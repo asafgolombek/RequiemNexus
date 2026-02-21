@@ -4,16 +4,31 @@
 
 To build the definitive, high-performance digital ecosystem for **Vampire: The Requiem (Chronicles of Darkness)**.
 
-**Requiem Nexus** is designed to eliminate the friction of character management, allowing Storytellers and players to focus on the _Danse Macabre_ rather than the math. By leveraging the reactive power of C# and the Antigravity philosophy, we aim to provide a "Beyond"-style experience that is as fast as a digital app but as deep as a leather-bound sourcebook.
+**Requiem Nexus** is designed to eliminate the friction of character management. By leveraging the reactive power of **.NET 10** and the Antigravity philosophy, we provide a "Beyond"-style experience that is as fast as a digital app but as deep as a leather-bound sourcebook.
 
 ---
 
-## 🛠️ Tech Stack & Philosophy
+## 🛠️ Architecture & Scaling Strategy
 
-- **Engine:** .NET 10 with a "Zero-JS" Reactive Framework (Antigravity/Blazor).
-- **Infrastructure:** Windows-optimized deployment with robust PowerShell-driven automation.
-- **Data Integrity:** PostgreSQL for relational Kindred data; JSONB for dynamic Merits/Conditions.
-- **UI/UX:** "Modern Gothic" aesthetic—Crimson on Charcoal, prioritizing speed, accessibility, and immersion.
+We build for the future. While we start as a **Modular Monolith** for development speed, our boundaries are defined to scale into **Microservices** as the coterie grows.
+
+- **Service Orchestration:** Utilize **.NET Aspire** to manage local resources (Postgres, Redis) and service discovery.
+- **Modular Boundaries:** Separate logic into distinct modules: `Identity.Nexus`, `Sheet.Nexus`, and `Roll.Nexus`.
+- **Focus on Scaling Up:**
+  - **State Management:** Use distributed caching (Redis) to ensure SignalR sessions can persist across multiple server instances (Horizontal Scaling).
+  - **Stateless Logic:** Keep the Rules Engine stateless; calculate derived stats on-demand rather than storing redundant data.
+  - **Load Balancing:** Architect for **YARP (Yet Another Reverse Proxy)** to handle rate-limiting and traffic distribution.
+
+---
+
+## 🔐 Security Protocols (The Masquerade)
+
+Data integrity is our highest priority. We treat player data with the same secrecy as a Prince's haven.
+
+- **Zero-Trust Identity:** Implement **OpenID Connect (OIDC)** with short-lived JWTs. Every internal service call requires identity verification.
+- **BOLA/IDOR Prevention:** Strict ownership checks on every request. A user can only access a character ID if they are the owner or a designated Storyteller.
+- **Input Sanitization:** "Trust no one." All inputs are validated via strict C# Type-checking and parameterized queries to prevent SQL Injection.
+- **Encryption at Rest:** Sensitive player and chronicle data is encrypted within the PostgreSQL JSONB columns.
 
 ---
 
@@ -21,41 +36,26 @@ To build the definitive, high-performance digital ecosystem for **Vampire: The R
 
 ### 1. The Living Sheet
 
-Create a character sheet that isn't just a digital form, but a reactive rules engine.
-
-- **Auto-Calculations:** Instant updates for Health, Willpower, Defense, and Speed.
-- **The Dot System:** A tactile, interactive interface for Attributes, Skills, and Disciplines.
-- **State Management:** Real-time synchronization between the Player and the Storyteller.
+- **Auto-Calculations:** Instant updates for Health, Willpower, Defense, and Speed using .NET 10 performance optimizations.
+- **tactile UI:** A bone-white and crimson interface optimized for mobile and desktop.
 
 ### 2. The XP Ledger
 
-An immutable, transparent system for tracking Kindred growth.
-
-- **Audit Logs:** Every point spent is recorded and reversible by the Storyteller.
-- **Validation:** Prevent illegal stat combinations based on the Chronicles of Darkness ruleset.
+- **Immutable Logs:** Audit every dot increased or merit purchased.
+- **Rule Enforcement:** Backend validation prevents "illegal" character builds.
 
 ### 3. The Dice Nexus
 
-A native, high-performance dice engine built into the UI.
-
-- **Rule Support:** Full support for 10-again, 9-again, 8-again, and rote actions.
-- **Contextual Rolling:** Click an Attribute + Skill directly on the sheet to initiate a roll.
+- **High-Throughput:** A specialized rolling service supporting 10-again, rote actions, and chance rolls.
 
 ---
 
-## ⚖️ Legal & Ethical Guardrails
+## 📅 Phase 1: The Neonate (.NET 10)
 
-- **Fan Content Policy:** Requiem Nexus is a fan project. It will not include verbatim proprietary text from Onyx Path or Paradox Interactive.
-- **The "Empty Shell" Model:** The platform provides the _structure_; users provide the _content_ (descriptions, lore, homebrew).
-
----
-
-## 📅 Phase 1: The Neonate (MVP)
-
-- [ ] Initialize C# Backend and Database Schema.
-- [ ] Implement the Core Attribute and Skill Grid.
-- [ ] Deploy the reactive "DotScale" component.
-- [ ] Finalize the 10-Again Dice Service.
+- [ ] Setup **.NET Aspire** orchestrator for local development.
+- [ ] Initialize **EF Core** migrations for the `Character` and `Clan` schemas.
+- [ ] Build the `DiceService.cs` using .NET 10's improved Random number generation.
+- [ ] Implement basic JWT-based authentication.
 
 ---
 
