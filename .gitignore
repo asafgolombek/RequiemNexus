@@ -480,3 +480,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Build logs
+build_err.txt
+build_out.txt
+build_*.txt
+*.buildlog
+*.log
