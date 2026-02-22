@@ -22,7 +22,11 @@ builder.Services.AddCascadingAuthenticationState();
 // We temporarily bypass cookies/JWT for a second until we set up OIDC
 // Just wire the basic Identity for now
 builder.Services.AddAuthentication();
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = true;
+        options.User.RequireUniqueEmail = true;
+    })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 

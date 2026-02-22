@@ -1,0 +1,121 @@
+@page "/register"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Register - Requiem Nexus</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Create New User</h2>
+            <p>Join Requiem Nexus</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        <EditForm Model="@registerModel" OnValidSubmit="HandleRegistration" FormName="registerForm" class="login-form">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-container">
+                    <InputText id="email" type="email" @bind-Value="registerModel.Email" class="form-control" placeholder="Enter your email" />
+                </div>
+                <ValidationMessage For="@(() => registerModel.Email)" class="text-danger mt-1 text-sm" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-container">
+                    <InputText id="password" type="password" @bind-Value="registerModel.Password" class="form-control" placeholder="Create a password" />
+                </div>
+                <ValidationMessage For="@(() => registerModel.Password)" class="text-danger mt-1 text-sm" />
+            </div>
+
+            <div class="form-group">
+                <label for="birthday">Birthday <small>(DD/MM/YYYY)</small></label>
+                <div class="input-container">
+                    <InputText id="birthday" @bind-Value="registerModel.Birthday" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').substring(0,10)" />
+                </div>
+                <ValidationMessage For="@(() => registerModel.Birthday)" class="text-danger mt-1 text-sm" />
+            </div>
+
+            <button type="submit" class="btn-login mt-4">
+                Register
+            </button>
+        </EditForm>
+
+        <div class="login-footer">
+            <p>Already have an account? <a href="/">Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private RegisterModel registerModel { get; set; } = new();
+
+    private string? errorMessage;
+
+    private async Task HandleRegistration()
+    {
+        errorMessage = null;
+
+        // Parse Birthday to DateOnly (DD/MM/YYYY)
+        if (!DateOnly.TryParseExact(registerModel.Birthday, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var parsedBirthday))
+        {
+            errorMessage = "Invalid birthday format. Please use DD/MM/YYYY.";
+            return;
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = registerModel.Email,
+            Email = registerModel.Email,
+            Birthday = parsedBirthday
+        };
+
+        var result = await UserManager.CreateAsync(user, registerModel.Password);
+
+        if (result.Succeeded)
+        {
+            // For now just redirect back to login
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            // If email is duplicate or other issues
+            if (result.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail"))
+            {
+                errorMessage = "The account already exists.";
+            }
+            else
+            {
+                errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
+        }
+    }
+
+    public class RegisterModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required.")]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Birthday is required.")]
+        [RegularExpression(@"^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$", ErrorMessage = "Format must be DD/MM/YYYY.")]
+        public string Birthday { get; set; } = string.Empty;
+    }
+}

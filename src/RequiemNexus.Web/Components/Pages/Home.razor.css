@@ -1,0 +1,156 @@
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #e0e0e0;
+}
+
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.hero-section h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #ff4b4b, #8b0000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 4px 12px rgba(255, 75, 75, 0.2);
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #9aa0a6;
+  margin-bottom: 2rem;
+}
+
+/* Glassmorphism Toolbar */
+.toolbar-glass {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(30, 30, 35, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.toolbar-btn .text {
+  z-index: 1;
+}
+
+.toolbar-btn .icon {
+  font-size: 1.25rem;
+  z-index: 1;
+}
+
+.toolbar-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.toolbar-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.toolbar-btn:hover::before {
+  opacity: 1;
+}
+
+.toolbar-btn:active {
+  transform: translateY(0);
+}
+
+/* Button Variants */
+.primary-btn {
+  background-color: #ff4757;
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+}
+
+.secondary-btn {
+  background-color: #2f3542;
+  color: #f1f2f6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.secondary-btn:hover {
+  background-color: #3f4552;
+}
+
+.accent-btn {
+  background-color: transparent;
+  color: #ff4757;
+  border: 1px solid #ff4757;
+}
+
+.accent-btn:hover {
+  background-color: rgba(255, 71, 87, 0.1);
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .toolbar-glass {
+    flex-direction: column;
+    width: 100%;
+  }
+  .toolbar-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+}
