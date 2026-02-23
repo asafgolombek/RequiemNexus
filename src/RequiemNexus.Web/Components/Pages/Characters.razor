@@ -1,0 +1,73 @@
+@page "/characters"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@inject ApplicationDbContext DbContext
+
+<PageTitle>My Characters - Requiem Nexus</PageTitle>
+
+<div class="home-layout">
+    <!-- Reusing Header for consistency -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="brand">
+                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
+            </div>
+            
+            <div class="header-actions">
+                <span class="welcome-text">Welcome back</span>
+                <button class="nav-btn primary-btn">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-content">
+        <div class="characters-header">
+            <h2>My Characters</h2>
+            <a href="/character/create" class="btn-create">Create New Character</a>
+        </div>
+
+        @if (characters == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else if (!characters.Any())
+        {
+            <div class="empty-state">
+                <p>You haven't embraced any characters yet.</p>
+                <a href="/character/create" class="btn-create btn-large">Create New Character</a>
+            </div>
+        }
+        else
+        {
+            <div class="character-grid">
+                @foreach (var character in characters)
+                {
+                    <div class="character-card">
+                        <h3>@character.Name</h3>
+                        <p class="clan-name">@(character.Clan?.Name ?? "Caitiff")</p>
+                        <div class="stats">
+                            <span>❤️ HP: @character.Health</span>
+                            <span>🛡️ WP: @character.Willpower</span>
+                            <span>🩸 BP: @character.BloodPotency</span>
+                            <span>🍷 Vitae: @character.Vitae</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Character>? characters;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Using AsNoTracking since we just need to list the characters
+        characters = await DbContext.Characters
+            .Include(c => c.Clan)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+}

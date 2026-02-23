@@ -3,8 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Web.Components;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration)
+                 .WriteTo.Console()
+                 .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

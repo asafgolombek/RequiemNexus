@@ -1,5 +1,7 @@
 @page "/"
+@rendermode InteractiveServer
 @inject NavigationManager NavigationManager
+@inject ILogger<Login> Logger
 
 <PageTitle>Login - Requiem Nexus</PageTitle>
 
@@ -10,7 +12,7 @@
             <p>Sign in to Requiem Nexus</p>
         </div>
 
-        <form class="login-form">
+        <form class="login-form" @onsubmit="HandleLogin" @onsubmit:preventDefault="true">
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <div class="input-container">
@@ -28,7 +30,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-login" @onclick="HandleLogin" @onclick:preventDefault="true">
+            <button type="submit" class="btn-login">
                 Sign In
             </button>
         </form>
@@ -42,6 +44,7 @@
 @code {
     private void HandleLogin()
     {
+        Logger.LogInformation("User attempted to log in.");
         // Placeholder for authenticating the user; for now we just redirect
         NavigationManager.NavigateTo("/home");
     }

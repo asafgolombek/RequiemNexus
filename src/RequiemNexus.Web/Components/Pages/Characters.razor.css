@@ -1,0 +1,178 @@
+/* Reusing global styles from Home if possible, but localized here for characters */
+.home-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #e0e0e0;
+  background-color: #121212;
+}
+
+.main-header {
+  background-color: #000000;
+  border-bottom: 2px solid #e50914;
+  padding: 0 1rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 60px;
+}
+
+.brand h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.welcome-text {
+  font-size: 0.9rem;
+  color: #aaaaaa;
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-btn {
+  background-color: #e50914;
+  color: #ffffff;
+}
+
+.primary-btn:hover {
+  background-color: #b20710;
+}
+
+/* Character Specific Content */
+.dashboard-content {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  flex: 1;
+  width: 100%;
+}
+
+.characters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 1rem;
+}
+
+.characters-header h2 {
+  font-size: 2rem;
+  color: #ffffff;
+  margin: 0;
+  font-weight: 700;
+}
+
+.btn-create {
+  background-color: #e50914;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  display: inline-block;
+}
+
+.btn-create:hover {
+  background-color: #b20710;
+  color: white;
+}
+
+.btn-large {
+  padding: 14px 28px;
+  font-size: 1.1rem;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: #1a1a1c;
+  border-radius: 8px;
+  border: 1px dashed #444;
+}
+
+.empty-state p {
+  color: #aaa;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Character Grid */
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.character-card {
+  background: linear-gradient(to bottom, #242528, #1a1a1c);
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-top: 3px solid #e50914;
+}
+
+.character-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border-color: #555;
+  border-top-color: #ff4b4b;
+}
+
+.character-card h3 {
+  margin: 0 0 0.25rem 0;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.clan-name {
+  color: #e50914;
+  margin: 0 0 1.5rem 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #ccc;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
