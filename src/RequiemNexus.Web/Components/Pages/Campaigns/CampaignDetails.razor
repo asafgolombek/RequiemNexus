@@ -1,0 +1,156 @@
+@page "/campaigns/{Id:int}"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Campaign Details - Requiem Nexus</PageTitle>
+
+<div class="home-layout">
+    <header class="main-header">
+        <div class="header-content">
+            <div class="brand">
+                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
+            </div>
+            <div class="header-actions">
+                <a href="/campaigns" class="nav-btn primary-btn">Back to Campaigns</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-content">
+        @if (campaign == null)
+        {
+            <p><em>Loading or campaign not found...</em></p>
+        }
+        else
+        {
+            <div class="campaign-header">
+                <h2>@campaign.Name</h2>
+                <div class="storyteller-badge">
+                    <span>👑 Story Teller:</span> @(campaign.StoryTeller?.UserName ?? campaign.StoryTeller?.Email ?? "Unknown")
+                </div>
+            </div>
+
+            <div class="characters-section">
+                <div class="section-header">
+                    <h3>Players in this Campaign</h3>
+                    <button class="btn-create" @onclick="ToggleAddCharacter">Add Character</button>
+                </div>
+
+                @if (showAddCharacter)
+                {
+                    <div class="add-character-panel">
+                        <h4>Add Character to Campaign</h4>
+                        <EditForm Model="addModel" OnValidSubmit="AddCharacterSubmit">
+                            <div class="form-group row">
+                                <div class="col">
+                                    <InputSelect @bind-Value="addModel.CharacterId" class="form-control">
+                                        <option value="0">-- Select an available character --</option>
+                                        @foreach (var c in availableCharacters)
+                                        {
+                                            <option value="@c.Id">@c.Name (@c.User?.Email)</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn-create" disabled="@(addModel.CharacterId == 0)">Add</button>
+                                    <button type="button" class="btn-cancel" @onclick="ToggleAddCharacter">Cancel</button>
+                                </div>
+                            </div>
+                        </EditForm>
+                    </div>
+                }
+
+                @if (!campaign.Characters.Any())
+                {
+                    <div class="empty-state">
+                        <p>No characters have joined this saga yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="character-grid">
+                        @foreach (var character in campaign.Characters)
+                        {
+                            <div class="character-card">
+                                <h4>@character.Name</h4>
+                                <div class="player-info">
+                                    <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
+                                </div>
+                                <div class="stats">
+                                    <span>❤️ HP: @character.Health</span>
+                                    <span>🛡️ WP: @character.Willpower</span>
+                                    <span>🩸 BP: @character.BloodPotency</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Campaign? campaign;
+    private List<Character> availableCharacters = new();
+    private bool showAddCharacter = false;
+
+    private AddCharacterModel addModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        campaign = await DbContext.Campaigns
+            .Include(c => c.StoryTeller)
+            .Include(c => c.Characters)
+            .ThenInclude(ch => ch.User) // Include user to show who it belongs to
+            .FirstOrDefaultAsync(c => c.Id == Id);
+
+        if (campaign != null)
+        {
+            // For MVP: load all characters not currently in a campaign
+            availableCharacters = await DbContext.Characters
+                .Include(c => c.User)
+                .Where(c => c.CampaignId == null)
+                .ToListAsync();
+        }
+    }
+
+    private void ToggleAddCharacter()
+    {
+        showAddCharacter = !showAddCharacter;
+        addModel.CharacterId = 0;
+    }
+
+    private async Task AddCharacterSubmit()
+    {
+        if (addModel.CharacterId > 0 && campaign != null)
+        {
+            var character = await DbContext.Characters.FindAsync(addModel.CharacterId);
+            if (character != null)
+            {
+                character.CampaignId = campaign.Id;
+                await DbContext.SaveChangesAsync();
+                
+                // Refresh data
+                await LoadData();
+                showAddCharacter = false;
+            }
+        }
+    }
+
+    public class AddCharacterModel
+    {
+        public int CharacterId { get; set; }
+    }
+}

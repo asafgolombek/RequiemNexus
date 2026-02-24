@@ -1,0 +1,85 @@
+@page "/campaigns"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@inject ApplicationDbContext DbContext
+
+<PageTitle>My Campaigns - Requiem Nexus</PageTitle>
+
+<div class="home-layout">
+    <header class="main-header">
+        <div class="header-content">
+            <div class="brand">
+                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
+            </div>
+            <div class="header-actions">
+                <span class="welcome-text">Welcome back</span>
+                <button class="nav-btn primary-btn">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-content">
+        <div class="campaigns-header">
+            <h2>My Campaigns</h2>
+            <a href="/campaigns/create" class="btn-create">Create New Campaign</a>
+        </div>
+
+        @if (campaigns == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else if (!campaigns.Any())
+        {
+            <div class="empty-state">
+                <p>You haven't joined or created any campaigns yet.</p>
+                <a href="/campaigns/create" class="btn-create btn-large">Create New Campaign</a>
+            </div>
+        }
+        else
+        {
+            <div class="campaign-grid">
+                @foreach (var campaign in campaigns)
+                {
+                    <a href="/campaigns/@campaign.Id" class="campaign-card">
+                        <h3>@campaign.Name</h3>
+                        <p class="role-text">
+                            @(IsStoryTeller(campaign) ? "👑 Story Teller" : "🗡️ Player")
+                        </p>
+                        <div class="stats">
+                            <span>👥 Characters: @(campaign.Characters?.Count ?? 0)</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Campaign>? campaigns;
+    // For now we don't have real logged in user ID so we simulate it or check if any
+    private string currentUserId = "dummy_user";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // For MVP, just loading all campaigns
+        campaigns = await DbContext.Campaigns
+            .Include(c => c.Characters)
+            .Include(c => c.StoryTeller)
+            .AsNoTracking()
+            .ToListAsync();
+            
+        // If we had Auth wired:
+        // var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // currentUserId = state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private bool IsStoryTeller(Campaign campaign)
+    {
+        // Placeholder check. Normally you'd compare current user's ID to campaign.StoryTellerId
+        // In this MVP, we will assume true if there's no Characters in it yet, or random logic.
+        // But for safety let's say "true" just to display the UI correctly.
+        return true;
+    }
+}

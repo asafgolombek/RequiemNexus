@@ -1,0 +1,79 @@
+@page "/campaigns/create"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@using System.ComponentModel.DataAnnotations
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Campaign - Requiem Nexus</PageTitle>
+
+<div class="split-layout">
+    <div class="form-side">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Forge a New Saga</h2>
+                <p>As a Story Teller, you will guide the neonates through the darkness.</p>
+            </div>
+
+            <EditForm Model="@campaignModel" OnValidSubmit="HandleValidSubmit" FormName="createCampaign">
+                <DataAnnotationsValidator />
+                
+                <div class="form-group">
+                    <label for="name">Campaign Name</label>
+                    <InputText id="name" @bind-Value="campaignModel.Name" class="form-control" placeholder="E.g., Shadows of the Damned" />
+                    <ValidationMessage For="@(() => campaignModel.Name)" class="text-danger" />
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-create">Create Campaign</button>
+                    <a href="/campaigns" class="btn-cancel">Cancel</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+    
+    <div class="image-side">
+        <!-- Visual flair area, maybe a background image in CSS -->
+        <div class="image-overlay">
+            <div class="quote">
+                "We are the monsters that monsters fear."
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CampaignModel campaignModel = new();
+
+    private async Task HandleValidSubmit()
+    {
+        // For MVP, randomly pick a user from db or create a dummy user logic to be the ST
+        var user = await DbContext.Users.FirstOrDefaultAsync();
+
+        if (user == null)
+        {
+            // If no user exists somehow, let's just abort or create an MVP user (if possible)
+            // But usually there's at least one from registration
+            return;
+        }
+
+        var campaign = new Campaign
+        {
+            Name = campaignModel.Name,
+            StoryTellerId = user.Id
+        };
+
+        DbContext.Campaigns.Add(campaign);
+        await DbContext.SaveChangesAsync();
+
+        NavigationManager.NavigateTo("/campaigns");
+    }
+
+    public class CampaignModel
+    {
+        [Required]
+        [MinLength(3, ErrorMessage = "Campaign name must be at least 3 characters.")]
+        public string Name { get; set; } = string.Empty;
+    }
+}

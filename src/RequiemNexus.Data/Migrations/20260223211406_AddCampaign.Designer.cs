@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RequiemNexus.Data;
 
@@ -10,9 +11,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260223211406_AddCampaign")]
+    partial class AddCampaign
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -240,23 +243,11 @@ namespace RequiemNexus.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Academics")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("AnimalKen")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("ApplicationUserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Athletics")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("BloodPotency")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Brawl")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("CampaignId")
@@ -265,49 +256,7 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<int?>("ClanId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Composure")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Computer")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Crafts")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Dexterity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Drive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Empathy")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Expression")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Firearms")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("Health")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Intelligence")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Intimidation")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Investigation")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Larceny")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Manipulation")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Medicine")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -315,55 +264,10 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Occult")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Persuasion")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Politics")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Presence")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Resolve")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Science")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Socialize")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Stamina")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Stealth")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Streetwise")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Strength")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Subterfuge")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Survival")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("Vitae")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Weaponry")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("Willpower")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Wits")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -375,54 +279,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("ClanId");
 
                     b.ToTable("Characters");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("CharacterDisciplines");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterMerit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("CharacterMerits");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Clan", b =>
@@ -522,7 +378,7 @@ namespace RequiemNexus.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("RequiemNexus.Data.Models.Clan", "Clan")
-                        .WithMany()
+                        .WithMany("Characters")
                         .HasForeignKey("ClanId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -531,28 +387,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Clan");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany("Disciplines")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterMerit", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany("Merits")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.ApplicationUser", b =>
@@ -565,11 +399,9 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Characters");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.Character", b =>
+            modelBuilder.Entity("RequiemNexus.Data.Models.Clan", b =>
                 {
-                    b.Navigation("Disciplines");
-
-                    b.Navigation("Merits");
+                    b.Navigation("Characters");
                 });
 #pragma warning restore 612, 618
         }
