@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C#: RequiemNexus.Web",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/RequiemNexus.Web/bin/Debug/net10.0/RequiemNexus.Web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/RequiemNexus.Web",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Run Database Update",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/RequiemNexus.Data/bin/Debug/net10.0/RequiemNexus.Data.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/RequiemNexus.Data",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
+        }
+    ]
+}

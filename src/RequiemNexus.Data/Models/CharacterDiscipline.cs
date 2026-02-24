@@ -13,9 +13,10 @@ public class CharacterDiscipline
     [ForeignKey(nameof(CharacterId))]
     public virtual Character? Character { get; set; }
 
-    [Required]
-    [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public int DisciplineId { get; set; }
+
+    [ForeignKey(nameof(DisciplineId))]
+    public virtual Discipline? Discipline { get; set; }
 
     public int Rating { get; set; }
 }

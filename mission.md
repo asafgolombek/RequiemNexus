@@ -4,31 +4,29 @@
 
 To build the definitive, high-performance digital ecosystem for **Vampire: The Requiem (Chronicles of Darkness)**.
 
-**Requiem Nexus** is designed to eliminate the friction of character management. By leveraging the reactive power of **.NET 10** and the Antigravity philosophy, we provide a "Beyond"-style experience that is as fast as a digital app but as deep as a leather-bound sourcebook.
+**Requiem Nexus** is designed to eliminate the friction of character management. By leveraging the reactive power of **.NET 10** and the **Antigravity philosophy**, we provide a "Beyond"-style experience that is as fast as a digital app but as deep as a leather-bound sourcebook.
 
 ---
 
-## 🛠️ Architecture & Scaling Strategy
+## 🏗️ Architectural Excellence (.NET 10)
 
-We build for the future. While we start as a **Modular Monolith** for development speed, our boundaries are defined to scale into **Microservices** as the coterie grows.
-
-- **Service Orchestration:** Utilize **.NET Aspire** to manage local resources (Postgres, Redis) and service discovery.
-- **Modular Boundaries:** Separate logic into distinct modules: `Identity.Nexus`, `Sheet.Nexus`, and `Roll.Nexus`.
+- **Modular Monolith:** Logic is partitioned into domain-specific projects (`Data`, `Web`, `Roll`) to allow for future Microservice extraction.
+- **Service Orchestration:** Utilize **.NET Aspire** to manage local resources (PostgreSQL, Redis) and service discovery.
 - **Focus on Scaling Up:**
-  - **State Management:** Use distributed caching (Redis) to ensure SignalR sessions can persist across multiple server instances (Horizontal Scaling).
+  - **State Management:** Use distributed caching (Redis) to ensure SignalR sessions can persist across multiple server instances.
   - **Stateless Logic:** Keep the Rules Engine stateless; calculate derived stats on-demand rather than storing redundant data.
-  - **Load Balancing:** Architect for **YARP (Yet Another Reverse Proxy)** to handle rate-limiting and traffic distribution.
+- **Observability:** Integrated Health Checks and OpenTelemetry to monitor "Vital Signs," ensuring low latency and high availability.
 
 ---
 
-## 🔐 Security Protocols (The Masquerade)
+## 🛡️ The Masquerade (Security)
 
-Data integrity is our highest priority. We treat player data with the same secrecy as a Prince's haven.
+Data integrity and player privacy are our highest priorities.
 
 - **Zero-Trust Identity:** Implement **OpenID Connect (OIDC)** with short-lived JWTs. Every internal service call requires identity verification.
-- **BOLA/IDOR Prevention:** Strict ownership checks on every request. A user can only access a character ID if they are the owner or a designated Storyteller.
+- **BOLA/IDOR Prevention:** Strict ownership checks ensure a user can only access a character if they are the owner or a designated Storyteller.
 - **Input Sanitization:** "Trust no one." All inputs are validated via strict C# Type-checking and parameterized queries to prevent SQL Injection.
-- **Encryption at Rest:** Sensitive player and chronicle data is encrypted within the PostgreSQL JSONB columns.
+- **Privacy:** Minimum Viable Data collection; all sensitive player and chronicle data is encrypted at rest.
 
 ---
 
@@ -37,25 +35,46 @@ Data integrity is our highest priority. We treat player data with the same secre
 ### 1. The Living Sheet
 
 - **Auto-Calculations:** Instant updates for Health, Willpower, Defense, and Speed using .NET 10 performance optimizations.
-- **tactile UI:** A bone-white and crimson interface optimized for mobile and desktop.
+- **Tactile UI:** A bone-white and crimson interface optimized for mobile and desktop, adhering to "Modern Gothic" aesthetics.
 
-### 2. The XP Ledger
+### 2. Campaign Management (The Chronicle Nexus)
+
+- **Coterie Hub:** A centralized space for players to link characters to a shared Chronicle.
+- **Shared Lore:** Storytellers can upload and share "public knowledge" notes, NPCs, and location descriptions.
+- **XP Allocation:** Storytellers can grant XP to the entire group or specific individuals directly from the dashboard.
+
+### 3. Storyteller Toolkit
+
+- **Initiative Tracker:** A real-time tracker handling the unique "Initiative Mod" mechanics of Chronicles of Darkness.
+- **ST Oversight:** Private "Glimpse" view allowing Storytellers to see player Health, Willpower, and Conditions at a glance without switching tabs.
+- **Encounter Manager:** Pre-build NPC stat-blocks (Ghouls, Strix, rival Kindred) for instant deployment during sessions.
+
+### 4. The XP Ledger
 
 - **Immutable Logs:** Audit every dot increased or merit purchased.
-- **Rule Enforcement:** Backend validation prevents "illegal" character builds.
+- **Rule Enforcement:** Backend validation prevents "illegal" character builds according to _Chronicles of Darkness_ rules.
 
-### 3. The Dice Nexus
+### 5. The Dice Nexus
 
-- **High-Throughput:** A specialized rolling service supporting 10-again, rote actions, and chance rolls.
+- **High-Throughput:** A specialized rolling service supporting 10-again, 9-again, 8-again, and rote actions.
 
 ---
 
-## 📅 Phase 1: The Neonate (.NET 10)
+## 🧪 DevOps & Automation
 
-- [ ] Setup **.NET Aspire** orchestrator for local development.
-- [ ] Initialize **EF Core** migrations for the `Character` and `Clan` schemas.
-- [ ] Build the `DiceService.cs` using .NET 10's improved Random number generation.
-- [ ] Implement basic JWT-based authentication.
+- **Local-First Development:** The project must be bootable via a single script (`build-debug.ps1`) to ensure environment parity.
+- **Database Governance:** All schema changes must be accompanied by a Migration and a corresponding update to the `DbInitializer` for local seeding.
+- **CI/CD:** Automated builds verify every commit to the `src/` directory to ensure the build remains "Green".
+
+---
+
+## 📅 Phase 1: The Neonate
+
+- [x] Initialize **.NET 10** modular project structure.
+- [x] Manifest local database schema via **EF Core Migrations**.
+- [ ] Implement `DbInitializer` for automatic Clan and Admin seeding.
+- [ ] Build the reactive `DotScale` component for Attributes and Skills.
+- [ ] Finalize the high-performance **Dice Nexus** service.
 
 ---
 

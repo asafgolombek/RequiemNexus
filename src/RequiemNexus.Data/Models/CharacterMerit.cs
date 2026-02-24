@@ -13,9 +13,13 @@ public class CharacterMerit
     [ForeignKey(nameof(CharacterId))]
     public virtual Character? Character { get; set; }
 
-    [Required]
-    [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public int MeritId { get; set; }
+
+    [ForeignKey(nameof(MeritId))]
+    public virtual Merit? Merit { get; set; }
 
     public int Rating { get; set; }
+
+    [MaxLength(100)]
+    public string? Specification { get; set; }
 }

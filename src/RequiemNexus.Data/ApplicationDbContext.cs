@@ -16,6 +16,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Campaign> Campaigns { get; set; }
     public DbSet<CharacterMerit> CharacterMerits { get; set; }
     public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; }
+    public DbSet<Discipline> Disciplines { get; set; }
+    public DbSet<DisciplinePower> DisciplinePowers { get; set; }
+    public DbSet<Merit> Merits { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
