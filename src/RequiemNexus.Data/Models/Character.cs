@@ -29,10 +29,20 @@ public class Character
     public virtual Campaign? Campaign { get; set; }
 
     // Core specific stats for the Neonate Phase
-    public int Health { get; set; }
-    public int Willpower { get; set; }
-    public int BloodPotency { get; set; }
-    public int Vitae { get; set; }
+    public int Humanity { get; set; } = 7;
+    public int Size { get; set; } = 5;
+    public int ExperiencePoints { get; set; } = 0;
+
+    public int MaxHealth { get; set; }
+    public int CurrentHealth { get; set; }
+
+    public int MaxWillpower { get; set; }
+    public int CurrentWillpower { get; set; }
+
+    public int BloodPotency { get; set; } = 1;
+
+    public int MaxVitae { get; set; }
+    public int CurrentVitae { get; set; }
 
     // --- Attributes ---
     // Mental

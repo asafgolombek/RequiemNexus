@@ -2,7 +2,10 @@
 @using Microsoft.EntityFrameworkCore
 @using RequiemNexus.Data
 @using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>My Characters - Requiem Nexus</PageTitle>
 
@@ -47,10 +50,10 @@
                         <h3>@character.Name</h3>
                         <p class="clan-name">@(character.Clan?.Name ?? "Caitiff")</p>
                         <div class="stats">
-                            <span>❤️ HP: @character.Health</span>
-                            <span>🛡️ WP: @character.Willpower</span>
+                            <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
+                            <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
                             <span>🩸 BP: @character.BloodPotency</span>
-                            <span>🍷 Vitae: @character.Vitae</span>
+                            <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
                         </div>
                         <div class="attributes-preview" style="margin-top: 10px; font-size: 0.85rem; color: #a0a0a0;">
                             <strong>Attributes:</strong><br/>
@@ -67,13 +70,25 @@
 
 @code {
     private List<Character>? characters;
+    private string? currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
-        // Using AsNoTracking since we just need to list the characters
-        characters = await DbContext.Characters
-            .Include(c => c.Clan)
-            .AsNoTracking()
-            .ToListAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            characters = await DbContext.Characters
+                .Include(c => c.Clan)
+                .Where(c => c.ApplicationUserId == currentUserId)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        else
+        {
+            // Not authenticated or user ID not found
+            characters = new List<Character>();
+        }
     }
 }

@@ -80,9 +80,10 @@
                                     <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
                                 </div>
                                 <div class="stats">
-                                    <span>❤️ HP: @character.Health</span>
-                                    <span>🛡️ WP: @character.Willpower</span>
+                                    <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
+                                    <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
                                     <span>🩸 BP: @character.BloodPotency</span>
+                                    <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
                                 </div>
                             </div>
                         }

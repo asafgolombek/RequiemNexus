@@ -487,3 +487,10 @@ build_out.txt
 build_*.txt
 *.buildlog
 *.log
+
+# Custom Build files
+build.txt
+
+# SQLite Temp Files
+*.db-shm
+*.db-wal

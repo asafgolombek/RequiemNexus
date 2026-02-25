@@ -18,5 +18,9 @@ public class Campaign
     [ForeignKey(nameof(StoryTellerId))]
     public virtual ApplicationUser? StoryTeller { get; set; }
 
+    public string Description { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; } = true;
+
     public virtual ICollection<Character> Characters { get; set; } = new List<Character>();
 }

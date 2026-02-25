@@ -2,7 +2,10 @@
 @using Microsoft.EntityFrameworkCore
 @using RequiemNexus.Data
 @using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>My Campaigns - Requiem Nexus</PageTitle>
 
@@ -58,28 +61,30 @@
 
 @code {
     private List<Campaign>? campaigns;
-    // For now we don't have real logged in user ID so we simulate it or check if any
-    private string currentUserId = "dummy_user";
+    private string? currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
-        // For MVP, just loading all campaigns
-        campaigns = await DbContext.Campaigns
-            .Include(c => c.Characters)
-            .Include(c => c.StoryTeller)
-            .AsNoTracking()
-            .ToListAsync();
-            
-        // If we had Auth wired:
-        // var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        // currentUserId = state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            campaigns = await DbContext.Campaigns
+                .Include(c => c.Characters)
+                .Include(c => c.StoryTeller)
+                .Where(c => c.StoryTellerId == currentUserId || c.Characters.Any(ch => ch.ApplicationUserId == currentUserId))
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        else
+        {
+            campaigns = new List<Campaign>();
+        }
     }
 
     private bool IsStoryTeller(Campaign campaign)
     {
-        // Placeholder check. Normally you'd compare current user's ID to campaign.StoryTellerId
-        // In this MVP, we will assume true if there's no Characters in it yet, or random logic.
-        // But for safety let's say "true" just to display the UI correctly.
-        return true;
+        return campaign.StoryTellerId == currentUserId;
     }
 }

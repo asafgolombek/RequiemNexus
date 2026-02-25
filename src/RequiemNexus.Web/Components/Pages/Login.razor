@@ -1,7 +1,9 @@
 @page "/"
-@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Data.Models
 @inject NavigationManager NavigationManager
 @inject ILogger<Login> Logger
+@inject SignInManager<ApplicationUser> SignInManager
 
 <PageTitle>Login - Requiem Nexus</PageTitle>
 
@@ -12,18 +14,26 @@
             <p>Sign in to Requiem Nexus</p>
         </div>
 
-        <form class="login-form" @onsubmit="HandleLogin" @onsubmit:preventDefault="true">
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        <form class="login-form" method="post" @formname="login-form" @onsubmit="HandleLogin">
+            <AntiforgeryToken />
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <div class="input-container">
-                    <input type="email" id="email" class="form-control" placeholder="Enter your email" required />
+                    <input type="email" id="email" name="Email" @bind="Email" class="form-control" placeholder="Enter your email" required />
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
                 <div class="input-container">
-                    <input type="password" id="password" class="form-control" placeholder="Enter your password" required />
+                    <input type="password" id="password" name="Password" @bind="Password" class="form-control" placeholder="Enter your password" required />
                 </div>
                 <div class="forgot-password-link">
                     <a href="/forgot-password">Forgot password?</a>
@@ -42,10 +52,32 @@
 </div>
 
 @code {
-    private void HandleLogin()
+    [SupplyParameterFromForm]
+    public string? Email { get; set; }
+
+    [SupplyParameterFromForm]
+    public string? Password { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Email ??= "";
+        Password ??= "";
+    }
+
+    private string? errorMessage;
+
+    private async Task HandleLogin()
     {
         Logger.LogInformation("User attempted to log in.");
-        // Placeholder for authenticating the user; for now we just redirect
-        NavigationManager.NavigateTo("/home");
+        var result = await SignInManager.PasswordSignInAsync(Email ?? "", Password ?? "", isPersistent: true, lockoutOnFailure: false);
+
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo("/home", true); // true forces a reload so cookies are picked up by the app properly
+        }
+        else
+        {
+            errorMessage = "Invalid login attempt.";
+        }
     }
 }
