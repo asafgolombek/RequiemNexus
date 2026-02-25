@@ -4,21 +4,17 @@ using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
 
-    public DbSet<Character> Characters { get; set; }
-    public DbSet<Clan> Clans { get; set; }
-    public DbSet<Campaign> Campaigns { get; set; }
-    public DbSet<CharacterMerit> CharacterMerits { get; set; }
-    public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; }
-    public DbSet<Discipline> Disciplines { get; set; }
-    public DbSet<DisciplinePower> DisciplinePowers { get; set; }
-    public DbSet<Merit> Merits { get; set; }
+    public DbSet<Character> Characters { get; set; } = default!;
+    public DbSet<Clan> Clans { get; set; } = default!;
+    public DbSet<Campaign> Campaigns { get; set; } = default!;
+    public DbSet<CharacterMerit> CharacterMerits { get; set; } = default!;
+    public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; } = default!;
+    public DbSet<Discipline> Disciplines { get; set; } = default!;
+    public DbSet<DisciplinePower> DisciplinePowers { get; set; } = default!;
+    public DbSet<Merit> Merits { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
