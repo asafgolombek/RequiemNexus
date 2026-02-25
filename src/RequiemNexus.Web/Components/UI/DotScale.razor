@@ -1,0 +1,85 @@
+<div class="dot-scale-container">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <button type="button" class="dot-label-btn" @onclick="HandleLabelClick" title="Quick Reference: @Label">
+            @Label
+        </button>
+    }
+    
+    <div class="dots-wrapper">
+        @for (int i = 1; i <= Max; i++)
+        {
+            var dotValue = i;
+            <button type="button" 
+                    class="dot @(dotValue <= Value ? "filled" : "empty")" 
+                    @onclick="() => SetValueAsync(dotValue)"
+                    title="Set @Label to @dotValue">
+            </button>
+        }
+    </div>
+
+    @if (ShowRollButton)
+    {
+        <button type="button" class="roll-btn" @onclick="HandleRollClick" title="Roll @Label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dice-5" viewBox="0 0 16 16">
+                <!-- Simple 6-sided die icon placeholder for D10 -->
+                <path d="M13 1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zM3 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V3a3 3 0 0 0-3-3z"/>
+                <path d="M5.5 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m8 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-8 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m4-4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+            </svg>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ValueChanged { get; set; }
+
+    [Parameter]
+    public int Max { get; set; } = 5;
+
+    [Parameter]
+    public bool ShowRollButton { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<string> OnLabelClick { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnRollClick { get; set; }
+
+    private async Task SetValueAsync(int newValue)
+    {
+        // Allow unsetting the first dot if clicking the currently selected 1st dot
+        if (newValue == 1 && Value == 1)
+        {
+            Value = 0;
+        }
+        else
+        {
+            Value = newValue;
+        }
+        
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleLabelClick()
+    {
+        if (OnLabelClick.HasDelegate)
+        {
+            await OnLabelClick.InvokeAsync(Label);
+        }
+    }
+
+    private async Task HandleRollClick()
+    {
+        if (OnRollClick.HasDelegate)
+        {
+            await OnRollClick.InvokeAsync(Label);
+        }
+    }
+}

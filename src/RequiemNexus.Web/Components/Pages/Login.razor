@@ -1,6 +1,7 @@
 @page "/"
 @using Microsoft.AspNetCore.Identity
 @using RequiemNexus.Data.Models
+@using System.ComponentModel.DataAnnotations
 @inject NavigationManager NavigationManager
 @inject ILogger<Login> Logger
 @inject SignInManager<ApplicationUser> SignInManager
@@ -21,20 +22,23 @@
             </div>
         }
 
-        <form class="login-form" method="post" @formname="login-form" @onsubmit="HandleLogin">
-            <AntiforgeryToken />
+        <EditForm Model="Input" OnValidSubmit="HandleLogin" FormName="login-form" class="login-form">
+            <DataAnnotationsValidator />
+            
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <div class="input-container">
-                    <input type="email" id="email" name="Email" @bind="Email" class="form-control" placeholder="Enter your email" required />
+                    <InputText type="email" id="email" @bind-Value="Input.Email" class="form-control" placeholder="Enter your email" required />
                 </div>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
                 <div class="input-container">
-                    <input type="password" id="password" name="Password" @bind="Password" class="form-control" placeholder="Enter your password" required />
+                    <InputText type="password" id="password" @bind-Value="Input.Password" class="form-control" placeholder="Enter your password" required />
                 </div>
+                <ValidationMessage For="() => Input.Password" class="text-danger" />
                 <div class="forgot-password-link">
                     <a href="/forgot-password">Forgot password?</a>
                 </div>
@@ -43,7 +47,7 @@
             <button type="submit" class="btn-login">
                 Sign In
             </button>
-        </form>
+        </EditForm>
 
         <div class="login-footer">
             <p>Don't have an account? <a href="/register">Create new user</a></p>
@@ -53,23 +57,19 @@
 
 @code {
     [SupplyParameterFromForm]
-    public string? Email { get; set; }
+    public LoginModel Input { get; set; } = default!;
 
-    [SupplyParameterFromForm]
-    public string? Password { get; set; }
+    private string? errorMessage;
 
     protected override void OnInitialized()
     {
-        Email ??= "";
-        Password ??= "";
+        Input ??= new LoginModel();
     }
-
-    private string? errorMessage;
 
     private async Task HandleLogin()
     {
         Logger.LogInformation("User attempted to log in.");
-        var result = await SignInManager.PasswordSignInAsync(Email ?? "", Password ?? "", isPersistent: true, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: true, lockoutOnFailure: false);
 
         if (result.Succeeded)
         {
@@ -79,5 +79,15 @@
         {
             errorMessage = "Invalid login attempt.";
         }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required.")]
+        public string Password { get; set; } = string.Empty;
     }
 }

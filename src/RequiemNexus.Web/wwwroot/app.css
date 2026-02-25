@@ -1,5 +1,19 @@
+:root {
+    --bg-color: #121212;
+    --bg-panel: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-muted: #888888;
+    --accent-color: #8b0000;
+    --accent-hover: #b20000;
+    --dot-border: #555555;
+    --font-primary: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-heading: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: var(--font-primary);
+    background-color: var(--bg-color);
+    color: var(--text-color);
 }
 
 a, .btn-link {

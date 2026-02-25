@@ -1,0 +1,187 @@
+@page "/character/{Id:int}"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using RequiemNexus.Web.Components.UI
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>@(character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
+
+@if (character == null)
+{
+    <p><em>Loading your immortal legacy...</em></p>
+}
+else
+{
+    <div class="character-sheet">
+        <!-- HEADER -->
+        <header class="cs-header">
+            <div class="char-avatar"></div>
+            <div class="char-info">
+                <h1>@character.Name</h1>
+                <div class="char-meta">
+                    <span><strong>Concept:</strong> ???</span>
+                    <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
+                    <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="cs-grid">
+            <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
+            <section class="cs-section cs-vitals">
+                <h2>Vitals</h2>
+                <div class="vitals-trackers">
+                    <div class="tracker-item">
+                        <span class="tracker-label">Health</span>
+                        <div class="tracker-boxes">
+                            @for(int i = 0; i < character.MaxHealth; i++)
+                            {
+                                <div class="tracker-box @(i < character.CurrentHealth ? "filled" : "")"></div>
+                            }
+                        </div>
+                    </div>
+                    <div class="tracker-item">
+                        <span class="tracker-label">Willpower</span>
+                        <div class="tracker-boxes">
+                            @for(int i = 0; i < character.MaxWillpower; i++)
+                            {
+                                <div class="tracker-box @(i < character.CurrentWillpower ? "filled" : "")"></div>
+                            }
+                        </div>
+                    </div>
+                    <div class="tracker-item">
+                        <span class="tracker-label">Vitae</span>
+                        <div class="tracker-boxes">
+                            @for(int i = 0; i < character.MaxVitae; i++)
+                            {
+                                <div class="tracker-box @(i < character.CurrentVitae ? "filled dark" : "")"></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ATTRIBUTES -->
+            <section class="cs-section cs-attributes">
+                <h2>Attributes</h2>
+                <div class="three-col-grid">
+                    <div class="stat-col mental">
+                        <h3>Mental</h3>
+                        <DotScale @bind-Value="character.Intelligence" Label="Intelligence" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Wits" Label="Wits" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Resolve" Label="Resolve" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    </div>
+                    <div class="stat-col physical">
+                        <h3>Physical</h3>
+                        <DotScale @bind-Value="character.Strength" Label="Strength" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Dexterity" Label="Dexterity" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Stamina" Label="Stamina" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    </div>
+                    <div class="stat-col social">
+                        <h3>Social</h3>
+                        <DotScale @bind-Value="character.Presence" Label="Presence" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Manipulation" Label="Manipulation" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Composure" Label="Composure" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- SKILLS -->
+            <section class="cs-section cs-skills">
+                <h2>Skills</h2>
+                <div class="three-col-grid">
+                    <div class="stat-col mental">
+                        <h3>Mental</h3>
+                        <DotScale @bind-Value="character.Academics" Label="Academics" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Computer" Label="Computer" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Crafts" Label="Crafts" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Investigation" Label="Investigation" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Medicine" Label="Medicine" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Occult" Label="Occult" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Politics" Label="Politics" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Science" Label="Science" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    </div>
+                    <div class="stat-col physical">
+                        <h3>Physical</h3>
+                        <DotScale @bind-Value="character.Athletics" Label="Athletics" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Brawl" Label="Brawl" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Drive" Label="Drive" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Firearms" Label="Firearms" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Larceny" Label="Larceny" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Stealth" Label="Stealth" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Survival" Label="Survival" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Weaponry" Label="Weaponry" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    </div>
+                    <div class="stat-col social">
+                        <h3>Social</h3>
+                        <DotScale @bind-Value="character.AnimalKen" Label="Animal Ken" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Empathy" Label="Empathy" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Expression" Label="Expression" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Intimidation" Label="Intimidation" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Persuasion" Label="Persuasion" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Socialize" Label="Socialize" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Streetwise" Label="Streetwise" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                        <DotScale @bind-Value="character.Subterfuge" Label="Subterfuge" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SUPERNATURAL & ADVANTAGES -->
+            <div class="two-col-grid">
+                <section class="cs-section cs-advantages">
+                    <h2>Advantages</h2>
+                    <DotScale @bind-Value="character.BloodPotency" Label="Blood Potency" Max="10" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    <DotScale @bind-Value="character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                    
+                    <h3 style="margin-top: 1rem;">Merits</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9em; font-style: italic;">Merit list component placeholder</p>
+                </section>
+                <section class="cs-section cs-disciplines">
+                    <h2>Disciplines</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9em; font-style: italic;">Discipline list component placeholder</p>
+                </section>
+            </div>
+            
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Character? character;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            character = await DbContext.Characters
+                .Include(c => c.Clan)
+                .Include(c => c.Campaign)
+                .FirstOrDefaultAsync(c => c.Id == Id && c.ApplicationUserId == currentUserId);
+                
+            // For now we don't handle saving back yet. 
+            // In a real app we'd bind to a separate View-Model or call DbContext.SaveChangesAsync() on value changes.
+        }
+    }
+
+    private void OpenReference(string traitName)
+    {
+        // TODO: Open Quick Reference Modal
+        Console.WriteLine($"Show Reference for: {traitName}");
+    }
+
+    private void OpenRoller(string traitName)
+    {
+        // TODO: Open Dice Roller with trait loaded
+        Console.WriteLine($"Roll: {traitName}");
+    }
+}
