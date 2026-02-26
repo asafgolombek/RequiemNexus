@@ -13,4 +13,6 @@ public class Clan
 
     [MaxLength(250)]
     public string Description { get; set; } = string.Empty;
+
+    public virtual ICollection<ClanDiscipline> ClanDisciplines { get; set; } = new List<ClanDiscipline>();
 }

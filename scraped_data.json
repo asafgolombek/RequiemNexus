@@ -1,0 +1,613 @@
+﻿{
+    "disciplines":  [
+
+                    ],
+    "merits":  [
+                   {
+                       "name":  "Acute Senses",
+                       "rating":  "•",
+                       "desc":  "Add Blood Potency as a bonus to use senses or identify sensory details. Exceptional successes can temporarily inflict Obsession."
+                   },
+                   {
+                       "name":  "Atrocious",
+                       "rating":  "•",
+                       "desc":  "Take 8-Again to evoke the monstrous Beast, but lose 10-Again to evoke or resist the seductive or competitive Beast."
+                   },
+                   {
+                       "name":  "Bloodhound",
+                       "rating":  "••",
+                       "desc":  "Smelling blood is as good as tasting it for your Kindred Senses."
+                   },
+                   {
+                       "name":  "Claws of the Unholy",
+                       "rating":  "•",
+                       "desc":  "When you use Unnatural Aspect claws in frenzy, their weapon rating becomes +0A."
+                   },
+                   {
+                       "name":  "Close Family",
+                       "rating":  "•",
+                       "desc":  "Blood sympathy manifests as if blood ties were one step closer, with a +1 bonus and 8-Again, but you can\u0027t spend Willpower for bonus dice in a scene where you\u0027ve felt it."
+                   },
+                   {
+                       "name":  "Cutthroat",
+                       "rating":  "•",
+                       "desc":  "Take 8-Again to evoke the competitive Beast, but lose 10-Again to evoke or resist the monstrous or seductive Beast."
+                   },
+                   {
+                       "name":  "Distinguished Palate",
+                       "rating":  "•",
+                       "desc":  "All Taste of Blood successes are exceptional, but you lose the first Vitae ingested in a scene from any vessel without a chosen trait you consider a delicacy."
+                   },
+                   {
+                       "name":  "Dream Visions",
+                       "rating":  "•",
+                       "desc":  "Once a night, when meeting a new person or visiting a new place, roll Blood Potency to have had prophetic dreams that answer a question about the subject."
+                   },
+                   {
+                       "name":  "Enticing",
+                       "rating":  "•",
+                       "desc":  "Take 8-Again to evoke the seductive Beast, but lose 10-Again to evoke or resist the monstrous or competitive Beast."
+                   },
+                   {
+                       "name":  "Feeding Grounds",
+                       "rating":  "• to •••••",
+                       "desc":  "You hold known influence over territory. While there, add dots in this Merit as a bonus to hunt, and to clash with the Predatory Aura."
+                   },
+                   {
+                       "name":  "Ghoul Retainers",
+                       "rating":  "• to •••••",
+                       "desc":  "As retainer, except they have dots in the regnant\u0027s disciplines equal to half the dots in this merit, rounded up."
+                   },
+                   {
+                       "name":  "Herd",
+                       "rating":  "• to •••••",
+                       "desc":  "You have marks willing to offer up twice your dots in this Merit in Vitae weekly, without a roll."
+                   },
+                   {
+                       "name":  "Honey Trap",
+                       "rating":  "•",
+                       "desc":  "A vampire who tastes your blood regains Willpower, and also takes a beat if it advances the Vinculum."
+                   },
+                   {
+                       "name":  "Kindred Status",
+                       "rating":  "• to •••••",
+                       "desc":  "As the general Status Merit, divided into City, Clan, and Covenant Status. If you hold Status in multiple covenants, your total dots of Covenant Status can\u0027t exceed five."
+                   },
+                   {
+                       "name":  "Kiss of the Succubus",
+                       "rating":  "•",
+                       "desc":  "When you inflict Swooning by feeding on a mortal vessel, also inflict Addicted."
+                   },
+                   {
+                       "name":  "Lineage",
+                       "rating":  "•",
+                       "desc":  "Once per session, you can borrow one dot of your sire\u0027s Allies, Contacts, Mentor, Resources, or Status."
+                   },
+                   {
+                       "name":  "Pack Alpha",
+                       "rating":  "•",
+                       "desc":  "Decide how you ritually mark a vampire or ghoul as part of your pack. Pack members take 8-Again to teamwork support rolls. When questioned by your pack and you don\u0027t cow them, lose Willpower. Exile from the pack is violent and lasting."
+                   },
+                   {
+                       "name":  "Swarm Form",
+                       "rating":  "••",
+                       "desc":  "You can become a swarm of Size 0 or 1 creatures when you take the Beast\u0027s Skin. Expand over a space up to (5 × Blood Potency) yards in diameter. Your attacks roll Strength + Brawl, ignore Defense, and deal lethal damage, while attacks against you that don\u0027t encompass wide swaths can only deal a point of damage at most."
+                   },
+                   {
+                       "name":  "Touchstone",
+                       "rating":  "• to •••••",
+                       "desc":  "You have an extra Touchstone for each dot in this Merit. Each Touchstone attaches to the next level of Humanity down after the last."
+                   },
+                   {
+                       "name":  "Undead Menses",
+                       "rating":  "••",
+                       "desc":  "You produce unnatural menstrual blood that, once per night when applied, can grant 8-Again to a Crúac ritual or reduce Resistance against a Discipline by up to your Blood Potency."
+                   },
+                   {
+                       "name":  "Unnatural Affinity",
+                       "rating":  "• to •••••",
+                       "desc":  "Choose another type of supernatural creature for each dot in this Merit. You can feed on their Vitae as if they were Kindred."
+                   },
+                   {
+                       "name":  "Unsettling Gaze",
+                       "rating":  "•",
+                       "desc":  "When you roll an exceptional success to infect a victim with Integrity or Humanity greater than yours with the monstrous Beast, your victim experiences a breaking point. If your Humanity is greater than 2, so do you."
+                   },
+                   {
+                       "name":  "Cacophony Savvy",
+                       "rating":  "•",
+                       "desc":  "You can read the Cacophony with Intelligence + Streetwise. Within a vampire\u0027s Feeding Grounds, add their (not your) dots in that Merit as bonus dice."
+                   },
+                   {
+                       "name":  "Dynasty Membership",
+                       "rating":  "•",
+                       "desc":  "Once per session, you can substitute your dynasty\u0027s Clan Status for your own on a Social roll."
+                   },
+                   {
+                       "name":  "Kindred Status",
+                       "rating":  "•",
+                       "desc":  "As for full Kindred. Clan Status requires Clan Impostor."
+                   },
+                   {
+                       "name":  "Carthian Pull",
+                       "rating":  "•",
+                       "desc":  "Every month, you can leverage favors to access your Carthian Status in dots of Allies, Contacts, Haven or Herd."
+                   },
+                   {
+                       "name":  "I Know a Guy",
+                       "rating":  "•",
+                       "desc":  "Once per story, your non-temporary dots of Allies can do double duty as dots of Retainer."
+                   },
+                   {
+                       "name":  "Night Doctor Surgery",
+                       "rating":  "•••",
+                       "desc":  "Roll Intelligence + Medicine to treat a vampire medically for an hour, reducing lethal damage to bashing."
+                   },
+                   {
+                       "name":  "Lex Terrae",
+                       "rating":  "••",
+                       "desc":  "So long as your Feeding Ground has been clearly declared, vampires who feed there without your permission wake the next night and vomit the Vitae out as useless, and are visibly marked for a week."
+                   },
+                   {
+                       "name":  "Mandate from the Masses",
+                       "rating":  "•••••",
+                       "desc":  "When you preside over a majority vote of local Carthians to condemn an enemy of the people, you can voluntarily lose access to a dot of Willpower to strip the enemy of Blood Potency proportional to the Carthian vote. Lost dots return when the enemy goes into exile or either you or the enemy are destroyed."
+                   },
+                   {
+                       "name":  "Plausible Deniability",
+                       "rating":  "••••",
+                       "desc":  "Supernatural means can\u0027t prove your guilt of crimes against domain or Tradition, diablerie doesn\u0027t stain your aura, and you penalize nonmagical efforts to perceive your guilt by your Carthian Status. You can\u0027t use your Kindred Status against anyone who ascertains your guilt anyway."
+                   },
+                   {
+                       "name":  "Right of Return",
+                       "rating":  "••",
+                       "desc":  "You\u0027re authorized to participate in multiple covenants. Your total maximum of Covenant Status dots ignores your dots of Carthian Status, and you improve your Social Maneuvering impression with your other affiliated covenants, but lose 10-Again to conceal suspicious behavior from them."
+                   },
+                   {
+                       "name":  "Strength of Resolution",
+                       "rating":  "•",
+                       "desc":  "When a supernatural power is used to compel you to violate the law of the domain, add your Carthian Status dots as dice to contest it."
+                   },
+                   {
+                       "name":  "Altar",
+                       "rating":  "•",
+                       "desc":  "You\u0027ve contributed to attuning a blood altar. In the presence of the altar, contributors can apply teamwork to Crúac rituals, even if they don\u0027t know Crúac, at the cost of slowing the ritual."
+                   },
+                   {
+                       "name":  "The Mother-Daughter Bond",
+                       "rating":  "•",
+                       "desc":  "Apply the benefits of the True Friend Merit to any Acolyte Mentor."
+                   },
+                   {
+                       "name":  "Attaché",
+                       "rating":  "•",
+                       "desc":  "Your Retainers each gain access to your Invictus Status in dots distributed among Contacts, Resources and Safe Place."
+                   },
+                   {
+                       "name":  "Friends in High Places",
+                       "rating":  "•",
+                       "desc":  "Every month, you can open up to your Invictus Status in Doors belonging to people held under the local Invictus thumb."
+                   },
+                   {
+                       "name":  "Invested",
+                       "rating":  "•",
+                       "desc":  "Distribute your dots in Invictus Status among free dots of Herd, Mentor, Resources and Retainer, provided by the covenant."
+                   },
+                   {
+                       "name":  "Notary",
+                       "rating":  "•••",
+                       "desc":  "You\u0027re empowered by the Invictus to preside over Invictus Oaths. Invictus Status can\u0027t be used in Social rolls against you, and once a month, you can call upon one dot of Allies, Contacts, Herd, Mentor or Resources from the covenant."
+                   },
+                   {
+                       "name":  "Speaker for the Silent",
+                       "rating":  "•••",
+                       "desc":  "You\u0027ve learned to voluntarily channel the will of a torpid elder. You can cut off an open channel with a point of Willpower."
+                   },
+                   {
+                       "name":  "Where the Bodies Are Buried",
+                       "rating":  "••",
+                       "desc":  "Once per story for every dot in this Merit, your notes on dirty work can turn up dirt on a vampire whose associations you know."
+                   },
+                   {
+                       "name":  "Oath of Action",
+                       "rating":  "••••",
+                       "desc":  "Swear a labor for your liege. For the duration of the Oath, you may access one of your liege\u0027s Disciplines (including bloodline gifts), while your liege\u0027s Blood Potency increases by one. The Oath concludes when the labor is complete or a month passes, and respectively the liege or the vassal suffers aggravated damage equal to the Discipline dots offered. You can only be party to one Oath of Action at a time."
+                   },
+                   {
+                       "name":  "Oath of Fealty",
+                       "rating":  "•",
+                       "desc":  "You can draw up to your Invictus Status in Vitae from your liege each week, without feeding from her. Your liege can tell when you lie to her. You can only swear an Oath of Fealty to one liege at a time."
+                   },
+                   {
+                       "name":  "Oath of Penance",
+                       "rating":  "•••",
+                       "desc":  "For the duration of the Oath, every tenth point of Vitae you ingest is mystically transmitted to your liege as Kindred Vitae, and you are denied the benefits of any other Invictus Oath. Your liege cannot use Disciplines against you."
+                   },
+                   {
+                       "name":  "Oath of Serfdom",
+                       "rating":  "••",
+                       "desc":  "Receive a feudal territory from your liege. While there, or when defending your liege, you gain a free dot of Celerity, Resilience or Vigor. You intuit when another predatory aura crosses into your land and from where. Your liege adds your dots in Feeding Ground as bonus dice against you, and ignores any blood bond you may impose."
+                   },
+                   {
+                       "name":  "Anointed",
+                       "rating":  "••",
+                       "desc":  "You\u0027re ordained. Once per session, you can roll Presence + Expression to preach the Raptured Condition."
+                   },
+                   {
+                       "name":  "Lorekeeper",
+                       "rating":  "•",
+                       "desc":  "Your lorehouse attracts occultists. Distribute your dots in the Library Merit among bonus dots in Retainer and Herd."
+                   },
+                   {
+                       "name":  "Secret Society Junkie",
+                       "rating":  "•",
+                       "desc":  "Dots in Status or Mystery Cult Initiation representing human secret societies also count as dots of Herd."
+                   },
+                   {
+                       "name":  "Sworn",
+                       "rating":  "•",
+                       "desc":  "Swear yourself to frequent duties either to the silencers of the Axe, learned of the Dying Light, or leaders of the Mysteries. Distribute your dots in Ordo Status among bonus dots of Mentor and Retainer."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Area of Expertise",
+                       "desc":  "Prerequisites: Resolve •• - Raise one Specialty\u0027s die bonus to +2."
+                   },
+                   {
+                       "rating":  "•••",
+                       "name":  "Common Sense",
+                       "desc":  "Once per chapter, roll Wits + Composure as an instant action to ask the Storyteller a question about risks and choices."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Danger Sense",
+                       "desc":  "+2 bonus to detect an ambush."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Direction Sense",
+                       "desc":  "Keep perfect track of your relative location and direction, and ignore penalties to navigate or find your way."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Eidetic Memory",
+                       "desc":  "Ignore rolls for recall or memory. +2 bonus to recall minute facts buried in other information."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Encyclopedic Knowledge",
+                       "desc":  "Roll Intelligence + Wits to recall useful trivia relating to a particular field or pursuit."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Eye for the Strange",
+                       "desc":  "Prerequisites: Resolve ••, Occult • - Roll Intelligence + Composure to identify evidence of supernatural involvement."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Fast Reflexes",
+                       "desc":  "Prerequisites: Wits \u0027\u0027or\u0027\u0027 Dexterity ••• - Add Fast Reflexes dots to Initiative."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Good Time Management",
+                       "desc":  "Prerequisites: Academics \u0027\u0027or\u0027\u0027 Science •• - Make extended action rolls in half the necessary time."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Holistic Awareness",
+                       "desc":  "Roll Wits + Survival to substitute woodland scavengings for equipment when treating patients with Medicine, unless the patient suffers non-bashing wound penalties."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Indomitable",
+                       "desc":  "Prerequisites: Resolve ••• - +2 to a contesting dice pool or resistance trait applied against supernatural mental influence."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Interdisciplinary Specialty",
+                       "desc":  "Prerequisites: Any Skill ••• - Choose a Specialty in the corresponding Skill. Apply the Specialty\u0027s bonus die to relevant rolls of any Skill, except unskilled rolls."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Investigative Aide",
+                       "desc":  "Prerequisites: Any Skill ••• - When you roll the selected Skill to uncover clues, achieve exceptional success with only three successes. Add a bonus element to any clues uncovered with this Skill."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Investigative Prodigy",
+                       "desc":  "Prerequisites: Wits •••, Investigation ••• - When you roll to uncover clues, you uncover a clue per success, capped by your dots in Investigative Prodigy. Clues from extra successes never have more than one element each."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Language",
+                       "desc":  "You can speak, read and write in a chosen language."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Library",
+                       "desc":  "You have a cache of information relating to a particular Skill. Add your dots in Library to relevant extended rolls."
+                   },
+                   {
+                       "rating":  "•, ••, or ••••",
+                       "name":  "Meditative Mind",
+                       "desc":  "Ignore environmental and wound penalties on meditation rolls. With two dots, meditation grants +3 to Resolve + Composure rolls for the remainder of the day. With four dots, meditation rolls only need to accumulate one success."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Multilingual",
+                       "desc":  "You can speak conversationally in two chosen languages. Roll Intelligence + Academics for reading comprehension."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Patient",
+                       "desc":  "Add +2 to your maximum number of allowed rolls on extended actions."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Tolerance for Biology",
+                       "desc":  "Prerequisites: Resolve ••• - Ignore Resistance rolls from witnessing biological grotesquerie."
+                   },
+                   {
+                       "rating":  "• or •••",
+                       "name":  "Trained Observer",
+                       "desc":  "Prerequisites: Wits \u0027\u0027or\u0027\u0027 Composure ••• - Take 9-Again, or 8-Again with three dots, on Perception rolls."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Vice-Ridden",
+                       "desc":  "Prerequisites: Vice - Take a second Vice."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Virtuous",
+                       "desc":  "Prerequisites: Virtue - Take a second Virtue."
+                   },
+                   {
+                       "rating":  "•••",
+                       "name":  "Ambidextrous",
+                       "desc":  "Ignore offhand penalties. Character creation only."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Automotive Genius",
+                       "desc":  "Prerequisites: Crafts •••, Drive •, Science • - Raise maximum modifications to a vehicle to thrice Crafts rating, plus number of relevant Crafts Specialties."
+                   },
+                   {
+                       "rating":  "•• or •••",
+                       "name":  "Crack Driver",
+                       "desc":  "Prerequisites: Drive ••• - When not taking any non-Drive actions, add your Composure as a bonus to Drive rolls, and penalize attempts to disable your vehicle by your Composure. With three dots, you can take a reflexive Drive action once per turn."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Demolisher",
+                       "desc":  "Prerequisites: Strength \u0027\u0027or\u0027\u0027 Intelligence ••• - When breaking objects, ignore a point of Durability per dot of Demolisher."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Double Jointed",
+                       "desc":  "Prerequisites: Dexterity ••• - Dislodge joints at will. Escape from mundane bondage automatically. When grappled and not acting aggressively, penalize your attacker\u0027s overpowering rolls by your Dexterity."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Fleet of Foot",
+                       "desc":  "Prerequisites: Athletics •• - Add dots in Fleet of Foot to your Speed, and penalize pursuit rolls in a foot chase by your Fleet of Foot dots."
+                   },
+                   {
+                       "rating":  "•••",
+                       "name":  "Giant",
+                       "desc":  "+1 Size. Character creation only."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Greyhound",
+                       "desc":  "Prerequisites: Athletics •••, Wits •••, Stamina ••• - Succeed exceptionally on three successes in a chase action."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Hardy",
+                       "desc":  "Prerequisites: Stamina ••• - Add Hardy dots as a bonus to rolls against disease, poison, deprivation, suffocation and unconsciousness."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Iron Stamina",
+                       "desc":  "Prerequisites: Stamina \u0027\u0027or\u0027\u0027 Resolve ••• - Ignore penalties from fatigue or wounds up to your rating in Iron Stamina."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Quick Draw",
+                       "desc":  "Prerequisites: Wits ••• - Whenever your Defense is available, you can draw a weapon that falls under a chosen Weaponry or Firearms Specialty as a reflexive action."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Relentless",
+                       "desc":  "Prerequisites: Athletics ••, Stamina ••• - Add 2 to the successes needed against you in a chase."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Seizing the Edge",
+                       "desc":  "Prerequisites: Wits •••, Composure ••• - You get the Edge in the first turn of a chase, and if your opponent fails a roll as if being ambushed, you can calculate your target successes without their Speed or Initiative."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Sleight of Hand",
+                       "desc":  "Prerequisites: Larceny ••• - You can take a Larceny instant action reflexively once per turn, and victims of your Larceny can\u0027t notice your attempts if they aren\u0027t specifically looking for them."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Small-Framed",
+                       "desc":  "-1 Size. Take a +2 bonus to hide, go unnoticed, or otherwise benefit from your size. Character creation only."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Allies",
+                       "desc":  "You have influence and goodwill with a chosen group proportional to your dots in this Merit. Each session, you can call on your Allies for favors of a value rated 1 to 5 by the Storyteller, up to your rating in the Merit. Favors in excess require a roll of Manipulation + Persuasion + Allies."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Alternate Identity",
+                       "desc":  "You\u0027ve laid groundwork establishing a false identity: an informal history with one dot, a veneer of documentation with two, or an airtight paper trail with three. +1 to Subterfuge rolls to maintain the false identity, or +2 with three dots."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Anonymity",
+                       "desc":  "Prerequisites: \u0027\u0027No Fame\u0027\u0027 - Penalize attempts to find you by paper trail or living evidence by a die per Anonymity dot."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Barfly",
+                       "desc":  "Prerequisites: Socialize •• - You can get in anywhere socially. Penalize attempts to recognize you as out of place by your Socialize dots."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Closed Book",
+                       "desc":  "Prerequisites: Manipulation •••, Resolve ••• - Add dots in this Merit to your number of Doors, and as a die bonus to contest Social assessment actions."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Contacts",
+                       "desc":  "Choose a group or field for each dot of Contacts. You can roll Manipulation + (relevant Social Skill) to gather information or dirt from acquaintances in any of these groups or fields."
+                   },
+                   {
+                       "rating":  "• to •••",
+                       "name":  "Fame",
+                       "desc":  "Prerequisites: \u0027\u0027No Anonymity\u0027\u0027 - You\u0027re known for something, locally or selectively with one dot, broadly in an area with two dots, or universally with three. Add Fame dots as a die bonus to Social rolls targeting those impressed by your reputation, and to rolls by other characters to find or identify you."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Fixer",
+                       "desc":  "Prerequisites: Contacts ••, Wits ••• - Obtain services as if they were one Availability dot lower."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Hobbyist Clique",
+                       "desc":  "Prerequisites: Any Skill •• - So long as you keep up with your fellow hobbyists, their support provides 9-Again to roll your hobby Skill, and a +2 die bonus to extended actions using that Skill."
+                   },
+                   {
+                       "rating":  "•••",
+                       "name":  "Inspiring",
+                       "desc":  "Prerequisites: Presence ••• - Roll Presence + Expression to confer the Inspired Condition."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Iron Will",
+                       "desc":  "Prerequisites: Resolve •••• - When you spend Willpower to contest or resist Social influence, substitute your Resolve rating for the usual Willpower bonus. If the roll is contested, take 8-Again."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Mentor",
+                       "desc":  "You have a guide who expects something from you proportional to his or her influence, as measured by your dots in Mentor. Choose three traits out of the list of Skills plus the Resources Merit. Once per session, your Mentor can provide aid that falls within one of these traits, achieving automatic success."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Pusher",
+                       "desc":  "Prerequisites: Persuasion •• - When you use soft leverage, improve your impression as if you\u0027d also satisfied the mark\u0027s Vice."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Resources",
+                       "desc":  "You have disposable income proportional to your dots in this Merit. Once per session, you can securely procure an item or service with an Availability that doesn\u0027t exceed your Resources rating, including any reasonable number of items or services whose Availability is exceeded by your Resources by two dots. You can acquire an item or service with an Availability one point above your Resources rating at the cost of reducing your effective Resources by a dot for a month."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Retainer",
+                       "desc":  "You have a mook. Your underling\u0027s dice pool is twice their Retainer rating for actions within their purview, or equal to their Retainer rating for actions outside it."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Safe Place",
+                       "desc":  "You\u0027ve secured a place from intrusion. While there, add the Safe Place rating to your Initiative. Penalize rolls to break in by Safe Place. If you have Crafts dots, you can trap it, forcing intruders to roll Dexterity + Larceny - Safe Place to avoid lethal damage up to the Safe Place\u0027s rating. Multiple characters can contribute dots to a Safe Place and share the full resulting rating."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Small Unit Tactics",
+                       "desc":  "Prerequisites: Presence ••• - Once per scene when you coordinate allies, you can spend Willpower as an instant action to confer the die bonus to a number of allies up to your Presence rating."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Spin Doctor",
+                       "desc":  "Prerequisites: Manipulation •••, Subterfuge •• - Using Tainted Clues inflicts an additional -1 penalty instead of consuming any successes."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Staff",
+                       "desc":  "You have employees corresponding to one Skill per dot of Staff. They can achieve a single automatic success at relevant actions using one of those Skills."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Status",
+                       "desc":  "You have influence as part of a chosen group. You can draw on their facilities and resources, block the use of a relevant Social Merit lower than your Status rating once per session, and apply Status as a die bonus to Social rolls drawing on your influence."
+                   },
+                   {
+                       "rating":  "• to ••",
+                       "name":  "Striking Looks",
+                       "desc":  "Your appearance is noteworthy and memorable. Add Striking Looks as a die bonus to Social rolls that benefit from your appearance, and to rolls by other characters to notice or remember you."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Sympathetic",
+                       "desc":  "When you engage in Social Maneuvering, you can accept a Condition such as Leveraged or Swooning to immediately open two Doors."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Table Turner",
+                       "desc":  "Prerequisites: Composure •••, Manipulation •••, Wits ••• - When targeted by Social Maneuvering, you can spend Willpower to preemptively respond with a Social action of your own."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Takes One to Know One",
+                       "desc":  "Prerequisites: Vice - When you investigate an incident that resonates with your Vice, instead of suffering the normal -2 penalty, your roll gains +2 dice and 9-Again. Succeeding on the roll satisfies your Vice."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Taste",
+                       "desc":  "Prerequisites: Crafts •• - Choose a Specialty in Crafts or Expression. You can roll Wits + (Skill in question) to draw information about the nature of a work that falls within the chosen Specialty."
+                   },
+                   {
+                       "rating":  "•••",
+                       "name":  "True Friend",
+                       "desc":  "You have an unbreakable bond of friendship with a chosen character. Rolls to influence your friend to your detriment suffer a -5 penalty. Once per story, you can recover one Willpower through a meaningful interaction with your friend."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Untouchable",
+                       "desc":  "Prerequisites: Manipulation •••, Subterfuge •• - You\u0027re a smooth criminal. Rolls to investigate your deeds must achieve an exceptional success or else turn up Incomplete Clues."
+                   },
+                   {
+                       "rating":  "• to •••••",
+                       "name":  "Esoteric Armory",
+                       "desc":  "You\u0027ve collected enough esoterica to supply the banes of ephemeral entities with a Rank up to your rating in this Merit."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Cheap Shot",
+                       "desc":  "Prerequisites: Street Fighting •••, Subterfuge •• - During a fight, you can reflexively contest Dexterity + Subterfuge against Wits + Composure to deny an opponent Defense next turn through dirty tricks and distractions."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Choke Hold",
+                       "desc":  "Prerequisites: Brawl •• - After a successful Hold, add the Choke grapple maneuver: accumulates successes across multiple turns to knock unconscious for a few minutes."
+                   },
+                   {
+                       "rating":  "•",
+                       "name":  "Defensive Combat",
+                       "desc":  "Prerequisites: Brawl • or Weaponry • - You can substitute the chosen Skill for Athletics when calculating your Defense, as long as you\u0027re currently equipped to make attacks with that Skill."
+                   },
+                   {
+                       "rating":  "••",
+                       "name":  "Fighting Finesse",
+                       "desc":  "Prerequisites: Dexterity ••• - You can substitute Dexterity for Strength when making rolls with a chosen Brawl or Weaponry Specialty."
+                   },
+                   {
+                       "rating":  "•• or ••••",
+                       "name":  "Iron Skin",
+                       "desc":  "Prerequisites: Martial Arts \u0027\u0027or\u0027\u0027 Street Fighting ••, Stamina ••• - Confers half your Iron Skin dots in points of general Armor against bashing attacks. When hurt, you can spend Willpower to reduce half your Iron Skin dots in lethal damage to bashing."
+                   },
+                   {
+                       "rating":  "• or ••",
+                       "name":  "Shiv",
+                       "desc":  "Prerequisites: Street Fighting ••, Weaponry • - You can conceal a 0L brawling weapon with one dot, or 1L with two, on your person. Penalize rolls to detect it by your Weaponry."
+                   }
+               ]
+}
+
