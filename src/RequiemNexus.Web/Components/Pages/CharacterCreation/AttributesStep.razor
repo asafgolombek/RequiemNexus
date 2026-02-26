@@ -1,0 +1,125 @@
+@using RequiemNexus.Data.Models
+
+<div class="step-content">
+    <h3>Attributes</h3>
+    <p style="color: #a0a0a0; margin-bottom: 20px;">Prioritize your Mental, Physical, and Social attributes (5/4/3 points to distribute). Every attribute starts with 1 dot.</p>
+    
+    @if (!IsValid)
+    {
+        <div style="margin-bottom: 20px; padding: 10px; background-color: #330000; border-left: 3px solid #ff3333; color: white; font-size: 0.9em;">
+            Warning: You must distribute exactly 5, 4, and 3 points among the three categories. Current: Mental (@MentalPointsSpent), Physical (@PhysicalPointsSpent), Social (@SocialPointsSpent).
+        </div>
+    }
+
+    <div class="attributes-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <!-- Mental -->
+        <div class="attribute-category">
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Mental (@MentalPointsSpent points spent)</h4>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Intelligence</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Intelligence), -1)' disabled="@(Character.Intelligence <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Intelligence</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Intelligence), 1)' disabled="@(Character.Intelligence >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Wits</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Wits), -1)' disabled="@(Character.Wits <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Wits</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Wits), 1)' disabled="@(Character.Wits >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Resolve</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Resolve), -1)' disabled="@(Character.Resolve <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Resolve</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Resolve), 1)' disabled="@(Character.Resolve >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Physical -->
+        <div class="attribute-category">
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Physical (@PhysicalPointsSpent points spent)</h4>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Strength</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Strength), -1)' disabled="@(Character.Strength <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Strength</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Strength), 1)' disabled="@(Character.Strength >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Dexterity</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Dexterity), -1)' disabled="@(Character.Dexterity <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Dexterity</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Dexterity), 1)' disabled="@(Character.Dexterity >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Stamina</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Stamina), -1)' disabled="@(Character.Stamina <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Stamina</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Stamina), 1)' disabled="@(Character.Stamina >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social -->
+        <div class="attribute-category">
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Social (@SocialPointsSpent points spent)</h4>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Presence</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Presence), -1)' disabled="@(Character.Presence <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Presence</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Presence), 1)' disabled="@(Character.Presence >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Manipulation</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Manipulation), -1)' disabled="@(Character.Manipulation <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Manipulation</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Manipulation), 1)' disabled="@(Character.Manipulation >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span>Composure</span>
+                <div>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Composure), -1)' disabled="@(Character.Composure <= 1)">-</button>
+                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Composure</span>
+                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Composure), 1)' disabled="@(Character.Composure >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter] public int MentalPointsSpent { get; set; }
+    [Parameter] public int PhysicalPointsSpent { get; set; }
+    [Parameter] public int SocialPointsSpent { get; set; }
+    [Parameter] public int TotalAttributePointsSpent { get; set; }
+    [Parameter] public bool IsValid { get; set; }
+
+    [Parameter] public Action<string, int>? OnAdjustAttribute { get; set; }
+    [Parameter] public EventCallback OnStateChanged { get; set; }
+
+    private async Task AdjustAndNotify(string name, int change)
+    {
+        OnAdjustAttribute?.Invoke(name, change);
+        if (OnStateChanged.HasDelegate)
+        {
+            await OnStateChanged.InvokeAsync();
+        }
+    }
+}

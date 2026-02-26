@@ -1,0 +1,149 @@
+@using RequiemNexus.Data.Models
+
+<div class="step-content">
+    <h3>Merits & Disciplines</h3>
+    
+    @if (!IsValid)
+    {
+        <div style="margin-bottom: 20px; padding: 10px; background-color: #330000; border-left: 3px solid #ff3333; color: white; font-size: 0.9em;">
+            Warning: You must distribute exactly 7 Merit points and 3 Clan Discipline dots. 
+            Current: Merits (@MeritPointsSpent/7), Disciplines (@DisciplineDotsSpent/3).
+        </div>
+    }
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <!-- Merits -->
+        <div>
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Merits (@MeritPointsSpent / 7)</h4>
+            <p style="font-size: 0.8em; color: #a0a0a0;">Select merits and assign ratings.</p>
+            
+            <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                <select @bind="selectedMeritId" class="form-control" style="flex-grow: 1; padding: 5px; background-color: #1a1a1a; border: 1px solid #330000; color: white;">
+                    <option value="">-- Select Merit --</option>
+                    @foreach (var merit in AvailableMerits)
+                    {
+                        <option value="@merit.Id">@merit.Name (Valid Ratings: @merit.ValidRatings)</option>
+                    }
+                </select>
+                <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddMerit" disabled="@(selectedMeritId == null || MeritPointsSpent >= 7)">Add</button>
+            </div>
+
+            @foreach (var cm in Character.Merits.ToList())
+            {
+                var m = AvailableMerits.FirstOrDefault(x => x.Id == cm.MeritId);
+                if (m != null)
+                {
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background-color: #151515; padding: 5px 10px; border-radius: 4px;">
+                        <span>@m.Name @(m.RequiresSpecification ? $" ({cm.Specification})" : "")</span>
+                        <div>
+                            <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustMeritAndNotify(cm, -1)' disabled="@(cm.Rating <= 1)">-</button>
+                            <span style="display: inline-block; width: 15px; text-align: center;">@cm.Rating</span>
+                            <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustMeritAndNotify(cm, 1)' disabled="@(cm.Rating >= 5 || MeritPointsSpent >= 7)">+</button>
+                            <button class="nav-btn" style="padding: 0px 6px; margin-left: 10px; background-color: #550000;" @onclick='() => RemoveMeritAndNotify(cm)'>X</button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Disciplines -->
+        <div>
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Disciplines (@DisciplineDotsSpent / 3)</h4>
+            <p style="font-size: 0.8em; color: #a0a0a0;">Assign 3 dots to Clan Disciplines.</p>
+            
+            <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                <select @bind="selectedDisciplineId" class="form-control" style="flex-grow: 1; padding: 5px; background-color: #1a1a1a; border: 1px solid #330000; color: white;">
+                    <option value="">-- Select Discipline --</option>
+                    @foreach (var disc in AvailableDisciplines)
+                    {
+                        <option value="@disc.Id">@disc.Name</option>
+                    }
+                </select>
+                <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddDiscipline" disabled="@(selectedDisciplineId == null || DisciplineDotsSpent >= 3)">Add</button>
+            </div>
+
+            @foreach (var cd in Character.Disciplines.ToList())
+            {
+                var d = AvailableDisciplines.FirstOrDefault(x => x.Id == cd.DisciplineId);
+                if (d != null)
+                {
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background-color: #151515; padding: 5px 10px; border-radius: 4px;">
+                        <span>@d.Name</span>
+                        <div>
+                            <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustDisciplineAndNotify(cd, -1)' disabled="@(cd.Rating <= 1)">-</button>
+                            <span style="display: inline-block; width: 15px; text-align: center;">@cd.Rating</span>
+                            <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustDisciplineAndNotify(cd, 1)' disabled="@(cd.Rating >= 5 || DisciplineDotsSpent >= 3)">+</button>
+                            <button class="nav-btn" style="padding: 0px 6px; margin-left: 10px; background-color: #550000;" @onclick='() => RemoveDisciplineAndNotify(cd)'>X</button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Character Character { get; set; } = default!;
+    [Parameter] public List<Merit> AvailableMerits { get; set; } = new();
+    [Parameter] public List<Discipline> AvailableDisciplines { get; set; } = new();
+    [Parameter] public int MeritPointsSpent { get; set; }
+    [Parameter] public int DisciplineDotsSpent { get; set; }
+    [Parameter] public bool IsValid { get; set; }
+
+    [Parameter] public Action<int>? OnAddMerit { get; set; }
+    [Parameter] public Action<CharacterMerit, int>? OnAdjustMeritRating { get; set; }
+    [Parameter] public Action<CharacterMerit>? OnRemoveMerit { get; set; }
+
+    [Parameter] public Action<int>? OnAddDiscipline { get; set; }
+    [Parameter] public Action<CharacterDiscipline, int>? OnAdjustDisciplineDots { get; set; }
+    [Parameter] public Action<CharacterDiscipline>? OnRemoveDiscipline { get; set; }
+
+    [Parameter] public EventCallback OnStateChanged { get; set; }
+
+    private int? selectedMeritId;
+    private int? selectedDisciplineId;
+
+    private async Task AddMerit()
+    {
+        if (selectedMeritId.HasValue)
+        {
+            OnAddMerit?.Invoke(selectedMeritId.Value);
+            selectedMeritId = null;
+            if (OnStateChanged.HasDelegate) await OnStateChanged.InvokeAsync();
+        }
+    }
+
+    private async Task AdjustMeritAndNotify(CharacterMerit cm, int change)
+    {
+        OnAdjustMeritRating?.Invoke(cm, change);
+        if (OnStateChanged.HasDelegate) await OnStateChanged.InvokeAsync();
+    }
+
+    private async Task RemoveMeritAndNotify(CharacterMerit cm)
+    {
+        OnRemoveMerit?.Invoke(cm);
+        if (OnStateChanged.HasDelegate) await OnStateChanged.InvokeAsync();
+    }
+
+    private async Task AddDiscipline()
+    {
+        if (selectedDisciplineId.HasValue)
+        {
+            OnAddDiscipline?.Invoke(selectedDisciplineId.Value);
+            selectedDisciplineId = null;
+            if (OnStateChanged.HasDelegate) await OnStateChanged.InvokeAsync();
+        }
+    }
+
+    private async Task AdjustDisciplineAndNotify(CharacterDiscipline cd, int change)
+    {
+        OnAdjustDisciplineDots?.Invoke(cd, change);
+        if (OnStateChanged.HasDelegate) await OnStateChanged.InvokeAsync();
+    }
+
+    private async Task RemoveDisciplineAndNotify(CharacterDiscipline cd)
+    {
+        OnRemoveDiscipline?.Invoke(cd);
+        if (OnStateChanged.HasDelegate) await OnStateChanged.InvokeAsync();
+    }
+}

@@ -1,0 +1,51 @@
+@using RequiemNexus.Data.Models
+
+<div class="step-content">
+    <h3>Basic Information</h3>
+    <p style="color: #a0a0a0; margin-bottom: 20px;">Who were you before the embrace? What bloodline flows through your veins?</p>
+
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label for="name" style="display: block; margin-bottom: 8px; color: #e0e0e0;">Character Name</label>
+        <input id="name" type="text" @bind="Character.Name" @bind:after="NotifyStateChanged" class="form-control" style="width: 100%; padding: 10px; background-color: #1a1a1a; border: 1px solid #330000; color: white; border-radius: 4px;" placeholder="Enter name..." />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label for="clan" style="display: block; margin-bottom: 8px; color: #e0e0e0;">Clan</label>
+        <select id="clan" @bind="Character.ClanId" @bind:after="NotifyStateChanged" class="form-control" style="width: 100%; padding: 10px; background-color: #1a1a1a; border: 1px solid #330000; color: white; border-radius: 4px;">
+            <option value="">-- Select a Clan --</option>
+            @foreach (var clan in AvailableClans)
+            {
+                <option value="@clan.Id">@clan.Name</option>
+            }
+        </select>
+        @if (Character.ClanId.HasValue)
+        {
+            var selectedClan = AvailableClans.FirstOrDefault(c => c.Id == Character.ClanId);
+            if (selectedClan != null)
+            {
+                <div style="margin-top: 10px; padding: 10px; background-color: #150000; border-left: 3px solid #990000; font-size: 0.9em; color: #d0d0d0;">
+                    @selectedClan.Description
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public List<Clan> AvailableClans { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnStateChanged { get; set; }
+
+    private async Task NotifyStateChanged()
+    {
+        if (OnStateChanged.HasDelegate)
+        {
+            await OnStateChanged.InvokeAsync();
+        }
+    }
+}

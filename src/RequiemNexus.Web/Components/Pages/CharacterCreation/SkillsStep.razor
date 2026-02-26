@@ -1,0 +1,96 @@
+@using RequiemNexus.Data.Models
+
+<div class="step-content">
+    <h3>Skills</h3>
+    <p style="color: #a0a0a0; margin-bottom: 20px;">Prioritize your Mental, Physical, and Social skills (11/7/4 points to distribute). Every skill starts with 0 dots.</p>
+    
+    @if (!IsValid)
+    {
+        <div style="margin-bottom: 20px; padding: 10px; background-color: #330000; border-left: 3px solid #ff3333; color: white; font-size: 0.9em;">
+            Warning: You must distribute exactly 11, 7, and 4 points among the three categories. Current: Mental (@MentalSkillsSpent), Physical (@PhysicalSkillsSpent), Social (@SocialSkillsSpent).
+        </div>
+    }
+
+    <div class="attributes-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <!-- Mental Skills -->
+        <div class="attribute-category">
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Mental (@MentalSkillsSpent)</h4>
+            @foreach (var skill in new[] { "Academics", "Computer", "Crafts", "Investigation", "Medicine", "Occult", "Politics", "Science" })
+            {
+                <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                    <span style="font-size: 0.9em;">@skill</span>
+                    <div>
+                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(GetSkillValue(skill) <= 0)">-</button>
+                        <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
+                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || MentalSkillsSpent >= 11)">+</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Physical Skills -->
+        <div class="attribute-category">
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Physical (@PhysicalSkillsSpent)</h4>
+            @foreach (var skill in new[] { "Athletics", "Brawl", "Drive", "Firearms", "Larceny", "Stealth", "Survival", "Weaponry" })
+            {
+                <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                    <span style="font-size: 0.9em;">@skill</span>
+                    <div>
+                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(GetSkillValue(skill) <= 0)">-</button>
+                        <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
+                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || PhysicalSkillsSpent >= 11)">+</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Social Skills -->
+        <div class="attribute-category">
+            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Social (@SocialSkillsSpent)</h4>
+            @foreach (var skill in new[] { "AnimalKen", "Empathy", "Expression", "Intimidation", "Persuasion", "Socialize", "Streetwise", "Subterfuge" })
+            {
+                <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                    <span style="font-size: 0.9em;">@(skill == "AnimalKen" ? "Animal Ken" : skill)</span>
+                    <div>
+                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(GetSkillValue(skill) <= 0)">-</button>
+                        <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
+                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || SocialSkillsSpent >= 11)">+</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter] public int MentalSkillsSpent { get; set; }
+    [Parameter] public int PhysicalSkillsSpent { get; set; }
+    [Parameter] public int SocialSkillsSpent { get; set; }
+    [Parameter] public int TotalSkillPointsSpent { get; set; }
+    [Parameter] public bool IsValid { get; set; }
+
+    [Parameter] public Action<string, int>? OnAdjustSkill { get; set; }
+    [Parameter] public EventCallback OnStateChanged { get; set; }
+
+    private int GetSkillValue(string skillName)
+    {
+        var prop = typeof(Character).GetProperty(skillName);
+        if (prop != null)
+        {
+            return (int)(prop.GetValue(Character) ?? 0);
+        }
+        return 0;
+    }
+
+    private async Task AdjustAndNotify(string name, int change)
+    {
+        OnAdjustSkill?.Invoke(name, change);
+        if (OnStateChanged.HasDelegate)
+        {
+            await OnStateChanged.InvokeAsync();
+        }
+    }
+}
