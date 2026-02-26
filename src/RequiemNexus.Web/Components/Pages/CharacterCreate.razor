@@ -31,16 +31,16 @@
             <div class="progress-bar" style="display: flex; gap: 10px; margin-top: 15px;">
                 @for(int i = 1; i <= 5; i++)
                 {
-                    <div style="flex-grow: 1; height: 10px; background-color: @(currentStep >= i ? "#990000" : "#1a1a1a"); border-radius: 5px;"></div>
+                    <div style="flex-grow: 1; height: 10px; background-color: @((int)currentStep >= i ? "#990000" : "#1a1a1a"); border-radius: 5px;"></div>
                 }
             </div>
             <div class="step-text" style="color: #a0a0a0; margin-top: 10px; text-align: right;">
-                Step @currentStep of 5
+                Step @((int)currentStep) of 5
             </div>
         </div>
 
         <div class="wizard-body" style="background-color: #0f0f0f; border: 1px solid #330000; padding: 30px; border-radius: 8px;">
-            @if (currentStep == 1)
+            @if (currentStep == CreationStep.BasicInformation)
             {
                 <div class="step-content">
                     <h3>Basic Information</h3>
@@ -73,7 +73,7 @@
                     </div>
                 </div>
             }
-            else if (currentStep == 2)
+            else if (currentStep == CreationStep.Attributes)
             {
                 <div class="step-content">
                     <h3>Attributes</h3>
@@ -95,7 +95,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Intelligence), -1)" disabled="@(newCharacter.Intelligence <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Intelligence</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Intelligence), 1)" disabled="@(newCharacter.Intelligence >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Intelligence), 1)" disabled="@(newCharacter.Intelligence >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                             <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -103,7 +103,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Wits), -1)" disabled="@(newCharacter.Wits <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Wits</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Wits), 1)" disabled="@(newCharacter.Wits >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Wits), 1)" disabled="@(newCharacter.Wits >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                             <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -111,7 +111,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Resolve), -1)" disabled="@(newCharacter.Resolve <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Resolve</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Resolve), 1)" disabled="@(newCharacter.Resolve >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Resolve), 1)" disabled="@(newCharacter.Resolve >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Strength), -1)" disabled="@(newCharacter.Strength <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Strength</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Strength), 1)" disabled="@(newCharacter.Strength >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Strength), 1)" disabled="@(newCharacter.Strength >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                             <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -132,7 +132,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Dexterity), -1)" disabled="@(newCharacter.Dexterity <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Dexterity</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Dexterity), 1)" disabled="@(newCharacter.Dexterity >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Dexterity), 1)" disabled="@(newCharacter.Dexterity >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                             <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -140,7 +140,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Stamina), -1)" disabled="@(newCharacter.Stamina <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Stamina</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Stamina), 1)" disabled="@(newCharacter.Stamina >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Stamina), 1)" disabled="@(newCharacter.Stamina >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                         </div>
@@ -153,7 +153,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Presence), -1)" disabled="@(newCharacter.Presence <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Presence</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Presence), 1)" disabled="@(newCharacter.Presence >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Presence), 1)" disabled="@(newCharacter.Presence >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                             <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -161,7 +161,7 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Manipulation), -1)" disabled="@(newCharacter.Manipulation <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Manipulation</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Manipulation), 1)" disabled="@(newCharacter.Manipulation >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Manipulation), 1)" disabled="@(newCharacter.Manipulation >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                             <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -169,14 +169,14 @@
                                 <div>
                                     <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Composure), -1)" disabled="@(newCharacter.Composure <= 1)">-</button>
                                     <span style="display: inline-block; width: 20px; text-align: center;">@newCharacter.Composure</span>
-                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Composure), 1)" disabled="@(newCharacter.Composure >= 5)">+</button>
+                                    <button class="nav-btn" style="padding: 2px 8px;" @onclick="() => AdjustAttribute(nameof(Character.Composure), 1)" disabled="@(newCharacter.Composure >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             }
-            else if (currentStep == 3)
+            else if (currentStep == CreationStep.Skills)
             {
                 <div class="step-content">
                     <h3>Skills</h3>
@@ -200,7 +200,7 @@
                                     <div>
                                         <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, -1)" disabled="@(GetSkillValue(skill) <= 0)">-</button>
                                         <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
-                                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, 1)" disabled="@(GetSkillValue(skill) >= 5)">+</button>
+                                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, 1)" disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || MentalSkillsSpent >= 11)">+</button>
                                     </div>
                                 </div>
                             }
@@ -216,7 +216,7 @@
                                     <div>
                                         <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, -1)" disabled="@(GetSkillValue(skill) <= 0)">-</button>
                                         <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
-                                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, 1)" disabled="@(GetSkillValue(skill) >= 5)">+</button>
+                                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, 1)" disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || PhysicalSkillsSpent >= 11)">+</button>
                                     </div>
                                 </div>
                             }
@@ -232,7 +232,7 @@
                                     <div>
                                         <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, -1)" disabled="@(GetSkillValue(skill) <= 0)">-</button>
                                         <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
-                                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, 1)" disabled="@(GetSkillValue(skill) >= 5)">+</button>
+                                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick="() => AdjustSkill(skill, 1)" disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || SocialSkillsSpent >= 11)">+</button>
                                     </div>
                                 </div>
                             }
@@ -240,7 +240,7 @@
                     </div>
                 </div>
             }
-            else if (currentStep == 4)
+            else if (currentStep == CreationStep.MeritsAndDisciplines)
             {
                 <div class="step-content">
                     <h3>Merits & Disciplines</h3>
@@ -267,7 +267,7 @@
                                         <option value="@merit.Id">@merit.Name (Valid Ratings: @merit.ValidRatings)</option>
                                     }
                                 </select>
-                                <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddMerit" disabled="@(selectedMeritId == null)">Add</button>
+                                <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddMerit" disabled="@(selectedMeritId == null || MeritPointsSpent >= 7)">Add</button>
                             </div>
 
                             @foreach (var cm in newCharacter.Merits.ToList())
@@ -280,7 +280,7 @@
                                         <div>
                                             <button class="nav-btn" style="padding: 0px 6px;" @onclick="() => AdjustMeritRating(cm, -1)" disabled="@(cm.Rating <= 1)">-</button>
                                             <span style="display: inline-block; width: 15px; text-align: center;">@cm.Rating</span>
-                                            <button class="nav-btn" style="padding: 0px 6px;" @onclick="() => AdjustMeritRating(cm, 1)" disabled="@(cm.Rating >= 5)">+</button>
+                                            <button class="nav-btn" style="padding: 0px 6px;" @onclick="() => AdjustMeritRating(cm, 1)" disabled="@(cm.Rating >= 5 || MeritPointsSpent >= 7)">+</button>
                                             <button class="nav-btn" style="padding: 0px 6px; margin-left: 10px; background-color: #550000;" @onclick="() => RemoveMerit(cm)">X</button>
                                         </div>
                                     </div>
@@ -301,7 +301,7 @@
                                         <option value="@disc.Id">@disc.Name</option>
                                     }
                                 </select>
-                                <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddDiscipline" disabled="@(selectedDisciplineId == null)">Add</button>
+                                <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddDiscipline" disabled="@(selectedDisciplineId == null || DisciplineDotsSpent >= 3)">Add</button>
                             </div>
 
                             @foreach (var cd in newCharacter.Disciplines.ToList())
@@ -314,7 +314,7 @@
                                         <div>
                                             <button class="nav-btn" style="padding: 0px 6px;" @onclick="() => AdjustDisciplineDots(cd, -1)" disabled="@(cd.Rating <= 1)">-</button>
                                             <span style="display: inline-block; width: 15px; text-align: center;">@cd.Rating</span>
-                                            <button class="nav-btn" style="padding: 0px 6px;" @onclick="() => AdjustDisciplineDots(cd, 1)" disabled="@(cd.Rating >= 5)">+</button>
+                                            <button class="nav-btn" style="padding: 0px 6px;" @onclick="() => AdjustDisciplineDots(cd, 1)" disabled="@(cd.Rating >= 5 || DisciplineDotsSpent >= 3)">+</button>
                                             <button class="nav-btn" style="padding: 0px 6px; margin-left: 10px; background-color: #550000;" @onclick="() => RemoveDiscipline(cd)">X</button>
                                         </div>
                                     </div>
@@ -324,7 +324,7 @@
                     </div>
                 </div>
             }
-            else if (currentStep == 5)
+            else if (currentStep == CreationStep.ReviewAndEmbrace)
             {
                 <div class="step-content">
                     <h3>Review & Embrace</h3>
@@ -365,9 +365,9 @@
         </div>
 
         <div class="wizard-footer" style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <button class="nav-btn primary-btn" style="background-color: #333;" @onclick="PreviousStep" disabled="@(currentStep == 1)">Back</button>
+            <button class="nav-btn primary-btn" style="background-color: #333;" @onclick="PreviousStep" disabled="@(currentStep == CreationStep.BasicInformation)">Back</button>
             
-            @if (currentStep < 5)
+            @if (currentStep < CreationStep.ReviewAndEmbrace)
             {
                 <button class="nav-btn primary-btn" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">Next Step</button>
             }
@@ -380,7 +380,16 @@
 </div>
 
 @code {
-    private int currentStep = 1;
+    public enum CreationStep
+    {
+        BasicInformation = 1,
+        Attributes = 2,
+        Skills = 3,
+        MeritsAndDisciplines = 4,
+        ReviewAndEmbrace = 5
+    }
+
+    private CreationStep currentStep = CreationStep.BasicInformation;
     private Character newCharacter = new Character();
     private List<Clan> availableClans = new List<Clan>();
     private string? currentUserId;
@@ -390,15 +399,16 @@
     private List<Merit> availableMerits = new List<Merit>();
     private List<Discipline> availableDisciplines = new List<Discipline>();
 
-    // Computed points spent (Attributes start at 1, so dots spent is value - 1)
     private int MentalPointsSpent => (newCharacter.Intelligence - 1) + (newCharacter.Wits - 1) + (newCharacter.Resolve - 1);
     private int PhysicalPointsSpent => (newCharacter.Strength - 1) + (newCharacter.Dexterity - 1) + (newCharacter.Stamina - 1);
     private int SocialPointsSpent => (newCharacter.Presence - 1) + (newCharacter.Manipulation - 1) + (newCharacter.Composure - 1);
+    private int TotalAttributePointsSpent => MentalPointsSpent + PhysicalPointsSpent + SocialPointsSpent;
 
     // Computed points spent for Skills (Base 0)
     private int MentalSkillsSpent => newCharacter.Academics + newCharacter.Computer + newCharacter.Crafts + newCharacter.Investigation + newCharacter.Medicine + newCharacter.Occult + newCharacter.Politics + newCharacter.Science;
     private int PhysicalSkillsSpent => newCharacter.Athletics + newCharacter.Brawl + newCharacter.Drive + newCharacter.Firearms + newCharacter.Larceny + newCharacter.Stealth + newCharacter.Survival + newCharacter.Weaponry;
     private int SocialSkillsSpent => newCharacter.AnimalKen + newCharacter.Empathy + newCharacter.Expression + newCharacter.Intimidation + newCharacter.Persuasion + newCharacter.Socialize + newCharacter.Streetwise + newCharacter.Subterfuge;
+    private int TotalSkillPointsSpent => MentalSkillsSpent + PhysicalSkillsSpent + SocialSkillsSpent;
 
     // Computed points for Merits and Disciplines
     private int MeritPointsSpent => newCharacter.Merits.Sum(m => m.Rating);
@@ -505,12 +515,12 @@
 
     private void NextStep()
     {
-        if (currentStep < 5) currentStep++;
+        if (currentStep < CreationStep.ReviewAndEmbrace) currentStep++;
     }
 
     private void PreviousStep()
     {
-        if (currentStep > 1) currentStep--;
+        if (currentStep > CreationStep.BasicInformation) currentStep--;
     }
 
     private bool IsAttributeDistributionValid()
@@ -536,29 +546,38 @@
 
     private bool CanProceedToNextStep()
     {
-        if (currentStep == 1)
+        switch (currentStep)
         {
-            return !string.IsNullOrWhiteSpace(newCharacter.Name) && newCharacter.ClanId.HasValue;
+            case CreationStep.BasicInformation:
+                return !string.IsNullOrWhiteSpace(newCharacter.Name) && newCharacter.ClanId.HasValue;
+            case CreationStep.Attributes:
+                return IsAttributeDistributionValid();
+            case CreationStep.Skills:
+                return IsSkillDistributionValid();
+            case CreationStep.MeritsAndDisciplines:
+                return IsMeritDisciplineDistributionValid();
+            case CreationStep.ReviewAndEmbrace:
+            default:
+                return true;
         }
-        else if (currentStep == 2)
-        {
-            return IsAttributeDistributionValid();
-        }
-        else if (currentStep == 3)
-        {
-            return IsSkillDistributionValid();
-        }
-        else if (currentStep == 4)
-        {
-            return IsMeritDisciplineDistributionValid();
-        }
-        return true; 
     }
 
     private async Task SaveCharacter()
     {
         try
         {
+            // Calculate derived stats based on Vampire: The Requiem rules
+            newCharacter.MaxHealth = newCharacter.Size + newCharacter.Stamina;
+            newCharacter.CurrentHealth = newCharacter.MaxHealth;
+            
+            newCharacter.MaxWillpower = newCharacter.Resolve + newCharacter.Composure;
+            newCharacter.CurrentWillpower = newCharacter.MaxWillpower;
+            
+            // Assuming neonate starts with BP 1, which gives 10 Vitae max. Start with 10.
+            newCharacter.BloodPotency = 1;
+            newCharacter.MaxVitae = 10;
+            newCharacter.CurrentVitae = 10;
+
             DbContext.Characters.Add(newCharacter);
             await DbContext.SaveChangesAsync();
             NavigationManager.NavigateTo("/characters");

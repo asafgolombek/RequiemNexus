@@ -1,4 +1,5 @@
 @page "/characters"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using RequiemNexus.Data
 @using RequiemNexus.Data.Models
@@ -6,6 +7,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ApplicationDbContext DbContext
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
 
 <PageTitle>My Characters - Requiem Nexus</PageTitle>
 
@@ -61,7 +63,10 @@
                             Physical: @(character.Strength + character.Dexterity + character.Stamina) <br/>
                             Social: @(character.Presence + character.Manipulation + character.Composure)
                         </div>
-                        <a href="/character/@character.Id" class="primary-btn" style="margin-top: 15px; display: inline-block; text-decoration: none;">View Sheet</a>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <a href="/character/@character.Id" class="primary-btn" style="text-decoration: none;">View Sheet</a>
+                            <button @onclick="() => DeleteCharacter(character)" class="nav-btn" style="border-color: #ff4444; color: #ff4444;">Delete</button>
+                        </div>
                     </div>
                 }
             </div>
@@ -90,6 +95,21 @@
         {
             // Not authenticated or user ID not found
             characters = new List<Character>();
+        }
+    }
+
+    private async Task DeleteCharacter(Character character)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {character.Name}?");
+        if (confirmed)
+        {
+            var entity = await DbContext.Characters.FindAsync(character.Id);
+            if (entity != null)
+            {
+                DbContext.Characters.Remove(entity);
+                await DbContext.SaveChangesAsync();
+                characters?.Remove(character);
+            }
         }
     }
 }

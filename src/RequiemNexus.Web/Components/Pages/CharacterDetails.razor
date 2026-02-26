@@ -1,4 +1,5 @@
 @page "/character/{Id:int}"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using RequiemNexus.Data
 @using RequiemNexus.Data.Models
@@ -26,6 +27,20 @@ else
                     <span><strong>Concept:</strong> ???</span>
                     <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
                     <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
+                </div>
+                <div class="char-xp" style="margin-top: 15px; display: flex; gap: 20px; align-items: center;">
+                    <div style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
+                        <strong style="color: #990000; margin-right: 10px;">Beats</strong>
+                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveBeat" disabled="@(character.Beats <= 0)">-</button>
+                        <span style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.Beats</span>
+                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddBeat">+</button>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
+                        <strong style="color: #990000; margin-right: 10px;">Experiences</strong>
+                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveXP" disabled="@(character.ExperiencePoints <= 0)">-</button>
+                        <span style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.ExperiencePoints</span>
+                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddXP">+</button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -183,5 +198,46 @@ else
     {
         // TODO: Open Dice Roller with trait loaded
         Console.WriteLine($"Roll: {traitName}");
+    }
+
+    private async Task AddBeat()
+    {
+        if (character != null)
+        {
+            character.Beats++;
+            if (character.Beats >= 5)
+            {
+                character.Beats -= 5;
+                character.ExperiencePoints++;
+            }
+            await DbContext.SaveChangesAsync();
+        }
+    }
+
+    private async Task RemoveBeat()
+    {
+        if (character != null && character.Beats > 0)
+        {
+            character.Beats--;
+            await DbContext.SaveChangesAsync();
+        }
+    }
+
+    private async Task AddXP()
+    {
+        if (character != null)
+        {
+            character.ExperiencePoints++;
+            await DbContext.SaveChangesAsync();
+        }
+    }
+
+    private async Task RemoveXP()
+    {
+        if (character != null && character.ExperiencePoints > 0)
+        {
+            character.ExperiencePoints--;
+            await DbContext.SaveChangesAsync();
+        }
     }
 }

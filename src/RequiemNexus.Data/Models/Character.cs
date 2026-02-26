@@ -32,6 +32,7 @@ public class Character
     public int Humanity { get; set; } = 7;
     public int Size { get; set; } = 5;
     public int ExperiencePoints { get; set; } = 0;
+    public int Beats { get; set; } = 0;
 
     public int MaxHealth { get; set; }
     public int CurrentHealth { get; set; }
