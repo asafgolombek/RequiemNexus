@@ -1,0 +1,364 @@
+{
+  "merits": [
+    {
+      "name": "Area of Expertise",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Common Sense",
+      "rating": "\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Danger Sense",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Direction Sense",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Eidetic Memory",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Encyclopedic Knowledge",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Eye for the Strange",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Fast Reflexes",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Good Time Management",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Holistic Awareness",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Indomitable",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Interdisciplinary Specialty",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Investigative Aide",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Investigative Prodigy",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Language",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Library",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Meditative Mind",
+      "rating": "\u2022, \u2022\u2022, or \u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Multilingual",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Patient",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Tolerance for Biology",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Trained Observer",
+      "rating": "\u2022 or \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Vice-Ridden",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Virtuous",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Ambidextrous",
+      "rating": "\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Automotive Genius",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Crack Driver",
+      "rating": "\u2022\u2022 or \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Demolisher",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Double Jointed",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Fleet of Foot",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Giant",
+      "rating": "\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Greyhound",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Hardy",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Iron Stamina",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Quick Draw",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Relentless",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Seizing the Edge",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Sleight of Hand",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Small-Framed",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Allies",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Alternate Identity",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Anonymity",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Barfly",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Closed Book",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Contacts",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Fame",
+      "rating": "\u2022 to \u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Fixer",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Hobbyist Clique",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Inspiring",
+      "rating": "\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Iron Will",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Mentor",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Pusher",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Resources",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Retainer",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Safe Place",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Small Unit Tactics",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Spin Doctor",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Staff",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Status",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Striking Looks",
+      "rating": "\u2022 to \u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Sympathetic",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Table Turner",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Takes One to Know One",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Taste",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "True Friend",
+      "rating": "\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Untouchable",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Esoteric Armory",
+      "rating": "\u2022 to \u2022\u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Cheap Shot",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Choke Hold",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Defensive Combat",
+      "rating": "\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Fighting Finesse",
+      "rating": "\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Iron Skin",
+      "rating": "\u2022\u2022 or \u2022\u2022\u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    },
+    {
+      "name": "Shiv",
+      "rating": "\u2022 or \u2022\u2022",
+      "desc": "Universal Merit: Imported from CofD"
+    }
+  ]
+}

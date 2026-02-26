@@ -95,4 +95,5 @@ public class Character
     // --- Collections ---
     public virtual ICollection<CharacterMerit> Merits { get; set; } = new List<CharacterMerit>();
     public virtual ICollection<CharacterDiscipline> Disciplines { get; set; } = new List<CharacterDiscipline>();
+    public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
 }

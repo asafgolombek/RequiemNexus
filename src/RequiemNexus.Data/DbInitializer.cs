@@ -10,12 +10,11 @@ public static class DbInitializer
     {
         await context.Database.MigrateAsync();
 
-        if (await context.Clans.AnyAsync() || await context.Disciplines.AnyAsync() || await context.Merits.AnyAsync())
+        bool hasClansAndDisciplines = await context.Clans.AnyAsync() && await context.Disciplines.AnyAsync();
+        
+        if (!hasClansAndDisciplines)
         {
-            return; // DB has been seeded
-        }
-
-        // 1. Seed Clans
+            // 1. Seed Clans
         var clans = new List<Clan>
         {
             new() { Name = "Daeva", Description = "The succubi, masters of passion and manipulation." },
@@ -134,6 +133,8 @@ public static class DbInitializer
 
         await context.ClanDisciplines.AddRangeAsync(clanDisciplines);
 
+        }
+
         // 4. Load Merits from JSON
         var meritsJsonPath = @"c:\gitrepo\RequiemNexus\scraped_data.json";
         if (File.Exists(meritsJsonPath))
@@ -144,7 +145,9 @@ public static class DbInitializer
                 var doc = JsonDocument.Parse(json);
                 var meritsArray = doc.RootElement.GetProperty("merits");
 
-                var meritEntities = new List<Merit>();
+                var existingMerits = await context.Merits.Select(m => m.Name).ToListAsync();
+                var newMeritsCount = 0;
+
                 foreach (var meritNode in meritsArray.EnumerateArray())
                 {
                     var name = meritNode.TryGetProperty("name", out var node) ? node.GetString() : "Unknown Merit";
@@ -152,18 +155,29 @@ public static class DbInitializer
                     var desc = meritNode.TryGetProperty("desc", out var node3) ? node3.GetString() : "";
 
                     if (string.IsNullOrWhiteSpace(name)) continue;
+                    
+                    var truncatedName = name.Length > 100 ? name.Substring(0, 100) : name;
 
-                    meritEntities.Add(new Merit
+                    if (!existingMerits.Contains(truncatedName))
                     {
-                        Name = name.Length > 100 ? name.Substring(0, 100) : name,
-                        ValidRatings = rating ?? "•",
-                        Description = desc ?? "",
-                        RequiresSpecification = false,
-                        CanBePurchasedMultipleTimes = false
-                    });
+                        var newMerit = new Merit
+                        {
+                            Name = truncatedName,
+                            ValidRatings = rating ?? "•",
+                            Description = desc ?? "",
+                            RequiresSpecification = false,
+                            CanBePurchasedMultipleTimes = false
+                        };
+                        await context.Merits.AddAsync(newMerit);
+                        existingMerits.Add(truncatedName); // Add to local list to prevent duplicates from JSON
+                        newMeritsCount++;
+                    }
                 }
                 
-                await context.Merits.AddRangeAsync(meritEntities);
+                if (newMeritsCount > 0) 
+                {
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {

@@ -52,28 +52,31 @@ else
                 <div class="vitals-trackers">
                     <div class="tracker-item">
                         <span class="tracker-label">Health</span>
-                        <div class="tracker-boxes">
+                        <div class="tracker-boxes" style="cursor: pointer;">
                             @for(int i = 0; i < character.MaxHealth; i++)
                             {
-                                <div class="tracker-box @(i < character.CurrentHealth ? "filled" : "")"></div>
+                                int captureIndex = i;
+                                <div class="tracker-box @(i < character.CurrentHealth ? "filled" : "")" @onclick="() => ToggleHealth(captureIndex)"></div>
                             }
                         </div>
                     </div>
                     <div class="tracker-item">
                         <span class="tracker-label">Willpower</span>
-                        <div class="tracker-boxes">
+                        <div class="tracker-boxes" style="cursor: pointer;">
                             @for(int i = 0; i < character.MaxWillpower; i++)
                             {
-                                <div class="tracker-box @(i < character.CurrentWillpower ? "filled" : "")"></div>
+                                int captureIndex = i;
+                                <div class="tracker-box @(i < character.CurrentWillpower ? "filled" : "")" @onclick="() => ToggleWillpower(captureIndex)"></div>
                             }
                         </div>
                     </div>
                     <div class="tracker-item">
                         <span class="tracker-label">Vitae</span>
-                        <div class="tracker-boxes">
+                        <div class="tracker-boxes" style="cursor: pointer;">
                             @for(int i = 0; i < character.MaxVitae; i++)
                             {
-                                <div class="tracker-box @(i < character.CurrentVitae ? "filled dark" : "")"></div>
+                                int captureIndex = i;
+                                <div class="tracker-box @(i < character.CurrentVitae ? "filled dark" : "")" @onclick="() => ToggleVitae(captureIndex)"></div>
                             }
                         </div>
                     </div>
@@ -153,13 +156,67 @@ else
                     <DotScale @bind-Value="character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
                     
                     <h3 style="margin-top: 1rem;">Merits</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9em; font-style: italic;">Merit list component placeholder</p>
+                    <ul class="trait-list" style="list-style: none; padding: 0;">
+                        @foreach(var merit in character.Merits)
+                        {
+                            <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) ? "" : $"({merit.Specification})")</span>
+                                <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•', merit.Rating))</span>
+                            </li>
+                        }
+                    </ul>
                 </section>
                 <section class="cs-section cs-disciplines">
                     <h2>Disciplines</h2>
-                    <p style="color: var(--text-muted); font-size: 0.9em; font-style: italic;">Discipline list component placeholder</p>
+                    <ul class="trait-list" style="list-style: none; padding: 0;">
+                        @foreach(var disc in character.Disciplines)
+                        {
+                            <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>@disc.Discipline?.Name</span>
+                                <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•', disc.Rating))</span>
+                            </li>
+                        }
+                    </ul>
                 </section>
             </div>
+
+            <!-- EQUIPMENT -->
+            <section class="cs-section cs-equipment" style="margin-top: 2rem; grid-column: span 3;">
+                <h2>Equipment</h2>
+                
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+                    <select @bind="selectedEquipmentId" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px; flex-grow: 1;">
+                        <option value="0">-- Select Equipment --</option>
+                        @foreach(var eq in availableEquipment)
+                        {
+                            <option value="@eq.Id">@eq.Name (@eq.Type.Trim())</option>
+                        }
+                    </select>
+                    <input type="number" min="1" @bind="selectedEquipmentQuantity" style="width: 60px; background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px;" />
+                    <button class="nav-btn" @onclick="AddEquipment" style="padding: 5px 15px;">Add</button>
+                </div>
+
+                <ul class="trait-list" style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
+                    @foreach(var ce in character.CharacterEquipments)
+                    {
+                        <li style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #2a0000; border-radius: 4px;">
+                            <div>
+                                <strong style="color: #c9a997;">@ce.Equipment?.Name (x@ce.Quantity)</strong>
+                                <div style="font-size: 0.85em; color: #a08070;">
+                                    <span>Type: @ce.Equipment?.Type</span>
+                                    @if(ce.Equipment?.Damage > 0) { <span style="margin-left:5px;">| Dmg: @ce.Equipment?.Damage</span> }
+                                    @if(ce.Equipment?.ArmorRating > 0) { <span style="margin-left:5px;">| Arm: @ce.Equipment?.ArmorRating</span> }
+                                </div>
+                                @if(!string.IsNullOrEmpty(ce.Equipment?.Description))
+                                {
+                                    <p style="font-size: 0.8em; margin: 5px 0 0 0; color: #888;">@ce.Equipment?.Description</p>
+                                }
+                            </div>
+                            <button class="nav-btn" @onclick="() => RemoveEquipment(ce.Id)" style="padding: 2px 8px; font-size: 0.8em; border-color: #500; color: #d55; background: transparent; cursor: pointer;">Del</button>
+                        </li>
+                    }
+                </ul>
+            </section>
             
         </div>
     </div>
@@ -170,6 +227,9 @@ else
     public int Id { get; set; }
 
     private Character? character;
+    private List<Equipment> availableEquipment = new List<Equipment>();
+    private int selectedEquipmentId = 0;
+    private int selectedEquipmentQuantity = 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,10 +241,12 @@ else
             character = await DbContext.Characters
                 .Include(c => c.Clan)
                 .Include(c => c.Campaign)
+                .Include(c => c.Merits).ThenInclude(m => m.Merit)
+                .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
+                .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
                 .FirstOrDefaultAsync(c => c.Id == Id && c.ApplicationUserId == currentUserId);
                 
-            // For now we don't handle saving back yet. 
-            // In a real app we'd bind to a separate View-Model or call DbContext.SaveChangesAsync() on value changes.
+            availableEquipment = await DbContext.Equipment.OrderBy(e => e.Name).ToListAsync();
         }
     }
 
@@ -238,6 +300,66 @@ else
         {
             character.ExperiencePoints--;
             await DbContext.SaveChangesAsync();
+        }
+    }
+
+    private async Task ToggleHealth(int index)
+    {
+        if (character == null) return;
+        if (index == character.CurrentHealth - 1) character.CurrentHealth--;
+        else character.CurrentHealth = index + 1;
+        await DbContext.SaveChangesAsync();
+    }
+
+    private async Task ToggleWillpower(int index)
+    {
+        if (character == null) return;
+        if (index == character.CurrentWillpower - 1) character.CurrentWillpower--;
+        else character.CurrentWillpower = index + 1;
+        await DbContext.SaveChangesAsync();
+    }
+
+    private async Task ToggleVitae(int index)
+    {
+        if (character == null) return;
+        if (index == character.CurrentVitae - 1) character.CurrentVitae--;
+        else character.CurrentVitae = index + 1;
+        await DbContext.SaveChangesAsync();
+    }
+
+    private async Task AddEquipment()
+    {
+        if (character != null && selectedEquipmentId > 0 && selectedEquipmentQuantity > 0)
+        {
+            var ce = new CharacterEquipment
+            {
+                CharacterId = character.Id,
+                EquipmentId = selectedEquipmentId,
+                Quantity = selectedEquipmentQuantity
+            };
+            DbContext.CharacterEquipments.Add(ce);
+            await DbContext.SaveChangesAsync();
+
+            // Refresh character equipment
+            ce.Equipment = availableEquipment.FirstOrDefault(e => e.Id == selectedEquipmentId);
+            character.CharacterEquipments.Add(ce);
+
+            selectedEquipmentId = 0;
+            selectedEquipmentQuantity = 1;
+        }
+    }
+
+    private async Task RemoveEquipment(int ceId)
+    {
+        if (character != null)
+        {
+            var ce = character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
+            if (ce != null)
+            {
+                DbContext.CharacterEquipments.Remove(ce);
+                await DbContext.SaveChangesAsync();
+                character.CharacterEquipments.Remove(ce);
+            }
         }
     }
 }

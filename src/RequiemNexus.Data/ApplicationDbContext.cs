@@ -16,6 +16,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<DisciplinePower> DisciplinePowers { get; set; } = default!;
     public DbSet<Merit> Merits { get; set; } = default!;
     public DbSet<ClanDiscipline> ClanDisciplines { get; set; } = default!;
+    public DbSet<Equipment> Equipment { get; set; } = default!;
+    public DbSet<CharacterEquipment> CharacterEquipments { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -74,6 +76,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(cd => cd.Discipline)
             .WithMany()
             .HasForeignKey(cd => cd.DisciplineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Character >- CharacterEquipment configuration
+        builder.Entity<CharacterEquipment>()
+            .HasOne(ce => ce.Character)
+            .WithMany(c => c.CharacterEquipments)
+            .HasForeignKey(ce => ce.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
