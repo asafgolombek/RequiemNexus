@@ -5,7 +5,9 @@
 @using RequiemNexus.Data.Models
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ApplicationDbContext DbContext
+@using RequiemNexus.Web.Services
+@using RequiemNexus.Web.Contracts
+@inject ICharacterService CharacterService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
 
@@ -85,11 +87,7 @@
 
         if (!string.IsNullOrEmpty(currentUserId))
         {
-            characters = await DbContext.Characters
-                .Include(c => c.Clan)
-                .Where(c => c.ApplicationUserId == currentUserId)
-                .AsNoTracking()
-                .ToListAsync();
+            characters = await CharacterService.GetCharactersByUserIdAsync(currentUserId);
         }
         else
         {
@@ -103,13 +101,8 @@
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {character.Name}?");
         if (confirmed)
         {
-            var entity = await DbContext.Characters.FindAsync(character.Id);
-            if (entity != null)
-            {
-                DbContext.Characters.Remove(entity);
-                await DbContext.SaveChangesAsync();
-                characters?.Remove(character);
-            }
+            await CharacterService.DeleteCharacterAsync(character.Id);
+            characters?.Remove(character);
         }
     }
 }

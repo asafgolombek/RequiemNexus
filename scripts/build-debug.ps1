@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $RootDir = Split-Path -Parent -Path $ScriptRoot
-$SlnPath = Join-Path -Path $RootDir -ChildPath "RequiemNexus.slnx"
+$SlnPath = Join-Path -Path $RootDir -ChildPath "src\RequiemNexus.slnx"
 $WebProjPath = Join-Path -Path $RootDir -ChildPath "src\RequiemNexus.Web\RequiemNexus.Web.csproj"
 
 Write-Host "========================================" -ForegroundColor Cyan

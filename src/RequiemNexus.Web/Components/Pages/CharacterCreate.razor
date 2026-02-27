@@ -6,7 +6,12 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.Pages.CharacterCreation
-@inject ApplicationDbContext DbContext
+@using RequiemNexus.Web.Services
+@using RequiemNexus.Web.Contracts
+@inject ICharacterService CharacterService
+@inject IClanService ClanService
+@inject IMeritService MeritService
+@inject IDisciplineService DisciplineService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -158,9 +163,9 @@
         }
 
         newCharacter.ApplicationUserId = currentUserId;
-        availableClans = await DbContext.Clans.OrderBy(c => c.Name).ToListAsync();
-        availableMerits = await DbContext.Merits.OrderBy(m => m.Name).ToListAsync();
-        availableDisciplines = await DbContext.Disciplines.OrderBy(d => d.Name).ToListAsync();
+        availableClans = await ClanService.GetAllClansAsync();
+        availableMerits = await MeritService.GetAllMeritsAsync();
+        availableDisciplines = await DisciplineService.GetAllDisciplinesAsync();
     }
 
     private void AdjustAttribute(string attributeName, int change)
@@ -286,20 +291,7 @@
     {
         try
         {
-            // Calculate derived stats based on Vampire: The Requiem rules
-            newCharacter.MaxHealth = newCharacter.Size + newCharacter.Stamina;
-            newCharacter.CurrentHealth = newCharacter.MaxHealth;
-            
-            newCharacter.MaxWillpower = newCharacter.Resolve + newCharacter.Composure;
-            newCharacter.CurrentWillpower = newCharacter.MaxWillpower;
-            
-            // Assuming neonate starts with BP 1, which gives 10 Vitae max. Start with 10.
-            newCharacter.BloodPotency = 1;
-            newCharacter.MaxVitae = 10;
-            newCharacter.CurrentVitae = 10;
-
-            DbContext.Characters.Add(newCharacter);
-            await DbContext.SaveChangesAsync();
+            await CharacterService.EmbraceCharacterAsync(newCharacter);
             NavigationManager.NavigateTo("/characters");
         }
         catch (Exception ex)

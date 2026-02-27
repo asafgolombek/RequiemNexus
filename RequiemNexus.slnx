@@ -1,6 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/RequiemNexus.Data/RequiemNexus.Data.csproj" />
-    <Project Path="src/RequiemNexus.Web/RequiemNexus.Web.csproj" />
-  </Folder>
-</Solution>

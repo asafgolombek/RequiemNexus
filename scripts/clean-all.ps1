@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $RootDir = Split-Path -Parent -Path $ScriptRoot
-$SlnPath = Join-Path -Path $RootDir -ChildPath "RequiemNexus.slnx"
+$SlnPath = Join-Path -Path $RootDir -ChildPath "src\RequiemNexus.slnx"
 
 Write-Host "========================================" -ForegroundColor Yellow
 Write-Host "Cleaning Requiem Nexus Build Products" -ForegroundColor Yellow

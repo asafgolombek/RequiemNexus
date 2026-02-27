@@ -24,6 +24,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Application Services
+builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, RequiemNexus.Web.Services.CharacterService>();
+builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus.Web.Services.ClanService>();
+builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();
+builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(options =>
     {
