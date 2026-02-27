@@ -43,17 +43,19 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
 
     public async Task<Character> EmbraceCharacterAsync(Character newCharacter)
     {
-        // Calculate derived stats based on Vampire: The Requiem rules - SRP logic correctly placed inside the business layer.
-        newCharacter.MaxHealth = newCharacter.Size + newCharacter.Stamina;
-        newCharacter.CurrentHealth = newCharacter.MaxHealth;
+        // Delegate derived stat calculations to the pure Domain layer
+        var (maxHealth, currentHealth) = RequiemNexus.Domain.CharacterCreationRules.CalculateInitialHealth(newCharacter.Size, newCharacter.Stamina);
+        newCharacter.MaxHealth = maxHealth;
+        newCharacter.CurrentHealth = currentHealth;
         
-        newCharacter.MaxWillpower = newCharacter.Resolve + newCharacter.Composure;
-        newCharacter.CurrentWillpower = newCharacter.MaxWillpower;
+        var (maxWillpower, currentWillpower) = RequiemNexus.Domain.CharacterCreationRules.CalculateInitialWillpower(newCharacter.Resolve, newCharacter.Composure);
+        newCharacter.MaxWillpower = maxWillpower;
+        newCharacter.CurrentWillpower = currentWillpower;
         
-        // Assuming neonate starts with BP 1, which gives 10 Vitae max. Start with 10.
-        newCharacter.BloodPotency = 1;
-        newCharacter.MaxVitae = 10;
-        newCharacter.CurrentVitae = 10;
+        var (bp, maxVitae, currentVitae) = RequiemNexus.Domain.CharacterCreationRules.CalculateInitialBloodPotencyAndVitae();
+        newCharacter.BloodPotency = bp;
+        newCharacter.MaxVitae = maxVitae;
+        newCharacter.CurrentVitae = currentVitae;
 
         _dbContext.Characters.Add(newCharacter);
         await _dbContext.SaveChangesAsync();

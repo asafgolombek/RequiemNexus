@@ -2,50 +2,135 @@
 
 ## 🌌 The Mission
 
-To build the definitive, high-performance digital ecosystem for **Vampire: The Requiem (Chronicles of Darkness) second edition**.
+To build the definitive, high-performance digital ecosystem for **Vampire: The Requiem (Chronicles of Darkness) Second Edition**.
 
-**Requiem Nexus** is a learning-driven, cloud-ready platform designed to eliminate the friction of character and campaign management. By leveraging the reactive power of **.NET 10** and the **Antigravity philosophy**, we provide a "Beyond"-style experience that is fast, secure, and infinitely scalable.
+**Requiem Nexus** is a learning-driven, cloud-ready platform designed to eliminate the friction of character and campaign management. By leveraging the reactive power of **.NET 10** and the **Antigravity Philosophy**, we deliver a Beyond-style experience that is fast, secure, observable, and infinitely scalable.
+
+> _The blood is the life… but clarity is the power._
 
 ---
 
 ## 📚 1. Educational Core (The Grimoire)
 
-Every architectural choice is a learning milestone. We prioritize "Understanding over Magic."
+Every architectural choice is a learning milestone.  
+We prioritize **Understanding over Magic**.
 
-- **Reactive Patterns:** Master how real-time state changes are handled without page refreshes using C# state management.
-- **ORM Mastery:** Use **EF Core** to understand relational mapping, migrations, and high-performance querying transitioning from SQLite to PostgreSQL.
-- **Identity & Security:** Deep dive into **ASP.NET Core Identity** to learn JWTs, Claims-based authorization, and data privacy at an enterprise level.
+### Core Learning Goals
+
+- **Reactive Patterns**  
+  Master real-time state changes without page refreshes using explicit C# state management.
+
+- **ORM Mastery**  
+  Use **EF Core** to understand relational mapping, migrations, performance tuning, and the transition from SQLite to PostgreSQL.
+
+- **Identity & Security**  
+  Deep dive into **ASP.NET Core Identity**, JWTs, Claims-based authorization, and enterprise-grade data privacy.
+
+### Learning Artifacts (Mandatory)
+
+Every major subsystem must include:
+
+- A `README.md` explaining **why** it exists
+- One intentionally **simple** example
+- One intentionally **wrong** example, with explanation
+
+If it cannot be taught, it is not finished.
 
 ---
 
 ## ☁️ 2. Cloud-Native & Deployment (The Global Nexus)
 
-The app is built to be "Cloud-Agnostic" for easy deployment to **Azure**, **AWS**, or **Railway**.
+The application is **cloud-agnostic** by design and deployable to Azure, AWS, Railway, or equivalent platforms.
 
-- **Containerization:** All services are containerized using **Docker** to ensure environment parity between local development and the cloud.
-- **Modular Monolith:** Logic is partitioned into domain-specific projects (`Data`, `Web`, `Roll`) to allow for future Microservice extraction.
-- **Service Orchestration:** Utilize **.NET Aspire** to manage local resources and service discovery, making cloud transitions seamless.
-- **Stateless Scaling:** The rules engine is kept stateless; sessions and character state use distributed caching (Redis) for horizontal scaling.
+### Architectural Principles
+
+- **Containerization**  
+  All services are containerized using Docker to ensure environment parity.
+
+- **Modular Monolith**  
+  Logic is partitioned into domain-specific projects (`Data`, `Web`, `Roll`) to allow future microservice extraction.
+
+- **Service Orchestration**  
+  **.NET Aspire** manages local resources, service discovery, and configuration.
+
+- **Stateless Scaling**  
+  The rules engine is stateless. Sessions and character state are stored via distributed caching (Redis).
+
+### Domain Boundaries (Non-Negotiable)
+
+Each domain owns:
+
+- Its persistence models
+- Its validation rules
+- Its invariants
+
+Cross-domain access is forbidden except via explicit contracts.
+
+There is **no shared “Common” dumping ground**.
 
 ---
 
 ## 🎨 3. UI/UX: Intuitive Immersion (The Masquerade)
 
-TTRPG tools should vanish into the background during roleplay.
+TTRPG tools should disappear during play.
 
-- **Modern Gothic Aesthetic:** A bone-white and crimson interface optimized for dark-mode environments to reduce eye strain.
-- **The 3-Click Rule:** No core function (rolling dice, spending XP, checking a merit) should be more than three clicks away from the dashboard.
-- **Mobile-First Responsiveness:** Optimized for tablets and phones, allowing Storytellers to track initiative while players manage sheets on mobile.
-- **Tactile Feedback:** Use reactive components and subtle animations to make digital character growth feel as satisfying as marking a paper sheet.
+- **Modern Gothic Aesthetic**  
+  Bone-white and crimson UI optimized for dark mode.
+
+- **The 3-Click Rule**  
+  No core action should require more than three interactions.
+
+- **Mobile-First Responsiveness**  
+  Full functionality on phones and tablets.
+
+- **Tactile Feedback**  
+  Subtle animations and reactive components reinforce character growth.
+
+The UI must _feel alive_, but never distracting.
 
 ---
 
 ## 🛡️ 4. Security & Data Integrity
 
-- **Zero-Trust Identity:** Implement **OpenID Connect (OIDC)** with short-lived JWTs. Every internal service call requires identity verification.
-- **BOLA/IDOR Prevention:** Strict ownership checks ensure a user can only access a character if they are the owner or a designated Storyteller.
-- **Input Sanitization:** All inputs are validated via strict C# Type-checking and parameterized queries to prevent SQL Injection.
-- **Privacy:** Minimum Viable Data collection; all sensitive player and chronicle data is encrypted at rest.
+Security is intentional, explicit, and verifiable.
+
+- **Zero-Trust Identity**  
+  OpenID Connect (OIDC) with short-lived JWTs. All service calls are authenticated.
+
+- **BOLA / IDOR Prevention**  
+  Strict ownership checks for characters and chronicles.
+
+- **Input Sanitization**  
+  Strong typing and parameterized queries—no raw SQL.
+
+- **Privacy First**  
+  Minimum viable data collection. Sensitive data encrypted at rest.
+
+- **Threat Modeling (Lite)**  
+  Every exposed endpoint documents:
+  - Trust boundaries
+  - Expected attacker capabilities
+  - Failure impact
+
+---
+
+## 🧭 5. Observability & Diagnostics
+
+Nothing important happens silently.
+
+- **Structured Logging**  
+  Correlation-ID aware, machine-queryable logs.
+
+- **Metrics First**  
+  Dice rolls, XP spends, and state changes emit metrics.
+
+- **Reproducibility**  
+  Any bug must be reproducible via logged inputs.
+
+- **Player-Safe Errors**  
+  Friendly messages for users, rich diagnostics for developers.
+
+If a bug cannot be observed, it cannot be fixed.
 
 ---
 
@@ -53,43 +138,107 @@ TTRPG tools should vanish into the background during roleplay.
 
 ### 1. The Living Sheet
 
-- **Auto-Calculations:** Instant updates for Health, Willpower, Defense, and Speed using .NET 10 performance optimizations.
-- **Contextual Rolling:** Tap any Attribute or Skill to trigger the **Dice Nexus** with appropriate modifiers.
+- Automatic calculation of Health, Willpower, Defense, and Speed
+- Zero manual recalculation at any time
+- Tap-to-roll integration with the Dice Nexus
+
+---
 
 ### 2. Campaign Management (The Chronicle Nexus)
 
-- **Coterie Hub:** A centralized space for players to link characters to a shared Chronicle.
-- **Shared Lore:** Storytellers can manage "public knowledge" notes, NPCs, and location descriptions.
-- **XP Allocation:** Grant XP to the entire group or specific individuals directly from the dashboard.
+- Coterie Hub for shared chronicles
+- Public lore, NPCs, and locations
+- Group or individual XP allocation
+
+---
 
 ### 3. Storyteller Toolkit
 
-- **Initiative Tracker:** A real-time tracker handling the unique "Initiative Mod" mechanics of Chronicles of Darkness.
-- **ST Oversight:** Private "Glimpse" view to see player vitals at a glance without switching tabs.
-- **Encounter Manager:** Pre-build NPC stat-blocks for instant deployment during sessions.
+- Real-time Initiative Tracker (Initiative Mod mechanics)
+- Private “Glimpse” view of player vitals
+- Pre-built NPC stat-blocks for instant encounters
+
+---
 
 ### 4. The Dice Nexus
 
-- **High-Throughput:** A specialized rolling service supporting 10-again, 9-again, 8-again, and rote actions.
+- High-throughput dice rolling
+- Support for 10-again, 9-again, 8-again, and rote actions
+- **Deterministic Mode** via seeded rolls for:
+  - Debugging
+  - Probability teaching
+  - Session replay
 
 ---
 
 ## 🧪 DevOps & Automation
 
-- **Local-First Development:** Bootable via a single script (`scripts/build-debug.ps1`) to ensure environment parity.
-- **Database Governance:** Schema changes must be accompanied by a Migration and a corresponding update to the `DbInitializer`.
-- **CI/CD:** Automated builds verify every commit to the `src/` directory to ensure the build remains "Green".
+- **Local-First Development**  
+  One-command startup via `scripts/build-debug.ps1`.
+
+- **Database Governance**  
+  All schema changes require migrations and `DbInitializer` updates.
+
+- **CI/CD Discipline**  
+  Every commit to `src/` must keep the build green.
 
 ---
 
-## 📅 Phase 1: The Neonate
+## 📅 Phase 1: The Neonate (Player Focus)
 
-- [x] Initialize **.NET 10** modular project structure.
-- [x] Manifest local database schema via **EF Core Migrations**.
-- [ ] Implement `DbInitializer` for automatic Clan and Admin seeding.
-- [ ] Build the reactive `DotScale` component for Attributes and Skills.
-- [ ] Finalize the high-performance **Dice Nexus** service.
+- [x] Initialize .NET 10 modular project structure
+- [x] EF Core migrations and schema manifest
+- [x] Robust `DbInitializer` for game data
+- [x] Comprehensive Character Management
+- [ ] Reactive `DotScale` component
+- [ ] XP expenditure and advancement flows
+- [ ] Finalize Dice Nexus service
+
+### Phase 1 Exit Criteria
+
+- A Neonate character can be created, advanced, and rolled entirely on mobile
+- No manual stat recalculation exists
+- A new developer can run the project locally in under 10 minutes
 
 ---
 
-> _"The blood is the life... but the data is the legacy."_
+## 📅 Phase 2: Account Management
+
+- Password reset and change
+- Account deletion and data wipe
+- Two-Factor Authentication (2FA)
+- Email validation
+- Profile management
+- Session management
+- OAuth / Social logins
+- Audit logs
+- Role management (Player vs Storyteller)
+
+---
+
+## 📅 Phase 3: The Storyteller
+
+- Initiative Tracker
+- Encounter Manager
+- Campaign notes and shared lore
+- ST Glimpse view
+
+---
+
+## 🧠 Antigravity Rules of Thumb
+
+1. **If it’s implicit, it’s a bug waiting to happen**
+2. **State must be visible or eliminable**
+3. **Magic is debt**
+4. **Traceability beats cleverness**
+5. **One reason to change per module**
+6. **No silent failure—ever**
+7. **Teach the system by reading the code**
+8. **If debugging is hard, the design is wrong**
+9. **Performance is a feature, not an optimization**
+10. **Every shortcut must be temporary—and documented**
+
+---
+
+> _The blood remembers.  
+> The code must too._

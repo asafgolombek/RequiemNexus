@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="RequiemNexus.Data/RequiemNexus.Data.csproj" />
+  <Project Path="RequiemNexus.Domain/RequiemNexus.Domain.csproj" />
   <Project Path="RequiemNexus.Web/RequiemNexus.Web.csproj" />
 </Solution>
