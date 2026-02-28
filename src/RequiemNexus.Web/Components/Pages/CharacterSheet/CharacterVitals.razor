@@ -1,0 +1,74 @@
+@using RequiemNexus.Data.Models
+
+<section class="cs-section cs-vitals">
+    <h2>Vitals</h2>
+    <div class="vitals-trackers">
+        <div class="tracker-item">
+            <span class="tracker-label">Health</span>
+            <div class="tracker-boxes" style="cursor: pointer;">
+                @for(int i = 0; i < Character.MaxHealth; i++)
+                {
+                    int captureIndex = i;
+                    <div class="tracker-box @(i < Character.CurrentHealth ? "filled" : "")" @onclick="() => ToggleHealth(captureIndex)"></div>
+                }
+            </div>
+        </div>
+        <div class="tracker-item">
+            <span class="tracker-label">Willpower</span>
+            <div class="tracker-boxes" style="cursor: pointer;">
+                @for(int i = 0; i < Character.MaxWillpower; i++)
+                {
+                    int captureIndex = i;
+                    <div class="tracker-box @(i < Character.CurrentWillpower ? "filled" : "")" @onclick="() => ToggleWillpower(captureIndex)"></div>
+                }
+            </div>
+        </div>
+        <div class="tracker-item">
+            <span class="tracker-label">Vitae</span>
+            <div class="tracker-boxes" style="cursor: pointer;">
+                @for(int i = 0; i < Character.MaxVitae; i++)
+                {
+                    int captureIndex = i;
+                    <div class="tracker-box @(i < Character.CurrentVitae ? "filled dark" : "")" @onclick="() => ToggleVitae(captureIndex)"></div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private async Task ToggleHealth(int index)
+    {
+        if (index == Character.CurrentHealth - 1) Character.CurrentHealth--;
+        else Character.CurrentHealth = index + 1;
+        await NotifyChanged();
+    }
+
+    private async Task ToggleWillpower(int index)
+    {
+        if (index == Character.CurrentWillpower - 1) Character.CurrentWillpower--;
+        else Character.CurrentWillpower = index + 1;
+        await NotifyChanged();
+    }
+
+    private async Task ToggleVitae(int index)
+    {
+        if (index == Character.CurrentVitae - 1) Character.CurrentVitae--;
+        else Character.CurrentVitae = index + 1;
+        await NotifyChanged();
+    }
+
+    private async Task NotifyChanged()
+    {
+        if (OnChanged.HasDelegate)
+        {
+            await OnChanged.InvokeAsync();
+        }
+    }
+}

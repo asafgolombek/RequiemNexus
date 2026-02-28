@@ -29,6 +29,8 @@ builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, Requiem
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus.Web.Services.ClanService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
+builder.Services.AddScoped<RequiemNexus.Web.Services.AdvancementService>();
+builder.Services.AddScoped<RequiemNexus.Domain.Services.DiceService>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(options =>

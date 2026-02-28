@@ -6,8 +6,10 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Components.Pages.CharacterSheet
 @inject ApplicationDbContext DbContext
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RequiemNexus.Web.Services.AdvancementService AdvancementService
 
 <PageTitle>@(character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -24,7 +26,7 @@ else
             <div class="char-info">
                 <h1>@character.Name</h1>
                 <div class="char-meta">
-                    <span><strong>Concept:</strong> ???</span>
+                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" : character.Concept)</span>
                     <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
                     <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
                 </div>
@@ -41,47 +43,31 @@ else
                         <span style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.ExperiencePoints</span>
                         <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddXP">+</button>
                     </div>
+                    <div style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000; margin-left: auto;">
+                        <strong style="color: #990000;">Total XP: </strong>
+                        <span style="font-weight: bold; margin-left: 5px;">@character.TotalExperiencePoints</span>
+                    </div>
+
+                    <button class="nav-btn @(isAdvancementMode ? "active" : "")" style="padding: 5px 15px; border-color: @(isAdvancementMode ? "#a00" : "#300");" @onclick="ToggleAdvancementMode">
+                        @(isAdvancementMode ? "Exit Advancement" : "Enter Advancement")
+                    </button>
+                    <button class="nav-btn @(isFreeEditMode ? "active" : "")" style="padding: 5px 15px; border-color: @(isFreeEditMode ? "#a00" : "#300");" @onclick="ToggleFreeEditMode">
+                        @(isFreeEditMode ? "Exit Free Edit" : "Free Edit Mode")
+                    </button>
                 </div>
             </div>
         </header>
 
-        <div class="cs-grid">
+        <div class="tabs" style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <button class="nav-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character Sheet</button>
+            <button class="nav-btn @(activeTab == "identity" ? "active" : "")" @onclick='() => activeTab = "identity"'>Identity & Backstory</button>
+        </div>
+
+        @if (activeTab == "sheet")
+        {
+            <div class="cs-grid">
             <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
-            <section class="cs-section cs-vitals">
-                <h2>Vitals</h2>
-                <div class="vitals-trackers">
-                    <div class="tracker-item">
-                        <span class="tracker-label">Health</span>
-                        <div class="tracker-boxes" style="cursor: pointer;">
-                            @for(int i = 0; i < character.MaxHealth; i++)
-                            {
-                                int captureIndex = i;
-                                <div class="tracker-box @(i < character.CurrentHealth ? "filled" : "")" @onclick="() => ToggleHealth(captureIndex)"></div>
-                            }
-                        </div>
-                    </div>
-                    <div class="tracker-item">
-                        <span class="tracker-label">Willpower</span>
-                        <div class="tracker-boxes" style="cursor: pointer;">
-                            @for(int i = 0; i < character.MaxWillpower; i++)
-                            {
-                                int captureIndex = i;
-                                <div class="tracker-box @(i < character.CurrentWillpower ? "filled" : "")" @onclick="() => ToggleWillpower(captureIndex)"></div>
-                            }
-                        </div>
-                    </div>
-                    <div class="tracker-item">
-                        <span class="tracker-label">Vitae</span>
-                        <div class="tracker-boxes" style="cursor: pointer;">
-                            @for(int i = 0; i < character.MaxVitae; i++)
-                            {
-                                int captureIndex = i;
-                                <div class="tracker-box @(i < character.CurrentVitae ? "filled dark" : "")" @onclick="() => ToggleVitae(captureIndex)"></div>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <CharacterVitals Character="character" OnChanged="SaveCharacter" />
 
             <!-- ATTRIBUTES -->
             <section class="cs-section cs-attributes">
@@ -218,8 +204,15 @@ else
                 </ul>
             </section>
             
-        </div>
+            </div>
+        }
+        else if (activeTab == "identity")
+        {
+            <CharacterIdentityTab Character="character" OnChanged="SaveCharacter" />
+        }
     </div>
+    
+    <DiceRollerModal @bind-IsVisible="isRollerOpen" TraitName="@rollerTraitName" BaseDice="@rollerBaseDice" />
 }
 
 @code {
@@ -230,6 +223,57 @@ else
     private List<Equipment> availableEquipment = new List<Equipment>();
     private int selectedEquipmentId = 0;
     private int selectedEquipmentQuantity = 1;
+
+    private bool isRollerOpen = false;
+    private string rollerTraitName = string.Empty;
+    private int rollerBaseDice = 1;
+
+    private bool isAdvancementMode = false;
+    private bool isFreeEditMode = false;
+    private string activeTab = "sheet";
+
+    private void ToggleAdvancementMode()
+    {
+        isAdvancementMode = !isAdvancementMode;
+        if (isAdvancementMode) isFreeEditMode = false;
+    }
+
+    private void ToggleFreeEditMode()
+    {
+        isFreeEditMode = !isFreeEditMode;
+        if (isFreeEditMode) isAdvancementMode = false;
+    }
+
+    private async Task SaveCharacter()
+    {
+        if (character != null)
+        {
+            await DbContext.SaveChangesAsync();
+        }
+    }
+
+    private async Task HandleTraitChange(string traitName, int currentRating, int newRating)
+    {
+        if (character == null) return;
+        
+        if (isAdvancementMode)
+        {
+            if (newRating > currentRating)
+            {
+                bool success = AdvancementService.TryUpgradeCoreTrait(character, traitName, currentRating, newRating);
+                if (success)
+                {
+                    await DbContext.SaveChangesAsync();
+                }
+            }
+        }
+        else if (isFreeEditMode)
+        {
+            // Free editing (for storyteller or initial setup)
+            AdvancementService.UpdateCoreTrait(character, traitName, newRating);
+            await DbContext.SaveChangesAsync();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -258,8 +302,53 @@ else
 
     private void OpenRoller(string traitName)
     {
-        // TODO: Open Dice Roller with trait loaded
-        Console.WriteLine($"Roll: {traitName}");
+        rollerTraitName = traitName;
+        rollerBaseDice = GetTraitValue(traitName);
+        isRollerOpen = true;
+    }
+
+    private int GetTraitValue(string traitName)
+    {
+        if (character == null) return 0;
+        return traitName switch
+        {
+            "Intelligence" => character.Intelligence,
+            "Wits" => character.Wits,
+            "Resolve" => character.Resolve,
+            "Strength" => character.Strength,
+            "Dexterity" => character.Dexterity,
+            "Stamina" => character.Stamina,
+            "Presence" => character.Presence,
+            "Manipulation" => character.Manipulation,
+            "Composure" => character.Composure,
+            "Academics" => character.Academics,
+            "Computer" => character.Computer,
+            "Crafts" => character.Crafts,
+            "Investigation" => character.Investigation,
+            "Medicine" => character.Medicine,
+            "Occult" => character.Occult,
+            "Politics" => character.Politics,
+            "Science" => character.Science,
+            "Athletics" => character.Athletics,
+            "Brawl" => character.Brawl,
+            "Drive" => character.Drive,
+            "Firearms" => character.Firearms,
+            "Larceny" => character.Larceny,
+            "Stealth" => character.Stealth,
+            "Survival" => character.Survival,
+            "Weaponry" => character.Weaponry,
+            "Animal Ken" => character.AnimalKen,
+            "Empathy" => character.Empathy,
+            "Expression" => character.Expression,
+            "Intimidation" => character.Intimidation,
+            "Persuasion" => character.Persuasion,
+            "Socialize" => character.Socialize,
+            "Streetwise" => character.Streetwise,
+            "Subterfuge" => character.Subterfuge,
+            "Blood Potency" => character.BloodPotency,
+            "Humanity" => character.Humanity,
+            _ => 0
+        };
     }
 
     private async Task AddBeat()
@@ -271,6 +360,7 @@ else
             {
                 character.Beats -= 5;
                 character.ExperiencePoints++;
+                character.TotalExperiencePoints++;
             }
             await DbContext.SaveChangesAsync();
         }
@@ -290,6 +380,7 @@ else
         if (character != null)
         {
             character.ExperiencePoints++;
+            character.TotalExperiencePoints++;
             await DbContext.SaveChangesAsync();
         }
     }
@@ -299,32 +390,9 @@ else
         if (character != null && character.ExperiencePoints > 0)
         {
             character.ExperiencePoints--;
+            character.TotalExperiencePoints--;
             await DbContext.SaveChangesAsync();
         }
-    }
-
-    private async Task ToggleHealth(int index)
-    {
-        if (character == null) return;
-        if (index == character.CurrentHealth - 1) character.CurrentHealth--;
-        else character.CurrentHealth = index + 1;
-        await DbContext.SaveChangesAsync();
-    }
-
-    private async Task ToggleWillpower(int index)
-    {
-        if (character == null) return;
-        if (index == character.CurrentWillpower - 1) character.CurrentWillpower--;
-        else character.CurrentWillpower = index + 1;
-        await DbContext.SaveChangesAsync();
-    }
-
-    private async Task ToggleVitae(int index)
-    {
-        if (character == null) return;
-        if (index == character.CurrentVitae - 1) character.CurrentVitae--;
-        else character.CurrentVitae = index + 1;
-        await DbContext.SaveChangesAsync();
     }
 
     private async Task AddEquipment()

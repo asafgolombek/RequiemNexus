@@ -1,0 +1,128 @@
+@using RequiemNexus.Domain.Services
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop" @onclick="Close">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>Roll: @TraitName</h3>
+                <button class="close-btn" @onclick="Close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Base Dice Pool (Trait Rating + Associated Trait)</label>
+                    <input type="number" @bind="BaseDice" min="1" class="form-control" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Modifiers (Bonus / Penalty)</label>
+                    <input type="number" @bind="Modifier" class="form-control" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Total Pool</label>
+                    <strong>@(BaseDice + Modifier <= 0 ? "Chance Die" : (BaseDice + Modifier).ToString())</strong>
+                </div>
+
+                <div class="options-group" style="margin-top: 15px;">
+                    <label><input type="checkbox" @bind="TenAgain" /> 10-Again</label>
+                    <label><input type="checkbox" @bind="NineAgain" /> 9-Again</label>
+                    <label><input type="checkbox" @bind="EightAgain" /> 8-Again</label>
+                    <label><input type="checkbox" @bind="IsRote" /> Rote Action</label>
+                </div>
+                
+                <div class="actions" style="margin-top: 20px;">
+                    <button class="btn btn-primary" @onclick="RollDice">Roll</button>
+                    @if (showTools)
+                    {
+                        <div class="debug-tools" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+                            <label>Seed (Deterministic Mode)</label>
+                            <input type="number" @bind="Seed" class="form-control" placeholder="Optional" />
+                        </div>
+                    }
+                    <button class="btn btn-secondary btn-sm" style="margin-top: 5px;" @onclick="() => showTools = !showTools">Toggle Debug Tools</button>
+                </div>
+                
+                @if (LastResult != null)
+                {
+                    <div class="result-box" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid #330000;">
+                        <h4>Result: @LastResult.Successes Successes</h4>
+                        @if (LastResult.IsExceptionalSuccess) { <span class="badge" style="color: #gold;">Exceptional Success!</span> }
+                        @if (LastResult.IsDramaticFailure) { <span class="badge" style="color: #red;">Dramatic Failure!</span> }
+                        
+                        <div class="dice-rolled" style="margin-top: 10px;">
+                            <p>Dice: @string.Join(", ", LastResult.DiceRolled)</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public string TraitName { get; set; } = string.Empty;
+    [Parameter] public int BaseDice { get; set; } = 1;
+    
+    [Inject] public DiceService DiceService { get; set; } = default!;
+
+    private int Modifier { get; set; } = 0;
+    private bool TenAgain { get; set; } = true;
+    private bool NineAgain { get; set; } = false;
+    private bool EightAgain { get; set; } = false;
+    private bool IsRote { get; set; } = false;
+    private int? Seed { get; set; } = null;
+    private RollResult? LastResult;
+    private bool showTools = false;
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        LastResult = null;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private void RollDice()
+    {
+        int pool = BaseDice + Modifier;
+        LastResult = DiceService.Roll(pool, TenAgain, NineAgain, EightAgain, IsRote, Seed);
+    }
+}
+
+<style>
+    .modal-backdrop {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.7);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background: #1a1a1a;
+        border: 1px solid #660000;
+        border-radius: 8px;
+        width: 100%; max-width: 400px;
+        padding: 20px;
+        color: #e0d0c0;
+        font-family: var(--font-primary, "Inter", sans-serif);
+    }
+    .modal-header {
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #330000; margin-bottom: 15px; padding-bottom: 10px;
+    }
+    .modal-header h3 { margin: 0; color: #8b0000; }
+    .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+    .close-btn:hover { color: #fff; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #aaa; }
+    .form-control { width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid #330000; color: #e0d0c0; border-radius: 4px; }
+    .options-group label { display: block; margin-bottom: 5px; font-size: 0.9em; cursor: pointer; }
+    .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+    .btn-primary { background: #660000; color: #fff; }
+    .btn-primary:hover { background: #8b0000; }
+    .btn-secondary { background: #333; color: #ccc; }
+    .btn-secondary:hover { background: #444; }
+</style>

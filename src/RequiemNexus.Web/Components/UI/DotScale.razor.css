@@ -46,6 +46,11 @@
   box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
 }
 
+.dot.hover-filled:not(.filled) {
+  background-color: rgba(139, 0, 0, 0.5);
+  border-color: var(--accent-color, #8b0000);
+}
+
 .dot:hover {
   transform: scale(1.2);
 }

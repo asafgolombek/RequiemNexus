@@ -17,6 +17,20 @@ public class Character
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+    
+    [MaxLength(100)]
+    public string Concept { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string Height { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string EyeColor { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string HairColor { get; set; } = string.Empty;
+
+    public string Backstory { get; set; } = string.Empty;
 
     public int? ClanId { get; set; }
 
@@ -32,6 +46,7 @@ public class Character
     public int Humanity { get; set; } = 7;
     public int Size { get; set; } = 5;
     public int ExperiencePoints { get; set; } = 0;
+    public int TotalExperiencePoints { get; set; } = 0;
     public int Beats { get; set; } = 0;
 
     public int MaxHealth { get; set; }
