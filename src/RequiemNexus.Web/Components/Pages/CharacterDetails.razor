@@ -26,32 +26,44 @@ else
             <div class="char-info">
                 <h1>@character.Name</h1>
                 <div class="char-meta">
-                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" : character.Concept)</span>
+                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" :
+                    character.Concept)</span>
                     <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
                     <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
                 </div>
                 <div class="char-xp" style="margin-top: 15px; display: flex; gap: 20px; align-items: center;">
-                    <div style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
+                    <div
+                        style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
                         <strong style="color: #990000; margin-right: 10px;">Beats</strong>
-                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveBeat" disabled="@(character.Beats <= 0)">-</button>
-                        <span style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.Beats</span>
+                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveBeat"
+                            disabled="@(character.Beats <= 0)">-</button>
+                        <span
+                            style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.Beats</span>
                         <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddBeat">+</button>
                     </div>
-                    <div style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
+                    <div
+                        style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
                         <strong style="color: #990000; margin-right: 10px;">Experiences</strong>
-                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveXP" disabled="@(character.ExperiencePoints <= 0)">-</button>
-                        <span style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.ExperiencePoints</span>
+                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveXP"
+                            disabled="@(character.ExperiencePoints <= 0)">-</button>
+                        <span
+                            style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.ExperiencePoints</span>
                         <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddXP">+</button>
                     </div>
-                    <div style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000; margin-left: auto;">
+                    <div
+                        style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000; margin-left: auto;">
                         <strong style="color: #990000;">Total XP: </strong>
                         <span style="font-weight: bold; margin-left: 5px;">@character.TotalExperiencePoints</span>
                     </div>
 
-                    <button class="nav-btn @(isAdvancementMode ? "active" : "")" style="padding: 5px 15px; border-color: @(isAdvancementMode ? "#a00" : "#300");" @onclick="ToggleAdvancementMode">
+                    <button class="nav-btn @(isAdvancementMode ? "active" : "")"
+                        style="padding: 5px 15px; border-color: @(isAdvancementMode ? "#a00" : "#300");"
+                    @onclick="ToggleAdvancementMode">
                         @(isAdvancementMode ? "Exit Advancement" : "Enter Advancement")
                     </button>
-                    <button class="nav-btn @(isFreeEditMode ? "active" : "")" style="padding: 5px 15px; border-color: @(isFreeEditMode ? "#a00" : "#300");" @onclick="ToggleFreeEditMode">
+                    <button class="nav-btn @(isFreeEditMode ? "active" : "")"
+                        style="padding: 5px 15px; border-color: @(isFreeEditMode ? "#a00" : "#300");"
+                    @onclick="ToggleFreeEditMode">
                         @(isFreeEditMode ? "Exit Free Edit" : "Free Edit Mode")
                     </button>
                 </div>
@@ -59,159 +71,214 @@ else
         </header>
 
         <div class="tabs" style="margin-bottom: 20px; display: flex; gap: 10px;">
-            <button class="nav-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character Sheet</button>
-            <button class="nav-btn @(activeTab == "identity" ? "active" : "")" @onclick='() => activeTab = "identity"'>Identity & Backstory</button>
+            <button class="nav-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character
+                Sheet</button>
+            <button class="nav-btn @(activeTab == "identity" ? "active" : "")"
+            @onclick='() => activeTab = "identity"'>Identity & Backstory</button>
         </div>
 
-        @if (activeTab == "sheet")
-        {
-            <div class="cs-grid">
-            <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
-            <CharacterVitals Character="character" OnChanged="SaveCharacter" />
+        <CascadingValue Value="@(isAdvancementMode || isFreeEditMode)" Name="IsEditable">
+            @if (activeTab == "sheet")
+            {
+                <div class="cs-grid">
+                    <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
+                    <CharacterVitals Character="character" OnChanged="SaveCharacter" />
 
-            <!-- ATTRIBUTES -->
-            <section class="cs-section cs-attributes">
-                <h2>Attributes</h2>
-                <div class="three-col-grid">
-                    <div class="stat-col mental">
-                        <h3>Mental</h3>
-                        <DotScale @bind-Value="character.Intelligence" Label="Intelligence" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Wits" Label="Wits" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Resolve" Label="Resolve" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    </div>
-                    <div class="stat-col physical">
-                        <h3>Physical</h3>
-                        <DotScale @bind-Value="character.Strength" Label="Strength" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Dexterity" Label="Dexterity" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Stamina" Label="Stamina" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    </div>
-                    <div class="stat-col social">
-                        <h3>Social</h3>
-                        <DotScale @bind-Value="character.Presence" Label="Presence" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Manipulation" Label="Manipulation" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Composure" Label="Composure" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    </div>
-                </div>
-            </section>
-
-            <!-- SKILLS -->
-            <section class="cs-section cs-skills">
-                <h2>Skills</h2>
-                <div class="three-col-grid">
-                    <div class="stat-col mental">
-                        <h3>Mental</h3>
-                        <DotScale @bind-Value="character.Academics" Label="Academics" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Computer" Label="Computer" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Crafts" Label="Crafts" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Investigation" Label="Investigation" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Medicine" Label="Medicine" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Occult" Label="Occult" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Politics" Label="Politics" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Science" Label="Science" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    </div>
-                    <div class="stat-col physical">
-                        <h3>Physical</h3>
-                        <DotScale @bind-Value="character.Athletics" Label="Athletics" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Brawl" Label="Brawl" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Drive" Label="Drive" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Firearms" Label="Firearms" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Larceny" Label="Larceny" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Stealth" Label="Stealth" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Survival" Label="Survival" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Weaponry" Label="Weaponry" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    </div>
-                    <div class="stat-col social">
-                        <h3>Social</h3>
-                        <DotScale @bind-Value="character.AnimalKen" Label="Animal Ken" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Empathy" Label="Empathy" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Expression" Label="Expression" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Intimidation" Label="Intimidation" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Persuasion" Label="Persuasion" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Socialize" Label="Socialize" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Streetwise" Label="Streetwise" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                        <DotScale @bind-Value="character.Subterfuge" Label="Subterfuge" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    </div>
-                </div>
-            </section>
-            
-            <!-- SUPERNATURAL & ADVANTAGES -->
-            <div class="two-col-grid">
-                <section class="cs-section cs-advantages">
-                    <h2>Advantages</h2>
-                    <DotScale @bind-Value="character.BloodPotency" Label="Blood Potency" Max="10" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    <DotScale @bind-Value="character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                    
-                    <h3 style="margin-top: 1rem;">Merits</h3>
-                    <ul class="trait-list" style="list-style: none; padding: 0;">
-                        @foreach(var merit in character.Merits)
-                        {
-                            <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) ? "" : $"({merit.Specification})")</span>
-                                <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•', merit.Rating))</span>
-                            </li>
-                        }
-                    </ul>
-                </section>
-                <section class="cs-section cs-disciplines">
-                    <h2>Disciplines</h2>
-                    <ul class="trait-list" style="list-style: none; padding: 0;">
-                        @foreach(var disc in character.Disciplines)
-                        {
-                            <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span>@disc.Discipline?.Name</span>
-                                <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•', disc.Rating))</span>
-                            </li>
-                        }
-                    </ul>
-                </section>
-            </div>
-
-            <!-- EQUIPMENT -->
-            <section class="cs-section cs-equipment" style="margin-top: 2rem; grid-column: span 3;">
-                <h2>Equipment</h2>
-                
-                <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-                    <select @bind="selectedEquipmentId" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px; flex-grow: 1;">
-                        <option value="0">-- Select Equipment --</option>
-                        @foreach(var eq in availableEquipment)
-                        {
-                            <option value="@eq.Id">@eq.Name (@eq.Type.Trim())</option>
-                        }
-                    </select>
-                    <input type="number" min="1" @bind="selectedEquipmentQuantity" style="width: 60px; background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px;" />
-                    <button class="nav-btn" @onclick="AddEquipment" style="padding: 5px 15px;">Add</button>
-                </div>
-
-                <ul class="trait-list" style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
-                    @foreach(var ce in character.CharacterEquipments)
-                    {
-                        <li style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #2a0000; border-radius: 4px;">
-                            <div>
-                                <strong style="color: #c9a997;">@ce.Equipment?.Name (x@ce.Quantity)</strong>
-                                <div style="font-size: 0.85em; color: #a08070;">
-                                    <span>Type: @ce.Equipment?.Type</span>
-                                    @if(ce.Equipment?.Damage > 0) { <span style="margin-left:5px;">| Dmg: @ce.Equipment?.Damage</span> }
-                                    @if(ce.Equipment?.ArmorRating > 0) { <span style="margin-left:5px;">| Arm: @ce.Equipment?.ArmorRating</span> }
-                                </div>
-                                @if(!string.IsNullOrEmpty(ce.Equipment?.Description))
-                                {
-                                    <p style="font-size: 0.8em; margin: 5px 0 0 0; color: #888;">@ce.Equipment?.Description</p>
-                                }
+                    <!-- ATTRIBUTES -->
+                    <section class="cs-section cs-attributes">
+                        <h2>Attributes</h2>
+                        <div class="three-col-grid">
+                            <div class="stat-col mental">
+                                <h3>Mental</h3>
+                                <DotScale @bind-Value="character.Intelligence" Label="Intelligence" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Wits" Label="Wits" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Resolve" Label="Resolve" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
                             </div>
-                            <button class="nav-btn" @onclick="() => RemoveEquipment(ce.Id)" style="padding: 2px 8px; font-size: 0.8em; border-color: #500; color: #d55; background: transparent; cursor: pointer;">Del</button>
-                        </li>
-                    }
-                </ul>
-            </section>
-            
-            </div>
-        }
-        else if (activeTab == "identity")
-        {
-            <CharacterIdentityTab Character="character" OnChanged="SaveCharacter" />
-        }
+                            <div class="stat-col physical">
+                                <h3>Physical</h3>
+                                <DotScale @bind-Value="character.Strength" Label="Strength" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Dexterity" Label="Dexterity" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Stamina" Label="Stamina" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                            </div>
+                            <div class="stat-col social">
+                                <h3>Social</h3>
+                                <DotScale @bind-Value="character.Presence" Label="Presence" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Manipulation" Label="Manipulation" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Composure" Label="Composure" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SKILLS -->
+                    <section class="cs-section cs-skills">
+                        <h2>Skills</h2>
+                        <div class="three-col-grid">
+                            <div class="stat-col mental">
+                                <h3>Mental</h3>
+                                <DotScale @bind-Value="character.Academics" Label="Academics" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Computer" Label="Computer" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Crafts" Label="Crafts" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Investigation" Label="Investigation"
+                                    OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Medicine" Label="Medicine" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Occult" Label="Occult" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Politics" Label="Politics" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Science" Label="Science" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                            </div>
+                            <div class="stat-col physical">
+                                <h3>Physical</h3>
+                                <DotScale @bind-Value="character.Athletics" Label="Athletics" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Brawl" Label="Brawl" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Drive" Label="Drive" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Firearms" Label="Firearms" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Larceny" Label="Larceny" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Stealth" Label="Stealth" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Survival" Label="Survival" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Weaponry" Label="Weaponry" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                            </div>
+                            <div class="stat-col social">
+                                <h3>Social</h3>
+                                <DotScale @bind-Value="character.AnimalKen" Label="Animal Ken" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Empathy" Label="Empathy" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Expression" Label="Expression" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Intimidation" Label="Intimidation" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Persuasion" Label="Persuasion" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Socialize" Label="Socialize" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Streetwise" Label="Streetwise" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                                <DotScale @bind-Value="character.Subterfuge" Label="Subterfuge" OnLabelClick="OpenReference"
+                                    OnRollClick="OpenRoller" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SUPERNATURAL & ADVANTAGES -->
+                    <div class="two-col-grid">
+                        <section class="cs-section cs-advantages">
+                            <h2>Advantages</h2>
+                            <DotScale @bind-Value="character.BloodPotency" Label="Blood Potency" Max="10"
+                                OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
+                            <DotScale @bind-Value="character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
+                                OnRollClick="OpenRoller" />
+
+                            <h3 style="margin-top: 1rem;">Merits</h3>
+                            <ul class="trait-list" style="list-style: none; padding: 0;">
+                                @foreach (var merit in character.Merits)
+                                {
+                                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) ? "" :
+                                $"({merit.Specification})")</span>
+                                        <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•',
+                                merit.Rating))</span>
+                                    </li>
+                                }
+                            </ul>
+                        </section>
+                        <section class="cs-section cs-disciplines">
+                            <h2>Disciplines</h2>
+                            <ul class="trait-list" style="list-style: none; padding: 0;">
+                                @foreach (var disc in character.Disciplines)
+                                {
+                                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>@disc.Discipline?.Name</span>
+                                        <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•',
+                                disc.Rating))</span>
+                                    </li>
+                                }
+                            </ul>
+                        </section>
+                    </div>
+
+                    <!-- EQUIPMENT -->
+                    <section class="cs-section cs-equipment" style="margin-top: 2rem; grid-column: span 3;">
+                        <h2>Equipment</h2>
+
+                        <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+                            <select @bind="selectedEquipmentId" class="form-control"
+                                style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px; flex-grow: 1;">
+                                <option value="0">-- Select Equipment --</option>
+                                @foreach (var eq in availableEquipment)
+                                {
+                                    <option value="@eq.Id">@eq.Name (@eq.Type.Trim())</option>
+                                }
+                            </select>
+                            <input type="number" min="1" @bind="selectedEquipmentQuantity"
+                                style="width: 60px; background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px;" />
+                            <button class="nav-btn" @onclick="AddEquipment" style="padding: 5px 15px;">Add</button>
+                        </div>
+
+                        <ul class="trait-list"
+                            style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
+                            @foreach (var ce in character.CharacterEquipments)
+                            {
+                                <li
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #2a0000; border-radius: 4px;">
+                                    <div>
+                                        <strong style="color: #c9a997;">@ce.Equipment?.Name (x@ce.Quantity)</strong>
+                                        <div style="font-size: 0.85em; color: #a08070;">
+                                            <span>Type: @ce.Equipment?.Type</span>
+                                            @if (ce.Equipment?.Damage > 0)
+                                            {
+                                                <span style="margin-left:5px;">| Dmg:
+                                                    @ce.Equipment?.Damage</span>
+                                            }
+                                            @if (ce.Equipment?.ArmorRating > 0)
+                                            {
+                                                <span style="margin-left:5px;">| Arm:
+                                                    @ce.Equipment?.ArmorRating</span>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(ce.Equipment?.Description))
+                                        {
+                                            <p style="font-size: 0.8em; margin: 5px 0 0 0; color: #888;">@ce.Equipment?.Description</p>
+                                        }
+                                    </div>
+                                    <button class="nav-btn" @onclick="() => RemoveEquipment(ce.Id)"
+                                        style="padding: 2px 8px; font-size: 0.8em; border-color: #500; color: #d55; background: transparent; cursor: pointer;">Del</button>
+                                </li>
+                            }
+                        </ul>
+                    </section>
+
+                </div>
+            }
+            else if (activeTab == "identity")
+            {
+        <CharacterIdentityTab Character="character" OnChanged="SaveCharacter" />
+            }
+    </CascadingValue>
     </div>
-    
+
     <DiceRollerModal @bind-IsVisible="isRollerOpen" TraitName="@rollerTraitName" BaseDice="@rollerBaseDice" />
 }
 
@@ -255,7 +322,7 @@ else
     private async Task HandleTraitChange(string traitName, int currentRating, int newRating)
     {
         if (character == null) return;
-        
+
         if (isAdvancementMode)
         {
             if (newRating > currentRating)
@@ -283,13 +350,13 @@ else
         if (!string.IsNullOrEmpty(currentUserId))
         {
             character = await DbContext.Characters
-                .Include(c => c.Clan)
-                .Include(c => c.Campaign)
-                .Include(c => c.Merits).ThenInclude(m => m.Merit)
-                .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
-                .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
-                .FirstOrDefaultAsync(c => c.Id == Id && c.ApplicationUserId == currentUserId);
-                
+            .Include(c => c.Clan)
+            .Include(c => c.Campaign)
+            .Include(c => c.Merits).ThenInclude(m => m.Merit)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
+            .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
+            .FirstOrDefaultAsync(c => c.Id == Id && c.ApplicationUserId == currentUserId);
+
             availableEquipment = await DbContext.Equipment.OrderBy(e => e.Name).ToListAsync();
         }
     }
@@ -400,11 +467,11 @@ else
         if (character != null && selectedEquipmentId > 0 && selectedEquipmentQuantity > 0)
         {
             var ce = new CharacterEquipment
-            {
-                CharacterId = character.Id,
-                EquipmentId = selectedEquipmentId,
-                Quantity = selectedEquipmentQuantity
-            };
+                {
+                    CharacterId = character.Id,
+                    EquipmentId = selectedEquipmentId,
+                    Quantity = selectedEquipmentQuantity
+                };
             DbContext.CharacterEquipments.Add(ce);
             await DbContext.SaveChangesAsync();
 

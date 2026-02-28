@@ -11,11 +11,12 @@
         {
             var dotValue = i;
             <button type="button" 
-                    class="dot @(dotValue <= Value ? "filled" : "empty") @(dotValue <= hoveredValue ? "hover-filled" : "")" 
+                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= hoveredValue ? "hover-filled" : "")" 
                     @onclick="() => SetValueAsync(dotValue)"
-                    @onmouseover="() => hoveredValue = dotValue"
-                    @onmouseout="() => hoveredValue = 0"
-                    title="Set @Label to @dotValue">
+                    @onmouseover="() => { if (IsEditable) hoveredValue = dotValue; }"
+                    @onmouseout="() => { if (IsEditable) hoveredValue = 0; }"
+                    title="@(IsEditable ? $"Set {Label} to {dotValue}" : $"{Label}: {Value}")"
+                    style="@(IsEditable ? "" : "cursor: default;")">
             </button>
         }
     </div>
@@ -54,10 +55,15 @@
     [Parameter]
     public EventCallback<string> OnRollClick { get; set; }
 
+    [CascadingParameter(Name = "IsEditable")]
+    public bool IsEditable { get; set; } = true;
+
     private int hoveredValue = 0;
 
     private async Task SetValueAsync(int newValue)
     {
+        if (!IsEditable) return;
+
         // Allow unsetting the first dot if clicking the currently selected 1st dot
         if (newValue == 1 && Value == 1)
         {

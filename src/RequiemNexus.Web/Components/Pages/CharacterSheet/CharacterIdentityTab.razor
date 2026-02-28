@@ -4,25 +4,25 @@
     <h2>Identity & Backstory</h2>
     <div class="form-group" style="margin-bottom: 15px;">
         <label style="color: #990000; font-weight: bold;">Concept</label>
-        <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" @bind="Character.Concept" @bind:after="NotifyChanged" />
+        <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.Concept" @bind:after="NotifyChanged" />
     </div>
     <div class="two-col-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
         <div class="form-group">
             <label style="color: #990000; font-weight: bold;">Height</label>
-            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" @bind="Character.Height" @bind:after="NotifyChanged" />
+            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.Height" @bind:after="NotifyChanged" />
         </div>
         <div class="form-group">
             <label style="color: #990000; font-weight: bold;">Eye Color</label>
-            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" @bind="Character.EyeColor" @bind:after="NotifyChanged" />
+            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.EyeColor" @bind:after="NotifyChanged" />
         </div>
         <div class="form-group">
             <label style="color: #990000; font-weight: bold;">Hair Color</label>
-            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" @bind="Character.HairColor" @bind:after="NotifyChanged" />
+            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.HairColor" @bind:after="NotifyChanged" />
         </div>
     </div>
     <div class="form-group">
         <label style="color: #990000; font-weight: bold;">Backstory</label>
-        <textarea class="form-control" rows="10" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%; resize: vertical;" @bind="Character.Backstory" @bind:after="NotifyChanged"></textarea>
+        <textarea class="form-control" rows="10" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%; resize: vertical;" disabled="@(!IsEditable)" @bind="Character.Backstory" @bind:after="NotifyChanged"></textarea>
     </div>
 </section>
 
@@ -32,6 +32,9 @@
 
     [Parameter]
     public EventCallback OnChanged { get; set; }
+
+    [CascadingParameter(Name = "IsEditable")]
+    public bool IsEditable { get; set; } = true;
 
     private async Task NotifyChanged()
     {
