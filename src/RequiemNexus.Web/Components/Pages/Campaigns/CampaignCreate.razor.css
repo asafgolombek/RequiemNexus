@@ -1,9 +1,10 @@
+/* Campaign Create — Unified Gothic Palette */
+
 .split-layout {
     display: flex;
-    min-height: 100vh;
-    background-color: #0b0c10;
-    color: #c5c6c7;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    min-height: calc(100vh - 110px);
+    color: var(--text-color);
+    font-family: var(--font-primary);
 }
 
 .form-side {
@@ -17,22 +18,23 @@
 .form-container {
     width: 100%;
     max-width: 480px;
-    background: #1f2833;
+    background: var(--bg-panel);
     padding: 3rem;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    border: 1px solid rgba(69, 162, 158, 0.2);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevated);
+    border: 1px solid var(--border-subtle);
 }
 
 .form-header h2 {
-    color: #66fcf1;
+    color: var(--accent-light);
     margin-top: 0;
     font-size: 2rem;
-    font-weight: 300;
+    font-weight: 600;
+    font-family: var(--font-heading);
 }
 
 .form-header p {
-    color: #c5c6c7;
+    color: var(--text-muted);
     margin-bottom: 2rem;
 }
 
@@ -43,24 +45,24 @@
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #45a29e;
+    color: var(--accent-light);
     font-weight: 500;
 }
 
 .form-control {
     width: 100%;
     padding: 0.75rem;
-    background: #0b0c10;
-    border: 1px solid #45a29e;
-    border-radius: 4px;
-    color: #e0e2e4;
-    transition: all 0.3s;
+    background: var(--bg-input);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+    color: var(--text-color);
+    transition: all var(--transition-normal);
 }
 
 .form-control:focus {
     outline: none;
-    border-color: #66fcf1;
-    box-shadow: 0 0 8px rgba(102, 252, 241, 0.3);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px var(--accent-glow);
 }
 
 .form-actions {
@@ -71,47 +73,51 @@
 
 .btn-create {
     flex: 1;
-    background: #45a29e;
-    color: #0b0c10;
+    background: var(--accent-color);
+    color: var(--text-bright);
     border: none;
     padding: 0.75rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all var(--transition-normal);
 }
 
 .btn-create:hover {
-    background: #66fcf1;
-    box-shadow: 0 0 15px rgba(102, 252, 241, 0.4);
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-glow);
 }
 
 .btn-cancel {
     flex: 1;
     background: transparent;
-    color: #c5c6c7;
-    border: 1px solid rgba(197, 198, 199, 0.3);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
     padding: 0.75rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     text-align: center;
     text-decoration: none;
-    transition: all 0.3s;
+    transition: all var(--transition-normal);
 }
 
 .btn-cancel:hover {
-    background: rgba(197, 198, 199, 0.1);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-bright);
 }
 
 .image-side {
     flex: 1;
-    background: linear-gradient(rgba(11, 12, 16, 0.8), rgba(11, 12, 16, 0.9)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80') center/cover no-repeat;
+    background: linear-gradient(rgba(13, 13, 13, 0.85), rgba(13, 13, 13, 0.95));
     display: none;
     position: relative;
 }
 
 @media (min-width: 768px) {
-    .image-side {    display: flex;    align-items: center;    justify-content: center;   }
+    .image-side {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 .image-overlay {
@@ -122,7 +128,8 @@
 .quote {
     font-size: 2rem;
     font-style: italic;
-    color: #66fcf1;
+    color: var(--accent-light);
     font-weight: 300;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    font-family: var(--font-heading);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }

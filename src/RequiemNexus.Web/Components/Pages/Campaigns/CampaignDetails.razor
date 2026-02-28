@@ -7,91 +7,78 @@
 
 <PageTitle>Campaign Details - Requiem Nexus</PageTitle>
 
-<div class="home-layout">
-    <header class="main-header">
-        <div class="header-content">
-            <div class="brand">
-                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
-            </div>
-            <div class="header-actions">
-                <a href="/campaigns" class="nav-btn primary-btn">Back to Campaigns</a>
+<div class="page-container fade-in">
+    @if (campaign == null)
+    {
+        <p><em>Loading or campaign not found...</em></p>
+    }
+    else
+    {
+        <div class="campaign-header">
+            <h2>@campaign.Name</h2>
+            <div class="storyteller-badge">
+                <span>👑 Story Teller:</span> @(campaign.StoryTeller?.UserName ?? campaign.StoryTeller?.Email ?? "Unknown")
             </div>
         </div>
-    </header>
 
-    <div class="dashboard-content">
-        @if (campaign == null)
-        {
-            <p><em>Loading or campaign not found...</em></p>
-        }
-        else
-        {
-            <div class="campaign-header">
-                <h2>@campaign.Name</h2>
-                <div class="storyteller-badge">
-                    <span>👑 Story Teller:</span> @(campaign.StoryTeller?.UserName ?? campaign.StoryTeller?.Email ?? "Unknown")
-                </div>
+        <div class="characters-section">
+            <div class="section-header">
+                <h3>Players in this Campaign</h3>
+                <button class="btn-primary-rn" @onclick="ToggleAddCharacter">Add Character</button>
             </div>
 
-            <div class="characters-section">
-                <div class="section-header">
-                    <h3>Players in this Campaign</h3>
-                    <button class="btn-create" @onclick="ToggleAddCharacter">Add Character</button>
+            @if (showAddCharacter)
+            {
+                <div class="add-character-panel">
+                    <h4>Add Character to Campaign</h4>
+                    <EditForm Model="addModel" OnValidSubmit="AddCharacterSubmit">
+                        <div class="add-character-row">
+                            <div class="add-character-select">
+                                <InputSelect @bind-Value="addModel.CharacterId" class="form-control">
+                                    <option value="0">-- Select an available character --</option>
+                                    @foreach (var c in availableCharacters)
+                                    {
+                                        <option value="@c.Id">@c.Name (@c.User?.Email)</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="add-character-actions">
+                                <button type="submit" class="btn-primary-rn" disabled="@(addModel.CharacterId == 0)">Add</button>
+                                <button type="button" class="btn-ghost" @onclick="ToggleAddCharacter">Cancel</button>
+                            </div>
+                        </div>
+                    </EditForm>
                 </div>
+            }
 
-                @if (showAddCharacter)
-                {
-                    <div class="add-character-panel">
-                        <h4>Add Character to Campaign</h4>
-                        <EditForm Model="addModel" OnValidSubmit="AddCharacterSubmit">
-                            <div class="form-group row">
-                                <div class="col">
-                                    <InputSelect @bind-Value="addModel.CharacterId" class="form-control">
-                                        <option value="0">-- Select an available character --</option>
-                                        @foreach (var c in availableCharacters)
-                                        {
-                                            <option value="@c.Id">@c.Name (@c.User?.Email)</option>
-                                        }
-                                    </InputSelect>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="submit" class="btn-create" disabled="@(addModel.CharacterId == 0)">Add</button>
-                                    <button type="button" class="btn-cancel" @onclick="ToggleAddCharacter">Cancel</button>
-                                </div>
+            @if (!campaign.Characters.Any())
+            {
+                <div class="empty-state-rn">
+                    <p>No characters have joined this saga yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="character-grid">
+                    @foreach (var character in campaign.Characters)
+                    {
+                        <div class="character-card card-rn">
+                            <h4>@character.Name</h4>
+                            <div class="player-info">
+                                <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
                             </div>
-                        </EditForm>
-                    </div>
-                }
-
-                @if (!campaign.Characters.Any())
-                {
-                    <div class="empty-state">
-                        <p>No characters have joined this saga yet.</p>
-                    </div>
-                }
-                else
-                {
-                    <div class="character-grid">
-                        @foreach (var character in campaign.Characters)
-                        {
-                            <div class="character-card">
-                                <h4>@character.Name</h4>
-                                <div class="player-info">
-                                    <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
-                                </div>
-                                <div class="stats">
-                                    <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
-                                    <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
-                                    <span>🩸 BP: @character.BloodPotency</span>
-                                    <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
-                                </div>
+                            <div class="stats">
+                                <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
+                                <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
+                                <span>🩸 BP: @character.BloodPotency</span>
+                                <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
                             </div>
-                        }
-                    </div>
-                }
-            </div>
-        }
-    </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
@@ -114,12 +101,11 @@
         campaign = await DbContext.Campaigns
             .Include(c => c.StoryTeller)
             .Include(c => c.Characters)
-            .ThenInclude(ch => ch.User) // Include user to show who it belongs to
+            .ThenInclude(ch => ch.User)
             .FirstOrDefaultAsync(c => c.Id == Id);
 
         if (campaign != null)
         {
-            // For MVP: load all characters not currently in a campaign
             availableCharacters = await DbContext.Characters
                 .Include(c => c.User)
                 .Where(c => c.CampaignId == null)
@@ -143,7 +129,6 @@
                 character.CampaignId = campaign.Id;
                 await DbContext.SaveChangesAsync();
                 
-                // Refresh data
                 await LoadData();
                 showAddCharacter = false;
             }

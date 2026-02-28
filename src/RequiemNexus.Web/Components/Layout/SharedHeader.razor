@@ -1,0 +1,77 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Data.Models
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+<header class="main-header">
+    <div class="header-content">
+        <div class="brand">
+            <a href="/home" class="brand-link">
+                <h1>REQUIEM NEXUS</h1>
+            </a>
+        </div>
+        
+        @if (ShowSearch)
+        {
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search Everything" />
+            </div>
+        }
+
+        <div class="header-actions">
+            @if (!string.IsNullOrEmpty(userName))
+            {
+                <span class="welcome-text">Welcome back, @userName</span>
+            }
+            <a href="/home" class="btn-ghost header-btn">Settings</a>
+            <form method="post" action="/logout" class="logout-form">
+                <input type="hidden" name="__RequestVerificationToken" value="" />
+                <a href="/" class="btn-primary-rn header-btn" @onclick="HandleLogout">Log Out</a>
+            </form>
+        </div>
+    </div>
+</header>
+
+@if (ShowSubNav)
+{
+    <nav class="sub-nav">
+        <div class="sub-nav-content">
+            <a href="/characters" class="sub-nav-link @(IsActivePath("/characters") ? "active" : "")">
+                My Characters
+            </a>
+            <a href="/campaigns" class="sub-nav-link @(IsActivePath("/campaigns") ? "active" : "")">
+                My Campaigns
+            </a>
+            <a href="#" class="sub-nav-link">Library</a>
+            <a href="#" class="sub-nav-link">Rules</a>
+            <a href="#" class="sub-nav-link">Tools</a>
+        </div>
+    </nav>
+}
+
+@code {
+    [Parameter] public bool ShowSubNav { get; set; } = true;
+    [Parameter] public bool ShowSearch { get; set; } = true;
+
+    private string? userName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        userName = authState.User.Identity?.Name;
+    }
+
+    private bool IsActivePath(string path)
+    {
+        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        return $"/{currentUri}".StartsWith(path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void HandleLogout()
+    {
+        NavigationManager.NavigateTo("/", true);
+    }
+}

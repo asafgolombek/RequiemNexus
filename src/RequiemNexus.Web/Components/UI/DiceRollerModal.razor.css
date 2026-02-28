@@ -1,0 +1,234 @@
+/* Dice Roller Modal */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--accent-color);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 420px;
+    padding: 1.5rem;
+    color: var(--text-color);
+    font-family: var(--font-primary);
+    box-shadow: var(--shadow-elevated), 0 0 30px var(--accent-glow);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-accent);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--accent-light);
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    padding: 0 4px;
+}
+
+.close-btn:hover {
+    color: var(--text-bright);
+}
+
+/* Form Elements */
+.roller-form-group {
+    margin-bottom: 0.75rem;
+}
+
+.roller-form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.roller-input {
+    width: 100%;
+    padding: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-accent);
+    color: var(--text-color);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-primary);
+}
+
+.roller-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.pool-total {
+    font-size: 1.1rem;
+    color: var(--text-bright);
+}
+
+/* Options */
+.options-group {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.option-label input[type="checkbox"] {
+    accent-color: var(--accent-color);
+}
+
+/* Actions */
+.roller-actions {
+    margin-top: 1.25rem;
+}
+
+.roll-action-btn {
+    width: 100%;
+    padding: 10px !important;
+    font-size: 1rem !important;
+}
+
+.debug-tools {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.75rem;
+}
+
+.debug-toggle {
+    margin-top: 0.5rem;
+    width: 100%;
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+}
+
+/* Results */
+.result-box {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.result-box.exceptional {
+    border-color: #d4aa00;
+    box-shadow: 0 0 15px rgba(212, 170, 0, 0.2);
+}
+
+.result-box.dramatic-failure {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.2);
+    animation: failurePulse 0.5s ease-out;
+}
+
+@keyframes failurePulse {
+    0% { box-shadow: 0 0 0 rgba(255, 68, 68, 0); }
+    50% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.4); }
+    100% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.2); }
+}
+
+.result-title {
+    margin: 0 0 0.5rem 0;
+    font-family: var(--font-heading);
+    color: var(--text-bright);
+    font-size: 1.1rem;
+}
+
+.result-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.exceptional-badge {
+    background: rgba(212, 170, 0, 0.15);
+    color: #ffd700;
+    border: 1px solid rgba(212, 170, 0, 0.3);
+}
+
+.failure-badge {
+    background: rgba(255, 68, 68, 0.15);
+    color: var(--danger-color);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+/* Individual Dice */
+.dice-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.5rem;
+}
+
+.die-result {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.success-die {
+    background: rgba(212, 170, 0, 0.15);
+    color: #ffd700;
+    border: 1px solid rgba(212, 170, 0, 0.3);
+}
+
+.fail-die {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-dim);
+    border: 1px solid var(--border-subtle);
+}

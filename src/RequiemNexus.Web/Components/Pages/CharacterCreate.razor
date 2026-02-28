@@ -17,106 +17,91 @@
 
 <PageTitle>Create Character - Requiem Nexus</PageTitle>
 
-<div class="home-layout">
-    <header class="main-header">
-        <div class="header-content">
-            <div class="brand">
-                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
-            </div>
-            
-            <div class="header-actions">
-                <span class="welcome-text">Create Character</span>
-                <a href="/characters" class="nav-btn primary-btn" style="text-decoration: none;">Cancel</a>
-            </div>
-        </div>
-    </header>
-
-    <div class="dashboard-content" style="max-width: 800px; margin: 0 auto;">
-        <div class="wizard-header" style="margin-bottom: 30px; border-bottom: 1px solid #330000; padding-bottom: 20px;">
-            <h2>Embrace a New Kindred</h2>
-            <div class="progress-bar" style="display: flex; gap: 10px; margin-top: 15px;">
-                @for(int i = 1; i <= 5; i++)
-                {
-                    <div style="flex-grow: 1; height: 10px; background-color: @((int)currentStep >= i ? "#990000" : "#1a1a1a"); border-radius: 5px;"></div>
-                }
-            </div>
-            <div class="step-text" style="color: #a0a0a0; margin-top: 10px; text-align: right;">
-                Step @((int)currentStep) of 5
-            </div>
-        </div>
-
-        <div class="wizard-body" style="background-color: #0f0f0f; border: 1px solid #330000; padding: 30px; border-radius: 8px;">
-            @if (currentStep == CreationStep.BasicInformation)
+<div class="page-container fade-in wizard-container">
+    <div class="wizard-header">
+        <h2>Embrace a New Kindred</h2>
+        <div class="wizard-progress-bar">
+            @for(int i = 1; i <= 5; i++)
             {
-                <BasicInformationStep Character="newCharacter" 
-                                      AvailableClans="availableClans" 
-                                      OnStateChanged="StateHasChanged" />
+                <div class="wizard-progress-step @((int)currentStep >= i ? "active" : "")"></div>
             }
-            else if (currentStep == CreationStep.Attributes)
-            {
-                <AttributesStep Character="newCharacter" 
-                                MentalPointsSpent="MentalPointsSpent" 
-                                PhysicalPointsSpent="PhysicalPointsSpent" 
-                                SocialPointsSpent="SocialPointsSpent" 
-                                TotalAttributePointsSpent="TotalAttributePointsSpent" 
-                                IsValid="IsAttributeDistributionValid()" 
-                                OnAdjustAttribute="AdjustAttribute" 
-                                OnStateChanged="StateHasChanged" />
-            }
-            else if (currentStep == CreationStep.Skills)
-            {
-                <SkillsStep Character="newCharacter" 
-                            MentalSkillsSpent="MentalSkillsSpent" 
-                            PhysicalSkillsSpent="PhysicalSkillsSpent" 
-                            SocialSkillsSpent="SocialSkillsSpent" 
-                            TotalSkillPointsSpent="TotalSkillPointsSpent" 
-                            IsValid="IsSkillDistributionValid()" 
-                            OnAdjustSkill="AdjustSkill" 
+        </div>
+        <div class="wizard-step-text">
+            Step @((int)currentStep) of 5
+        </div>
+    </div>
+
+    <div class="wizard-body">
+        @if (currentStep == CreationStep.BasicInformation)
+        {
+            <BasicInformationStep Character="newCharacter" 
+                                  AvailableClans="availableClans" 
+                                  OnStateChanged="StateHasChanged" />
+        }
+        else if (currentStep == CreationStep.Attributes)
+        {
+            <AttributesStep Character="newCharacter" 
+                            MentalPointsSpent="MentalPointsSpent" 
+                            PhysicalPointsSpent="PhysicalPointsSpent" 
+                            SocialPointsSpent="SocialPointsSpent" 
+                            TotalAttributePointsSpent="TotalAttributePointsSpent" 
+                            IsValid="IsAttributeDistributionValid()" 
+                            OnAdjustAttribute="AdjustAttribute" 
                             OnStateChanged="StateHasChanged" />
-            }
-            else if (currentStep == CreationStep.MeritsAndDisciplines)
-            {
-                <MeritsAndDisciplinesStep Character="newCharacter" 
-                                          AvailableMerits="availableMerits" 
-                                          AvailableDisciplines="availableDisciplines" 
-                                          MeritPointsSpent="MeritPointsSpent" 
-                                          DisciplineDotsSpent="DisciplineDotsSpent" 
-                                          IsValid="IsMeritDisciplineDistributionValid()" 
-                                          OnAddMerit="HandleAddMerit" 
-                                          OnAdjustMeritRating="AdjustMeritRating" 
-                                          OnRemoveMerit="RemoveMerit" 
-                                          OnAddDiscipline="HandleAddDiscipline" 
-                                          OnAdjustDisciplineDots="AdjustDisciplineDots" 
-                                          OnRemoveDiscipline="RemoveDiscipline" 
-                                          OnStateChanged="StateHasChanged" />
-            }
-            else if (currentStep == CreationStep.ReviewAndEmbrace)
-            {
-                <ReviewAndEmbraceStep Character="newCharacter" 
-                                      AvailableClans="availableClans" 
-                                      MentalPointsSpent="MentalPointsSpent" 
-                                      PhysicalPointsSpent="PhysicalPointsSpent" 
-                                      SocialPointsSpent="SocialPointsSpent" 
-                                      MentalSkillsSpent="MentalSkillsSpent" 
-                                      PhysicalSkillsSpent="PhysicalSkillsSpent" 
-                                      SocialSkillsSpent="SocialSkillsSpent" 
+        }
+        else if (currentStep == CreationStep.Skills)
+        {
+            <SkillsStep Character="newCharacter" 
+                        MentalSkillsSpent="MentalSkillsSpent" 
+                        PhysicalSkillsSpent="PhysicalSkillsSpent" 
+                        SocialSkillsSpent="SocialSkillsSpent" 
+                        TotalSkillPointsSpent="TotalSkillPointsSpent" 
+                        IsValid="IsSkillDistributionValid()" 
+                        OnAdjustSkill="AdjustSkill" 
+                        OnStateChanged="StateHasChanged" />
+        }
+        else if (currentStep == CreationStep.MeritsAndDisciplines)
+        {
+            <MeritsAndDisciplinesStep Character="newCharacter" 
+                                      AvailableMerits="availableMerits" 
+                                      AvailableDisciplines="availableDisciplines" 
                                       MeritPointsSpent="MeritPointsSpent" 
-                                      DisciplineDotsSpent="DisciplineDotsSpent" />
-            }
-        </div>
+                                      DisciplineDotsSpent="DisciplineDotsSpent" 
+                                      IsValid="IsMeritDisciplineDistributionValid()" 
+                                      OnAddMerit="HandleAddMerit" 
+                                      OnAdjustMeritRating="AdjustMeritRating" 
+                                      OnRemoveMerit="RemoveMerit" 
+                                      OnAddDiscipline="HandleAddDiscipline" 
+                                      OnAdjustDisciplineDots="AdjustDisciplineDots" 
+                                      OnRemoveDiscipline="RemoveDiscipline" 
+                                      OnStateChanged="StateHasChanged" />
+        }
+        else if (currentStep == CreationStep.ReviewAndEmbrace)
+        {
+            <ReviewAndEmbraceStep Character="newCharacter" 
+                                  AvailableClans="availableClans" 
+                                  MentalPointsSpent="MentalPointsSpent" 
+                                  PhysicalPointsSpent="PhysicalPointsSpent" 
+                                  SocialPointsSpent="SocialPointsSpent" 
+                                  MentalSkillsSpent="MentalSkillsSpent" 
+                                  PhysicalSkillsSpent="PhysicalSkillsSpent" 
+                                  SocialSkillsSpent="SocialSkillsSpent" 
+                                  MeritPointsSpent="MeritPointsSpent" 
+                                  DisciplineDotsSpent="DisciplineDotsSpent" />
+        }
+    </div>
 
-        <div class="wizard-footer" style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <button class="nav-btn primary-btn" style="background-color: #333;" @onclick="PreviousStep" disabled="@(currentStep == CreationStep.BasicInformation)">Back</button>
-            
-            @if (currentStep < CreationStep.ReviewAndEmbrace)
-            {
-                <button class="nav-btn primary-btn" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">Next Step</button>
-            }
-            else
-            {
-                <button class="nav-btn primary-btn" style="background-color: #990000;" @onclick="SaveCharacter">Embrace</button>
-            }
-        </div>
+    <div class="wizard-footer">
+        <button class="btn-ghost" @onclick="PreviousStep" disabled="@(currentStep == CreationStep.BasicInformation)">Back</button>
+        
+        @if (currentStep < CreationStep.ReviewAndEmbrace)
+        {
+            <button class="btn-primary-rn" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">Next Step</button>
+        }
+        else
+        {
+            <button class="btn-primary-rn wizard-btn-embrace" @onclick="SaveCharacter">Embrace</button>
+        }
     </div>
 </div>
 

@@ -19,7 +19,7 @@
 }
 else
 {
-    <div class="character-sheet">
+    <div class="character-sheet fade-in">
         <!-- HEADER -->
         <header class="cs-header">
             <div class="char-avatar"></div>
@@ -31,38 +31,31 @@ else
                     <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
                     <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
                 </div>
-                <div class="char-xp" style="margin-top: 15px; display: flex; gap: 20px; align-items: center;">
-                    <div
-                        style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
-                        <strong style="color: #990000; margin-right: 10px;">Beats</strong>
-                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveBeat"
+                <div class="char-xp">
+                    <div class="xp-counter">
+                        <strong class="xp-counter-label">Beats</strong>
+                        <button class="xp-counter-btn" @onclick="RemoveBeat"
                             disabled="@(character.Beats <= 0)">-</button>
-                        <span
-                            style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.Beats</span>
-                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddBeat">+</button>
+                        <span class="xp-counter-value">@character.Beats</span>
+                        <button class="xp-counter-btn" @onclick="AddBeat">+</button>
                     </div>
-                    <div
-                        style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000;">
-                        <strong style="color: #990000; margin-right: 10px;">Experiences</strong>
-                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="RemoveXP"
+                    <div class="xp-counter">
+                        <strong class="xp-counter-label">Experiences</strong>
+                        <button class="xp-counter-btn" @onclick="RemoveXP"
                             disabled="@(character.ExperiencePoints <= 0)">-</button>
-                        <span
-                            style="display: inline-block; width: 20px; text-align: center; font-weight: bold;">@character.ExperiencePoints</span>
-                        <button class="nav-btn" style="padding: 2px 8px; font-size: 0.8em;" @onclick="AddXP">+</button>
+                        <span class="xp-counter-value">@character.ExperiencePoints</span>
+                        <button class="xp-counter-btn" @onclick="AddXP">+</button>
                     </div>
-                    <div
-                        style="background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 4px; border: 1px solid #330000; margin-left: auto;">
-                        <strong style="color: #990000;">Total XP: </strong>
-                        <span style="font-weight: bold; margin-left: 5px;">@character.TotalExperiencePoints</span>
+                    <div class="xp-total">
+                        <strong class="xp-counter-label">Total XP</strong>
+                        <span class="xp-counter-value">@character.TotalExperiencePoints</span>
                     </div>
 
-                    <button class="nav-btn @(isAdvancementMode ? "active" : "")"
-                        style="padding: 5px 15px; border-color: @(isAdvancementMode ? "#a00" : "#300");"
+                    <button class="btn-ghost mode-toggle-btn @(isAdvancementMode ? "active" : "")"
                     @onclick="ToggleAdvancementMode">
                         @(isAdvancementMode ? "Exit Advancement" : "Enter Advancement")
                     </button>
-                    <button class="nav-btn @(isFreeEditMode ? "active" : "")"
-                        style="padding: 5px 15px; border-color: @(isFreeEditMode ? "#a00" : "#300");"
+                    <button class="btn-ghost mode-toggle-btn @(isFreeEditMode ? "active" : "")"
                     @onclick="ToggleFreeEditMode">
                         @(isFreeEditMode ? "Exit Free Edit" : "Free Edit Mode")
                     </button>
@@ -70,10 +63,10 @@ else
             </div>
         </header>
 
-        <div class="tabs" style="margin-bottom: 20px; display: flex; gap: 10px;">
-            <button class="nav-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character
+        <div class="tab-bar">
+            <button class="tab-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character
                 Sheet</button>
-            <button class="nav-btn @(activeTab == "identity" ? "active" : "")"
+            <button class="tab-btn @(activeTab == "identity" ? "active" : "")"
             @onclick='() => activeTab = "identity"'>Identity & Backstory</button>
         </div>
 
@@ -87,7 +80,7 @@ else
                     <!-- ATTRIBUTES -->
                     <section class="cs-section cs-attributes">
                         <h2>Attributes</h2>
-                        <div class="three-col-grid">
+                        <div class="grid-3-col">
                             <div class="stat-col mental">
                                 <h3>Mental</h3>
                                 <DotScale @bind-Value="character.Intelligence" Label="Intelligence" OnLabelClick="OpenReference"
@@ -121,7 +114,7 @@ else
                     <!-- SKILLS -->
                     <section class="cs-section cs-skills">
                         <h2>Skills</h2>
-                        <div class="three-col-grid">
+                        <div class="grid-3-col">
                             <div class="stat-col mental">
                                 <h3>Mental</h3>
                                 <DotScale @bind-Value="character.Academics" Label="Academics" OnLabelClick="OpenReference"
@@ -183,7 +176,7 @@ else
                     </section>
 
                     <!-- SUPERNATURAL & ADVANTAGES -->
-                    <div class="two-col-grid">
+                    <div class="grid-2-col">
                         <section class="cs-section cs-advantages">
                             <h2>Advantages</h2>
                             <DotScale @bind-Value="character.BloodPotency" Label="Blood Potency" Max="10"
@@ -191,14 +184,14 @@ else
                             <DotScale @bind-Value="character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
                                 OnRollClick="OpenRoller" />
 
-                            <h3 style="margin-top: 1rem;">Merits</h3>
-                            <ul class="trait-list" style="list-style: none; padding: 0;">
+                            <h3 class="trait-subheading">Merits</h3>
+                            <ul class="trait-list">
                                 @foreach (var merit in character.Merits)
                                 {
-                                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <li class="trait-item">
                                         <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) ? "" :
                                 $"({merit.Specification})")</span>
-                                        <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•',
+                                        <span class="trait-dots">@(new string('•',
                                 merit.Rating))</span>
                                     </li>
                                 }
@@ -206,12 +199,12 @@ else
                         </section>
                         <section class="cs-section cs-disciplines">
                             <h2>Disciplines</h2>
-                            <ul class="trait-list" style="list-style: none; padding: 0;">
+                            <ul class="trait-list">
                                 @foreach (var disc in character.Disciplines)
                                 {
-                                    <li style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <li class="trait-item">
                                         <span>@disc.Discipline?.Name</span>
-                                        <span class="dots" style="color: #990000; font-size: 1.2rem;">@(new string('•',
+                                        <span class="trait-dots">@(new string('•',
                                 disc.Rating))</span>
                                     </li>
                                 }
@@ -220,12 +213,11 @@ else
                     </div>
 
                     <!-- EQUIPMENT -->
-                    <section class="cs-section cs-equipment" style="margin-top: 2rem; grid-column: span 3;">
+                    <section class="cs-section cs-equipment">
                         <h2>Equipment</h2>
 
-                        <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-                            <select @bind="selectedEquipmentId" class="form-control"
-                                style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px; flex-grow: 1;">
+                        <div class="equipment-form">
+                            <select @bind="selectedEquipmentId" class="equipment-select">
                                 <option value="0">-- Select Equipment --</option>
                                 @foreach (var eq in availableEquipment)
                                 {
@@ -233,38 +225,33 @@ else
                                 }
                             </select>
                             <input type="number" min="1" @bind="selectedEquipmentQuantity"
-                                style="width: 60px; background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 5px;" />
-                            <button class="nav-btn" @onclick="AddEquipment" style="padding: 5px 15px;">Add</button>
+                                class="equipment-quantity" />
+                            <button class="btn-primary-rn" @onclick="AddEquipment">Add</button>
                         </div>
 
-                        <ul class="trait-list"
-                            style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
+                        <ul class="equipment-grid">
                             @foreach (var ce in character.CharacterEquipments)
                             {
-                                <li
-                                    style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #2a0000; border-radius: 4px;">
-                                    <div>
-                                        <strong style="color: #c9a997;">@ce.Equipment?.Name (x@ce.Quantity)</strong>
-                                        <div style="font-size: 0.85em; color: #a08070;">
+                                <li class="equipment-item">
+                                    <div class="equipment-info">
+                                        <strong class="equipment-name">@ce.Equipment?.Name (x@ce.Quantity)</strong>
+                                        <div class="equipment-meta">
                                             <span>Type: @ce.Equipment?.Type</span>
                                             @if (ce.Equipment?.Damage > 0)
                                             {
-                                                <span style="margin-left:5px;">| Dmg:
-                                                    @ce.Equipment?.Damage</span>
+                                                <span>| Dmg: @ce.Equipment?.Damage</span>
                                             }
                                             @if (ce.Equipment?.ArmorRating > 0)
                                             {
-                                                <span style="margin-left:5px;">| Arm:
-                                                    @ce.Equipment?.ArmorRating</span>
+                                                <span>| Arm: @ce.Equipment?.ArmorRating</span>
                                             }
                                         </div>
                                         @if (!string.IsNullOrEmpty(ce.Equipment?.Description))
                                         {
-                                            <p style="font-size: 0.8em; margin: 5px 0 0 0; color: #888;">@ce.Equipment?.Description</p>
+                                            <p class="equipment-desc">@ce.Equipment?.Description</p>
                                         }
                                     </div>
-                                    <button class="nav-btn" @onclick="() => RemoveEquipment(ce.Id)"
-                                        style="padding: 2px 8px; font-size: 0.8em; border-color: #500; color: #d55; background: transparent; cursor: pointer;">Del</button>
+                                    <button class="equipment-remove-btn" @onclick="() => RemoveEquipment(ce.Id)">Del</button>
                                 </li>
                             }
                         </ul>
@@ -336,7 +323,6 @@ else
         }
         else if (isFreeEditMode)
         {
-            // Free editing (for storyteller or initial setup)
             AdvancementService.UpdateCoreTrait(character, traitName, newRating);
             await DbContext.SaveChangesAsync();
         }
@@ -363,7 +349,6 @@ else
 
     private void OpenReference(string traitName)
     {
-        // TODO: Open Quick Reference Modal
         Console.WriteLine($"Show Reference for: {traitName}");
     }
 
@@ -475,7 +460,6 @@ else
             DbContext.CharacterEquipments.Add(ce);
             await DbContext.SaveChangesAsync();
 
-            // Refresh character equipment
             ce.Equipment = availableEquipment.FirstOrDefault(e => e.Id == selectedEquipmentId);
             character.CharacterEquipments.Add(ce);
 

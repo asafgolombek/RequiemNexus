@@ -1,176 +1,135 @@
-.home-layout {
-    min-height: 100vh;
-    background-color: #0b0c10;
-    color: #c5c6c7;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-}
-
-.main-header {
-    background: linear-gradient(135deg, #1f2833 0%, #0b0c10 100%);
-    border-bottom: 1px solid #45a29e;
-    padding: 1rem 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.brand h1 {
-    color: #66fcf1;
-    font-size: 1.5rem;
-    margin: 0;
-    letter-spacing: 2px;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.primary-btn {
-    background: transparent;
-    border: 1px solid #45a29e;
-    color: #45a29e;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.primary-btn:hover {
-    background: rgba(69, 162, 158, 0.1);
-    box-shadow: 0 0 10px rgba(69, 162, 158, 0.3);
-}
-
-.dashboard-content {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 2rem;
-}
+/* Campaign Details — Unified Gothic Palette */
 
 .campaign-header {
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid rgba(69, 162, 158, 0.2);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .campaign-header h2 {
-    color: #66fcf1;
-    font-size: 2.5rem;
+    color: var(--accent-light);
+    font-size: 2rem;
     margin: 0 0 1rem 0;
+    font-family: var(--font-heading);
 }
 
 .storyteller-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(69, 162, 158, 0.1);
-    border: 1px solid #45a29e;
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent-color);
     padding: 0.5rem 1rem;
     border-radius: 20px;
-    color: #e0e2e4;
+    color: var(--text-color);
     font-size: 0.9rem;
 }
 
 .storyteller-badge span {
-    color: #66fcf1;
+    color: var(--accent-light);
     font-weight: 600;
-}
-
-.characters-section h3 {
-    color: #e0e2e4;
-    font-weight: 300;
-    font-size: 1.8rem;
-    margin: 0 0 2rem 0;
-}
-
-.character-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.character-card {
-    background: #1f2833;
-    border-radius: 8px;
-    padding: 1.5rem;
-    border-left: 4px solid #45a29e;
-    transition: transform 0.2s;
-}
-
-.character-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.character-card h4 {
-    color: #66fcf1;
-    margin: 0 0 1rem 0;
-    font-size: 1.3rem;
-}
-
-.player-info {
-    font-size: 0.9rem;
-    color: #c5c6c7;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.stats {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.stats span {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #e0e2e4;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 1.5rem;
 }
 
-.btn-create {
-    background: #45a29e;
-    color: #0b0c10;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
+.characters-section h3 {
+    color: var(--text-color);
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin: 0;
+    font-family: var(--font-heading);
 }
 
-.btn-cancel {
-    background: transparent;
-    color: #c5c6c7;
-    border: 1px solid #c5c6c7;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
 }
 
+.character-card h4 {
+    color: var(--accent-light);
+    margin: 0 0 0.75rem 0;
+    font-size: 1.2rem;
+}
+
+.player-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.player-info span {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Add Character Panel */
 .add-character-panel {
-    background: rgba(31, 40, 51, 0.5);
+    background: var(--bg-surface);
     padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 1px solid #45a29e;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-accent);
 }
-.add-character-panel h4 { margin-top: 0; color: #66fcf1; }
-.form-group.row { display: flex; gap: 10px; align-items: center; }
-.form-control { flex: 1; padding: 0.5rem; background: #0b0c10; color: #c5c6c7; border: 1px solid #45a29e; border-radius: 4px; }
-.empty-state { text-align: center; color: #c5c6c7; padding: 2rem; border: 1px dashed rgba(69, 162, 158, 0.4); border-radius: 8px; }
+
+.add-character-panel h4 {
+    margin-top: 0;
+    color: var(--accent-light);
+    font-family: var(--font-heading);
+}
+
+.add-character-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.add-character-select {
+    flex: 1;
+}
+
+.add-character-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--bg-input);
+    color: var(--text-color);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+}
+
+@media (max-width: 480px) {
+    .add-character-row {
+        flex-direction: column;
+    }
+    
+    .stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}

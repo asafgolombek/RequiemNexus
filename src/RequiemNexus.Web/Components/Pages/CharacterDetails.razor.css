@@ -1,139 +1,427 @@
+/* ============================================================
+   Character Sheet Styles
+   ============================================================ */
+
 .character-sheet {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  font-family: var(--font-primary, sans-serif);
-  color: var(--text-color, #e0e0e0);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: var(--font-primary);
+    color: var(--text-color);
 }
 
+/* --- Header --- */
 .cs-header {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-  background-color: var(--bg-panel, #1e1e1e);
-  padding: 2rem;
-  border-radius: 8px;
-  border-top: 4px solid var(--accent-color, #8b0000);
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    background-color: var(--bg-panel);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border-top: 4px solid var(--accent-color);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-card);
 }
 
 .char-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background-color: #333;
-  border: 2px solid var(--accent-color, #8b0000);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #333, #222);
+    border: 2px solid var(--accent-color);
+    flex-shrink: 0;
+}
+
+.char-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .char-info h1 {
-  font-family: var(--font-heading, serif);
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: #fff;
-  letter-spacing: 1px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-bright);
+    letter-spacing: 1px;
+    font-size: 1.8rem;
 }
 
 .char-meta {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  color: var(--text-muted, #aaa);
-  font-size: 0.95rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
 .char-meta strong {
-  color: var(--text-color, #e0e0e0);
+    color: var(--text-color);
 }
 
+/* --- XP / Beats Tracker --- */
+.char-xp {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.xp-counter {
+    background: var(--bg-input);
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.xp-counter-label {
+    color: var(--accent-color);
+    margin-right: 4px;
+    font-size: 0.85rem;
+}
+
+.xp-counter-btn {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-color);
+    padding: 2px 8px;
+    font-size: 0.8em;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.xp-counter-btn:hover:not(:disabled) {
+    border-color: var(--accent-color);
+    color: var(--accent-light);
+}
+
+.xp-counter-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.xp-counter-value {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+}
+
+.xp-total {
+    background: var(--bg-input);
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.mode-toggle-btn {
+    padding: 5px 15px !important;
+    font-size: 0.8rem !important;
+}
+
+/* --- Tabs --- */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 4px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn.active {
+    color: var(--text-bright);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-color);
+}
+
+/* --- Grid Layout --- */
 .cs-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .cs-section {
-  background-color: var(--bg-panel, #1e1e1e);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-panel);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
 }
 
 .cs-section h2 {
-  font-family: var(--font-heading, serif);
-  font-size: 1.5rem;
-  color: #fff;
-  border-bottom: 1px solid var(--accent-color, #8b0000);
-  padding-bottom: 0.5rem;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  letter-spacing: 2px;
-}
-
-.three-col-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-}
-
-.two-col-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    color: var(--text-bright);
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
 }
 
 .stat-col h3 {
-  font-family: var(--font-heading, serif);
-  font-size: 1.1rem;
-  color: var(--accent-hover, #ff6666);
-  margin-top: 0;
-  margin-bottom: 1rem;
-  text-align: center;
-  border-bottom: 1px solid #333;
-  padding-bottom: 0.25rem;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    color: var(--accent-light);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 0.25rem;
 }
 
-/* Vitals Trackers */
+/* --- Trait Lists (Merits, Disciplines) --- */
+.trait-subheading {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    color: var(--accent-light);
+    font-family: var(--font-heading);
+}
+
+.trait-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.trait-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 4px 0;
+}
+
+.trait-dots {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+
+/* --- Equipment --- */
+.cs-equipment {
+    grid-column: 1 / -1;
+}
+
+.equipment-form {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.equipment-select {
+    background: var(--bg-input);
+    color: var(--text-color);
+    border: 1px solid var(--border-accent);
+    padding: 6px 10px;
+    flex-grow: 1;
+    border-radius: var(--radius-sm);
+}
+
+.equipment-quantity {
+    width: 60px;
+    background: var(--bg-input);
+    color: var(--text-color);
+    border: 1px solid var(--border-accent);
+    padding: 6px;
+    border-radius: var(--radius-sm);
+}
+
+.equipment-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.75rem;
+}
+
+.equipment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition-fast);
+}
+
+.equipment-item:hover {
+    border-color: var(--border-subtle);
+}
+
+.equipment-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.equipment-name {
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.equipment-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.equipment-meta span {
+    margin-right: 4px;
+}
+
+.equipment-desc {
+    font-size: 0.8em;
+    margin: 4px 0 0 0;
+    color: var(--text-dim);
+}
+
+.equipment-remove-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    color: var(--danger-color);
+    padding: 2px 8px;
+    font-size: 0.8em;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+}
+
+.equipment-remove-btn:hover {
+    background: rgba(255, 68, 68, 0.1);
+    border-color: var(--danger-color);
+}
+
+/* --- Vitals Trackers --- */
 .vitals-trackers {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 2rem;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 2rem;
 }
 
 .tracker-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .tracker-label {
-  font-weight: bold;
-  color: var(--text-color);
-  letter-spacing: 1px;
-  font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-color);
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
 }
 
 .tracker-boxes {
-  display: flex;
-  gap: 4px;
+    display: flex;
+    gap: 4px;
 }
 
 .tracker-box {
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--dot-border, #555);
-  background: transparent;
-  transition: background-color 0.2s ease;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--dot-border);
+    background: transparent;
+    transition: background-color var(--transition-fast);
+    cursor: pointer;
+}
+
+.tracker-box:hover {
+    border-color: var(--text-muted);
 }
 
 .tracker-box.filled {
-  background-color: #fff;
-  border-color: #fff;
+    background-color: var(--text-bright);
+    border-color: var(--text-bright);
 }
 
 .tracker-box.filled.dark {
-  background-color: var(--accent-color, #8b0000);
-  border-color: var(--accent-color, #8b0000);
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .cs-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .char-avatar {
+        width: 60px;
+        height: 60px;
+        align-self: center;
+    }
+
+    .char-xp {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .xp-total {
+        margin-left: 0;
+    }
+
+    .mode-toggle-btn {
+        width: 100%;
+    }
+
+    .tab-bar {
+        overflow-x: auto;
+    }
+
+    .tracker-box {
+        width: 22px;
+        height: 22px;
+    }
+
+    .equipment-form {
+        flex-direction: column;
+    }
+
+    .equipment-select {
+        width: 100%;
+    }
 }

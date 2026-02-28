@@ -13,67 +13,72 @@
 
 <PageTitle>My Characters - Requiem Nexus</PageTitle>
 
-<div class="home-layout">
-    <!-- Reusing Header for consistency -->
-    <header class="main-header">
-        <div class="header-content">
-            <div class="brand">
-                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
-            </div>
-            
-            <div class="header-actions">
-                <span class="welcome-text">Welcome back</span>
-                <button class="nav-btn primary-btn">Log Out</button>
-            </div>
-        </div>
-    </header>
+<div class="page-container fade-in">
+    <div class="page-header-rn">
+        <h2>My Characters</h2>
+        <a href="/character/create" class="btn-primary-rn btn-create">Create New Character</a>
+    </div>
 
-    <div class="dashboard-content">
-        <div class="characters-header">
-            <h2>My Characters</h2>
-            <a href="/character/create" class="btn-create">Create New Character</a>
+    @if (characters == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (!characters.Any())
+    {
+        <div class="empty-state-rn">
+            <p>You haven't embraced any characters yet.</p>
+            <a href="/character/create" class="btn-primary-rn btn-create btn-large">Create New Character</a>
         </div>
-
-        @if (characters == null)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else if (!characters.Any())
-        {
-            <div class="empty-state">
-                <p>You haven't embraced any characters yet.</p>
-                <a href="/character/create" class="btn-create btn-large">Create New Character</a>
-            </div>
-        }
-        else
-        {
-            <div class="character-grid">
-                @foreach (var character in characters)
-                {
-                    <div class="character-card">
-                        <h3>@character.Name</h3>
-                        <p class="clan-name">@(character.Clan?.Name ?? "Caitiff")</p>
-                        <div class="stats">
-                            <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
-                            <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
-                            <span>🩸 BP: @character.BloodPotency</span>
-                            <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
+    }
+    else
+    {
+        <div class="character-grid">
+            @foreach (var character in characters)
+            {
+                <div class="character-card card-rn">
+                    <div class="card-top">
+                        <div class="char-avatar">
+                            <span>@(character.Name?.Length > 0 ? character.Name[0].ToString().ToUpper() : "?")</span>
                         </div>
-                        <div class="attributes-preview" style="margin-top: 10px; font-size: 0.85rem; color: #a0a0a0;">
-                            <strong>Attributes:</strong><br/>
-                            Mental: @(character.Intelligence + character.Wits + character.Resolve) <br/>
-                            Physical: @(character.Strength + character.Dexterity + character.Stamina) <br/>
-                            Social: @(character.Presence + character.Manipulation + character.Composure)
-                        </div>
-                        <div style="margin-top: 15px; display: flex; gap: 10px;">
-                            <a href="/character/@character.Id" class="primary-btn" style="text-decoration: none;">View Sheet</a>
-                            <button @onclick="() => DeleteCharacter(character)" class="nav-btn" style="border-color: #ff4444; color: #ff4444;">Delete</button>
+                        <div class="card-name-block">
+                            <h3>@character.Name</h3>
+                            <p class="clan-name">@(character.Clan?.Name ?? "Caitiff")</p>
                         </div>
                     </div>
-                }
-            </div>
-        }
-    </div>
+                    <div class="vitals-bars">
+                        <div class="vital-bar">
+                            <span class="vital-label">Health</span>
+                            <div class="bar-track">
+                                <div class="bar-fill health-fill" style="width: @(character.MaxHealth > 0 ? (int)(100.0 * character.CurrentHealth / character.MaxHealth) : 0)%"></div>
+                            </div>
+                            <span class="vital-value">@character.CurrentHealth/@character.MaxHealth</span>
+                        </div>
+                        <div class="vital-bar">
+                            <span class="vital-label">Willpower</span>
+                            <div class="bar-track">
+                                <div class="bar-fill wp-fill" style="width: @(character.MaxWillpower > 0 ? (int)(100.0 * character.CurrentWillpower / character.MaxWillpower) : 0)%"></div>
+                            </div>
+                            <span class="vital-value">@character.CurrentWillpower/@character.MaxWillpower</span>
+                        </div>
+                        <div class="vital-bar">
+                            <span class="vital-label">Vitae</span>
+                            <div class="bar-track">
+                                <div class="bar-fill vitae-fill" style="width: @(character.MaxVitae > 0 ? (int)(100.0 * character.CurrentVitae / character.MaxVitae) : 0)%"></div>
+                            </div>
+                            <span class="vital-value">@character.CurrentVitae/@character.MaxVitae</span>
+                        </div>
+                    </div>
+                    <div class="card-stats">
+                        <span>🩸 Blood Potency: @character.BloodPotency</span>
+                    </div>
+                    <div class="card-actions">
+                        <a href="/character/@character.Id" class="btn-primary-rn">View Sheet</a>
+                        <button @onclick="() => DeleteCharacter(character)" class="btn-danger-rn">Delete</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
@@ -91,7 +96,6 @@
         }
         else
         {
-            // Not authenticated or user ID not found
             characters = new List<Character>();
         }
     }

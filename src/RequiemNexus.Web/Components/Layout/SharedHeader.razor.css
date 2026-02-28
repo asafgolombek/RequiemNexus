@@ -1,0 +1,175 @@
+/* ============================================================
+   SharedHeader — Primary Navigation
+   ============================================================ */
+
+/* Primary Top Navbar */
+.main-header {
+    background-color: #000000;
+    border-bottom: 2px solid var(--accent-color);
+    padding: 0 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 60px;
+    gap: 1rem;
+}
+
+.brand-link {
+    text-decoration: none;
+    color: var(--text-bright);
+}
+
+.brand-link:hover {
+    color: var(--text-bright);
+}
+
+.brand h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-bright);
+    letter-spacing: 2px;
+    font-family: var(--font-heading);
+}
+
+/* Search Box */
+.search-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    flex-grow: 1;
+    max-width: 400px;
+    transition: border-color var(--transition-fast);
+}
+
+.search-container:focus-within {
+    border-color: var(--accent-color);
+}
+
+.search-icon {
+    margin-right: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.search-input {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    width: 100%;
+    font-size: 0.9rem;
+    outline: none;
+    font-family: var(--font-primary);
+}
+
+.search-input::placeholder {
+    color: var(--text-dim);
+}
+
+/* Header Action Buttons */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.welcome-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.header-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.logout-form {
+    display: inline;
+}
+
+/* Secondary Navbar */
+.sub-nav {
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sub-nav-content {
+    display: flex;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 44px;
+    padding: 0 1rem;
+    gap: 0.25rem;
+}
+
+.sub-nav-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.sub-nav-link:hover {
+    color: var(--text-bright);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sub-nav-link.active {
+    color: var(--text-bright);
+}
+
+.sub-nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 1rem;
+    right: 1rem;
+    height: 2px;
+    background-color: var(--accent-color);
+    border-radius: 1px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .search-container {
+        display: none;
+    }
+    
+    .welcome-text {
+        display: none;
+    }
+
+    .sub-nav-content {
+        gap: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sub-nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .brand h1 {
+        font-size: 1.1rem;
+    }
+}

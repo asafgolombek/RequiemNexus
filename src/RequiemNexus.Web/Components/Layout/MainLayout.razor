@@ -1,10 +1,12 @@
 ﻿@inherits LayoutComponentBase
+@using RequiemNexus.Web.Components.Layout
 
 <div class="page">
 
-    <main>
+    <SharedHeader />
 
-        <article class="content px-4">
+    <main>
+        <article class="content px-4 fade-in">
             @Body
         </article>
     </main>

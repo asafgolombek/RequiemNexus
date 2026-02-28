@@ -9,54 +9,40 @@
 
 <PageTitle>My Campaigns - Requiem Nexus</PageTitle>
 
-<div class="home-layout">
-    <header class="main-header">
-        <div class="header-content">
-            <div class="brand">
-                <h1><a href="/home" style="color: white; text-decoration: none;">REQUIEM NEXUS</a></h1>
-            </div>
-            <div class="header-actions">
-                <span class="welcome-text">Welcome back</span>
-                <button class="nav-btn primary-btn">Log Out</button>
-            </div>
-        </div>
-    </header>
-
-    <div class="dashboard-content">
-        <div class="campaigns-header">
-            <h2>My Campaigns</h2>
-            <a href="/campaigns/create" class="btn-create">Create New Campaign</a>
-        </div>
-
-        @if (campaigns == null)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else if (!campaigns.Any())
-        {
-            <div class="empty-state">
-                <p>You haven't joined or created any campaigns yet.</p>
-                <a href="/campaigns/create" class="btn-create btn-large">Create New Campaign</a>
-            </div>
-        }
-        else
-        {
-            <div class="campaign-grid">
-                @foreach (var campaign in campaigns)
-                {
-                    <a href="/campaigns/@campaign.Id" class="campaign-card">
-                        <h3>@campaign.Name</h3>
-                        <p class="role-text">
-                            @(IsStoryTeller(campaign) ? "👑 Story Teller" : "🗡️ Player")
-                        </p>
-                        <div class="stats">
-                            <span>👥 Characters: @(campaign.Characters?.Count ?? 0)</span>
-                        </div>
-                    </a>
-                }
-            </div>
-        }
+<div class="page-container fade-in">
+    <div class="page-header-rn">
+        <h2>My Campaigns</h2>
+        <a href="/campaigns/create" class="btn-primary-rn btn-create">Create New Campaign</a>
     </div>
+
+    @if (campaigns == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (!campaigns.Any())
+    {
+        <div class="empty-state-rn">
+            <p>You haven't joined or created any campaigns yet.</p>
+            <a href="/campaigns/create" class="btn-primary-rn btn-create btn-large">Create New Campaign</a>
+        </div>
+    }
+    else
+    {
+        <div class="campaign-grid">
+            @foreach (var campaign in campaigns)
+            {
+                <a href="/campaigns/@campaign.Id" class="campaign-card card-rn">
+                    <h3>@campaign.Name</h3>
+                    <p class="role-text">
+                        @(IsStoryTeller(campaign) ? "👑 Story Teller" : "🗡️ Player")
+                    </p>
+                    <div class="card-stats-line">
+                        <span>👥 Characters: @(campaign.Characters?.Count ?? 0)</span>
+                    </div>
+                </a>
+            }
+        </div>
+    }
 </div>
 
 @code {

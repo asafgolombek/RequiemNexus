@@ -1,0 +1,63 @@
+/* Character Creation Wizard Styles */
+
+.wizard-container {
+    max-width: 800px;
+}
+
+.wizard-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-accent);
+    padding-bottom: 1.5rem;
+}
+
+.wizard-header h2 {
+    font-family: var(--font-heading);
+    color: var(--text-bright);
+    margin: 0 0 1rem 0;
+    font-size: 1.8rem;
+}
+
+.wizard-progress-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 1rem;
+}
+
+.wizard-progress-step {
+    flex-grow: 1;
+    height: 8px;
+    background-color: var(--bg-surface);
+    border-radius: 4px;
+    transition: background-color var(--transition-normal);
+}
+
+.wizard-progress-step.active {
+    background-color: var(--accent-color);
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.wizard-step-text {
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+.wizard-body {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-accent);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+}
+
+.wizard-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.wizard-btn-embrace {
+    background: linear-gradient(to right, var(--accent-color), #aa0000) !important;
+    padding: 10px 24px !important;
+    font-size: 1rem !important;
+}

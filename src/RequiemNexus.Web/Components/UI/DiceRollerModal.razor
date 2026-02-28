@@ -3,56 +3,69 @@
 @if (IsVisible)
 {
     <div class="modal-backdrop" @onclick="Close">
-        <div class="modal-content" @onclick:stopPropagation>
+        <div class="modal-panel" @onclick:stopPropagation>
             <div class="modal-header">
                 <h3>Roll: @TraitName</h3>
                 <button class="close-btn" @onclick="Close">&times;</button>
             </div>
             
             <div class="modal-body">
-                <div class="form-group">
+                <div class="roller-form-group">
                     <label>Base Dice Pool (Trait Rating + Associated Trait)</label>
-                    <input type="number" @bind="BaseDice" min="1" class="form-control" />
+                    <input type="number" @bind="BaseDice" min="1" class="roller-input" />
                 </div>
                 
-                <div class="form-group">
+                <div class="roller-form-group">
                     <label>Modifiers (Bonus / Penalty)</label>
-                    <input type="number" @bind="Modifier" class="form-control" />
+                    <input type="number" @bind="Modifier" class="roller-input" />
                 </div>
                 
-                <div class="form-group">
+                <div class="roller-form-group">
                     <label>Total Pool</label>
-                    <strong>@(BaseDice + Modifier <= 0 ? "Chance Die" : (BaseDice + Modifier).ToString())</strong>
+                    <strong class="pool-total">@(BaseDice + Modifier <= 0 ? "Chance Die" : (BaseDice + Modifier).ToString())</strong>
                 </div>
 
-                <div class="options-group" style="margin-top: 15px;">
-                    <label><input type="checkbox" @bind="TenAgain" /> 10-Again</label>
-                    <label><input type="checkbox" @bind="NineAgain" /> 9-Again</label>
-                    <label><input type="checkbox" @bind="EightAgain" /> 8-Again</label>
-                    <label><input type="checkbox" @bind="IsRote" /> Rote Action</label>
+                <div class="options-group">
+                    <label class="option-label"><input type="checkbox" @bind="TenAgain" /> 10-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="NineAgain" /> 9-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="EightAgain" /> 8-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="IsRote" /> Rote Action</label>
                 </div>
                 
-                <div class="actions" style="margin-top: 20px;">
-                    <button class="btn btn-primary" @onclick="RollDice">Roll</button>
+                <div class="roller-actions">
+                    <button class="btn-primary-rn roll-action-btn" @onclick="RollDice">Roll the Dice</button>
                     @if (showTools)
                     {
-                        <div class="debug-tools" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+                        <div class="debug-tools">
                             <label>Seed (Deterministic Mode)</label>
-                            <input type="number" @bind="Seed" class="form-control" placeholder="Optional" />
+                            <input type="number" @bind="Seed" class="roller-input" placeholder="Optional" />
                         </div>
                     }
-                    <button class="btn btn-secondary btn-sm" style="margin-top: 5px;" @onclick="() => showTools = !showTools">Toggle Debug Tools</button>
+                    <button class="btn-ghost debug-toggle" @onclick="() => showTools = !showTools">
+                        @(showTools ? "Hide" : "Show") Debug Tools
+                    </button>
                 </div>
                 
                 @if (LastResult != null)
                 {
-                    <div class="result-box" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid #330000;">
-                        <h4>Result: @LastResult.Successes Successes</h4>
-                        @if (LastResult.IsExceptionalSuccess) { <span class="badge" style="color: #gold;">Exceptional Success!</span> }
-                        @if (LastResult.IsDramaticFailure) { <span class="badge" style="color: #red;">Dramatic Failure!</span> }
+                    <div class="result-box @(LastResult.IsExceptionalSuccess ? "exceptional" : "") @(LastResult.IsDramaticFailure ? "dramatic-failure" : "")">
+                        <h4 class="result-title">
+                            @LastResult.Successes Success@(LastResult.Successes != 1 ? "es" : "")
+                        </h4>
+                        @if (LastResult.IsExceptionalSuccess)
+                        {
+                            <span class="result-badge exceptional-badge">✨ Exceptional Success!</span>
+                        }
+                        @if (LastResult.IsDramaticFailure)
+                        {
+                            <span class="result-badge failure-badge">💀 Dramatic Failure!</span>
+                        }
                         
-                        <div class="dice-rolled" style="margin-top: 10px;">
-                            <p>Dice: @string.Join(", ", LastResult.DiceRolled)</p>
+                        <div class="dice-results">
+                            @foreach (var die in LastResult.DiceRolled)
+                            {
+                                <span class="die-result @(die >= 8 ? "success-die" : "fail-die")">@die</span>
+                            }
                         </div>
                     </div>
                 }
@@ -91,38 +104,3 @@
         LastResult = DiceService.Roll(pool, TenAgain, NineAgain, EightAgain, IsRote, Seed);
     }
 }
-
-<style>
-    .modal-backdrop {
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.7);
-        display: flex; justify-content: center; align-items: center;
-        z-index: 1000;
-    }
-    .modal-content {
-        background: #1a1a1a;
-        border: 1px solid #660000;
-        border-radius: 8px;
-        width: 100%; max-width: 400px;
-        padding: 20px;
-        color: #e0d0c0;
-        font-family: var(--font-primary, "Inter", sans-serif);
-    }
-    .modal-header {
-        display: flex; justify-content: space-between; align-items: center;
-        border-bottom: 1px solid #330000; margin-bottom: 15px; padding-bottom: 10px;
-    }
-    .modal-header h3 { margin: 0; color: #8b0000; }
-    .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
-    .close-btn:hover { color: #fff; }
-    .form-group { margin-bottom: 10px; }
-    .form-group label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #aaa; }
-    .form-control { width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid #330000; color: #e0d0c0; border-radius: 4px; }
-    .options-group label { display: block; margin-bottom: 5px; font-size: 0.9em; cursor: pointer; }
-    .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
-    .btn-primary { background: #660000; color: #fff; }
-    .btn-primary:hover { background: #8b0000; }
-    .btn-secondary { background: #333; color: #ccc; }
-    .btn-secondary:hover { background: #444; }
-</style>

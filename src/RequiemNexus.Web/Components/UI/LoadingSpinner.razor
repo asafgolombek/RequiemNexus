@@ -1,0 +1,15 @@
+<div class="loading-spinner-container">
+    <div class="spinner-ring">
+        <div class="ring-segment"></div>
+        <div class="ring-segment"></div>
+        <div class="ring-segment"></div>
+    </div>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p class="spinner-message">@Message</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Loading...";
+}
