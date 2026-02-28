@@ -1,15 +1,14 @@
 @page "/character/{Id:int}"
 @rendermode InteractiveServer
-@using Microsoft.EntityFrameworkCore
-@using RequiemNexus.Data
 @using RequiemNexus.Data.Models
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
-@inject ApplicationDbContext DbContext
+@using RequiemNexus.Web.Contracts
+@inject ICharacterService CharacterService
+@inject IAdvancementService AdvancementService
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject RequiemNexus.Web.Services.AdvancementService AdvancementService
 
 <PageTitle>@(character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -67,7 +66,7 @@ else
             <button class="tab-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character
                 Sheet</button>
             <button class="tab-btn @(activeTab == "identity" ? "active" : "")"
-            @onclick='() => activeTab = "identity"'>Identity & Backstory</button>
+            @onclick='() => activeTab = "identity"'>Identity &amp; Backstory</button>
         </div>
 
         <CascadingValue Value="@(isAdvancementMode || isFreeEditMode)" Name="IsEditable">
@@ -251,7 +250,7 @@ else
                                             <p class="equipment-desc">@ce.Equipment?.Description</p>
                                         }
                                     </div>
-                                    <button class="equipment-remove-btn" @onclick="() => RemoveEquipment(ce.Id)">Del</button>
+                                    <button class="equipment-remove-btn" @onclick="() => RemoveEquipment(ce.Id)">Remove</button>
                                 </li>
                             }
                         </ul>
@@ -302,7 +301,7 @@ else
     {
         if (character != null)
         {
-            await DbContext.SaveChangesAsync();
+            await CharacterService.SaveAsync(character);
         }
     }
 
@@ -317,14 +316,14 @@ else
                 bool success = AdvancementService.TryUpgradeCoreTrait(character, traitName, currentRating, newRating);
                 if (success)
                 {
-                    await DbContext.SaveChangesAsync();
+                    await CharacterService.SaveAsync(character);
                 }
             }
         }
         else if (isFreeEditMode)
         {
             AdvancementService.UpdateCoreTrait(character, traitName, newRating);
-            await DbContext.SaveChangesAsync();
+            await CharacterService.SaveAsync(character);
         }
     }
 
@@ -335,15 +334,8 @@ else
 
         if (!string.IsNullOrEmpty(currentUserId))
         {
-            character = await DbContext.Characters
-            .Include(c => c.Clan)
-            .Include(c => c.Campaign)
-            .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
-            .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
-            .FirstOrDefaultAsync(c => c.Id == Id && c.ApplicationUserId == currentUserId);
-
-            availableEquipment = await DbContext.Equipment.OrderBy(e => e.Name).ToListAsync();
+            character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
+            availableEquipment = await CharacterService.GetAvailableEquipmentAsync();
         }
     }
 
@@ -362,104 +354,39 @@ else
     private int GetTraitValue(string traitName)
     {
         if (character == null) return 0;
-        return traitName switch
-        {
-            "Intelligence" => character.Intelligence,
-            "Wits" => character.Wits,
-            "Resolve" => character.Resolve,
-            "Strength" => character.Strength,
-            "Dexterity" => character.Dexterity,
-            "Stamina" => character.Stamina,
-            "Presence" => character.Presence,
-            "Manipulation" => character.Manipulation,
-            "Composure" => character.Composure,
-            "Academics" => character.Academics,
-            "Computer" => character.Computer,
-            "Crafts" => character.Crafts,
-            "Investigation" => character.Investigation,
-            "Medicine" => character.Medicine,
-            "Occult" => character.Occult,
-            "Politics" => character.Politics,
-            "Science" => character.Science,
-            "Athletics" => character.Athletics,
-            "Brawl" => character.Brawl,
-            "Drive" => character.Drive,
-            "Firearms" => character.Firearms,
-            "Larceny" => character.Larceny,
-            "Stealth" => character.Stealth,
-            "Survival" => character.Survival,
-            "Weaponry" => character.Weaponry,
-            "Animal Ken" => character.AnimalKen,
-            "Empathy" => character.Empathy,
-            "Expression" => character.Expression,
-            "Intimidation" => character.Intimidation,
-            "Persuasion" => character.Persuasion,
-            "Socialize" => character.Socialize,
-            "Streetwise" => character.Streetwise,
-            "Subterfuge" => character.Subterfuge,
-            "Blood Potency" => character.BloodPotency,
-            "Humanity" => character.Humanity,
-            _ => 0
-        };
+        var prop = typeof(Character).GetProperty(traitName.Replace(" ", ""));
+        return (int)(prop?.GetValue(character) ?? 0);
     }
 
     private async Task AddBeat()
     {
         if (character != null)
-        {
-            character.Beats++;
-            if (character.Beats >= 5)
-            {
-                character.Beats -= 5;
-                character.ExperiencePoints++;
-                character.TotalExperiencePoints++;
-            }
-            await DbContext.SaveChangesAsync();
-        }
+            await CharacterService.AddBeatAsync(character);
     }
 
     private async Task RemoveBeat()
     {
-        if (character != null && character.Beats > 0)
-        {
-            character.Beats--;
-            await DbContext.SaveChangesAsync();
-        }
+        if (character != null)
+            await CharacterService.RemoveBeatAsync(character);
     }
 
     private async Task AddXP()
     {
         if (character != null)
-        {
-            character.ExperiencePoints++;
-            character.TotalExperiencePoints++;
-            await DbContext.SaveChangesAsync();
-        }
+            await CharacterService.AddXPAsync(character);
     }
 
     private async Task RemoveXP()
     {
-        if (character != null && character.ExperiencePoints > 0)
-        {
-            character.ExperiencePoints--;
-            character.TotalExperiencePoints--;
-            await DbContext.SaveChangesAsync();
-        }
+        if (character != null)
+            await CharacterService.RemoveXPAsync(character);
     }
 
     private async Task AddEquipment()
     {
         if (character != null && selectedEquipmentId > 0 && selectedEquipmentQuantity > 0)
         {
-            var ce = new CharacterEquipment
-                {
-                    CharacterId = character.Id,
-                    EquipmentId = selectedEquipmentId,
-                    Quantity = selectedEquipmentQuantity
-                };
-            DbContext.CharacterEquipments.Add(ce);
-            await DbContext.SaveChangesAsync();
-
+            var ce = await CharacterService.AddEquipmentAsync(character.Id, selectedEquipmentId, selectedEquipmentQuantity);
             ce.Equipment = availableEquipment.FirstOrDefault(e => e.Id == selectedEquipmentId);
             character.CharacterEquipments.Add(ce);
 
@@ -472,13 +399,9 @@ else
     {
         if (character != null)
         {
+            await CharacterService.RemoveEquipmentAsync(ceId);
             var ce = character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
-            if (ce != null)
-            {
-                DbContext.CharacterEquipments.Remove(ce);
-                await DbContext.SaveChangesAsync();
-                character.CharacterEquipments.Remove(ce);
-            }
+            if (ce != null) character.CharacterEquipments.Remove(ce);
         }
     }
 }

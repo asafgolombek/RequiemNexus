@@ -23,4 +23,22 @@ public static class CharacterCreationRules
         // A standard starting neonate has BP 1 and a Max Vitae pool of 10.
         return (BloodPotency: 1, MaxVitae: 10, CurrentVitae: 10);
     }
+
+    /// <summary>
+    /// Converts 5 Beats into 1 Experience Point (and increments Total XP earned).
+    /// Returns true if a conversion occurred.
+    /// </summary>
+    public static bool TryConvertBeats(int beats, out int newBeats, out int xpGained)
+    {
+        if (beats >= 5)
+        {
+            newBeats = beats - 5;
+            xpGained = 1;
+            return true;
+        }
+
+        newBeats = beats;
+        xpGained = 0;
+        return false;
+    }
 }

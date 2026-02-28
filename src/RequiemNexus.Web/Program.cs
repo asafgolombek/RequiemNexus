@@ -29,7 +29,7 @@ builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, Requiem
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus.Web.Services.ClanService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
-builder.Services.AddScoped<RequiemNexus.Web.Services.AdvancementService>();
+builder.Services.AddScoped<RequiemNexus.Web.Contracts.IAdvancementService, RequiemNexus.Web.Services.AdvancementService>();
 builder.Services.AddScoped<RequiemNexus.Domain.Services.DiceService>();
 
 builder.Services.AddCascadingAuthenticationState();
@@ -44,11 +44,16 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = false; // Set to false to allow login without confirmation for now
         options.User.RequireUniqueEmail = true;
-        options.Password.RequireDigit = false;
-        options.Password.RequiredLength = 1;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequireUppercase = false;
-        options.Password.RequireLowercase = false;
+
+        // Relaxed password rules are development-only
+        if (builder.Environment.IsDevelopment())
+        {
+            options.Password.RequireDigit = false;
+            options.Password.RequiredLength = 1;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireLowercase = false;
+        }
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
