@@ -9,7 +9,9 @@
                 @for(int i = 0; i < Character.MaxHealth; i++)
                 {
                     int captureIndex = i;
-                    <div class="tracker-box @(i < Character.CurrentHealth ? "filled" : "")" @onclick="() => ToggleHealth(captureIndex)"></div>
+                    <div class="tracker-box health-box" @onclick="() => ToggleHealth(captureIndex)">
+                        @GetHealthDamageChar(captureIndex)
+                    </div>
                 }
             </div>
         </div>
@@ -43,10 +45,41 @@
     [Parameter]
     public EventCallback OnChanged { get; set; }
 
+    private string GetHealthDamageChar(int index)
+    {
+        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
+            return string.Empty;
+        
+        char damage = Character.HealthDamage[index];
+        return damage == ' ' ? string.Empty : damage.ToString();
+    }
+
     private async Task ToggleHealth(int index)
     {
-        if (index == Character.CurrentHealth - 1) Character.CurrentHealth--;
-        else Character.CurrentHealth = index + 1;
+        if (Character.HealthDamage == null) Character.HealthDamage = string.Empty;
+        
+        if (Character.HealthDamage.Length < Character.MaxHealth)
+        {
+            Character.HealthDamage = Character.HealthDamage.PadRight(Character.MaxHealth, ' ');
+        }
+
+        char currentDamage = Character.HealthDamage[index];
+        char newDamage = currentDamage switch
+        {
+            ' ' => '/',
+            '/' => 'X',
+            'X' => '*',
+            '*' => ' ',
+            _ => '/'
+        };
+
+        var chars = Character.HealthDamage.ToCharArray();
+        chars[index] = newDamage;
+        Character.HealthDamage = new string(chars);
+
+        // Keep CurrentHealth in sync with total damage boxes taken
+        Character.CurrentHealth = Character.HealthDamage.Count(c => c != ' ');
+
         await NotifyChanged();
     }
 

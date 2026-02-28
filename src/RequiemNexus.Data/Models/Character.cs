@@ -51,6 +51,9 @@ public class Character
 
     public int MaxHealth { get; set; }
     public int CurrentHealth { get; set; }
+    
+    [MaxLength(50)]
+    public string HealthDamage { get; set; } = string.Empty;
 
     public int MaxWillpower { get; set; }
     public int CurrentWillpower { get; set; }

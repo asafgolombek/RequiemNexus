@@ -389,3 +389,22 @@ h1:focus {
   background-color: var(--accent-hover);
   border-color: var(--accent-hover);
 }
+
+/* ---------- Character Sheet Shared Sections ---------- */
+.cs-section {
+    background-color: var(--bg-panel);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.cs-section h2 {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    color: var(--text-bright);
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
+}
