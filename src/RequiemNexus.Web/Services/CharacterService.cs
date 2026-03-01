@@ -25,7 +25,7 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
             .Include(c => c.Clan)
             .Include(c => c.Campaign)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
             .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
@@ -134,5 +134,46 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
             _dbContext.CharacterEquipments.Remove(ce);
             await _dbContext.SaveChangesAsync();
         }
+    }
+
+    public async Task<List<Merit>> GetAvailableMeritsAsync()
+    {
+        return await _dbContext.Merits.OrderBy(m => m.Name).ToListAsync();
+    }
+
+    public async Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost)
+    {
+        character.ExperiencePoints -= xpCost;
+        
+        var cm = new CharacterMerit
+        {
+            CharacterId = character.Id,
+            MeritId = meritId,
+            Rating = rating,
+            Specification = specification
+        };
+        _dbContext.CharacterMerits.Add(cm);
+        await _dbContext.SaveChangesAsync();
+        return cm;
+    }
+
+    public async Task<List<Discipline>> GetAvailableDisciplinesAsync()
+    {
+        return await _dbContext.Disciplines.OrderBy(d => d.Name).ToListAsync();
+    }
+
+    public async Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, int xpCost)
+    {
+        character.ExperiencePoints -= xpCost;
+
+        var cd = new CharacterDiscipline
+        {
+            CharacterId = character.Id,
+            DisciplineId = disciplineId,
+            Rating = rating
+        };
+        _dbContext.CharacterDisciplines.Add(cd);
+        await _dbContext.SaveChangesAsync();
+        return cd;
     }
 }

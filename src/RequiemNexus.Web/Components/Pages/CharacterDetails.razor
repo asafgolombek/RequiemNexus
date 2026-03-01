@@ -32,10 +32,19 @@ else
                     <h1 @onclick="() => isEditingName = true" style="cursor: pointer;" title="Click to edit name">@character.Name <i class="edit-icon">✎</i></h1>
                 }
                 <div class="char-meta">
-                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" :
-                    character.Concept)</span>
+                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" : character.Concept)</span>
                     <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
                     <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
+                    <span><strong>Mask:</strong> @(string.IsNullOrEmpty(character.Mask) ? "???" : character.Mask)</span>
+                    <span><strong>Dirge:</strong> @(string.IsNullOrEmpty(character.Dirge) ? "???" : character.Dirge)</span>
+                    @if (isFreeEditMode)
+                    {
+                        <span><strong>Touchstone:</strong> <input type="text" @bind="character.Touchstone" class="char-meta-input" placeholder="e.g. My sibling" /></span>
+                    }
+                    else
+                    {
+                        <span><strong>Touchstone:</strong> @(string.IsNullOrEmpty(character.Touchstone) ? "???" : character.Touchstone)</span>
+                    }
                 </div>
                 <div class="char-xp">
                     <div class="xp-counter">
@@ -57,13 +66,13 @@ else
                         <span class="xp-counter-value">@character.TotalExperiencePoints</span>
                     </div>
 
-                    <button class="btn-ghost mode-toggle-btn @(isAdvancementMode ? "active" : "")"
-                    @onclick="ToggleAdvancementMode">
-                        @(isAdvancementMode ? "Exit Advancement" : "Enter Advancement")
+                    <button class="btn-ghost mode-toggle-btn"
+                    @onclick="GoToAdvancement">
+                        Enter Advancement
                     </button>
                     <button class="btn-ghost mode-toggle-btn @(isFreeEditMode ? "active" : "")"
                     @onclick="ToggleFreeEditMode">
-                        @(isFreeEditMode ? "Exit Free Edit" : "Free Edit Mode")
+                        @(isFreeEditMode ? "Finish Edit" : "Edit Character")
                     </button>
                 </div>
             </div>
@@ -195,7 +204,7 @@ else
                                 @foreach (var merit in character.Merits)
                                 {
                                     <li class="trait-item">
-                                        <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) ? "" :
+                                        <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" :
                                 $"({merit.Specification})")</span>
                                         <span class="trait-dots">@(new string('•',
                                 merit.Rating))</span>
@@ -205,13 +214,45 @@ else
                         </section>
                         <section class="cs-section cs-disciplines">
                             <h2>Disciplines</h2>
-                            <ul class="trait-list">
+                            <ul class="trait-list disciplines-list">
                                 @foreach (var disc in character.Disciplines)
                                 {
-                                    <li class="trait-item">
-                                        <span>@disc.Discipline?.Name</span>
-                                        <span class="trait-dots">@(new string('•',
-                                disc.Rating))</span>
+                                    <li class="trait-item discipline-item" style="flex-direction: column; align-items: stretch;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer;" @onclick="() => ToggleDiscipline(disc.DisciplineId)">
+                                            <span>
+                                                @if (expandedDisciplines.Contains(disc.DisciplineId))
+                                                {
+                                                    <i class="oi oi-chevron-bottom" style="font-size: 0.8em; margin-right: 5px;"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="oi oi-chevron-right" style="font-size: 0.8em; margin-right: 5px;"></i>
+                                                }
+                                                @disc.Discipline?.Name
+                                            </span>
+                                            <span class="trait-dots">@(new string('•', disc.Rating))</span>
+                                        </div>
+                                        
+                                        @if (expandedDisciplines.Contains(disc.DisciplineId) && disc.Discipline?.Powers != null)
+                                        {
+                                            <div class="discipline-powers" style="margin-top: 10px; padding-left: 15px; border-left: 2px solid #550000; font-size: 0.9em; color: #d0d0d0;">
+                                                @foreach (var power in disc.Discipline.Powers.Where(p => p.Level <= disc.Rating).OrderBy(p => p.Level))
+                                                {
+                                                    <div class="power-item" style="margin-bottom: 8px;">
+                                                        <strong>Level @power.Level - @power.Name:</strong>
+                                                        <p style="margin: 2px 0 0 0; font-size: 0.85em; color: #a0a0a0;">@power.Description</p>
+                                                        @if (!string.IsNullOrEmpty(power.DicePool) || !string.IsNullOrEmpty(power.Cost))
+                                                        {
+                                                            <div style="font-size: 0.8em; color: #808080; margin-top: 2px;">
+                                                                @(string.IsNullOrEmpty(power.DicePool) ? "" : $"Pool: {power.DicePool}")
+                                                                @(string.IsNullOrEmpty(power.DicePool) || string.IsNullOrEmpty(power.Cost) ? "" : " | ")
+                                                                @(string.IsNullOrEmpty(power.Cost) ? "" : $"Cost: {power.Cost}")
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
                                     </li>
                                 }
                             </ul>
@@ -276,6 +317,8 @@ else
 }
 
 @code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
     [Parameter]
     public int Id { get; set; }
 
@@ -292,6 +335,25 @@ else
     private bool isFreeEditMode = false;
     private string activeTab = "sheet";
     private bool isEditingName = false;
+    
+    private HashSet<int> expandedDisciplines = new HashSet<int>();
+
+    private void ToggleDiscipline(int disciplineId)
+    {
+        if (expandedDisciplines.Contains(disciplineId))
+        {
+            expandedDisciplines.Remove(disciplineId);
+        }
+        else
+        {
+            expandedDisciplines.Add(disciplineId);
+        }
+    }
+
+    private void GoToAdvancement()
+    {
+        NavigationManager.NavigateTo($"/character/{Id}/advancement");
+    }
 
     private async Task SaveNameOffBlur()
     {
@@ -313,10 +375,16 @@ else
         if (isAdvancementMode) isFreeEditMode = false;
     }
 
-    private void ToggleFreeEditMode()
+    private async Task ToggleFreeEditMode()
     {
+        bool wasEditing = isFreeEditMode;
         isFreeEditMode = !isFreeEditMode;
         if (isFreeEditMode) isAdvancementMode = false;
+        // Save when the user finishes editing (transitions from ON → OFF)
+        if (!isFreeEditMode && wasEditing)
+        {
+            await SaveCharacter();
+        }
     }
 
     private async Task SaveCharacter()
@@ -345,6 +413,8 @@ else
         else if (isFreeEditMode)
         {
             AdvancementService.UpdateCoreTrait(character, traitName, newRating);
+            if (traitName is "Stamina" or "Resolve" or "Composure")
+                AdvancementService.RecalculateDerivedStats(character);
             await CharacterService.SaveAsync(character);
         }
     }

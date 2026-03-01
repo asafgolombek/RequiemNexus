@@ -27,6 +27,9 @@ public class Character
     [MaxLength(50)]
     public string Dirge { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    public string Touchstone { get; set; } = string.Empty;
+
     [MaxLength(50)]
     public string Height { get; set; } = string.Empty;
 

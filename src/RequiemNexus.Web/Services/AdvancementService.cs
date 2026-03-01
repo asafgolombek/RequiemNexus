@@ -25,6 +25,24 @@ public class AdvancementService : IAdvancementService
         SetTrait(character, traitName, newRating);
     }
 
+    /// <summary>
+    /// Recalculates MaxHealth and MaxWillpower after attributes change.
+    /// Applies the delta to Current values to preserve existing injuries/willpower spend.
+    /// </summary>
+    public void RecalculateDerivedStats(Character character)
+    {
+        int newMaxHealth = character.Size + character.Stamina;
+        int newMaxWillpower = character.Resolve + character.Composure;
+
+        int healthDiff = newMaxHealth - character.MaxHealth;
+        character.MaxHealth = newMaxHealth;
+        character.CurrentHealth = Math.Clamp(character.CurrentHealth + healthDiff, 0, newMaxHealth);
+
+        int willpowerDiff = newMaxWillpower - character.MaxWillpower;
+        character.MaxWillpower = newMaxWillpower;
+        character.CurrentWillpower = Math.Clamp(character.CurrentWillpower + willpowerDiff, 0, newMaxWillpower);
+    }
+
     private bool TryUpgradeAttribute(Character character, string traitName, int currentRating, int newRating)
     {
         if (newRating <= currentRating || newRating > 5) return false;

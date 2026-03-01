@@ -185,7 +185,7 @@
     {
         if (!newCharacter.Merits.Any(m => m.MeritId == meritId))
         {
-            newCharacter.Merits.Add(new CharacterMerit { MeritId = meritId, Rating = 1, Specification = "N/A" });
+            newCharacter.Merits.Add(new CharacterMerit { MeritId = meritId, Rating = 1, Specification = "" });
         }
     }
 

@@ -1,0 +1,311 @@
+@page "/character/{Id:int}/advancement"
+@rendermode InteractiveServer
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Components.Pages.CharacterSheet
+@using RequiemNexus.Web.Contracts
+@inject ICharacterService CharacterService
+@inject IAdvancementService AdvancementService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Advancement: @(character?.Name ?? "Loading...") - Requiem Nexus</PageTitle>
+
+@if (character == null)
+{
+    <p><em>Loading immortal legacy...</em></p>
+}
+else
+{
+    <div class="character-sheet fade-in">
+        <header class="cs-header" style="justify-content: space-between;">
+            <div>
+                <h1>Advancing @character.Name</h1>
+                <p>Spend your Experiences to grow more powerful.</p>
+            </div>
+            <div class="char-xp" style="flex-direction: column; align-items: flex-end;">
+                <div class="xp-counter">
+                    <strong class="xp-counter-label">Experiences</strong>
+                    <span class="xp-counter-value">@character.ExperiencePoints</span>
+                </div>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div style="color: #ff6666; margin-top: 10px; font-size: 0.9em;">@errorMessage</div>
+                }
+                <button class="btn-ghost" @onclick="GoBackToSheet" style="margin-top: 10px;">Return to Character Sheet</button>
+            </div>
+        </header>
+
+        <CascadingValue Value="true" Name="IsEditable">
+            <div class="cs-grid">
+                <!-- ATTRIBUTES -->
+                <section class="cs-section cs-attributes">
+                    <h2>Attributes (New Dot x 4 XP)</h2>
+                    <div class="grid-3-col">
+                        <div class="stat-col mental">
+                            <h3>Mental</h3>
+                            <DotScale Value="character.Intelligence" ValueChanged='(int val) => TryUpgrade("Intelligence", character.Intelligence, val)' Label="Intelligence" ShowRollButton="false" />
+                            <DotScale Value="character.Wits" ValueChanged='(int val) => TryUpgrade("Wits", character.Wits, val)' Label="Wits" ShowRollButton="false" />
+                            <DotScale Value="character.Resolve" ValueChanged='(int val) => TryUpgrade("Resolve", character.Resolve, val)' Label="Resolve" ShowRollButton="false" />
+                        </div>
+                        <div class="stat-col physical">
+                            <h3>Physical</h3>
+                            <DotScale Value="character.Strength" ValueChanged='(int val) => TryUpgrade("Strength", character.Strength, val)' Label="Strength" ShowRollButton="false" />
+                            <DotScale Value="character.Dexterity" ValueChanged='(int val) => TryUpgrade("Dexterity", character.Dexterity, val)' Label="Dexterity" ShowRollButton="false" />
+                            <DotScale Value="character.Stamina" ValueChanged='(int val) => TryUpgrade("Stamina", character.Stamina, val)' Label="Stamina" ShowRollButton="false" />
+                        </div>
+                        <div class="stat-col social">
+                            <h3>Social</h3>
+                            <DotScale Value="character.Presence" ValueChanged='(int val) => TryUpgrade("Presence", character.Presence, val)' Label="Presence" ShowRollButton="false" />
+                            <DotScale Value="character.Manipulation" ValueChanged='(int val) => TryUpgrade("Manipulation", character.Manipulation, val)' Label="Manipulation" ShowRollButton="false" />
+                            <DotScale Value="character.Composure" ValueChanged='(int val) => TryUpgrade("Composure", character.Composure, val)' Label="Composure" ShowRollButton="false" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SKILLS -->
+                <section class="cs-section cs-skills">
+                    <h2>Skills (New Dot x 2 XP)</h2>
+                    <div class="grid-3-col">
+                        <div class="stat-col mental">
+                            <h3>Mental</h3>
+                            <DotScale Value="character.Academics" ValueChanged='(int val) => TryUpgrade("Academics", character.Academics, val)' Label="Academics" ShowRollButton="false" />
+                            <DotScale Value="character.Computer" ValueChanged='(int val) => TryUpgrade("Computer", character.Computer, val)' Label="Computer" ShowRollButton="false" />
+                            <DotScale Value="character.Crafts" ValueChanged='(int val) => TryUpgrade("Crafts", character.Crafts, val)' Label="Crafts" ShowRollButton="false" />
+                            <DotScale Value="character.Investigation" ValueChanged='(int val) => TryUpgrade("Investigation", character.Investigation, val)' Label="Investigation" ShowRollButton="false" />
+                            <DotScale Value="character.Medicine" ValueChanged='(int val) => TryUpgrade("Medicine", character.Medicine, val)' Label="Medicine" ShowRollButton="false" />
+                            <DotScale Value="character.Occult" ValueChanged='(int val) => TryUpgrade("Occult", character.Occult, val)' Label="Occult" ShowRollButton="false" />
+                            <DotScale Value="character.Politics" ValueChanged='(int val) => TryUpgrade("Politics", character.Politics, val)' Label="Politics" ShowRollButton="false" />
+                            <DotScale Value="character.Science" ValueChanged='(int val) => TryUpgrade("Science", character.Science, val)' Label="Science" ShowRollButton="false" />
+                        </div>
+                        <div class="stat-col physical">
+                            <h3>Physical</h3>
+                            <DotScale Value="character.Athletics" ValueChanged='(int val) => TryUpgrade("Athletics", character.Athletics, val)' Label="Athletics" ShowRollButton="false" />
+                            <DotScale Value="character.Brawl" ValueChanged='(int val) => TryUpgrade("Brawl", character.Brawl, val)' Label="Brawl" ShowRollButton="false" />
+                            <DotScale Value="character.Drive" ValueChanged='(int val) => TryUpgrade("Drive", character.Drive, val)' Label="Drive" ShowRollButton="false" />
+                            <DotScale Value="character.Firearms" ValueChanged='(int val) => TryUpgrade("Firearms", character.Firearms, val)' Label="Firearms" ShowRollButton="false" />
+                            <DotScale Value="character.Larceny" ValueChanged='(int val) => TryUpgrade("Larceny", character.Larceny, val)' Label="Larceny" ShowRollButton="false" />
+                            <DotScale Value="character.Stealth" ValueChanged='(int val) => TryUpgrade("Stealth", character.Stealth, val)' Label="Stealth" ShowRollButton="false" />
+                            <DotScale Value="character.Survival" ValueChanged='(int val) => TryUpgrade("Survival", character.Survival, val)' Label="Survival" ShowRollButton="false" />
+                            <DotScale Value="character.Weaponry" ValueChanged='(int val) => TryUpgrade("Weaponry", character.Weaponry, val)' Label="Weaponry" ShowRollButton="false" />
+                        </div>
+                        <div class="stat-col social">
+                            <h3>Social</h3>
+                            <DotScale Value="character.AnimalKen" ValueChanged='(int val) => TryUpgrade("AnimalKen", character.AnimalKen, val)' Label="Animal Ken" ShowRollButton="false" />
+                            <DotScale Value="character.Empathy" ValueChanged='(int val) => TryUpgrade("Empathy", character.Empathy, val)' Label="Empathy" ShowRollButton="false" />
+                            <DotScale Value="character.Expression" ValueChanged='(int val) => TryUpgrade("Expression", character.Expression, val)' Label="Expression" ShowRollButton="false" />
+                            <DotScale Value="character.Intimidation" ValueChanged='(int val) => TryUpgrade("Intimidation", character.Intimidation, val)' Label="Intimidation" ShowRollButton="false" />
+                            <DotScale Value="character.Persuasion" ValueChanged='(int val) => TryUpgrade("Persuasion", character.Persuasion, val)' Label="Persuasion" ShowRollButton="false" />
+                            <DotScale Value="character.Socialize" ValueChanged='(int val) => TryUpgrade("Socialize", character.Socialize, val)' Label="Socialize" ShowRollButton="false" />
+                            <DotScale Value="character.Streetwise" ValueChanged='(int val) => TryUpgrade("Streetwise", character.Streetwise, val)' Label="Streetwise" ShowRollButton="false" />
+                            <DotScale Value="character.Subterfuge" ValueChanged='(int val) => TryUpgrade("Subterfuge", character.Subterfuge, val)' Label="Subterfuge" ShowRollButton="false" />
+                        </div>
+                    </div>
+                </section>
+                
+                @if (character.Disciplines.Any())
+                {
+                    <section class="cs-section cs-disciplines">
+                        <h2>Disciplines (New Dot x 5 XP)</h2>
+                        <ul class="trait-list disciplines-list" style="max-width: 400px;">
+                            @foreach (var disc in character.Disciplines)
+                            {
+                                <li class="trait-item discipline-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="flex-grow: 1;">@disc.Discipline?.Name</span>
+                                    <DotScale Value="disc.Rating" ValueChanged='(int val) => TryUpgradeDiscipline(disc, val)' Max="5" ShowRollButton="false" />
+                                </li>
+                            }
+                        </ul>
+                    </section>
+                }
+
+                <!-- ADD NEW MERIT -->
+                <section class="cs-section cs-advantages">
+                    <h2>Add New Merit (Rating x 1 XP)</h2>
+                    <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <select @bind="selectedMeritId" class="equipment-select" style="min-width: 200px;">
+                            <option value="0">-- Select Merit --</option>
+                            @foreach (var m in availableMerits)
+                            {
+                                <option value="@m.Id">@m.Name (@m.ValidRatings)</option>
+                            }
+                        </select>
+
+                        @if (SelectedMeritRequiresSpec)
+                        {
+                            <input type="text" @bind="newMeritSpecification" placeholder="Specification..." class="char-meta-input" style="width: 150px;" />
+                        }
+
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span>Rating:</span>
+                            <input type="number" min="1" max="5" @bind="newMeritRating" class="equipment-quantity" style="width: 60px;" />
+                        </div>
+
+                        <button class="btn-primary-rn" @onclick="AddNewMerit" disabled="@(selectedMeritId == 0)">Add</button>
+                    </div>
+                </section>
+
+                <!-- ADD NEW DISCIPLINE -->
+                <section class="cs-section cs-disciplines">
+                    <h2>Add New Discipline (Rating x 5 XP)</h2>
+                    <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <select @bind="selectedDisciplineId" class="equipment-select" style="min-width: 200px;">
+                            <option value="0">-- Select Discipline --</option>
+                            @foreach (var d in availableDisciplines.Where(ad => !character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
+                            {
+                                <option value="@d.Id">@d.Name</option>
+                            }
+                        </select>
+
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span>Starting Rating:</span>
+                            <input type="number" min="1" max="5" @bind="newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
+                        </div>
+
+                        <button class="btn-primary-rn" @onclick="AddNewDiscipline" disabled="@(selectedDisciplineId == 0)">Add</button>
+                    </div>
+                </section>
+            </div>
+        </CascadingValue>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Character? character;
+    private string? errorMessage;
+
+    private List<Merit> availableMerits = new();
+    private int selectedMeritId = 0;
+    private int newMeritRating = 1;
+    private string? newMeritSpecification;
+
+    private List<Discipline> availableDisciplines = new();
+    private int selectedDisciplineId = 0;
+    private int newDisciplineRating = 1;
+
+    private bool SelectedMeritRequiresSpec => 
+        availableMerits.FirstOrDefault(m => m.Id == selectedMeritId)?.RequiresSpecification ?? false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
+            availableMerits = await CharacterService.GetAvailableMeritsAsync();
+            availableDisciplines = await CharacterService.GetAvailableDisciplinesAsync();
+        }
+    }
+
+    private void GoBackToSheet()
+    {
+        NavigationManager.NavigateTo($"/character/{Id}");
+    }
+
+    private async Task TryUpgrade(string traitName, int currentRating, int newRating)
+    {
+        if (character == null) return;
+        
+        errorMessage = null;
+
+        if (newRating > currentRating)
+        {
+            bool success = AdvancementService.TryUpgradeCoreTrait(character, traitName, currentRating, newRating);
+            if (success)
+            {
+                if (traitName is "Stamina" or "Resolve" or "Composure")
+                    AdvancementService.RecalculateDerivedStats(character);
+                await CharacterService.SaveAsync(character);
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = "Not enough Experiences to upgrade that trait.";
+            }
+        }
+    }
+
+    private async Task TryUpgradeDiscipline(CharacterDiscipline cd, int newRating)
+    {
+        if (character == null || newRating <= cd.Rating) return;
+
+        errorMessage = null;
+
+        // Custom discipline cost calculation (New Dot x 5)
+        int currentRating = cd.Rating;
+        int totalCost = 0;
+        for (int i = currentRating + 1; i <= newRating; i++)
+        {
+            totalCost += i * 5;
+        }
+
+        if (character.ExperiencePoints >= totalCost)
+        {
+            character.ExperiencePoints -= totalCost;
+            cd.Rating = newRating;
+            await CharacterService.SaveAsync(character);
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = "Not enough Experiences to upgrade that discipline.";
+        }
+    }
+
+    private async Task AddNewMerit()
+    {
+        if (character == null || selectedMeritId == 0) return;
+
+        errorMessage = null;
+        int xpCost = newMeritRating; // 1 XP per dot (VtR2e rulebook p.44)
+
+        if (character.ExperiencePoints >= xpCost)
+        {
+            var merit = availableMerits.First(m => m.Id == selectedMeritId);
+            var cm = await CharacterService.AddMeritAsync(character, selectedMeritId, SelectedMeritRequiresSpec ? newMeritSpecification : null, newMeritRating, xpCost);
+            cm.Merit = merit;
+            character.Merits.Add(cm);
+
+            selectedMeritId = 0;
+            newMeritRating = 1;
+            newMeritSpecification = string.Empty;
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = $"Not enough Experiences to add that merit. Cost is {xpCost} XP.";
+        }
+    }
+
+    private async Task AddNewDiscipline()
+    {
+        if (character == null || selectedDisciplineId == 0) return;
+
+        errorMessage = null;
+        int xpCost = 0;
+        for (int i = 1; i <= newDisciplineRating; i++) xpCost += i * 5;
+
+        if (character.ExperiencePoints >= xpCost)
+        {
+            var disc = availableDisciplines.First(d => d.Id == selectedDisciplineId);
+            var cd = await CharacterService.AddDisciplineAsync(character, selectedDisciplineId, newDisciplineRating, xpCost);
+            cd.Discipline = disc;
+            character.Disciplines.Add(cd);
+
+            selectedDisciplineId = 0;
+            newDisciplineRating = 1;
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = $"Not enough Experiences to add that discipline. Cost is {xpCost} XP.";
+        }
+    }
+}
