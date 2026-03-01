@@ -99,8 +99,11 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
     {
         if (character.ExperiencePoints > 0)
         {
-            // Only deduct from spendable pool — Total XP reflects lifetime earned XP and never decreases.
             character.ExperiencePoints--;
+            if (character.TotalExperiencePoints > 0)
+            {
+                character.TotalExperiencePoints--;
+            }
             await _dbContext.SaveChangesAsync();
         }
     }

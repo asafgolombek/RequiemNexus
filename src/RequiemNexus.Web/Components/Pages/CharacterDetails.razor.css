@@ -46,6 +46,33 @@
     font-size: 1.8rem;
 }
 
+.char-name-input {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-bright);
+    letter-spacing: 1px;
+    font-size: 1.8rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px dashed var(--accent-light);
+    outline: none;
+    width: 100%;
+}
+
+.edit-icon {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-style: normal;
+    margin-left: 0.5rem;
+}
+
+.char-info h1:hover .edit-icon {
+    opacity: 1;
+}
+
 .char-meta {
     display: flex;
     gap: 1.5rem;

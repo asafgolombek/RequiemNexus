@@ -23,7 +23,14 @@ else
         <header class="cs-header">
             <div class="char-avatar"></div>
             <div class="char-info">
-                <h1>@character.Name</h1>
+                @if (isEditingName)
+                {
+                    <input type="text" class="char-name-input" @bind="character.Name" @onblur="SaveNameOffBlur" @onkeyup="HandleNameKeyUp" autofocus />
+                }
+                else
+                {
+                    <h1 @onclick="() => isEditingName = true" style="cursor: pointer;" title="Click to edit name">@character.Name <i class="edit-icon">✎</i></h1>
+                }
                 <div class="char-meta">
                     <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" :
                     character.Concept)</span>
@@ -284,6 +291,21 @@ else
     private bool isAdvancementMode = false;
     private bool isFreeEditMode = false;
     private string activeTab = "sheet";
+    private bool isEditingName = false;
+
+    private async Task SaveNameOffBlur()
+    {
+        isEditingName = false;
+        await SaveCharacter();
+    }
+
+    private async Task HandleNameKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SaveNameOffBlur();
+        }
+    }
 
     private void ToggleAdvancementMode()
     {

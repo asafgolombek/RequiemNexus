@@ -68,7 +68,7 @@
     margin: 0;
     font-weight: 600;
     font-size: 0.8rem;
-    text-transform: uppercase;
+    text-transform: capitalize;
     letter-spacing: 1px;
 }
 
@@ -89,7 +89,6 @@
 .vital-label {
     font-size: 0.75rem;
     color: var(--text-muted);
-    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 

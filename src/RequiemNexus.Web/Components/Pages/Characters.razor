@@ -46,15 +46,42 @@
                         </div>
                     </div>
                     <div class="vitals-bars">
+                        @{
+                            var bashing = character.HealthDamage?.Count(c => c == '/') ?? 0;
+                            var lethal = character.HealthDamage?.Count(c => c == 'X') ?? 0;
+                            var agg = character.HealthDamage?.Count(c => c == '*') ?? 0;
+                        }
                         <div class="vital-bar">
                             <span class="vital-label">Health</span>
-                            <div class="bar-track">
-                                <div class="bar-fill health-fill" style="width: @(character.MaxHealth > 0 ? (int)(100.0 * character.CurrentHealth / character.MaxHealth) : 0)%"></div>
-                            </div>
-                            <span class="vital-value">@character.CurrentHealth/@character.MaxHealth</span>
+                            <div class="bar-track" style="background: transparent;"></div>
+                            <span class="vital-value">@character.MaxHealth</span>
                         </div>
+                        @if (bashing > 0)
+                        {
+                            <div class="vital-bar" style="margin-top: -6px;">
+                                <span class="vital-label" style="padding-left: 10px; font-size: 0.7rem; opacity: 0.9;">Bashing</span>
+                                <div class="bar-track" style="background: transparent;"></div>
+                                <span class="vital-value">@bashing</span>
+                            </div>
+                        }
+                        @if (lethal > 0)
+                        {
+                            <div class="vital-bar" style="margin-top: -6px;">
+                                <span class="vital-label" style="padding-left: 10px; font-size: 0.7rem; color: #ff6b6b;">Lethal</span>
+                                <div class="bar-track" style="background: transparent;"></div>
+                                <span class="vital-value">@lethal</span>
+                            </div>
+                        }
+                        @if (agg > 0)
+                        {
+                            <div class="vital-bar" style="margin-top: -6px;">
+                                <span class="vital-label" style="padding-left: 10px; font-size: 0.7rem; color: #fa5252; font-weight: bold;">Aggravated</span>
+                                <div class="bar-track" style="background: transparent;"></div>
+                                <span class="vital-value">@agg</span>
+                            </div>
+                        }
                         <div class="vital-bar">
-                            <span class="vital-label">Willpower</span>
+                            <span class="vital-label">Will Power</span>
                             <div class="bar-track">
                                 <div class="bar-fill wp-fill" style="width: @(character.MaxWillpower > 0 ? (int)(100.0 * character.CurrentWillpower / character.MaxWillpower) : 0)%"></div>
                             </div>
