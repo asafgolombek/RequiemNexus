@@ -57,6 +57,7 @@ The system is structured into **explicit layers** with strict boundaries.
 - No business rules
 - No database access
 - All inputs validated before passing inward
+- **Real-Time boundaries**: SignalR/WebSockets reside here, pushing state updates to clients without holding authoritative game state.
 
 **Allowed dependencies:** Application layer only
 
@@ -94,6 +95,7 @@ This layer is:
 - EF Core mappings
 - Database migrations
 - External integrations (Redis, Identity, etc.)
+- **Open API / Extensibility**: Any external entry points (REST/gRPC) must reside here, secured via the same zero-trust principles as the primary UI.
 
 Infrastructure **serves** the domain, never the reverse.
 
@@ -119,7 +121,7 @@ Cross-domain interaction is only allowed via **explicit contracts**.
   - Intentional
   - Logged
   - Observable
-
+- **Event Sourcing (Audit Trails)**: Critical domain transitions (e.g., spending XP, suffering Aggravated damage) must be recorded as explicit historical events, rather than just mutating the current value.
 - Derived state must never be stored unless proven necessary.
 
 ---

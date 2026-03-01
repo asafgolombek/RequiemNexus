@@ -83,6 +83,9 @@ TTRPG tools should disappear during play.
 - **Mobile-First Responsiveness**  
   Full functionality on phones and tablets.
 
+- **Offline Capabilities (PWA)**  
+  Local-first data resolution to support unstable connections at the table.
+
 - **Tactile Feedback**  
   Subtle animations and reactive components reinforce character growth.
 
@@ -190,9 +193,14 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] EF Core migrations and schema manifest
 - [x] Robust `DbInitializer` for game data
 - [x] Comprehensive Character Management
-- [ ] Reactive `DotScale` component
-- [ ] XP expenditure and advancement flows
-- [ ] Finalize Dice Nexus service
+- [x] Reactive `DotScale` component
+- [x] XP expenditure and advancement flows
+- [x] Finalize Dice Nexus service
+- [ ] Add Aspirations to the character: allow choosing Aspirations in character creation and adding/removing them in the character sheet
+- [ ] Add Bane section to the character and ability to add/remove them
+- [ ] Add Size, Speed, Defense, and Armor to the character sheet
+- [ ] Add Mask and Dirge to the character and character sheet: include in character creation and ability to change them in the character sheet
+- [ ] In the roll, add ability to choose the relevant ability to the roll
 
 ### Phase 1 Exit Criteria
 
@@ -202,7 +210,19 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 2: Account Management
+## 📅 Phase 2: Validation & Automation (The Ascendant)
+
+- Comprehensive unit testing for Domain models and Rules engine
+- Integration testing for EF Core and ASP.NET API endpoints
+- End-to-End (E2E) UI testing for critical player flows
+- Automated Pull Request checks (Linting, Formatting, Test Coverage)
+- CI/CD Pipelines (GitHub Actions / Azure DevOps)
+- Automated deployments to staging and production environments
+- Load testing and observability alerts
+
+---
+
+## 📅 Phase 3: Account Management
 
 - Password reset and change
 - Account deletion and data wipe
@@ -216,12 +236,19 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 3: The Storyteller
+## 📅 Phase 4: The Storyteller
 
 - Initiative Tracker
 - Encounter Manager
 - Campaign notes and shared lore
 - ST Glimpse view
+- **Homebrew / Custom Content Support** (Disciplines, Devotions, Bloodlines)
+
+---
+## 📅 Phase 5: The Global Embrace
+
+- **Localization and Internationalization (i18n)** (Full language support)
+- Third-party API integrations
 
 ---
 
