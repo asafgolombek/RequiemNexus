@@ -196,11 +196,11 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Reactive `DotScale` component
 - [x] XP expenditure and advancement flows
 - [x] Finalize Dice Nexus service
-- [ ] Add Aspirations to the character: allow choosing Aspirations in character creation and adding/removing them in the character sheet
-- [ ] Add Bane section to the character and ability to add/remove them
-- [ ] Add Size, Speed, Defense, and Armor to the character sheet
-- [ ] Add Mask and Dirge to the character and character sheet: include in character creation and ability to change them in the character sheet
-- [ ] In the roll, add ability to choose the relevant ability to the roll
+- [x] Add Aspirations to the character: allow choosing Aspirations in character creation and adding/removing them in the character sheet
+- [x] Add Bane section to the character and ability to add/remove them
+- [x] Add Size, Speed, Defense, and Armor to the character sheet
+- [x] Add Mask and Dirge to the character and character sheet: include in character creation and ability to change them in the character sheet
+- [x] In the roll, add ability to choose the relevant ability to the roll
 
 ### Phase 1 Exit Criteria
 

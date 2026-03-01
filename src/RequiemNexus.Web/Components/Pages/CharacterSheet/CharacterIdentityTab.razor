@@ -6,6 +6,18 @@
         <label style="color: #990000; font-weight: bold;">Concept</label>
         <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.Concept" @bind:after="NotifyChanged" />
     </div>
+
+    <div class="two-col-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+        <div class="form-group">
+            <label style="color: #990000; font-weight: bold;">Mask</label>
+            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.Mask" @bind:after="NotifyChanged" placeholder="The face shown to the world..." />
+        </div>
+        <div class="form-group">
+            <label style="color: #990000; font-weight: bold;">Dirge</label>
+            <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%;" disabled="@(!IsEditable)" @bind="Character.Dirge" @bind:after="NotifyChanged" placeholder="The true inner self..." />
+        </div>
+    </div>
+
     <div class="two-col-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
         <div class="form-group">
             <label style="color: #990000; font-weight: bold;">Height</label>
@@ -23,6 +35,58 @@
     <div class="form-group">
         <label style="color: #990000; font-weight: bold;">Backstory</label>
         <textarea class="form-control" rows="10" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; width: 100%; resize: vertical;" disabled="@(!IsEditable)" @bind="Character.Backstory" @bind:after="NotifyChanged"></textarea>
+    </div>
+
+    <!-- Aspirations -->
+    <div class="form-group" style="margin-top: 25px; border-top: 1px solid #330000; padding-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="color: #990000; font-weight: bold; font-size: 1.2em;">Aspirations</label>
+            @if (IsEditable)
+            {
+                <button type="button" @onclick="AddAspiration" style="background: #330000; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;">+ Add</button>
+            }
+        </div>
+        @if (Character.Aspirations != null && Character.Aspirations.Any())
+        {
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                @foreach (var asp in Character.Aspirations.ToList())
+                {
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; flex: 1;" disabled="@(!IsEditable)" @bind="asp.Description" @bind:after="NotifyChanged" placeholder="Aspiration..." />
+                        @if (IsEditable)
+                        {
+                            <button type="button" @onclick="() => RemoveAspiration(asp)" style="background: transparent; color: #990000; border: 1px solid #990000; padding: 4px 10px; border-radius: 4px; cursor: pointer;">X</button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Banes -->
+    <div class="form-group" style="margin-top: 25px; border-top: 1px solid #330000; padding-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="color: #990000; font-weight: bold; font-size: 1.2em;">Banes</label>
+            @if (IsEditable)
+            {
+                <button type="button" @onclick="AddBane" style="background: #330000; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;">+ Add</button>
+            }
+        </div>
+        @if (Character.Banes != null && Character.Banes.Any())
+        {
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                @foreach (var bane in Character.Banes.ToList())
+                {
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control" style="background: rgba(0,0,0,0.5); color: #e0d0c0; border: 1px solid #330000; padding: 8px; flex: 1;" disabled="@(!IsEditable)" @bind="bane.Description" @bind:after="NotifyChanged" placeholder="Bane description..." />
+                        @if (IsEditable)
+                        {
+                            <button type="button" @onclick="() => RemoveBane(bane)" style="background: transparent; color: #990000; border: 1px solid #990000; padding: 4px 10px; border-radius: 4px; cursor: pointer;">X</button>
+                        }
+                    </div>
+                }
+            </div>
+        }
     </div>
 </section>
 
@@ -42,5 +106,31 @@
         {
             await OnChanged.InvokeAsync();
         }
+    }
+
+    private async Task AddAspiration()
+    {
+        Character.Aspirations ??= new List<CharacterAspiration>();
+        Character.Aspirations.Add(new CharacterAspiration { CharacterId = Character.Id });
+        await NotifyChanged();
+    }
+
+    private async Task RemoveAspiration(CharacterAspiration aspiration)
+    {
+        Character.Aspirations?.Remove(aspiration);
+        await NotifyChanged();
+    }
+
+    private async Task AddBane()
+    {
+        Character.Banes ??= new List<CharacterBane>();
+        Character.Banes.Add(new CharacterBane { CharacterId = Character.Id });
+        await NotifyChanged();
+    }
+
+    private async Task RemoveBane(CharacterBane bane)
+    {
+        Character.Banes?.Remove(bane);
+        await NotifyChanged();
     }
 }

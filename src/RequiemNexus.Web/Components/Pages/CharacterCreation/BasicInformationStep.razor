@@ -29,6 +29,30 @@
             }
         }
     </div>
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label for="mask" style="display: block; margin-bottom: 8px; color: #e0e0e0;">Mask</label>
+        <input id="mask" type="text" @bind="Character.Mask" @bind:after="NotifyStateChanged" class="form-control" style="width: 100%; padding: 10px; background-color: #1a1a1a; border: 1px solid #330000; color: white; border-radius: 4px;" placeholder="The face you show the world..." />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label for="dirge" style="display: block; margin-bottom: 8px; color: #e0e0e0;">Dirge</label>
+        <input id="dirge" type="text" @bind="Character.Dirge" @bind:after="NotifyStateChanged" class="form-control" style="width: 100%; padding: 10px; background-color: #1a1a1a; border: 1px solid #330000; color: white; border-radius: 4px;" placeholder="Your true inner self..." />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; color: #e0e0e0;">Initial Aspirations</label>
+        <p style="color: #a0a0a0; font-size: 0.85em; margin-bottom: 10px;">Define three goals your character wants to achieve (e.g., "Find a reliable haven", "Impress the Prince").</p>
+        
+        @if (Character.Aspirations != null)
+        {
+            var aspirationsList = Character.Aspirations.ToList();
+            for (int i = 0; i < aspirationsList.Count; i++)
+            {
+                var index = i;
+                <input type="text" @bind="aspirationsList[index].Description" @bind:after="NotifyStateChanged" class="form-control" style="width: 100%; padding: 10px; background-color: #1a1a1a; border: 1px solid #330000; color: white; border-radius: 4px; margin-bottom: 8px;" placeholder="Aspiration @(index + 1)..." />
+            }
+        }
+    </div>
 </div>
 
 @code {
@@ -40,6 +64,21 @@
 
     [Parameter]
     public EventCallback OnStateChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // Ensure we have exactly 3 initial aspirations to fill out during creation
+        if (Character.Aspirations == null || !Character.Aspirations.Any())
+        {
+            Character.Aspirations ??= new List<CharacterAspiration>();
+            while (Character.Aspirations.Count < 3)
+            {
+                Character.Aspirations.Add(new CharacterAspiration { CharacterId = Character.Id });
+            }
+        }
+    }
 
     private async Task NotifyStateChanged()
     {

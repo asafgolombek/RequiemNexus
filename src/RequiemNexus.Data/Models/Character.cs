@@ -22,6 +22,12 @@ public class Character
     public string Concept { get; set; } = string.Empty;
 
     [MaxLength(50)]
+    public string Mask { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string Dirge { get; set; } = string.Empty;
+
+    [MaxLength(50)]
     public string Height { get; set; } = string.Empty;
 
     [MaxLength(50)]
@@ -62,6 +68,16 @@ public class Character
 
     public int MaxVitae { get; set; }
     public int CurrentVitae { get; set; }
+
+    // --- Derived Stats ---
+    [NotMapped]
+    public int Speed => Strength + Dexterity + Size;
+
+    [NotMapped]
+    public int Defense => Math.Min(Wits, Dexterity) + Athletics;
+
+    [NotMapped]
+    public int Armor => CharacterEquipments.Sum(e => e.Equipment?.ArmorRating ?? 0);
 
     // --- Attributes ---
     // Mental
@@ -111,6 +127,8 @@ public class Character
     public int Subterfuge { get; set; }
 
     // --- Collections ---
+    public virtual ICollection<CharacterAspiration> Aspirations { get; set; } = new List<CharacterAspiration>();
+    public virtual ICollection<CharacterBane> Banes { get; set; } = new List<CharacterBane>();
     public virtual ICollection<CharacterMerit> Merits { get; set; } = new List<CharacterMerit>();
     public virtual ICollection<CharacterDiscipline> Disciplines { get; set; } = new List<CharacterDiscipline>();
     public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();

@@ -18,6 +18,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ClanDiscipline> ClanDisciplines { get; set; } = default!;
     public DbSet<Equipment> Equipment { get; set; } = default!;
     public DbSet<CharacterEquipment> CharacterEquipments { get; set; } = default!;
+    public DbSet<CharacterAspiration> CharacterAspirations { get; set; } = default!;
+    public DbSet<CharacterBane> CharacterBanes { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -83,6 +85,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(ce => ce.Character)
             .WithMany(c => c.CharacterEquipments)
             .HasForeignKey(ce => ce.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Character >- CharacterAspiration
+        builder.Entity<CharacterAspiration>()
+            .HasOne(a => a.Character)
+            .WithMany(c => c.Aspirations)
+            .HasForeignKey(a => a.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Character >- CharacterBane
+        builder.Entity<CharacterBane>()
+            .HasOne(b => b.Character)
+            .WithMany(c => c.Banes)
+            .HasForeignKey(b => b.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

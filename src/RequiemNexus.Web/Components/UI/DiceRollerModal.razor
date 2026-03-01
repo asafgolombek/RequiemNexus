@@ -11,10 +11,32 @@
             
             <div class="modal-body">
                 <div class="roller-form-group">
-                    <label>Base Dice Pool (Trait Rating + Associated Trait)</label>
-                    <input type="number" @bind="BaseDice" min="1" class="roller-input" />
+                    <label>Base Trait (@TraitName)</label>
+                    <input type="number" value="@BaseDice" readonly class="roller-input" style="background: rgba(0,0,0,0.5);" />
                 </div>
                 
+                @if (Character != null)
+                {
+                    <div class="roller-form-group">
+                        <label>Associated Trait</label>
+                        <select @bind="AssociatedTraitName" class="roller-input" style="width: 100%; padding: 8px;">
+                            <option value="">-- None --</option>
+                            <optgroup label="Attributes">
+                                @foreach (var attr in Attributes)
+                                {
+                                    if (attr != TraitName) { <option value="@attr">@attr</option> }
+                                }
+                            </optgroup>
+                            <optgroup label="Skills">
+                                @foreach (var skill in Skills)
+                                {
+                                    if (skill != TraitName) { <option value="@skill">@skill</option> }
+                                }
+                            </optgroup>
+                        </select>
+                    </div>
+                }
+
                 <div class="roller-form-group">
                     <label>Modifiers (Bonus / Penalty)</label>
                     <input type="number" @bind="Modifier" class="roller-input" />
@@ -22,7 +44,7 @@
                 
                 <div class="roller-form-group">
                     <label>Total Pool</label>
-                    <strong class="pool-total">@(BaseDice + Modifier <= 0 ? "Chance Die" : (BaseDice + Modifier).ToString())</strong>
+                    <strong class="pool-total">@(TotalPool <= 0 ? "Chance Die" : TotalPool.ToString())</strong>
                 </div>
 
                 <div class="options-group">
@@ -79,9 +101,11 @@
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
     [Parameter] public string TraitName { get; set; } = string.Empty;
     [Parameter] public int BaseDice { get; set; } = 1;
+    [Parameter] public RequiemNexus.Data.Models.Character? Character { get; set; }
     
     [Inject] public DiceService DiceService { get; set; } = default!;
 
+    private string AssociatedTraitName { get; set; } = string.Empty;
     private int Modifier { get; set; } = 0;
     private bool TenAgain { get; set; } = true;
     private bool NineAgain { get; set; } = false;
@@ -91,16 +115,33 @@
     private RollResult? LastResult;
     private bool showTools = false;
 
+    private readonly string[] Attributes = { "Intelligence", "Wits", "Resolve", "Strength", "Dexterity", "Stamina", "Presence", "Manipulation", "Composure" };
+    private readonly string[] Skills = { "Academics", "Computer", "Crafts", "Investigation", "Medicine", "Occult", "Politics", "Science", "Athletics", "Brawl", "Drive", "Firearms", "Larceny", "Stealth", "Survival", "Weaponry", "Animal Ken", "Empathy", "Expression", "Intimidation", "Persuasion", "Socialize", "Streetwise", "Subterfuge" };
+
+    private int AssociatedTraitDice
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(AssociatedTraitName) || Character == null) return 0;
+            var propName = AssociatedTraitName.Replace(" ", "");
+            var prop = typeof(RequiemNexus.Data.Models.Character).GetProperty(propName);
+            return (int)(prop?.GetValue(Character) ?? 0);
+        }
+    }
+
+    private int TotalPool => BaseDice + AssociatedTraitDice + Modifier;
+
     private async Task Close()
     {
         IsVisible = false;
         LastResult = null;
+        AssociatedTraitName = string.Empty;
+        Modifier = 0;
         await IsVisibleChanged.InvokeAsync(IsVisible);
     }
 
     private void RollDice()
     {
-        int pool = BaseDice + Modifier;
-        LastResult = DiceService.Roll(pool, TenAgain, NineAgain, EightAgain, IsRote, Seed);
+        LastResult = DiceService.Roll(TotalPool, TenAgain, NineAgain, EightAgain, IsRote, Seed);
     }
 }
