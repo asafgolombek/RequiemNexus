@@ -1,13 +1,22 @@
-$ErrorActionPreference = "Stop"
+param(
+    [switch]$SkipTests
+)
 
-$ScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-$RootDir = Split-Path -Parent -Path $ScriptRoot
-$SlnPath = Join-Path -Path $RootDir -ChildPath "src\RequiemNexus.slnx"
+. "$PSScriptRoot\_common.ps1"
 
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host "Building Requiem Nexus - Release Configuration" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 
+Invoke-Restore
+
+Write-Host "`nBuilding solution..." -ForegroundColor DarkGray
 dotnet build $SlnPath -c Release
+
+if (-not $SkipTests) {
+    Invoke-Tests -Configuration Release
+} else {
+    Write-Host "`n  [Skipping tests as requested]" -ForegroundColor DarkYellow
+}
 
 Write-Host "`nBuild complete!" -ForegroundColor Green

@@ -2,4 +2,7 @@
   <Project Path="RequiemNexus.Data/RequiemNexus.Data.csproj" />
   <Project Path="RequiemNexus.Domain/RequiemNexus.Domain.csproj" />
   <Project Path="RequiemNexus.Web/RequiemNexus.Web.csproj" />
+  <Project Path="../tests/RequiemNexus.Domain.Tests/RequiemNexus.Domain.Tests.csproj" />
+  <Project Path="../tests/RequiemNexus.Data.Tests/RequiemNexus.Data.Tests.csproj" />
+  <Project Path="../tests/RequiemNexus.E2ETests/RequiemNexus.E2ETests.csproj" />
 </Solution>

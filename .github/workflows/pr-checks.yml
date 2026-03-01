@@ -1,0 +1,51 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pr-checks:
+    name: Format, Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
+      - name: Check formatting
+        run: dotnet format src/RequiemNexus.slnx --verify-no-changes --verbosity diagnostic
+
+      - name: Build
+        run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Debug
+
+      - name: Run unit tests (Domain)
+        run: >
+          dotnet test tests/RequiemNexus.Domain.Tests/RequiemNexus.Domain.Tests.csproj
+          --no-build
+          --configuration Debug
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage/domain
+
+      - name: Run integration tests (Data)
+        run: >
+          dotnet test tests/RequiemNexus.Data.Tests/RequiemNexus.Data.Tests.csproj
+          --no-build
+          --configuration Debug
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage/data
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-pr-${{ github.run_number }}
+          path: ./coverage

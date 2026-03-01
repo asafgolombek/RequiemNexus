@@ -212,13 +212,13 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 📅 Phase 2: Validation & Automation (The Ascendant)
 
-- Comprehensive unit testing for Domain models and Rules engine
-- Integration testing for EF Core and ASP.NET API endpoints
-- End-to-End (E2E) UI testing for critical player flows
-- Automated Pull Request checks (Linting, Formatting, Test Coverage)
-- CI/CD Pipelines (GitHub Actions / Azure DevOps)
-- Automated deployments to staging and production environments
-- Load testing and observability alerts
+- [x] Comprehensive unit testing for Domain models and Rules engine
+- [x] Integration testing for EF Core and ASP.NET API endpoints
+- [x] End-to-End (E2E) UI testing for critical player flows
+- [x] Automated Pull Request checks (Linting, Formatting, Test Coverage)
+- [x] CI/CD Pipelines (GitHub Actions)
+- [ ] Automated deployments to staging and production environments
+- [ ] Load testing and observability alerts
 
 ---
 
