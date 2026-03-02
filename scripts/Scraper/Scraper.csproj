@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="*" />
+    <PackageReference Include="HtmlAgilityPack" />
   </ItemGroup>
 </Project>
