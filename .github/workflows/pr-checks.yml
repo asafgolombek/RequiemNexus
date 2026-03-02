@@ -55,7 +55,7 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-pr-${{ github.run_number }}
           path: ./coverage
@@ -87,6 +87,8 @@ jobs:
           dotnet ef database update \
             --project src/RequiemNexus.Data \
             --startup-project src/RequiemNexus.Web \
+            --configuration Debug \
+            --no-build \
             --connection "Data Source=/tmp/migration-test.db"
         env:
           ASPNETCORE_ENVIRONMENT: Development
