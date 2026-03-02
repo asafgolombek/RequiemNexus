@@ -228,6 +228,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
 - [ ] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
 - [ ] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
+- [x] Enforce `.editorconfig` in CI (fail build if `dotnet format --verify-no-changes` fails)
 
 ### Phase 2 Exit Criteria
 

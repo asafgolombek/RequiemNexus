@@ -25,6 +25,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/RequiemNexus.slnx
 
+      - name: Check formatting
+        run: dotnet format src/RequiemNexus.slnx --verify-no-changes --verbosity diagnostic
+
       - name: Build (Release)
         run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Release
 
