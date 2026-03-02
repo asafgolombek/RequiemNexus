@@ -45,6 +45,9 @@ These rules apply to **all layers**: UI, application logic, domain logic, and in
 10. **Every shortcut must be temporary—and documented**  
     Technical debt must have a due date.
 
+11. **Automation is Documentation**  
+    If a deployment, build, or test step isn't automated in CI/CD, it doesn't effectively exist.
+
 ---
 
 ## 🧱 Architectural Layers
@@ -146,6 +149,33 @@ Every major action emits:
 - Correlation IDs
 
 If it cannot be observed, it is architecturally incomplete.
+
+---
+
+## 🧪 Testing Architecture & Boundaries
+
+Testing follows our structural layers, ensuring stability without fragile test setups:
+
+- **Domain Layer:** Must be 100% unit-testable. Tests must be deterministic and run entirely in memory without infrastructure dependencies (no database access, no network calls).
+- **Infrastructure Layer:** Validated via Integration tests against a real (or Dockerized) test database to ensure EF Core mappings and external integrations behave correctly.
+- **Presentation Layer:** Verified via End-to-End (E2E) tests simulating real user interactions and flows.
+
+---
+
+## ⚙️ Configuration & Environment Strategy
+
+- Environment differences (Local vs. AWS Cloud) are managed explicitly via configuration, not by conditional code logic (e.g., `#if DEBUG`).
+- The application secures connections differently based on environment (e.g., local connection strings in development; AWS Secrets Manager in production).
+- Configuration loading must fail fast on startup if required values are missing.
+
+---
+
+## ☁️ Deployment Topology (AWS)
+
+While Requiem Nexus is deployed to the cloud (AWS), it retains the Antigravity philosophy:
+- **Stateless Web Nodes:** Application servers hold no durable state, enabling seamless scaling.
+- **Managed Persistence:** Databases and external state stores are pushed to managed services (e.g., RDS, ElastiCache) to reduce operational cognitive load.
+- **Explicit Infrastructure:** Infrastructure is configured explicitly.
 
 ---
 

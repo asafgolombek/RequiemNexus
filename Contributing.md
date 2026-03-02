@@ -47,5 +47,35 @@ If your change makes the system harder to reason about, it will be rejected—ev
 ### Local Startup
 
 ```bash
+# For local development with hot reload and debugging tools
 scripts/build-debug.ps1
+
+# To verify production-ready optimizations locally
+scripts/build-release.ps1
 ```
+
+### 🧪 Testing Expectations
+
+Before submitting a Pull Request, you must validate your changes locally:
+
+```bash
+# Runs all unit, integration, and E2E tests
+scripts/test-local.ps1
+```
+
+### 🗄️ Database Configuration
+
+When running locally, the application is configured to connect to a local development database. 
+- Ensure your local connection strings in `appsettings.Development.json` or user secrets are configured correctly.
+- Do not check production connection strings into source control.
+- Ensure Docker is running if you rely on a containerized local database instance.
+
+### 🚀 CI/CD & Pull Requests
+
+We treat automation as a first-class citizen. 
+All Pull Requests must pass automated GitHub Actions workflows which enforce:
+- Successful compilation
+- 100% passing test suites (Unit, Integration, E2E)
+- Code formatting and style enforcement
+
+Branches cannot be merged if any automated check fails.
