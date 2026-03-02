@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # NuGet packages (managed centrally via Directory.Packages.props)
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      aspnetcore:
+        patterns:
+          - "Microsoft.AspNetCore.*"
+          - "Microsoft.EntityFrameworkCore.*"
+      serilog:
+        patterns:
+          - "Serilog.*"
+      testing:
+        patterns:
+          - "xunit*"
+          - "coverlet.*"
+          - "Microsoft.NET.Test.Sdk"
+          - "Microsoft.Playwright"
+
+  # GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
