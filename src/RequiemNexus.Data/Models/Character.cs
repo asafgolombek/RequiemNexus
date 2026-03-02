@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RequiemNexus.Data.Models;
@@ -17,7 +17,7 @@ public class Character
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
-    
+
     [MaxLength(100)]
     public string Concept { get; set; } = string.Empty;
 
@@ -60,7 +60,7 @@ public class Character
 
     public int MaxHealth { get; set; }
     public int CurrentHealth { get; set; }
-    
+
     [MaxLength(50)]
     public string HealthDamage { get; set; } = string.Empty;
 

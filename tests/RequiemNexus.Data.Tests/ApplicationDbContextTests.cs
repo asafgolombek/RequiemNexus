@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 using Xunit;
 namespace RequiemNexus.Data.Tests;
@@ -64,9 +64,12 @@ public class ApplicationDbContextTests
         {
             ApplicationUserId = "user-cascade",
             Name = "Armand",
-            MaxHealth = 6, CurrentHealth = 6,
-            MaxWillpower = 4, CurrentWillpower = 4,
-            MaxVitae = 10, CurrentVitae = 10
+            MaxHealth = 6,
+            CurrentHealth = 6,
+            MaxWillpower = 4,
+            CurrentWillpower = 4,
+            MaxVitae = 10,
+            CurrentVitae = 10
         };
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
@@ -95,9 +98,12 @@ public class ApplicationDbContextTests
         {
             ApplicationUserId = "user-bane",
             Name = "Louis",
-            MaxHealth = 6, CurrentHealth = 6,
-            MaxWillpower = 4, CurrentWillpower = 4,
-            MaxVitae = 10, CurrentVitae = 10
+            MaxHealth = 6,
+            CurrentHealth = 6,
+            MaxWillpower = 4,
+            CurrentWillpower = 4,
+            MaxVitae = 10,
+            CurrentVitae = 10
         };
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();

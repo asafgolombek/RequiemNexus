@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
@@ -144,7 +144,7 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
     public async Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost)
     {
         character.ExperiencePoints -= xpCost;
-        
+
         var cm = new CharacterMerit
         {
             CharacterId = character.Id,

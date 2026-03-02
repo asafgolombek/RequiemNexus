@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace RequiemNexus.Data.Models;
 
@@ -20,7 +20,7 @@ public class Equipment
     public float Weight { get; set; } // e.g., in lbs or kg
 
     // Cost in dots (• to •••••) or actual money value depending on house rules, sticking to typical CofD dots
-    public int Cost { get; set; } 
+    public int Cost { get; set; }
 
     // Optional weapon or armor specific stats
     public int Damage { get; set; }
