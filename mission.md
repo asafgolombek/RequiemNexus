@@ -217,12 +217,27 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] End-to-End (E2E) UI testing for critical player flows
 - [x] Automated Pull Request checks (Linting, Formatting, Test Coverage)
 - [x] CI/CD Pipelines (GitHub Actions)
-- [ ] Automated deployments to staging and production environments
-- [ ] Load testing and observability alerts
+- [ ] Setup Dependabot/Renovate for automated dependency updates
+- [ ] Database Migration Validation (test migrations against empty DB in CI)
+- [ ] Security & Vulnerability Scanning (NuGet packages and Static Analysis)
+- [ ] Automated Accessibility (a11y) scanning integrated into E2E tests
+- [ ] Code Quality & Advanced Static Analysis (e.g., SonarCloud, Qodana)
+- [ ] Automated Versioning & Git Tagging (Generate CI build numbers, inject into assemblies/logs, push Git tags)
 
 ---
 
-## 📅 Phase 3: Account Management
+## 📅 Phase 3: Automated Deployments & Observability
+
+- [ ] Containerize application (Dockerfile) and push to Container Registry
+- [ ] Configure AWS Environments (Staging, Production)
+- [ ] Establish Application Configurations (.NET Environments & appsettings)
+- [ ] Automated deployments to staging and production environments
+- [ ] Load testing and observability alerts
+- [ ] Error Tracking Integration (e.g., Sentry, Raygun) for real-time exception alerts
+
+---
+
+## 📅 Phase 4: Account Management
 
 - Password reset and change
 - Account deletion and data wipe
@@ -236,7 +251,7 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 4: The Storyteller
+## 📅 Phase 5: The Storyteller
 
 - Initiative Tracker
 - Encounter Manager
@@ -245,10 +260,11 @@ If a bug cannot be observed, it cannot be fixed.
 - **Homebrew / Custom Content Support** (Disciplines, Devotions, Bloodlines)
 
 ---
-## 📅 Phase 5: The Global Embrace
+## 📅 Phase 6: The Global Embrace
 
 - **Localization and Internationalization (i18n)** (Full language support)
 - Third-party API integrations
+- **SEO & Rich Social Sharing** (Open Graph tags for public character sheets and chronicles)
 
 ---
 
