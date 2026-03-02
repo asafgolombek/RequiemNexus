@@ -6,6 +6,10 @@ This is not just a codebase—it is a **teaching system**, an **architectural re
 
 By contributing, you agree to uphold the **Antigravity Philosophy**.
 
+> Before you contribute, read:
+> - [🩸 Mission](./mission.md) — _Why_ this project exists
+> - [📐 Architecture](./Architecture.md) — _How_ this project is structured
+
 ---
 
 ## 🪐 The Antigravity Pledge
@@ -63,6 +67,8 @@ Before submitting a Pull Request, you must validate your changes locally:
 scripts/test-local.ps1
 ```
 
+If any tests fail, **fix them before opening the PR**. PRs with failing tests will not be reviewed.
+
 ### 🗄️ Database Configuration
 
 When running locally, the application is configured to connect to a local development database. 
@@ -79,3 +85,53 @@ All Pull Requests must pass automated GitHub Actions workflows which enforce:
 - Code formatting and style enforcement
 
 Branches cannot be merged if any automated check fails.
+
+---
+
+## 🌿 Branching Strategy
+
+All branches should be cut from `main` and follow the naming convention:
+
+| Type | Pattern | Example |
+|---|---|---|
+| Feature | `feature/<short-description>` | `feature/xp-advancement-flow` |
+| Bug Fix | `fix/<short-description>` | `fix/dice-roll-seeding` |
+| Chore | `chore/<short-description>` | `chore/update-ef-core` |
+| Documentation | `docs/<short-description>` | `docs/update-architecture` |
+
+---
+
+## 📝 Commit Message Conventions
+
+All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <short summary>
+```
+
+Common types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`
+
+**Examples:**
+```
+feat(domain): add Touchstone to character advancement
+fix(dice): correct 8-again explosion logic
+docs(arch): update deployment topology section
+test(integration): add EF Core migration validation test
+```
+
+This convention feeds into automated versioning and changelog generation in Phase 2+.
+
+---
+
+## 👁️ Code Review Standards
+
+Every PR must receive at least one approving review before merging.
+
+A valid approval confirms that:
+
+- The change is **traceable** from UI → logic → data
+- No new **implicit state** or hidden dependencies were introduced
+- All new logic is **unit-tested** or has a documented reason for exemption
+- Commit messages follow the conventions above
+
+> If you are unsure whether an architectural exception is justified, document it explicitly in the PR description. Undocumented exceptions will be rejected.

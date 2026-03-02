@@ -177,13 +177,16 @@ If a bug cannot be observed, it cannot be fixed.
 ## 🧪 DevOps & Automation
 
 - **Local-First Development**  
-  One-command startup via `scripts/build-debug.ps1`.
+  One-command startup via `scripts/build-debug.ps1`. Run `scripts/test-local.ps1` to validate before opening a PR.
 
 - **Database Governance**  
-  All schema changes require migrations and `DbInitializer` updates.
+  All schema changes require EF Core migrations and `DbInitializer` updates. Migrations are validated against an empty database in CI.
 
 - **CI/CD Discipline**  
-  Every commit to `src/` must keep the build green.
+  Every commit to `src/` must keep the build green. GitHub Actions enforce compilation, test coverage, and formatting on every PR.
+
+- **Automation is Documentation**  
+  If a build, test, or deploy step is not automated, it does not reliably exist.
 
 ---
 
@@ -222,18 +225,44 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] Security & Vulnerability Scanning (NuGet packages and Static Analysis)
 - [ ] Automated Accessibility (a11y) scanning integrated into E2E tests
 - [ ] Code Quality & Advanced Static Analysis (e.g., SonarCloud, Qodana)
-- [ ] Automated Versioning & Git Tagging (Generate CI build numbers, inject into assemblies/logs, push Git tags)
+- [ ] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
+- [ ] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
+- [ ] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
+
+### Phase 2 Exit Criteria
+
+- All pull requests are automatically validated (build, test, lint) before merge
+- Unit, integration, and E2E test suites pass on CI with no manual steps
+- Security and dependency scanning is active on every PR
+- A new developer can run the full test suite locally in one command
+- Merging to `main` is blocked unless all required status checks pass
 
 ---
 
 ## 📅 Phase 3: Automated Deployments & Observability
 
+- [ ] Automated Versioning & Git Tagging (generate CI build numbers, inject into assemblies/logs, push Git tags)
+- [ ] Infrastructure as Code (IaC) — define all AWS resources (ECS, RDS, ALB, etc.) in CDK, Terraform, or CloudFormation
+- [ ] Secrets & environment variable management (AWS Secrets Manager / Parameter Store; no hardcoded secrets)
+- [ ] Expose `/health` and `/ready` endpoints (ASP.NET Core HealthChecks) consumed by the load balancer
 - [ ] Containerize application (Dockerfile) and push to Container Registry
 - [ ] Configure AWS Environments (Staging, Production)
 - [ ] Establish Application Configurations (.NET Environments & appsettings)
+- [ ] Define migration deployment strategy (pre-deploy step vs. container startup, with ordering guards)
 - [ ] Automated deployments to staging and production environments
+- [ ] Post-deploy smoke test — automated check after each staging deploy (health endpoint + critical flows)
+- [ ] Define and test rollback strategy (ECS task revision rollback or blue/green)
 - [ ] Load testing and observability alerts
 - [ ] Error Tracking Integration (e.g., Sentry, Raygun) for real-time exception alerts
+
+### Phase 3 Exit Criteria
+
+- Every merge to `main` automatically deploys to staging
+- Production deployments are one-command (or one-click) from a green staging build
+- Observability dashboards are live with alerts configured for error rate and latency
+- Zero manual infrastructure configuration via the AWS Console
+- All secrets are managed via AWS Secrets Manager; no credentials exist in the repository
+- A rollback to the previous version can be completed in under 5 minutes
 
 ---
 
@@ -270,16 +299,7 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 🧠 Antigravity Rules of Thumb
 
-1. **If it’s implicit, it’s a bug waiting to happen**
-2. **State must be visible or eliminable**
-3. **Magic is debt**
-4. **Traceability beats cleverness**
-5. **One reason to change per module**
-6. **No silent failure—ever**
-7. **Teach the system by reading the code**
-8. **If debugging is hard, the design is wrong**
-9. **Performance is a feature, not an optimization**
-10. **Every shortcut must be temporary—and documented**
+See the full list with explanations in [Architecture.md](./Architecture.md#-antigravity-rules-of-thumb).
 
 ---
 

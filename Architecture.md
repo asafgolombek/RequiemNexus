@@ -50,6 +50,23 @@ These rules apply to **all layers**: UI, application logic, domain logic, and in
 
 ---
 
+## 🗺️ Request Flow
+
+Every user action flows through the layers in one direction:
+
+```mermaid
+flowchart LR
+    A["🖥️ Presentation (Web)"] --> B["⚙️ Application Layer"]
+    B --> C["🎲 Domain Layer"]
+    B --> D["🗄️ Infrastructure Layer"]
+    D --> E[("PostgreSQL / Redis")]
+    C -.->|"No direct DB access"| D
+```
+
+Dependencies **always point inward**. Infrastructure is a plugin to the domain, not the other way around.
+
+---
+
 ## 🧱 Architectural Layers
 
 The system is structured into **explicit layers** with strict boundaries.
@@ -60,7 +77,7 @@ The system is structured into **explicit layers** with strict boundaries.
 - No business rules
 - No database access
 - All inputs validated before passing inward
-- **Real-Time boundaries**: SignalR/WebSockets reside here, pushing state updates to clients without holding authoritative game state.
+- **Real-Time boundaries**: The SignalR Hub is owned by the Web layer. It pushes state updates to clients in response to Application-layer events. It holds **no authoritative game state**—it is a pure output channel.
 
 **Allowed dependencies:** Application layer only
 
@@ -156,9 +173,12 @@ If it cannot be observed, it is architecturally incomplete.
 
 Testing follows our structural layers, ensuring stability without fragile test setups:
 
-- **Domain Layer:** Must be 100% unit-testable. Tests must be deterministic and run entirely in memory without infrastructure dependencies (no database access, no network calls).
-- **Infrastructure Layer:** Validated via Integration tests against a real (or Dockerized) test database to ensure EF Core mappings and external integrations behave correctly.
-- **Presentation Layer:** Verified via End-to-End (E2E) tests simulating real user interactions and flows.
+- **Domain Layer → `RequiemNexus.Tests.Unit`**  
+  Must be 100% unit-testable. Tests must be deterministic and run entirely in memory without infrastructure dependencies (no database access, no network calls).
+- **Infrastructure Layer → `RequiemNexus.Tests.Integration`**  
+  Validated via Integration tests against a real (or Dockerized) test database to ensure EF Core mappings and external integrations behave correctly.
+- **Presentation Layer → `RequiemNexus.Tests.E2E`**  
+  Verified via End-to-End (E2E) tests simulating real user interactions and flows.
 
 ---
 
@@ -173,9 +193,19 @@ Testing follows our structural layers, ensuring stability without fragile test s
 ## ☁️ Deployment Topology (AWS)
 
 While Requiem Nexus is deployed to the cloud (AWS), it retains the Antigravity philosophy:
-- **Stateless Web Nodes:** Application servers hold no durable state, enabling seamless scaling.
-- **Managed Persistence:** Databases and external state stores are pushed to managed services (e.g., RDS, ElastiCache) to reduce operational cognitive load.
-- **Explicit Infrastructure:** Infrastructure is configured explicitly.
+
+| Component | AWS Service | Notes |
+|---|---|---|
+| Web Application | ECS (Fargate) | Stateless, no durable app state |
+| Container Registry | ECR | Built images pushed from CI/CD |
+| Relational Database | RDS (PostgreSQL) | Managed, encrypted at rest |
+| Distributed Cache | ElastiCache (Redis) | Session and transient state |
+| Secrets Management | AWS Secrets Manager | No secrets in source control |
+| Load Balancing | Application Load Balancer | HTTPS termination |
+
+- **Stateless Web Nodes:** Application servers hold no durable state, enabling seamless horizontal scaling.
+- **Managed Persistence:** Databases and caches are pushed to managed services to reduce operational cognitive load.
+- **Explicit Infrastructure:** All infrastructure is defined explicitly (IaC), never configured manually through the AWS Console.
 
 ---
 
