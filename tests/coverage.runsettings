@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <!--
+    Coverage run settings used by CI workflows and local test runs.
+    Emits OpenCover XML format required by SonarCloud and ReportGenerator.
+    Excludes test assemblies and EF Core migration files from coverage.
+
+    The 60% threshold is enforced via inline CLI args in ci.yml / pr-checks.yml.
+    See those files for the exact dotnet test commands.
+  -->
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>opencover</Format>
+          <Exclude>[*.Tests]*,[*.E2ETests]*</Exclude>
+          <ExcludeByFile>**/Migrations/*.cs,**/obj/**/*.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

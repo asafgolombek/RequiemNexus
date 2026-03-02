@@ -35,6 +35,11 @@ jobs:
           --configuration Debug
           --collect:"XPlat Code Coverage"
           --results-directory ./coverage/domain
+          --settings tests/coverage.runsettings
+          --
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdType=line
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
 
       - name: Run integration tests (Data)
         run: >
@@ -43,9 +48,71 @@ jobs:
           --configuration Debug
           --collect:"XPlat Code Coverage"
           --results-directory ./coverage/data
+          --settings tests/coverage.runsettings
+          --
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdType=line
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-pr-${{ github.run_number }}
           path: ./coverage
+
+  validate-migrations:
+    name: Validate DB Migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
+      - name: Build
+        run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Debug
+
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Validate migrations against empty database
+        run: |
+          dotnet ef database update \
+            --project src/RequiemNexus.Data \
+            --startup-project src/RequiemNexus.Web \
+            --connection "Data Source=/tmp/migration-test.db"
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+
+  security-scan:
+    name: Security & Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
+      - name: Scan for vulnerable NuGet packages
+        run: |
+          OUTPUT=$(dotnet list src/RequiemNexus.slnx package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
+            echo "❌ Vulnerable packages detected — fix them before merging."
+            exit 1
+          fi
+          echo "✅ No vulnerable packages found."

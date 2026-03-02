@@ -220,12 +220,12 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] End-to-End (E2E) UI testing for critical player flows
 - [x] Automated Pull Request checks (Linting, Formatting, Test Coverage)
 - [x] CI/CD Pipelines (GitHub Actions)
-- [ ] Setup Dependabot/Renovate for automated dependency updates
-- [ ] Database Migration Validation (test migrations against empty DB in CI)
-- [ ] Security & Vulnerability Scanning (NuGet packages and Static Analysis)
-- [ ] Automated Accessibility (a11y) scanning integrated into E2E tests
-- [ ] Code Quality & Advanced Static Analysis (e.g., SonarCloud, Qodana)
-- [ ] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
+- [x] Setup Dependabot/Renovate for automated dependency updates
+- [x] Database Migration Validation (test migrations against empty DB in CI)
+- [x] Security & Vulnerability Scanning (NuGet packages and Static Analysis)
+- [x] Automated Accessibility (a11y) scanning integrated into E2E tests
+- [x] Code Quality & Advanced Static Analysis (e.g., SonarCloud, Qodana)
+- [x] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
 - [ ] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
 - [ ] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
 
