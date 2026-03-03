@@ -43,7 +43,7 @@ public class AdvancementService : IAdvancementService
         character.CurrentWillpower = Math.Clamp(character.CurrentWillpower + willpowerDiff, 0, newMaxWillpower);
     }
 
-    private bool TryUpgradeAttribute(Character character, string traitName, int currentRating, int newRating)
+    private static bool TryUpgradeAttribute(Character character, string traitName, int currentRating, int newRating)
     {
         if (newRating <= currentRating || newRating > 5) return false;
 
@@ -62,7 +62,7 @@ public class AdvancementService : IAdvancementService
         return false;
     }
 
-    private bool TryUpgradeSkill(Character character, string traitName, int currentRating, int newRating)
+    private static bool TryUpgradeSkill(Character character, string traitName, int currentRating, int newRating)
     {
         if (newRating <= currentRating || newRating > 5) return false;
 
