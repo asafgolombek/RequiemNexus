@@ -2,7 +2,7 @@
 <RunSettings>
   <!--
     Coverage run settings used by CI workflows and local test runs.
-    Emits OpenCover XML format required by SonarCloud and ReportGenerator.
+    Emits OpenCover XML format required by ReportGenerator.
     Excludes test assemblies and EF Core migration files from coverage.
 
     The 60% threshold is enforced via inline CLI args in ci.yml / pr-checks.yml.

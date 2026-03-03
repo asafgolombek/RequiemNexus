@@ -224,7 +224,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Database Migration Validation (test migrations against empty DB in CI)
 - [x] Security & Vulnerability Scanning (NuGet packages and Static Analysis)
 - [x] Automated Accessibility (a11y) scanning integrated into E2E tests
-- [x] Code Quality & Advanced Static Analysis (e.g., SonarCloud, Qodana)
+- [x] Code Quality & Advanced Static Analysis (e.g., Qodana)
 - [x] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
 - [ ] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
 - [ ] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
