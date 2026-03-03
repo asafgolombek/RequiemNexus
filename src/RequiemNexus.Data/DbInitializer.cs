@@ -18,6 +18,12 @@ public static class DbInitializer
     {
         await context.Database.MigrateAsync();
 
+        await SeedClansAndDisciplinesAsync(context);
+        await SeedMeritsFromJsonAsync(context);
+    }
+
+    private static async Task SeedClansAndDisciplinesAsync(ApplicationDbContext context)
+    {
         bool hasClansAndDisciplines = await context.Clans.AnyAsync() && await context.Disciplines.AnyAsync();
 
         if (!hasClansAndDisciplines)
@@ -142,9 +148,12 @@ public static class DbInitializer
             await context.ClanDisciplines.AddRangeAsync(clanDisciplines);
 
         }
+    }
 
+    private static async Task SeedMeritsFromJsonAsync(ApplicationDbContext context)
+    {
         // 4. Load Merits from JSON
-        var meritsJsonPath = @"c:\gitrepo\RequiemNexus\scraped_data.json";
+        var meritsJsonPath = Environment.GetEnvironmentVariable("MERITS_JSON_PATH") ?? "scraped_data.json";
         if (File.Exists(meritsJsonPath))
         {
             try
@@ -192,7 +201,5 @@ public static class DbInitializer
                 Console.WriteLine($"Error seeding merits: {ex.Message}");
             }
         }
-
-        await context.SaveChangesAsync();
     }
 }
