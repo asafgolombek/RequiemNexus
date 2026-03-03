@@ -7,17 +7,20 @@ namespace RequiemNexus.Data.Migrations
     /// <inheritdoc />
     public partial class AddCampaign : Migration
     {
+        private const string TableCampaigns = "Campaigns";
+        private const string TableCharacters = "Characters";
+        private const string ColumnCampaignId = "CampaignId";
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "CampaignId",
-                table: "Characters",
+                name: ColumnCampaignId,
+                table: TableCharacters,
                 type: "INTEGER",
                 nullable: true);
 
             migrationBuilder.CreateTable(
-                name: "Campaigns",
+                name: TableCampaigns,
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -38,19 +41,19 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Characters_CampaignId",
-                table: "Characters",
-                column: "CampaignId");
+                table: TableCharacters,
+                column: ColumnCampaignId);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Campaigns_StoryTellerId",
-                table: "Campaigns",
+                table: TableCampaigns,
                 column: "StoryTellerId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Characters_Campaigns_CampaignId",
-                table: "Characters",
-                column: "CampaignId",
-                principalTable: "Campaigns",
+                table: TableCharacters,
+                column: ColumnCampaignId,
+                principalTable: TableCampaigns,
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
         }
@@ -60,18 +63,18 @@ namespace RequiemNexus.Data.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_Characters_Campaigns_CampaignId",
-                table: "Characters");
+                table: TableCharacters);
 
             migrationBuilder.DropTable(
-                name: "Campaigns");
+                name: TableCampaigns);
 
             migrationBuilder.DropIndex(
                 name: "IX_Characters_CampaignId",
-                table: "Characters");
+                table: TableCharacters);
 
             migrationBuilder.DropColumn(
-                name: "CampaignId",
-                table: "Characters");
+                name: ColumnCampaignId,
+                table: TableCharacters);
         }
     }
 }

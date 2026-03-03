@@ -7,11 +7,12 @@ namespace RequiemNexus.Data.Migrations
     /// <inheritdoc />
     public partial class AddClanDisciplinesAndSeedData : Migration
     {
+        private const string TableClanDisciplines = "ClanDisciplines";
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ClanDisciplines",
+                name: TableClanDisciplines,
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -38,12 +39,12 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClanDisciplines_ClanId",
-                table: "ClanDisciplines",
+                table: TableClanDisciplines,
                 column: "ClanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClanDisciplines_DisciplineId",
-                table: "ClanDisciplines",
+                table: TableClanDisciplines,
                 column: "DisciplineId");
         }
 
@@ -51,7 +52,7 @@ namespace RequiemNexus.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ClanDisciplines");
+                name: TableClanDisciplines);
         }
     }
 }

@@ -10,6 +10,9 @@ namespace RequiemNexus.Data.Migrations
     {
         private const string TableAspNetRoles = "AspNetRoles";
         private const string TableAspNetUsers = "AspNetUsers";
+        private const string TableCharacters = "Characters";
+        private const string TypeInteger = "INTEGER";
+        private const string AnnotationSqliteAutoincrement = "Sqlite:Autoincrement";
 
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,16 +40,16 @@ namespace RequiemNexus.Data.Migrations
                     NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    EmailConfirmed = table.Column<bool>(type: TypeInteger, nullable: false),
                     PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
                     SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
                     PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PhoneNumberConfirmed = table.Column<bool>(type: TypeInteger, nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: TypeInteger, nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    LockoutEnabled = table.Column<bool>(type: TypeInteger, nullable: false),
+                    AccessFailedCount = table.Column<int>(type: TypeInteger, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -57,8 +60,8 @@ namespace RequiemNexus.Data.Migrations
                 name: "Clans",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(type: TypeInteger, nullable: false)
+                        .Annotation(AnnotationSqliteAutoincrement, true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 250, nullable: false)
                 },
@@ -71,8 +74,8 @@ namespace RequiemNexus.Data.Migrations
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(type: TypeInteger, nullable: false)
+                        .Annotation(AnnotationSqliteAutoincrement, true),
                     RoleId = table.Column<string>(type: "TEXT", nullable: false),
                     ClaimType = table.Column<string>(type: "TEXT", nullable: true),
                     ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
@@ -92,8 +95,8 @@ namespace RequiemNexus.Data.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(type: TypeInteger, nullable: false)
+                        .Annotation(AnnotationSqliteAutoincrement, true),
                     UserId = table.Column<string>(type: "TEXT", nullable: false),
                     ClaimType = table.Column<string>(type: "TEXT", nullable: true),
                     ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
@@ -174,18 +177,18 @@ namespace RequiemNexus.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Characters",
+                name: TableCharacters,
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(type: TypeInteger, nullable: false)
+                        .Annotation(AnnotationSqliteAutoincrement, true),
                     ApplicationUserId = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ClanId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Health = table.Column<int>(type: "INTEGER", nullable: false),
-                    Willpower = table.Column<int>(type: "INTEGER", nullable: false),
-                    BloodPotency = table.Column<int>(type: "INTEGER", nullable: false),
-                    Vitae = table.Column<int>(type: "INTEGER", nullable: false)
+                    ClanId = table.Column<int>(type: TypeInteger, nullable: true),
+                    Health = table.Column<int>(type: TypeInteger, nullable: false),
+                    Willpower = table.Column<int>(type: TypeInteger, nullable: false),
+                    BloodPotency = table.Column<int>(type: TypeInteger, nullable: false),
+                    Vitae = table.Column<int>(type: TypeInteger, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -243,12 +246,12 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Characters_ApplicationUserId",
-                table: "Characters",
+                table: TableCharacters,
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Characters_ClanId",
-                table: "Characters",
+                table: TableCharacters,
                 column: "ClanId");
         }
 
@@ -271,7 +274,7 @@ namespace RequiemNexus.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Characters");
+                name: TableCharacters);
 
             migrationBuilder.DropTable(
                 name: TableAspNetRoles);

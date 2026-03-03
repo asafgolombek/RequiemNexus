@@ -10,7 +10,7 @@ public class RollResult
     public List<int> DiceRolled { get; set; } = new List<int>();
 }
 
-public class DiceService
+public static class DiceService
 {
     public static RollResult Roll(int dicePool, bool tenAgain = true, bool nineAgain = false, bool eightAgain = false, bool isRote = false, int? seed = null)
     {
@@ -48,37 +48,42 @@ public class DiceService
 
         while (diceToRoll > 0)
         {
-            int additionalDice = 0;
-
-            for (int i = 0; i < diceToRoll; i++)
-            {
-                int roll = random.Next(1, 11);
-                result.DiceRolled.Add(roll);
-
-                if (roll >= 8)
-                {
-                    successes++;
-                }
-                else if (isRote)
-                {
-                    // Rote action: reroll failed dice once
-                    int reroll = random.Next(1, 11);
-                    result.DiceRolled.Add(reroll);
-                    if (reroll >= 8) successes++;
-                }
-
-                // Exploding dice rules
-                if (tenAgain && roll == 10) additionalDice++;
-                else if (nineAgain && roll >= 9) additionalDice++;
-                else if (eightAgain && roll >= 8) additionalDice++;
-            }
-
-            diceToRoll = additionalDice;
+            diceToRoll = ProcessDiceRollBatch(random, diceToRoll, tenAgain, nineAgain, eightAgain, isRote, result, ref successes);
             // Rote only applies to the initial pool, not exploding dice
             isRote = false;
         }
 
         result.Successes = successes;
         return result;
+    }
+
+    private static int ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result, ref int successes)
+    {
+        int additionalDice = 0;
+
+        for (int i = 0; i < diceToRoll; i++)
+        {
+            int roll = random.Next(1, 11);
+            result.DiceRolled.Add(roll);
+
+            if (roll >= 8)
+            {
+                successes++;
+            }
+            else if (isRote)
+            {
+                // Rote action: reroll failed dice once
+                int reroll = random.Next(1, 11);
+                result.DiceRolled.Add(reroll);
+                if (reroll >= 8) successes++;
+            }
+
+            // Exploding dice rules
+            if (tenAgain && roll == 10) additionalDice++;
+            else if (nineAgain && roll >= 9) additionalDice++;
+            else if (eightAgain && roll >= 8) additionalDice++;
+        }
+
+        return additionalDice;
     }
 }

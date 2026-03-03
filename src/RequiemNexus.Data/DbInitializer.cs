@@ -12,6 +12,7 @@ public static class DbInitializer
     private const string ClanNosferatu = "Nosferatu";
     private const string ClanVentrue = "Ventrue";
     private const string CostOneVitae = "1 Vitae";
+    private const string CostOneWillpower = "1 Willpower";
 
     public static async Task InitializeAsync(ApplicationDbContext context)
     {
@@ -40,14 +41,14 @@ public static class DbInitializer
             animalism.Powers.Add(new DisciplinePower { Name = "Raise the Familiar", Level = 2, Description = "Turn dead animal into a loyal proto-vampire.", Cost = CostOneVitae });
             animalism.Powers.Add(new DisciplinePower { Name = "Summon the Hunt", Level = 3, Description = "Call animals to a location or target with spilled blood.", DicePool = "Presence + Animal Ken + Animalism" });
             animalism.Powers.Add(new DisciplinePower { Name = "Feral Infection", Level = 4, Description = "Drives animals, humans and vampires into a frenzy.", DicePool = "Presence + Intimidation + Animalism" });
-            animalism.Powers.Add(new DisciplinePower { Name = "Lord of the Land", Level = 5, Description = "Mark territory as own, intruders take penalties.", Cost = "1 Willpower" });
+            animalism.Powers.Add(new DisciplinePower { Name = "Lord of the Land", Level = 5, Description = "Mark territory as own, intruders take penalties.", Cost = CostOneWillpower });
 
             var auspex = new Discipline { Name = "Auspex", Description = "Preternatural perception and psychic awareness." };
             auspex.Powers.Add(new DisciplinePower { Name = "Beast's Senses", Level = 1, Description = "Heighten senses to supernatural levels." });
             auspex.Powers.Add(new DisciplinePower { Name = "Aura Perception", Level = 2, Description = "Read the emotional resonance and nature of a subject.", DicePool = "Wits + Empathy + Auspex" });
             auspex.Powers.Add(new DisciplinePower { Name = "The Spirit's Touch", Level = 3, Description = "Read psychic residue from objects.", DicePool = "Wits + Occult + Auspex" });
             auspex.Powers.Add(new DisciplinePower { Name = "Lay Open the Mind", Level = 4, Description = "Read the surface thoughts of a target.", DicePool = "Intelligence + Investigation + Auspex vs Resolve + Blood Potency" });
-            auspex.Powers.Add(new DisciplinePower { Name = "Twilight Projection", Level = 5, Description = "Project awareness out of the body in twilight state.", Cost = "1 Willpower" });
+            auspex.Powers.Add(new DisciplinePower { Name = "Twilight Projection", Level = 5, Description = "Project awareness out of the body in twilight state.", Cost = CostOneWillpower });
 
             var celerity = new Discipline { Name = "Celerity", Description = "Supernatural speed and reflexes." };
             celerity.Powers.Add(new DisciplinePower { Name = "Celerity 1", Level = 1, Description = "Add dots to Initiative, subtract from attack pools.", Cost = CostOneVitae });
@@ -60,8 +61,8 @@ public static class DbInitializer
             dominate.Powers.Add(new DisciplinePower { Name = "Mesmerize", Level = 1, Description = "Plant a single command in a hypnotic trance.", DicePool = "Intelligence + Expression + Dominate vs Resolve + Blood Potency" });
             dominate.Powers.Add(new DisciplinePower { Name = "Command", Level = 2, Description = "Give a simple, immediate order.", DicePool = "Manipulation + Intimidation + Dominate vs Resolve + Blood Potency" });
             dominate.Powers.Add(new DisciplinePower { Name = "The Forgetful Mind", Level = 3, Description = "Alter or erase recent memories.", DicePool = "Wits + Subterfuge + Dominate vs Resolve + Blood Potency" });
-            dominate.Powers.Add(new DisciplinePower { Name = "Conditioning", Level = 4, Description = "Long-term programming and susceptibility.", Cost = "1 Willpower" });
-            dominate.Powers.Add(new DisciplinePower { Name = "Possession", Level = 5, Description = "Take direct control of a mortal's body.", Cost = "1 Willpower", DicePool = "Intelligence + Intimidation + Dominate vs Resolve + Blood Potency" });
+            dominate.Powers.Add(new DisciplinePower { Name = "Conditioning", Level = 4, Description = "Long-term programming and susceptibility.", Cost = CostOneWillpower });
+            dominate.Powers.Add(new DisciplinePower { Name = "Possession", Level = 5, Description = "Take direct control of a mortal's body.", Cost = CostOneWillpower, DicePool = "Intelligence + Intimidation + Dominate vs Resolve + Blood Potency" });
 
             var majesty = new Discipline { Name = "Majesty", Description = "Supernatural allure and emotional manipulation." };
             majesty.Powers.Add(new DisciplinePower { Name = "Awe", Level = 1, Description = "Draw all eyes and fascinate onlookers.", DicePool = "Presence + Expression + Majesty vs Composure + Blood Potency" });
@@ -74,7 +75,7 @@ public static class DbInitializer
             nightmare.Powers.Add(new DisciplinePower { Name = "Dread", Level = 1, Description = "Elicit creeping paranoia and fear.", DicePool = "Presence + Empathy + Nightmare vs Composure + Blood Potency" });
             nightmare.Powers.Add(new DisciplinePower { Name = "Face of the Beast", Level = 2, Description = "Reveal a monstrous visage.", Cost = CostOneVitae });
             nightmare.Powers.Add(new DisciplinePower { Name = "Aura of Terror", Level = 3, Description = "Radiate overwhelming fear.", Cost = CostOneVitae, DicePool = "Presence + Intimidation + Nightmare vs Composure + Blood Potency" });
-            nightmare.Powers.Add(new DisciplinePower { Name = "Waking Nightmare", Level = 4, Description = "Force a target's worst fears to hallucinate.", Cost = "1 Willpower" });
+            nightmare.Powers.Add(new DisciplinePower { Name = "Waking Nightmare", Level = 4, Description = "Force a target's worst fears to hallucinate.", Cost = CostOneWillpower });
             nightmare.Powers.Add(new DisciplinePower { Name = "Mortal Fear", Level = 5, Description = "A terrifying shock to the system.", Cost = CostOneVitae, DicePool = "Presence + Intimidation + Nightmare vs Composure + Blood Potency" });
 
             var obfuscate = new Discipline { Name = "Obfuscate", Description = "The power to remain unseen and ignored." };
@@ -82,7 +83,7 @@ public static class DbInitializer
             obfuscate.Powers.Add(new DisciplinePower { Name = "Mask of Tranquility", Level = 2, Description = "Hide your Predatory Aura and emotions.", Cost = CostOneVitae });
             obfuscate.Powers.Add(new DisciplinePower { Name = "Cloak of Night", Level = 3, Description = "Turn utterly invisible.", Cost = CostOneVitae, DicePool = "Intelligence + Stealth + Obfuscate" });
             obfuscate.Powers.Add(new DisciplinePower { Name = "The Familiar Stranger", Level = 4, Description = "Disguise yourself as whoever the target expects.", Cost = CostOneVitae });
-            obfuscate.Powers.Add(new DisciplinePower { Name = "Oubliette", Level = 5, Description = "Erase a person or place from perception entirely.", Cost = "1 Willpower" });
+            obfuscate.Powers.Add(new DisciplinePower { Name = "Oubliette", Level = 5, Description = "Erase a person or place from perception entirely.", Cost = CostOneWillpower });
 
             var protean = new Discipline { Name = "Protean", Description = "Shape-shifting and bestial adaptation." };
             protean.Powers.Add(new DisciplinePower { Name = "Unnatural Aspect", Level = 1, Description = "Gain feral eyes, or retractible claws.", Cost = CostOneVitae });
@@ -96,7 +97,7 @@ public static class DbInitializer
             resilience.Powers.Add(new DisciplinePower { Name = "Resilience 2", Level = 2, Description = "Ignore wound penalties temporarily.", Cost = CostOneVitae });
             resilience.Powers.Add(new DisciplinePower { Name = "Resilience 3", Level = 3, Description = "Downgrade lethal damage to bashing.", Cost = CostOneVitae });
             resilience.Powers.Add(new DisciplinePower { Name = "Resilience 4", Level = 4, Description = "Resist all mundane sources of damage.", Cost = CostOneVitae });
-            resilience.Powers.Add(new DisciplinePower { Name = "Resilience 5", Level = 5, Description = "Shrug off almost anything.", Cost = "1 Willpower" });
+            resilience.Powers.Add(new DisciplinePower { Name = "Resilience 5", Level = 5, Description = "Shrug off almost anything.", Cost = CostOneWillpower });
 
             var vigor = new Discipline { Name = "Vigor", Description = "Supernatural strength." };
             vigor.Powers.Add(new DisciplinePower { Name = "Vigor 1", Level = 1, Description = "Add dots to Strength and jumping.", Cost = CostOneVitae });

@@ -102,8 +102,6 @@
     [Parameter] public string TraitName { get; set; } = string.Empty;
     [Parameter] public int BaseDice { get; set; } = 1;
     [Parameter] public RequiemNexus.Data.Models.Character? Character { get; set; }
-    
-    [Inject] public DiceService DiceService { get; set; } = default!;
 
     private string AssociatedTraitName { get; set; } = string.Empty;
     private int Modifier { get; set; } = 0;
