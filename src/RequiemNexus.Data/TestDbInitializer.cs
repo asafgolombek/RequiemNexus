@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 
@@ -29,9 +29,9 @@ public static class TestDbInitializer
                 EmailConfirmed = true,
                 SecurityStamp = Guid.NewGuid().ToString()
             };
-            
+
             newUser.PasswordHash = hasher.HashPassword(newUser, TestUserPassword);
-            
+
             await context.Users.AddAsync(newUser);
             await context.SaveChangesAsync();
         }

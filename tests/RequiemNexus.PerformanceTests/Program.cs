@@ -1,5 +1,5 @@
-﻿using NBomber.CSharp;
-using NBomber.Contracts.Stats;
+﻿using NBomber.Contracts.Stats;
+using NBomber.CSharp;
 
 namespace RequiemNexus.PerformanceTests;
 
@@ -14,9 +14,9 @@ public class Program
         {
             var request = new HttpRequestMessage(HttpMethod.Get, targetUrl);
             var response = await httpClient.SendAsync(request);
-            
-            return response.IsSuccessStatusCode 
-                ? Response.Ok(statusCode: ((int)response.StatusCode).ToString()) 
+
+            return response.IsSuccessStatusCode
+                ? Response.Ok(statusCode: ((int)response.StatusCode).ToString())
                 : Response.Fail(statusCode: ((int)response.StatusCode).ToString());
         })
         .WithLoadSimulations(
