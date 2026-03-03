@@ -240,7 +240,31 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 3: Automated Deployments & Observability
+## 📅 Phase 3: Account Management
+
+- Password reset and change
+- Account deletion and data wipe
+- Two-Factor Authentication (2FA)
+- Email validation
+- Profile management
+- Session management
+- OAuth / Social logins
+- Audit logs
+- Role management (Player vs Storyteller)
+
+---
+
+## 📅 Phase 4: The Storyteller
+
+- Initiative Tracker
+- Encounter Manager
+- Campaign notes and shared lore
+- ST Glimpse view
+- **Homebrew / Custom Content Support** (Disciplines, Devotions, Bloodlines)
+
+---
+
+## 📅 Phase 5: Automated Deployments & Observability
 
 - [ ] Automated Versioning & Git Tagging (generate CI build numbers, inject into assemblies/logs, push Git tags)
 - [ ] Infrastructure as Code (IaC) — define all AWS resources (ECS, RDS, ALB, etc.) in CDK, Terraform, or CloudFormation
@@ -256,7 +280,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] Load testing and observability alerts
 - [ ] Error Tracking Integration (e.g., Sentry, Raygun) for real-time exception alerts
 
-### Phase 3 Exit Criteria
+### Phase 5 Exit Criteria
 
 - Every merge to `main` automatically deploys to staging
 - Production deployments are one-command (or one-click) from a green staging build
@@ -264,30 +288,6 @@ If a bug cannot be observed, it cannot be fixed.
 - Zero manual infrastructure configuration via the AWS Console
 - All secrets are managed via AWS Secrets Manager; no credentials exist in the repository
 - A rollback to the previous version can be completed in under 5 minutes
-
----
-
-## 📅 Phase 4: Account Management
-
-- Password reset and change
-- Account deletion and data wipe
-- Two-Factor Authentication (2FA)
-- Email validation
-- Profile management
-- Session management
-- OAuth / Social logins
-- Audit logs
-- Role management (Player vs Storyteller)
-
----
-
-## 📅 Phase 5: The Storyteller
-
-- Initiative Tracker
-- Encounter Manager
-- Campaign notes and shared lore
-- ST Glimpse view
-- **Homebrew / Custom Content Support** (Disciplines, Devotions, Bloodlines)
 
 ---
 ## 📅 Phase 6: The Global Embrace
