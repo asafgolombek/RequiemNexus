@@ -11,7 +11,7 @@ namespace RequiemNexus.E2ETests;
 /// </summary>
 public class DiceRollFlowTests : IAsyncLifetime
 {
-    private const string AppBaseUrl = "http://localhost:5000";
+    private static readonly string AppBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5000";
     private const string TestUserEmail = "e2etest@requiemnexus.local";
     private const string TestUserPassword = "test";
 
