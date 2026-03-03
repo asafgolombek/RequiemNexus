@@ -64,6 +64,11 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await DbInitializer.InitializeAsync(context);
+
+    if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("E2E"))
+    {
+        await TestDbInitializer.InitializeAsync(context);
+    }
 }
 
 // Configure the HTTP request pipeline.

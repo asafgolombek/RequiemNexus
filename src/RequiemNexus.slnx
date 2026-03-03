@@ -5,4 +5,5 @@
   <Project Path="../tests/RequiemNexus.Domain.Tests/RequiemNexus.Domain.Tests.csproj" />
   <Project Path="../tests/RequiemNexus.Data.Tests/RequiemNexus.Data.Tests.csproj" />
   <Project Path="../tests/RequiemNexus.E2ETests/RequiemNexus.E2ETests.csproj" />
+  <Project Path="../tests/RequiemNexus.PerformanceTests/RequiemNexus.PerformanceTests.csproj" />
 </Solution>

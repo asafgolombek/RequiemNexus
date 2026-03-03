@@ -26,6 +26,7 @@ $RootDir     = Split-Path -Parent -Path $ScriptRoot
 $SlnPath     = Join-Path $RootDir "src\RequiemNexus.slnx"
 $DomainTests = Join-Path $RootDir "tests\RequiemNexus.Domain.Tests\RequiemNexus.Domain.Tests.csproj"
 $DataTests   = Join-Path $RootDir "tests\RequiemNexus.Data.Tests\RequiemNexus.Data.Tests.csproj"
+$E2ETests    = Join-Path $RootDir "tests\RequiemNexus.E2ETests\RequiemNexus.E2ETests.csproj"
 $CoverageDir = Join-Path $RootDir "coverage"
 
 function Write-Step([string]$Message) {
@@ -78,7 +79,18 @@ $dataResult = 0
 dotnet test $DataTests @TestArgs
 $dataResult = $LASTEXITCODE
 
-# ── 6. Summary ───────────────────────────────────────────────────────────────
+# ── 6. E2E tests ──────────────────────────────────────────────────────────────
+Write-Step "Running E2E tests"
+$e2eResult = 0
+try {
+    pwsh "$RootDir\tests\RequiemNexus.E2ETests\bin\$Configuration\net10.0\playwright.ps1" install
+} catch {
+    Write-Host "Playwright installation skipped or failed." -ForegroundColor Yellow
+}
+dotnet test $E2ETests @TestArgs
+$e2eResult = $LASTEXITCODE
+
+# ── 7. Summary ───────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "══════════════════════════════════════" -ForegroundColor DarkMagenta
 Write-Host "  TEST SUMMARY" -ForegroundColor Magenta
@@ -89,6 +101,9 @@ else                      { Write-Fail   "Domain tests:      FAILED" }
 
 if ($dataResult -eq 0)   { Write-Success "Integration tests: PASSED" }
 else                      { Write-Fail   "Integration tests: FAILED" }
+
+if ($e2eResult -eq 0)    { Write-Success "E2E tests:         PASSED" }
+else                      { Write-Fail   "E2E tests:         FAILED" }
 
 Write-Host ""
 
@@ -104,8 +119,8 @@ if ($Coverage) {
     }
 }
 
-# ── 8. Exit with failure if any test suite failed ────────────────────────────
-if ($domainResult -ne 0 -or $dataResult -ne 0) {
+# ── 9. Exit with failure if any test suite failed ────────────────────────────
+if ($domainResult -ne 0 -or $dataResult -ne 0 -or $e2eResult -ne 0) {
     exit 1
 }
 

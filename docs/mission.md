@@ -226,9 +226,14 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Automated Accessibility (a11y) scanning integrated into E2E tests
 - [x] Code Quality & Advanced Static Analysis (e.g., Qodana)
 - [x] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
-- [ ] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
-- [ ] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
+- [x] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
+- [x] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
 - [x] Enforce `.editorconfig` in CI (fail build if `dotnet format --verify-no-changes` fails)
+- [x] Performance / Load Testing baseline (e.g., k6 or NBomber smoke test to catch regressions on critical endpoints)
+- [x] Test Data Seeding Strategy (repeatable, deterministic `TestDbInitializer` or fixture for integration and E2E tests)
+- [x] CI Caching & Build Time Optimization (cache NuGet packages and build artifacts in GitHub Actions)
+- [x] Automated Changelog / Release Notes (auto-generate from PR titles or conventional commits)
+- [x] Developer Documentation (`CONTRIBUTING.md` — how to run tests, PR process, coding conventions)
 
 ### Phase 2 Exit Criteria
 
@@ -237,20 +242,64 @@ If a bug cannot be observed, it cannot be fixed.
 - Security and dependency scanning is active on every PR
 - A new developer can run the full test suite locally in one command
 - Merging to `main` is blocked unless all required status checks pass
+- A `CONTRIBUTING.md` exists and is kept up to date with the project workflow
 
 ---
 
-## 📅 Phase 3: Account Management
+## 📅 Phase 3: Account Management & Security (The Masquerade Veil)
 
-- Password reset and change
-- Account deletion and data wipe
-- Two-Factor Authentication (2FA)
-- Email validation
-- Profile management
-- Session management
-- OAuth / Social logins
-- Audit logs
-- Role management (Player vs Storyteller)
+- [ ] **Registration & Onboarding**
+  - Email verification (with token expiration)
+  - Welcome emails and resend verification links
+- [ ] **Authentication Rules**
+  - Login lockout policies (e.g., 5 failed attempts locks for 15 mins)
+  - "Remember Me" functionality
+  - Password complexity rules and validation
+- [ ] **Account Security**
+  - Password reset and change flows
+  - Two-Factor Authentication (2FA) via Authenticator App (TOTP) or Email
+  - Recovery backup codes for 2FA
+- [ ] **Session Management**
+  - View active sessions across devices
+  - Remote logout of other active sessions
+  - Automatic timeout for inactivity
+- [ ] **Data Privacy & Compliance**
+  - GDPR/CCPA compliant "Download My Data"
+  - Account deletion with a soft-delete grace period
+  - Audit logs for security events (login, password change, 2FA toggle)
+- [ ] **Profile Management**
+  - Update display name, avatar, and email address
+  - Email change flow with re-verification of the new address before it takes effect
+- [ ] **Password Reset via Email**
+  - Request link → email with time-limited token → reset form → invalidate old sessions
+- [ ] **Account Recovery**
+  - Define recovery path for users who lose 2FA device and recovery codes (e.g., support ticket, identity verification)
+- [ ] **Rate Limiting**
+  - Throttle login attempts, password reset requests, and registration endpoints to prevent brute-force and abuse
+- [ ] **OAuth Connect**
+  - Link/unlink Google, Discord, or Apple accounts to an existing local account
+- [ ] **Role Management**
+  - Player vs Storyteller authorization policies
+- [ ] **Notification Preferences**
+  - Opt in/out of email notifications (security alerts, campaign updates)
+- [ ] **Terms of Service & Privacy Policy**
+  - Track user consent acceptance with timestamps (required for GDPR compliance)
+
+### Phase 3 Testing & Security Criteria
+
+- **Unit Tests (Domain/Services):** Isolate and verify password hashing, token generation, lockout logic, and 2FA code validation.
+- **Integration Tests (API/DB):** Verify EF Core correctly saves user states (`EmailConfirmed`, `TwoFactorEnabled`) and endpoints return correct HTTP status codes (e.g., `401 Unauthorized` for bad passwords).
+- **E2E UI Tests (Playwright/bUnit):**
+  - Automate the registration form submission.
+  - Attempt login with incorrect passwords to trigger lockout UI.
+  - Navigate to the profile page, change the password, and verify the old password no longer works.
+- **Security Tests:** Ensure all session cookies have `HttpOnly`, `Secure`, and `SameSite` flags set correctly.
+
+### Phase 3 Exit Criteria
+
+- A user can register, verify their email, enable 2FA, and delete their account without developer intervention.
+- All authentication endpoints and services have 100% test coverage.
+- Account lockout and session invalidation work automatically.
 
 ---
 

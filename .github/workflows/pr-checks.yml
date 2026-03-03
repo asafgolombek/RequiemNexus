@@ -19,6 +19,14 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'src/RequiemNexus.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
         run: dotnet restore src/RequiemNexus.slnx
 
@@ -54,6 +62,32 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdType=line
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
 
+      - name: Build E2E tests
+        run: dotnet build tests/RequiemNexus.E2ETests/RequiemNexus.E2ETests.csproj --no-restore --configuration Debug
+
+      - name: Install Playwright browsers
+        run: pwsh tests/RequiemNexus.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps
+
+      - name: Start Web App in Background
+        run: |
+          dotnet run --project src/RequiemNexus.Web/RequiemNexus.Web.csproj --configuration Debug > web.log 2>&1 &
+          sleep 10
+        env:
+          ASPNETCORE_ENVIRONMENT: E2E
+
+      - name: Run E2E tests
+        run: >
+          dotnet test tests/RequiemNexus.E2ETests/RequiemNexus.E2ETests.csproj
+          --no-build
+          --configuration Debug
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage/e2e
+          --settings tests/coverage.runsettings
+          --
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdType=line
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v7
         with:
@@ -72,6 +106,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'src/RequiemNexus.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
         run: dotnet restore src/RequiemNexus.slnx
@@ -105,6 +147,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'src/RequiemNexus.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
         run: dotnet restore src/RequiemNexus.slnx

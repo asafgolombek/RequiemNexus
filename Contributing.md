@@ -7,8 +7,8 @@ This is not just a codebase—it is a **teaching system**, an **architectural re
 By contributing, you agree to uphold the **Antigravity Philosophy**.
 
 > Before you contribute, read:
-> - [🩸 Mission](./mission.md) — _Why_ this project exists
-> - [📐 Architecture](./Architecture.md) — _How_ this project is structured
+> - [🩸 Mission](./docs/mission.md) — _Why_ this project exists
+> - [📐 Architecture](./docs/Architecture.md) — _How_ this project is structured
 
 ---
 
