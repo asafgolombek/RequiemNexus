@@ -73,7 +73,7 @@ jobs:
 
       - name: Start Web App in Background
         run: |
-          dotnet run --project src/RequiemNexus.Web/RequiemNexus.Web.csproj --configuration Release > web.log 2>&1 &
+          dotnet run --project src/RequiemNexus.Web/RequiemNexus.Web.csproj --configuration Release --no-launch-profile > web.log 2>&1 &
           sleep 10
         env:
           ASPNETCORE_ENVIRONMENT: E2E
