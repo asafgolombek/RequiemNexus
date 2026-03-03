@@ -44,19 +44,19 @@ public class DiceRollFlowTests : IAsyncLifetime
 
     private async Task LoginAsync()
     {
-        await _page.GotoAsync("/Account/Login");
-        await _page.FillAsync("input[name='Input.Email']", TestUserEmail);
-        await _page.FillAsync("input[name='Input.Password']", TestUserPassword);
+        await _page.GotoAsync("/");
+        await _page.FillAsync("input[id='email']", TestUserEmail);
+        await _page.FillAsync("input[id='password']", TestUserPassword);
         await _page.ClickAsync("button[type='submit']");
-        await _page.WaitForURLAsync("**/");
+        await _page.WaitForURLAsync("**/home");
     }
 
     private async Task<IPage> NavigateToFirstCharacterSheetAsync()
     {
-        await _page.GotoAsync("/");
+        await _page.GotoAsync("/characters");
 
         // Click the first character card to navigate to its sheet
-        var firstCharacterLink = _page.Locator("a[id^='character-card-']").First;
+        var firstCharacterLink = _page.Locator(".character-card a:has-text('View Sheet')").First;
         await firstCharacterLink.ClickAsync();
         await _page.WaitForURLAsync("**/character/**", new PageWaitForURLOptions { Timeout = 10_000 });
 

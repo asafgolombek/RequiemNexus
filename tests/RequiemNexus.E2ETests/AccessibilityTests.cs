@@ -101,7 +101,7 @@ public class AccessibilityTests : IAsyncLifetime
     {
         SkipIfAppNotReachable();
 
-        await _page.GotoAsync("/Identity/Account/Login");
+        await _page.GotoAsync("/");
         var violations = await RunAxeAsync();
 
         Assert.True(violations.Count == 0,
@@ -110,8 +110,8 @@ public class AccessibilityTests : IAsyncLifetime
 
     // ── axe-core result DTOs ─────────────────────────────────────────────────
 
-    private sealed record AxeResult(List<AxeViolation> Violations);
-    private sealed record AxeViolation(string Id, string Impact, string Description, List<object> Nodes);
+    private sealed class AxeResult { public List<AxeViolation> Violations { get; set; } = new(); }
+    private sealed class AxeViolation { public string Id { get; set; } = ""; public string Impact { get; set; } = ""; public string Description { get; set; } = ""; public List<object> Nodes { get; set; } = new(); }
 }
 
 /// <summary>

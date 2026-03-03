@@ -44,11 +44,11 @@ public class CharacterCreationFlowTests : IAsyncLifetime
 
     private async Task LoginAsync()
     {
-        await _page.GotoAsync("/Account/Login");
-        await _page.FillAsync("input[name='Input.Email']", TestUserEmail);
-        await _page.FillAsync("input[name='Input.Password']", TestUserPassword);
+        await _page.GotoAsync("/");
+        await _page.FillAsync("input[id='email']", TestUserEmail);
+        await _page.FillAsync("input[id='password']", TestUserPassword);
         await _page.ClickAsync("button[type='submit']");
-        await _page.WaitForURLAsync("**/");
+        await _page.WaitForURLAsync("**/home");
     }
 
     [Fact]
