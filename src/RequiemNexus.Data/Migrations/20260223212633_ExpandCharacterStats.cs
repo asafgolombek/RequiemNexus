@@ -4,6 +4,7 @@
 
 namespace RequiemNexus.Data.Migrations
 {
+#pragma warning disable S1192 // String literals should not be duplicated
     /// <inheritdoc />
     public partial class ExpandCharacterStats : Migration
     {

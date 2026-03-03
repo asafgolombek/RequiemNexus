@@ -48,7 +48,9 @@ public static class DiceService
 
         while (diceToRoll > 0)
         {
-            diceToRoll = ProcessDiceRollBatch(random, diceToRoll, tenAgain, nineAgain, eightAgain, isRote, result, ref successes);
+            var batchResult = ProcessDiceRollBatch(random, diceToRoll, tenAgain, nineAgain, eightAgain, isRote, result);
+            diceToRoll = batchResult.AdditionalDice;
+            successes += batchResult.NewSuccesses;
             // Rote only applies to the initial pool, not exploding dice
             isRote = false;
         }
@@ -57,9 +59,10 @@ public static class DiceService
         return result;
     }
 
-    private static int ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result, ref int successes)
+    private static (int AdditionalDice, int NewSuccesses) ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result)
     {
         int additionalDice = 0;
+        int newSuccesses = 0;
 
         for (int i = 0; i < diceToRoll; i++)
         {
@@ -68,14 +71,14 @@ public static class DiceService
 
             if (roll >= 8)
             {
-                successes++;
+                newSuccesses++;
             }
             else if (isRote)
             {
                 // Rote action: reroll failed dice once
                 int reroll = random.Next(1, 11);
                 result.DiceRolled.Add(reroll);
-                if (reroll >= 8) successes++;
+                if (reroll >= 8) newSuccesses++;
             }
 
             // Exploding dice rules
@@ -84,6 +87,6 @@ public static class DiceService
             else if (eightAgain && roll >= 8) additionalDice++;
         }
 
-        return additionalDice;
+        return (additionalDice, newSuccesses);
     }
 }
