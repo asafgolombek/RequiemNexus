@@ -8,11 +8,14 @@ namespace RequiemNexus.Data.Migrations
     /// <inheritdoc />
     public partial class InitialDataSchema : Migration
     {
+        private const string TableAspNetRoles = "AspNetRoles";
+        private const string TableAspNetUsers = "AspNetUsers";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "AspNetRoles",
+                name: TableAspNetRoles,
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
@@ -26,7 +29,7 @@ namespace RequiemNexus.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AspNetUsers",
+                name: TableAspNetUsers,
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
@@ -80,7 +83,7 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "AspNetRoles",
+                        principalTable: TableAspNetRoles,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -101,7 +104,7 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_AspNetUserClaims_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: TableAspNetUsers,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -121,7 +124,7 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_AspNetUserLogins_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: TableAspNetUsers,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -139,13 +142,13 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "AspNetRoles",
+                        principalTable: TableAspNetRoles,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_AspNetUserRoles_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: TableAspNetUsers,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -165,7 +168,7 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_AspNetUserTokens_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: TableAspNetUsers,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -190,7 +193,7 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_Characters_AspNetUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: TableAspNetUsers,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -208,7 +211,7 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
-                table: "AspNetRoles",
+                table: TableAspNetRoles,
                 column: "NormalizedName",
                 unique: true);
 
@@ -229,12 +232,12 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
-                table: "AspNetUsers",
+                table: TableAspNetUsers,
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
-                table: "AspNetUsers",
+                table: TableAspNetUsers,
                 column: "NormalizedUserName",
                 unique: true);
 
@@ -271,10 +274,10 @@ namespace RequiemNexus.Data.Migrations
                 name: "Characters");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
+                name: TableAspNetRoles);
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: TableAspNetUsers);
 
             migrationBuilder.DropTable(
                 name: "Clans");

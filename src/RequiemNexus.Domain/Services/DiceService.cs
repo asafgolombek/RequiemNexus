@@ -12,25 +12,37 @@ public class RollResult
 
 public class DiceService
 {
-    public RollResult Roll(int dicePool, bool tenAgain = true, bool nineAgain = false, bool eightAgain = false, bool isRote = false, int? seed = null)
+    public static RollResult Roll(int dicePool, bool tenAgain = true, bool nineAgain = false, bool eightAgain = false, bool isRote = false, int? seed = null)
     {
+#pragma warning disable S2245 // Using pseudorandom number generators (PRNGs) is security-sensitive
         var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
-        var result = new RollResult();
+#pragma warning restore S2245 // Using pseudorandom number generators (PRNGs) is security-sensitive
 
         if (dicePool <= 0)
         {
-            // Chance die
-            int roll = random.Next(1, 11);
-            result.DiceRolled.Add(roll);
-
-            if (roll == 10)
-                result.Successes = 1;
-            else if (roll == 1)
-                result.IsDramaticFailure = true;
-
-            return result;
+            return RollChanceDie(random);
         }
 
+        return RollRegularPool(random, dicePool, tenAgain, nineAgain, eightAgain, isRote);
+    }
+
+    private static RollResult RollChanceDie(Random random)
+    {
+        var result = new RollResult();
+        int roll = random.Next(1, 11);
+        result.DiceRolled.Add(roll);
+
+        if (roll == 10)
+            result.Successes = 1;
+        else if (roll == 1)
+            result.IsDramaticFailure = true;
+
+        return result;
+    }
+
+    private static RollResult RollRegularPool(Random random, int dicePool, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
+    {
+        var result = new RollResult();
         int successes = 0;
         int diceToRoll = dicePool;
 
@@ -43,8 +55,7 @@ public class DiceService
                 int roll = random.Next(1, 11);
                 result.DiceRolled.Add(roll);
 
-                bool isSuccess = roll >= 8;
-                if (isSuccess)
+                if (roll >= 8)
                 {
                     successes++;
                 }
