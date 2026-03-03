@@ -189,7 +189,7 @@
         }
     }
 
-    private void AdjustMeritRating(CharacterMerit cm, int change)
+    private static void AdjustMeritRating(CharacterMerit cm, int change)
     {
         if (cm.Rating + change >= 1 && cm.Rating + change <= 5)
         {
@@ -210,7 +210,7 @@
         }
     }
 
-    private void AdjustDisciplineDots(CharacterDiscipline cd, int change)
+    private static void AdjustDisciplineDots(CharacterDiscipline cd, int change)
     {
         if (cd.Rating + change >= 1 && cd.Rating + change <= 5)
         {

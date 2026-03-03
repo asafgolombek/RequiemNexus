@@ -1,4 +1,5 @@
-﻿using System;
+#pragma warning disable S1192 // String literals should not be duplicated
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -27,3 +28,4 @@ namespace RequiemNexus.Data.Migrations
         }
     }
 }
+

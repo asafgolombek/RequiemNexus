@@ -77,7 +77,7 @@
         if (registerModel is null) return;
 
         // Parse Birthday to DateOnly (DD/MM/YYYY)
-        if (!DateOnly.TryParseExact(registerModel.Birthday, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var parsedBirthday))
+        if (!DateOnly.TryParseExact(registerModel.Birthday, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsedBirthday))
         {
             errorMessage = "Invalid birthday format. Please use DD/MM/YYYY.";
             return;
