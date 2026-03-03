@@ -89,7 +89,7 @@
     private List<Character> availableCharacters = new();
     private bool showAddCharacter = false;
 
-    private AddCharacterModel addModel = new();
+    private readonly AddCharacterModel addModel = new();
 
     protected override async Task OnInitializedAsync()
     {

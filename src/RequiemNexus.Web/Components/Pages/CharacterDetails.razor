@@ -336,7 +336,7 @@ else
     private string activeTab = "sheet";
     private bool isEditingName = false;
     
-    private HashSet<int> expandedDisciplines = new HashSet<int>();
+    private readonly HashSet<int> expandedDisciplines = new HashSet<int>();
 
     private void ToggleDiscipline(int disciplineId)
     {
