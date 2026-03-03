@@ -34,7 +34,6 @@ public static class TestDbInitializer
 
             await context.Users.AddAsync(newUser);
             await context.SaveChangesAsync();
-            
 
         }
     }
