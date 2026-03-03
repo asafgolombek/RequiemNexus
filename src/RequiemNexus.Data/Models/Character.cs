@@ -54,9 +54,9 @@ public class Character
     // Core specific stats for the Neonate Phase
     public int Humanity { get; set; } = 7;
     public int Size { get; set; } = 5;
-    public int ExperiencePoints { get; set; } = 0;
-    public int TotalExperiencePoints { get; set; } = 0;
-    public int Beats { get; set; } = 0;
+    public int ExperiencePoints { get; set; }
+    public int TotalExperiencePoints { get; set; }
+    public int Beats { get; set; }
 
     public int MaxHealth { get; set; }
     public int CurrentHealth { get; set; }

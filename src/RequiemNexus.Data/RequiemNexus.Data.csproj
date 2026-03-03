@@ -15,9 +15,4 @@
     <ProjectReference Include="..\RequiemNexus.Domain\RequiemNexus.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Migrations\**" />
-    <Compile Include="Migrations\**" SonarQubeExclude="true" />
-  </ItemGroup>
-
 </Project>

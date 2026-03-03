@@ -17,5 +17,5 @@ public class CharacterAspiration
     [MaxLength(255)]
     public string Description { get; set; } = string.Empty;
 
-    public bool IsLongTerm { get; set; } = false;
+    public bool IsLongTerm { get; set; }
 }

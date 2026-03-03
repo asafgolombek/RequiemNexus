@@ -369,11 +369,7 @@ else
         }
     }
 
-    private void ToggleAdvancementMode()
-    {
-        isAdvancementMode = !isAdvancementMode;
-        if (isAdvancementMode) isFreeEditMode = false;
-    }
+
 
     private async Task ToggleFreeEditMode()
     {
@@ -395,29 +391,7 @@ else
         }
     }
 
-    private async Task HandleTraitChange(string traitName, int currentRating, int newRating)
-    {
-        if (character == null) return;
 
-        if (isAdvancementMode)
-        {
-            if (newRating > currentRating)
-            {
-                bool success = AdvancementService.TryUpgradeCoreTrait(character, traitName, currentRating, newRating);
-                if (success)
-                {
-                    await CharacterService.SaveAsync(character);
-                }
-            }
-        }
-        else if (isFreeEditMode)
-        {
-            AdvancementService.UpdateCoreTrait(character, traitName, newRating);
-            if (traitName is "Stamina" or "Resolve" or "Composure")
-                AdvancementService.RecalculateDerivedStats(character);
-            await CharacterService.SaveAsync(character);
-        }
-    }
 
     protected override async Task OnInitializedAsync()
     {
