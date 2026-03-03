@@ -217,16 +217,13 @@ If a bug cannot be observed, it cannot be fixed.
 
 - [x] Comprehensive unit testing for Domain models and Rules engine
 - [x] Integration testing for EF Core and ASP.NET API endpoints
-- [x] End-to-End (E2E) UI testing for critical player flows
 - [x] Automated Pull Request checks (Linting, Formatting, Test Coverage)
 - [x] CI/CD Pipelines (GitHub Actions)
 - [x] Setup Dependabot/Renovate for automated dependency updates
 - [x] Database Migration Validation (test migrations against empty DB in CI)
 - [x] Security & Vulnerability Scanning (NuGet packages and Static Analysis)
-- [x] Automated Accessibility (a11y) scanning integrated into E2E tests
 - [x] Code Quality & Advanced Static Analysis (e.g., Qodana)
 - [x] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
-- [x] Add E2E tests to the CI pipeline (currently only Domain + Data tests run; no UI test job exists)
 - [x] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
 - [x] Enforce `.editorconfig` in CI (fail build if `dotnet format --verify-no-changes` fails)
 - [x] Performance / Load Testing baseline (e.g., k6 or NBomber smoke test to catch regressions on critical endpoints)
@@ -344,6 +341,14 @@ If a bug cannot be observed, it cannot be fixed.
 - **Localization and Internationalization (i18n)** (Full language support)
 - Third-party API integrations
 - **SEO & Rich Social Sharing** (Open Graph tags for public character sheets and chronicles)
+
+---
+
+## 📅 Phase 7: End-to-End (E2E) Testing 
+
+- [ ] End-to-End (E2E) UI testing for critical player flows
+- [ ] Automated Accessibility (a11y) scanning integrated into E2E tests
+- [ ] Add E2E tests to the CI pipeline
 
 ---
 
