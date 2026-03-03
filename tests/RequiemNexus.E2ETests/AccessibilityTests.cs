@@ -69,11 +69,21 @@ public class AccessibilityTests : IAsyncLifetime
         await _page.EvaluateAsync(axeScript);
 
         // Run analysis and collect violations
-        var result = await _page.EvaluateAsync<AxeResult>("async () => await axe.run()");
+        var result = await _page.EvaluateAsync<System.Text.Json.JsonElement>("async () => await axe.run()");
 
-        return result.Violations
-            .Select(v => $"[{v.Impact}] {v.Id}: {v.Description} — nodes: {v.Nodes.Count}")
-            .ToList();
+        var violations = new List<string>();
+        if (result.TryGetProperty("violations", out var violationsElement) && violationsElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+        {
+            foreach (var v in violationsElement.EnumerateArray())
+            {
+                var impact = v.TryGetProperty("impact", out var imp) ? imp.GetString() : "unknown";
+                var id = v.TryGetProperty("id", out var i) ? i.GetString() : "unknown";
+                var description = v.TryGetProperty("description", out var desc) ? desc.GetString() : "";
+                var nodesCount = v.TryGetProperty("nodes", out var n) ? n.GetArrayLength() : 0;
+                violations.Add($"[{impact}] {id}: {description} — nodes: {nodesCount}");
+            }
+        }
+        return violations;
     }
 
     private void SkipIfAppNotReachable()
@@ -108,10 +118,7 @@ public class AccessibilityTests : IAsyncLifetime
             $"Accessibility violations found on login page:\n{string.Join("\n", violations)}");
     }
 
-    // ── axe-core result DTOs ─────────────────────────────────────────────────
-
-    private sealed class AxeResult { public List<AxeViolation> Violations { get; set; } = new(); }
-    private sealed class AxeViolation { public string Id { get; set; } = ""; public string Impact { get; set; } = ""; public string Description { get; set; } = ""; public List<object> Nodes { get; set; } = new(); }
+    // Removed AxeResult DTOs in favor of dynamic parsing via JsonElement
 }
 
 /// <summary>

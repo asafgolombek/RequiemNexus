@@ -54,7 +54,7 @@ public class CharacterCreationFlowTests : IAsyncLifetime
     [Fact]
     public async Task CreateCharacter_NavigatesToCreationPage()
     {
-        await _page.GotoAsync("/create-character");
+        await _page.GotoAsync("/character/create");
 
         var heading = await _page.TextContentAsync("h1");
         Assert.Contains("Embrace", heading ?? string.Empty, StringComparison.OrdinalIgnoreCase);
@@ -63,7 +63,7 @@ public class CharacterCreationFlowTests : IAsyncLifetime
     [Fact]
     public async Task CreateCharacter_SubmitValidForm_RedirectsToCharacterSheet()
     {
-        await _page.GotoAsync("/create-character");
+        await _page.GotoAsync("/character/create");
 
         // Fill character name
         await _page.FillAsync("input[id='character-name']", "E2E Vampire");
@@ -86,9 +86,9 @@ public class CharacterCreationFlowTests : IAsyncLifetime
     [Fact]
     public async Task CreateCharacter_CharacterNameAppearsInSheet()
     {
-        await _page.GotoAsync("/create-character");
+        await _page.GotoAsync("/character/create");
 
-        var uniqueName = $"E2E-{Guid.NewGuid():N[..6]}";
+        var uniqueName = $"E2E-{Guid.NewGuid().ToString("N")[..6]}";
 
         await _page.FillAsync("input[id='character-name']", uniqueName);
         await _page.ClickAsync("button[id='embrace-button']");
