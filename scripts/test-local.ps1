@@ -57,8 +57,18 @@ if ($Coverage) {
     $TestArgs += $CoverageDir
 }
 
-# --- 3. Execution Loop ---
+# --- 3. Formatting Check ---
 $Results = @{}
+Write-Step "Checking Code Formatting"
+dotnet format $SlnPath --verify-no-changes
+$Results["Formatting"] = $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) {
+    Write-Fail "Formatting check failed. Run 'dotnet format' to fix."
+} else {
+    Write-Success "Formatting is correct."
+}
+
+# --- 4. Execution Loop ---
 foreach ($Project in $TestProjects) {
     Write-Step "Running $($Project.Name) tests"
     

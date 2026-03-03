@@ -14,7 +14,8 @@ Write-Host "`nBuilding solution..." -ForegroundColor DarkGray
 dotnet build $SlnPath -c Release
 
 if (-not $SkipTests) {
-    Invoke-Tests -Configuration Release
+    & "$PSScriptRoot\test-local.ps1" -Configuration Release
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } else {
     Write-Host "`n  [Skipping tests as requested]" -ForegroundColor DarkYellow
 }
