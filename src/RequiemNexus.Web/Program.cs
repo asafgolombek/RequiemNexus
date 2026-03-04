@@ -41,7 +41,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = false; // Set to false to allow login without confirmation for now
+        options.SignIn.RequireConfirmedAccount = true;
         options.User.RequireUniqueEmail = true;
 
         // Relaxed password rules are development-only
@@ -57,6 +57,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IEmailSender<ApplicationUser>, RequiemNexus.Web.Services.SmtpEmailSender>();
 
 var app = builder.Build();
 

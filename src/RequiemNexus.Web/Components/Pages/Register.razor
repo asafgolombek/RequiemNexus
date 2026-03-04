@@ -4,6 +4,10 @@
 @using RequiemNexus.Data.Models
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Text
+@using System.Text.Encodings.Web
+@inject IEmailSender<ApplicationUser> EmailSender
 
 <PageTitle>Register - Requiem Nexus</PageTitle>
 
@@ -21,41 +25,53 @@
             </div>
         }
 
-        <EditForm Model="@registerModel" OnValidSubmit="HandleRegistration" FormName="registerForm" class="login-form">
-            <DataAnnotationsValidator />
-
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <div class="input-container">
-                    <InputText id="email" type="email" @bind-Value="registerModel!.Email" class="form-control" placeholder="Enter your email" />
-                </div>
-                <ValidationMessage For="@(() => registerModel!.Email)" class="text-danger mt-1 text-sm" />
+        @if (registrationSuccess)
+        {
+            <div class="alert alert-success mt-4" role="alert">
+                Registration successful! Please check your email to verify your account before logging in.
             </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-container">
-                    <InputText id="password" type="password" @bind-Value="registerModel!.Password" class="form-control" placeholder="Create a password" />
-                </div>
-                <ValidationMessage For="@(() => registerModel!.Password)" class="text-danger mt-1 text-sm" />
+            <div class="login-footer">
+                <p><a href="/">Return to Sign In</a></p>
             </div>
+        }
+        else
+        {
+            <EditForm Model="@registerModel" OnValidSubmit="HandleRegistration" FormName="registerForm" class="login-form">
+                <DataAnnotationsValidator />
 
-            <div class="form-group">
-                <label for="birthday">Birthday <small>(DD/MM/YYYY)</small></label>
-                <div class="input-container">
-                    <InputText id="birthday" @bind-Value="registerModel!.Birthday" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').substring(0,10)" />
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-container">
+                        <InputText id="email" type="email" @bind-Value="registerModel!.Email" class="form-control" placeholder="Enter your email" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel!.Email)" class="text-danger mt-1 text-sm" />
                 </div>
-                <ValidationMessage For="@(() => registerModel!.Birthday)" class="text-danger mt-1 text-sm" />
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-container">
+                        <InputText id="password" type="password" @bind-Value="registerModel!.Password" class="form-control" placeholder="Create a password" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel!.Password)" class="text-danger mt-1 text-sm" />
+                </div>
+
+                <div class="form-group">
+                    <label for="birthday">Birthday <small>(DD/MM/YYYY)</small></label>
+                    <div class="input-container">
+                        <InputText id="birthday" @bind-Value="registerModel!.Birthday" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').substring(0,10)" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel!.Birthday)" class="text-danger mt-1 text-sm" />
+                </div>
+
+                <button type="submit" class="btn-login mt-4">
+                    Register
+                </button>
+            </EditForm>
+
+            <div class="login-footer">
+                <p>Already have an account? <a href="/">Sign In</a></p>
             </div>
-
-            <button type="submit" class="btn-login mt-4">
-                Register
-            </button>
-        </EditForm>
-
-        <div class="login-footer">
-            <p>Already have an account? <a href="/">Sign In</a></p>
-        </div>
+        }
     </div>
 </div>
 
@@ -69,6 +85,7 @@
     }
 
     private string? errorMessage;
+    private bool registrationSuccess;
 
     private async Task HandleRegistration()
     {
@@ -94,8 +111,16 @@
 
         if (result.Succeeded)
         {
-            // For now just redirect back to login
-            NavigationManager.NavigateTo("/");
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+
+            await EmailSender.SendConfirmationLinkAsync(user, registerModel.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            registrationSuccess = true;
         }
         else
         {

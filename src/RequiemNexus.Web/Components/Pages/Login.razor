@@ -51,6 +51,7 @@
 
         <div class="login-footer">
             <p>Don't have an account? <a href="/register">Create new user</a></p>
+            <p><a href="/Account/ResendEmailConfirmation">Resend email confirmation</a></p>
         </div>
     </main>
 </div>
@@ -74,6 +75,14 @@
         if (result.Succeeded)
         {
             NavigationManager.NavigateTo("/home", true); // true forces a reload so cookies are picked up by the app properly
+        }
+        else if (result.IsNotAllowed)
+        {
+            errorMessage = "You must confirm your email before logging in. Please check your email or resend the confirmation link.";
+        }
+        else if (result.IsLockedOut)
+        {
+            errorMessage = "This account has been locked out, please try again later.";
         }
         else
         {
