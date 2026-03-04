@@ -62,14 +62,26 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
     [SupplyParameterFromForm]
     public LoginModel Input { get; set; } = default!;
 
     private string? errorMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Input ??= new LoginModel();
+
+        if (AuthenticationStateTask is not null)
+        {
+            var authState = await AuthenticationStateTask;
+            if (authState.User?.Identity?.IsAuthenticated == true)
+            {
+                NavigationManager.NavigateTo("/home");
+            }
+        }
     }
 
     private async Task HandleLogin()
