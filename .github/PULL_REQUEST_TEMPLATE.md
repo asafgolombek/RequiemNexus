@@ -1,37 +1,42 @@
-## Description
+## 🩸 The PR Inquisition
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
+Please provide a formal exposition of this change. State clearly what issue is resolved, the motivation, and any dependencies invoked. Remember the Antigravity Philosophy: "Reduce cognitive weight, not add to it."
 
 Fixes # (issue)
 
-## Type of change
+## ⚖️ Traceability Report
 
-Please delete options that are not relevant.
+*To preserve the Sacred Covenants, you must explicitly trace the flow of this change through the system:*
+- **UI / Presentation Layer**: [Describe where the user interaction begins or state changes visually]
+- **Domain Logic / Application Layer**: [Describe the rules, invariants, or C# 14 learning milestones invoked]
+- **Data Persistence (The Blood)**: [Describe how EF Core or the DB schema stores or retrieves this state]
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
+## 🔮 Type of Change
 
-## How Has This Been Tested?
+Strike out options that do not apply:
+- [ ] Bug fix (Non-breaking alignment of logic)
+- [ ] New feature (Growth that adheres to the Modular Monolith boundaries)
+- [ ] Breaking change (Alters existing architectural pacts)
+- [ ] Grimoire Update (Documentation or Automation script refinements)
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
+## 🧪 Validation & Testing
 
-- [ ] Test A
-- [ ] Test B
+Describe the rites enacted to prove this change is sound. If a test relies on implicit logic, it is invalid.
 
-**Test Configuration**:
+- [ ] Test A: [Description]
+- [ ] Test B: [Description]
+
+**Test Configuration (The Haven)**:
 * OS:
 * Browser:
-* Toolchain / SDK version:
+* Toolchain / SDK version (.NET 10 / Aspire): 
 
-## Checklist:
+## 📜 The Antigravity Pacts
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+Verify your commitment to the architecture before submitting:
+- [ ] My code strictly follows the "Explicit over implicit" rule; it contains no "magic".
+- [ ] I have provided the mandatory Traceability Report.
+- [ ] "Automation is Documentation"—my new build/test steps are baked into PowerShell/Actions.
+- [ ] I have updated the Grimoire (documentation) where applicable.
+- [ ] Technical milestones (e.g., EF Core mappings, Aspire orchestration, C# 14 Primary Constructors) are utilized transparently.
+- [ ] My changes pass the local Inquisition (`scripts/test-local.ps1`) warning-free.
