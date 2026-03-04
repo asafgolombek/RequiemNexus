@@ -1,0 +1,76 @@
+@page "/Account/ConfirmEmail"
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Confirm email</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Confirm Email</h2>
+            <p>@statusMessage</p>
+        </div>
+        <div class="login-footer mt-4">
+            <p><a href="/">Return to Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? statusMessage;
+
+    // Automatically maps the "userId" parameter from the URL to this property
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public string? UserId { get; set; }
+
+    // Automatically maps the "code" parameter from the URL to this property
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Validation check for the mapped parameters
+        if (string.IsNullOrWhiteSpace(UserId) || string.IsNullOrWhiteSpace(Code))
+        {
+            statusMessage = "Error: Invalid email confirmation link. One or more parameters are missing.";
+            return;
+        }
+
+        // 2. Locate the user
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            statusMessage = $"Error: Unable to load user with ID '{UserId}'.";
+            return;
+        }
+
+        try 
+        {
+            // 3. Decode the Base64Url token
+            // The code is usually encoded as Base64Url to be safe for URLs
+            var decodedCodeBytes = WebEncoders.Base64UrlDecode(Code);
+            var decodedCode = Encoding.UTF8.GetString(decodedCodeBytes);
+
+            // 4. Perform the confirmation
+            var result = await UserManager.ConfirmEmailAsync(user, decodedCode);
+            
+            statusMessage = result.Succeeded 
+                ? "Thank you for confirming your email." 
+                : "Error: Could not confirm your email. The link may have expired.";
+        }
+        catch (FormatException)
+        {
+            statusMessage = "Error: The confirmation code is malformed.";
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: An unexpected error occurred: {ex.Message}";
+        }
+    }
+}

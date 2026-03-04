@@ -245,7 +245,7 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 📅 Phase 3: Account Management & Security (The Masquerade Veil)
 
-- [ ] **Registration & Onboarding**
+- [x] **Registration & Onboarding**
   - Email verification (with token expiration)
   - Welcome emails and resend verification links
 - [ ] **Authentication Rules**
