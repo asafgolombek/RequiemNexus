@@ -1,4 +1,4 @@
-﻿namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain;
 
 /// <summary>
 /// Encapsulates the deterministic rules for Vampire: The Requiem character creation and stat derivation.

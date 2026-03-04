@@ -12,7 +12,7 @@ charset = utf-8
 # C# files
 [*.cs]
 indent_size = 4
-charset = utf-8-bom
+charset = utf-8
 
 # Dotnet code style — enforced by dotnet format analyzers
 dotnet_sort_system_directives_first = true
