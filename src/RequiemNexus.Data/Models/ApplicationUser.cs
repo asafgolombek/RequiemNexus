@@ -13,4 +13,7 @@ public class ApplicationUser : IdentityUser
     public virtual ICollection<Campaign> StoryToldCampaigns { get; set; } = new List<Campaign>();
 
     public DateOnly? Birthday { get; set; }
+
+    // FIDO2 WebAuthn stored credentials for physical security keys
+    public virtual ICollection<FidoStoredCredential> FidoStoredCredentials { get; set; } = new List<FidoStoredCredential>();
 }

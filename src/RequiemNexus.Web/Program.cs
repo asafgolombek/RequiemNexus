@@ -1,3 +1,4 @@
+using Fido2NetLib;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
@@ -23,6 +24,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data")));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddFido2(options =>
+{
+    options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost";
+    options.ServerName = "Requiem Nexus";
+    options.Origins = builder.Configuration.GetSection("Fido2:Origins").Get<HashSet<string>>() ?? new HashSet<string> { "https://localhost:5001", "https://localhost:7154" }; // Defaults for generic dev
+    options.TimestampDriftTolerance = 300000;
+})
+.AddCachedMetadataService(config =>
+{
+    // config.AddFidoMetadataRepository(); // uncomment if we want FIDO MDS
+});
 
 // Application Services
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, RequiemNexus.Web.Services.CharacterService>();

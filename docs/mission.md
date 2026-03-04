@@ -212,13 +212,14 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] **Registration & Onboarding**
   - Email verification (with token expiration)
   - Welcome emails and resend verification links
-- [ ] **Authentication Rules**
+- [x] **Authentication Rules**
   - Login lockout policies (e.g., 5 failed attempts locks for 15 mins)
   - "Remember Me" functionality
   - Password complexity rules and validation
-- [ ] **Account Security**
+- [x] **Account Security**
   - Password reset and change flows
   - Two-Factor Authentication (2FA) via Authenticator App (TOTP) or Email
+  - FIDO2 / WebAuthn Physical Security Keys
   - Recovery backup codes for 2FA
 - [ ] **Session Management**
   - View active sessions across devices

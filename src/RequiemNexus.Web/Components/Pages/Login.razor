@@ -93,6 +93,11 @@
         {
             NavigationManager.NavigateTo("/home", true); // true forces a reload so cookies are picked up by the app properly
         }
+        else if (result.RequiresTwoFactor)
+        {
+            var formattedUrl = $"/Account/LoginWith2fa?RememberMe={Input.RememberMe}&ReturnUrl=/home";
+            NavigationManager.NavigateTo(formattedUrl);
+        }
         else if (result.IsNotAllowed)
         {
             errorMessage = "You must confirm your email before logging in. Please check your email or resend the confirmation link.";

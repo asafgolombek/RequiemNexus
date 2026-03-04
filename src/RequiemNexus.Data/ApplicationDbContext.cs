@@ -10,6 +10,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Character> Characters { get; set; } = default!;
     public DbSet<Clan> Clans { get; set; } = default!;
     public DbSet<Campaign> Campaigns { get; set; } = default!;
+    public DbSet<FidoStoredCredential> FidoStoredCredentials { get; set; } = null!;
     public DbSet<CharacterMerit> CharacterMerits { get; set; } = default!;
     public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; } = default!;
     public DbSet<Discipline> Disciplines { get; set; } = default!;
