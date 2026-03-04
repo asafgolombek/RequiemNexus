@@ -1,6 +1,7 @@
 @page "/character/{Id:int}/advancement"
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Domain
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.UI
@@ -238,13 +239,8 @@ else
 
         errorMessage = null;
 
-        // Custom discipline cost calculation (New Dot x 5)
-        int currentRating = cd.Rating;
-        int totalCost = 0;
-        for (int i = currentRating + 1; i <= newRating; i++)
-        {
-            totalCost += i * 5;
-        }
+        // Use centralized ExperienceCostRules
+        int totalCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(cd.Rating, newRating);
 
         if (character.ExperiencePoints >= totalCost)
         {
@@ -264,7 +260,7 @@ else
         if (character == null || selectedMeritId == 0) return;
 
         errorMessage = null;
-        int xpCost = newMeritRating; // 1 XP per dot (VtR2e rulebook p.44)
+        int xpCost = ExperienceCostRules.CalculateMeritCost(newMeritRating);
 
         if (character.ExperiencePoints >= xpCost)
         {
@@ -289,8 +285,7 @@ else
         if (character == null || selectedDisciplineId == 0) return;
 
         errorMessage = null;
-        int xpCost = 0;
-        for (int i = 1; i <= newDisciplineRating; i++) xpCost += i * 5;
+        int xpCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(0, newDisciplineRating);
 
         if (character.ExperiencePoints >= xpCost)
         {

@@ -1,4 +1,6 @@
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Domain
+@using RequiemNexus.Web.Helpers
 
 <div class="step-content">
     <h3>Skills</h3>
@@ -12,53 +14,28 @@
     }
 
     <div class="attributes-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-        <!-- Mental Skills -->
-        <div class="attribute-category">
-            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Mental (@MentalSkillsSpent)</h4>
-            @foreach (var skill in new[] { "Academics", "Computer", "Crafts", "Investigation", "Medicine", "Occult", "Politics", "Science" })
-            {
-                <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                    <span style="font-size: 0.9em;">@skill</span>
-                    <div>
-                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(GetSkillValue(skill) <= 0)">-</button>
-                        <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
-                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || MentalSkillsSpent >= 11)">+</button>
+        @foreach (var (category, traits, spent, limit) in new[] { 
+            ("Mental", TraitMetadata.MentalSkills, MentalSkillsSpent, 11),
+            ("Physical", TraitMetadata.PhysicalSkills, PhysicalSkillsSpent, 7),
+            ("Social", TraitMetadata.SocialSkills, SocialSkillsSpent, 4)
+        })
+        {
+            <div class="attribute-category">
+                <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">@category (@spent)</h4>
+                @foreach (var skill in traits)
+                {
+                    var val = CharacterTraitHelper.GetTraitValue(Character, skill);
+                    <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                        <span style="font-size: 0.9em;">@TraitMetadata.GetDisplayName(skill)</span>
+                        <div>
+                            <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(val <= 0)">-</button>
+                            <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@val</span>
+                            <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(val >= 5 || TotalSkillPointsSpent >= 22 || spent >= limit)">+</button>
+                        </div>
                     </div>
-                </div>
-            }
-        </div>
-
-        <!-- Physical Skills -->
-        <div class="attribute-category">
-            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Physical (@PhysicalSkillsSpent)</h4>
-            @foreach (var skill in new[] { "Athletics", "Brawl", "Drive", "Firearms", "Larceny", "Stealth", "Survival", "Weaponry" })
-            {
-                <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                    <span style="font-size: 0.9em;">@skill</span>
-                    <div>
-                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(GetSkillValue(skill) <= 0)">-</button>
-                        <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
-                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || PhysicalSkillsSpent >= 11)">+</button>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <!-- Social Skills -->
-        <div class="attribute-category">
-            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Social (@SocialSkillsSpent)</h4>
-            @foreach (var skill in new[] { "AnimalKen", "Empathy", "Expression", "Intimidation", "Persuasion", "Socialize", "Streetwise", "Subterfuge" })
-            {
-                <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                    <span style="font-size: 0.9em;">@(skill == "AnimalKen" ? "Animal Ken" : skill)</span>
-                    <div>
-                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, -1)' disabled="@(GetSkillValue(skill) <= 0)">-</button>
-                        <span style="display: inline-block; width: 15px; text-align: center; font-size: 0.9em;">@GetSkillValue(skill)</span>
-                        <button class="nav-btn" style="padding: 0px 6px; font-size: 0.8em;" @onclick='() => AdjustAndNotify(skill, 1)' disabled="@(GetSkillValue(skill) >= 5 || TotalSkillPointsSpent >= 22 || SocialSkillsSpent >= 11)">+</button>
-                    </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
@@ -74,16 +51,6 @@
 
     [Parameter] public Action<string, int>? OnAdjustSkill { get; set; }
     [Parameter] public EventCallback OnStateChanged { get; set; }
-
-    private int GetSkillValue(string skillName)
-    {
-        var prop = typeof(Character).GetProperty(skillName);
-        if (prop != null)
-        {
-            return (int)(prop.GetValue(Character) ?? 0);
-        }
-        return 0;
-    }
 
     private async Task AdjustAndNotify(string name, int change)
     {

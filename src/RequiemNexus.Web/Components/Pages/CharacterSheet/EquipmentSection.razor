@@ -1,0 +1,71 @@
+@using RequiemNexus.Data.Models
+
+<section class="cs-section cs-equipment">
+    <h2>Equipment</h2>
+
+    <div class="equipment-form">
+        <select @bind="selectedEquipmentId" class="equipment-select">
+            <option value="0">-- Select Equipment --</option>
+            @foreach (var eq in AvailableEquipment)
+            {
+                <option value="@eq.Id">@eq.Name (@eq.Type.Trim())</option>
+            }
+        </select>
+        <input type="number" min="1" @bind="selectedQuantity" class="equipment-quantity" />
+        <button class="btn-primary-rn" @onclick="HandleAdd">Add</button>
+    </div>
+
+    <ul class="equipment-grid">
+        @foreach (var ce in Character.CharacterEquipments)
+        {
+            <li class="equipment-item">
+                <div class="equipment-info">
+                    <strong class="equipment-name">@ce.Equipment?.Name (x@ce.Quantity)</strong>
+                    <div class="equipment-meta">
+                        <span>Type: @ce.Equipment?.Type</span>
+                        @if (ce.Equipment?.Damage > 0)
+                        {
+                            <span>| Dmg: @ce.Equipment?.Damage</span>
+                        }
+                        @if (ce.Equipment?.ArmorRating > 0)
+                        {
+                            <span>| Arm: @ce.Equipment?.ArmorRating</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(ce.Equipment?.Description))
+                    {
+                        <p class="equipment-desc">@ce.Equipment?.Description</p>
+                    }
+                </div>
+                <button class="equipment-remove-btn" @onclick="() => HandleRemove(ce.Id)">Remove</button>
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter] public List<Equipment> AvailableEquipment { get; set; } = new();
+    [Parameter] public EventCallback<(int EquipmentId, int Quantity)> OnAddEquipment { get; set; }
+    [Parameter] public EventCallback<int> OnRemoveEquipment { get; set; }
+
+    private int selectedEquipmentId = 0;
+    private int selectedQuantity = 1;
+
+    private async Task HandleAdd()
+    {
+        if (selectedEquipmentId > 0 && selectedQuantity > 0)
+        {
+            await OnAddEquipment.InvokeAsync((selectedEquipmentId, selectedQuantity));
+            selectedEquipmentId = 0;
+            selectedQuantity = 1;
+        }
+    }
+
+    private async Task HandleRemove(int ceId)
+    {
+        await OnRemoveEquipment.InvokeAsync(ceId);
+    }
+}
