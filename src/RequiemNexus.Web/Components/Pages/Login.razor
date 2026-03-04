@@ -44,6 +44,11 @@
                 </div>
             </div>
 
+            <div class="form-group form-check">
+                <InputCheckbox id="remember-me" @bind-Value="Input.RememberMe" class="form-check-input" />
+                <label for="remember-me" class="form-check-label">Remember Me</label>
+            </div>
+
             <button type="submit" class="btn-login">
                 Sign In
             </button>
@@ -70,7 +75,7 @@
     private async Task HandleLogin()
     {
         Logger.LogInformation("User attempted to log in.");
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: true, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: Input.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
@@ -98,5 +103,7 @@
 
         [Required(ErrorMessage = "Password is required.")]
         public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
     }
 }
