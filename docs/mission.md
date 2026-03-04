@@ -2,9 +2,9 @@
 
 ## 🌌 The Mission
 
-To build the definitive, high-performance digital ecosystem for **Vampire: The Requiem (Chronicles of Darkness) Second Edition**.
+To forge the definitive, high-performance digital ecosystem for **Vampire: The Requiem (Chronicles of Darkness) Second Edition**.
 
-**Requiem Nexus** is a learning-driven, cloud-ready platform designed to eliminate the friction of character and campaign management. By leveraging the reactive power of **.NET 10** and the **Antigravity Philosophy**, we deliver a Beyond-style experience that is fast, secure, observable, and infinitely scalable.
+**Requiem Nexus** is a learning-driven, cloud-native covenant designed to banish the friction of character and chronicle management. By wielding the reactive, high-performance supremacy of **.NET 10** and the authoritative **Antigravity Philosophy**, we cast aside the archaic in favor of tactile immersion. We deliver an experience that mirrors the aesthetic of the nocturnal world—bone-white and crimson, fast, secure, observable, and infinitely scalable. The architecture itself serves as a Grimoire of Modern Engineering, ensuring every line of code is as intentional as a predator's strike.
 
 > _The blood is the life… but clarity is the power._
 
@@ -240,6 +240,7 @@ If a bug cannot be observed, it cannot be fixed.
 - A new developer can run the full test suite locally in one command
 - Merging to `main` is blocked unless all required status checks pass
 - A `CONTRIBUTING.md` exists and is kept up to date with the project workflow
+- Static analysis rules explicitly validate that C# 14 features (e.g., enhanced collection expressions, primary constructors) are utilized correctly throughout the "Grimoire".
 
 ---
 
