@@ -177,10 +177,16 @@
 
     private void HandleAddMerit(int meritId)
     {
-        if (!newCharacter.Merits.Any(m => m.MeritId == meritId))
-        {
-            newCharacter.Merits.Add(new CharacterMerit { MeritId = meritId, Rating = 1, Specification = "" });
-        }
+        var merit = availableMerits.FirstOrDefault(m => m.Id == meritId);
+        if (merit == null) return;
+
+        // For merits that can be purchased multiple times, allow adding duplicates
+        if (!merit.CanBePurchasedMultipleTimes && newCharacter.Merits.Any(m => m.MeritId == meritId))
+            return;
+
+        int startingRating = MeritRatingHelper.GetMinRating(merit.ValidRatings);
+
+        newCharacter.Merits.Add(new CharacterMerit { MeritId = meritId, Rating = startingRating, Specification = "" });
     }
 
     private static void AdjustMeritRating(CharacterMerit cm, int change)

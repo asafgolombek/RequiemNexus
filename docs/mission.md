@@ -10,6 +10,38 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 
 ---
 
+## 🧱 The Five Pillars
+
+Requiem Nexus is built on five guiding principles.
+
+1. **Explicit Engineering** — If behavior cannot be understood by reading the code, the system is wrong.
+2. **Learning Through Architecture** — The project is also an educational artifact demonstrating modern .NET architecture.
+3. **Domain Sovereignty** — Each subsystem owns its models, rules, and persistence.
+4. **Observability First** — Systems must explain themselves through logs, metrics, and traces.
+5. **Player-Invisible UX** — The tool must disappear during play.
+
+---
+
+## 🚫 Non-Goals
+
+Requiem Nexus intentionally does **not** attempt to:
+
+- Replace a full **Virtual Tabletop (VTT)** or implement battle maps / tactical grid combat.
+- Become a generic multi-system TTRPG platform.
+- Support every **Chronicles of Darkness** splat line.
+
+> **The focus is clear: Character and Chronicle management for Vampire: The Requiem 2e.**
+
+---
+
+## 👥 Primary Users
+
+- **🧛 Player** — Manages characters, rolls dice, tracks conditions and aspirations.
+- **🎭 Storyteller** — Runs chronicles, manages NPCs, tracks player vitals, and organizes lore.
+- **🧙 Developer (The Apprentice)** — Learns modern architecture through the project's Grimoire.
+
+---
+
 ## 📚 1. Educational Core (The Grimoire)
 
 Every architectural choice is a learning milestone. We prioritize **Explicit Understanding over Implicit "Magic"**.
@@ -51,6 +83,14 @@ The application is **cloud-agnostic** by design and deployable to any sanctuary:
 - **Stateless Scaling**  
   The rules engine is stateless. Sessions and character state are persisted via distributed caching (Redis).
 
+### Performance Budgets
+
+"Fast" is not a feeling—it is a constraint:
+
+- **Dice rolls** resolve and broadcast in **< 200ms**.
+- **Time to Interactive (TTI)** for character sheets is **< 1.5 seconds**.
+- **API response time** for all CRUD operations is **< 300ms** (p95).
+
 ### Domain Boundaries (Non-Negotiable)
 
 Each domain exercises total sovereignty over:
@@ -73,9 +113,21 @@ TTRPG tools should disappear during play.
 - **Mobile-First Responsiveness**  
   Full functionality on phones and tablets.
 - **Offline Capabilities (PWA)**  
-  Local-first data resolution to support unstable connections at the table.
+  Local-first data resolution to support unstable connections at the table.  
+  **Sync Strategy:** Event-sourced state changes are queued locally and reconciled on reconnect using last-write-wins optimistic concurrency with conflict detection.
 - **Tactile Feedback**  
   Subtle animations and reactive components reinforce character growth.
+- **Accessibility (a11y) — WCAG 2.1 AA Compliance**  
+  The Gothic aesthetic must not sacrifice usability. Crimson-on-black is beautiful but must pass contrast ratios. The system commits to:  
+  - High-contrast mode toggle for all UI surfaces.
+  - Legible font scaling and responsive typography.
+  - ARIA labels on all interactive elements (dice results, dot-scale controls, navigation).
+  - Screen-reader-friendly announcements for dice rolls and state changes.
+- **Data Sovereignty (The Player Owns Their Data)**  
+  If the server ever goes down, no character is lost. Players can:  
+  - **Export** their full character sheet to a standardized JSON format.
+  - **Export** a printable PDF character sheet.
+  - **Import** a previously exported character into any Requiem Nexus instance.
 
 The UI must _feel alive_, but never distracting.
 
@@ -125,17 +177,32 @@ If a bug cannot be observed, it cannot be fixed.
 - Zero manual recalculation at any time.
 - Tap-to-roll integration with the Dice Nexus.
 
-### 2. Campaign Management (The Chronicle)
+### 2. The Beat & Experience Ledger
+- An immutable, transactional history of how **Beats** were earned (Dramatic Failure, resolving a Condition, fulfilling an Aspiration).
+- Full audit trail of how **XP** was spent (Attribute dots, Discipline levels, Merits).
+- Eliminates the "Wait, did I add my Beats from last session?" problem forever.
+
+### 3. Condition & Tilt Tracker
+- First-class tracking for V:tR 2e **Conditions** (Guilty, Swooned, Tempted) and **Tilts** (Knocked Down, Stunned, Blinded).
+- One-tap resolution of Conditions to automatically award a Beat.
+- Mechanical effects of active Conditions/Tilts surfaced directly on the character sheet.
+
+### 4. Campaign Management (The Chronicle)
 - Coterie Hub for shared chronicles.
 - Public lore, NPCs, and locations.
 - Group or individual XP allocation.
 
-### 3. Storyteller Toolkit
+### 5. Coterie & Domain Mapping (The Danse Macabre)
+- Track feeding territories and hunting grounds.
+- Map the city's power structure: Prince, Primogen, Covenants, and their influence.
+- Manage NPC relationships and **Touchstones** — the mortal anchors that keep the Beast at bay.
+
+### 6. Storyteller Toolkit
 - Real-time Initiative Tracker (Initiative Mod mechanics).
 - Private “Glimpse” view of player vitals.
 - Pre-built NPC stat-blocks for instant encounters.
 
-### 4. The Dice Nexus
+### 7. The Dice Nexus
 - High-throughput dice rolling.
 - Support for 10-again, 9-again, 8-again, and rote actions.
 - **Deterministic Mode** via seeded rolls for debugging and session replay.
@@ -229,6 +296,10 @@ If a bug cannot be observed, it cannot be fixed.
   - GDPR/CCPA compliant "Download My Data"
   - Account deletion with a soft-delete grace period
   - Audit logs for security events (login, password change, 2FA toggle)
+- [ ] **Data Sovereignty (Export / Import)**
+  - Export full character sheet to standardized JSON format
+  - Export printable PDF character sheet
+  - Import previously exported character into any Requiem Nexus instance
 - [ ] **Profile Management**
   - Update display name, avatar, and email address
   - Email change flow with re-verification of the new address before it takes effect
@@ -251,21 +322,54 @@ If a bug cannot be observed, it cannot be fixed.
 - **Unit Tests (Domain/Services):** Isolate and verify password hashing, token generation, lockout logic, and 2FA code validation.
 - **Integration Tests (API/DB):** Verify EF Core correctly saves user states (`EmailConfirmed`, `TwoFactorEnabled`) and endpoints return correct HTTP status codes.
 - **Security Tests:** Ensure all session cookies have `HttpOnly`, `Secure`, and `SameSite` flags set correctly.
+- **Export Tests:** Validate JSON export schema roundtrips (export → import → export produces identical output).
 
 ### Phase 3 Exit Criteria
 - A user can register, verify their email, enable 2FA, and delete their account without developer intervention.
 - All authentication endpoints and services have 100% test coverage.
 - Account lockout and session invalidation work automatically.
+- A player can export their character as JSON, delete their account, re-register, and import the character with zero data loss.
 
 ---
 
-## 📅 Phase 4: The Storyteller
+## 📅 Phase 4: The Storyteller & The Danse Macabre
 
-- Initiative Tracker
-- Encounter Manager
-- Campaign notes and shared lore
-- ST Glimpse view
-- **Homebrew / Custom Content Support** (Disciplines, Devotions, Bloodlines)
+### Chronicle & Storyteller Tools
+- [ ] **Initiative Tracker** — real-time initiative order using Initiative Mod mechanics
+- [ ] **Encounter Manager** — create, manage, and resolve combat encounters
+- [ ] **Storyteller Glimpse** — private dashboard showing player vitals (Health, Willpower, Humanity, active Conditions)
+- [ ] **Campaign Notes & Shared Lore** — collaborative lore database accessible to the coterie
+- [ ] **NPC Quick Stat Blocks** — pre-built and custom NPC stat blocks for instant encounters
+- [ ] **XP Distribution** — group or individual XP/Beat allocation from the Storyteller dashboard
+
+### The Beat & Experience Ledger
+- [ ] **Beat Tracking** — immutable, transactional log of how Beats are earned (Dramatic Failure, resolving a Condition, fulfilling an Aspiration)
+- [ ] **XP Spend Audit Trail** — full history of how XP was spent (Attribute dots, Discipline levels, Merits)
+- [ ] **Storyteller Beat Awards** — Storyteller can award Beats to individuals or the coterie with a tagged reason
+
+### Condition & Tilt Tracker
+- [ ] **Condition Management** — add, view, and resolve V:tR 2e Conditions (Guilty, Swooned, Tempted, etc.)
+- [ ] **Tilt Management** — track combat Tilts (Knocked Down, Stunned, Blinded) with mechanical effects
+- [ ] **One-Tap Resolution** — resolving a Condition automatically awards a Beat to the character
+- [ ] **Active Effects Display** — mechanical effects of active Conditions/Tilts surfaced directly on the character sheet
+
+### Coterie & Domain Mapping (The Danse Macabre)
+- [ ] **Coterie Hub** — shared coterie identity, resources, and group aspirations
+- [ ] **Feeding Territories** — track hunting grounds and their ratings
+- [ ] **City Power Structure** — map the political landscape: Prince, Primogen, Covenants, and their domains of influence
+- [ ] **Touchstone Management** — track mortal Touchstones tied to Humanity anchors, with relationship status
+- [ ] **NPC Relationship Web** — visual or list-based relationship tracker between PCs, NPCs, and factions
+
+### Homebrew & Custom Content
+- [ ] **Custom Disciplines & Devotions** — create and share homebrew supernatural powers
+- [ ] **Custom Bloodlines** — define new Bloodlines with unique Disciplines and weaknesses
+- [ ] **Content Sharing** — Storytellers can export/import homebrew content packs as JSON
+
+### Phase 4 Exit Criteria
+- A Storyteller can run a full session: track initiative, manage encounters, award Beats, and view player vitals — entirely from the Glimpse dashboard.
+- Conditions can be applied, mechanically tracked, and resolved for Beats without manual bookkeeping.
+- The city's political structure and feeding territories are viewable and editable by the Storyteller.
+- All features have full unit and integration test coverage.
 
 ---
 
@@ -284,6 +388,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] Define and test rollback strategy (ECS task revision rollback or blue/green)
 - [ ] Load testing and observability alerts
 - [ ] Error Tracking Integration (e.g., Sentry, Raygun) for real-time exception alerts
+- [ ] **Performance Budget Enforcement** — automated checks that dice rolls < 200ms, TTI < 1.5s, API p95 < 300ms
 
 ### Phase 5 Exit Criteria
 - Every merge to `main` automatically deploys to staging.
@@ -292,22 +397,75 @@ If a bug cannot be observed, it cannot be fixed.
 - Zero manual infrastructure configuration via the AWS Console.
 - All secrets are managed via AWS Secrets Manager; no credentials exist in the repository.
 - A rollback to the previous version can be completed in under 5 minutes.
+- Performance budgets are enforced in CI — builds fail if thresholds are exceeded.
 
 ---
 
-## 📅 Phase 6: The Global Embrace
+## 📅 Phase 6: Realtime Play (The Blood Communion)
 
-- **Localization and Internationalization (i18n)** (Full language support)
-- Third-party API integrations
-- **SEO & Rich Social Sharing**
+- [ ] **Live Dice Rolls** — dice results broadcast to the coterie in real-time via SignalR / WebSockets
+- [ ] **Shared Initiative Tracker** — live initiative order visible to all session participants
+- [ ] **Real-Time Character Updates** — changes to Health, Willpower, and Conditions sync instantly across clients
+- [ ] **Session Presence** — indicators showing which players are online and active in the chronicle
+- [ ] **Synchronized Chronicle State** — Storyteller actions (awarding Beats, applying Conditions, advancing scenes) push live to all connected players
+- [ ] **Dice Roll History Feed** — a shared, scrollable feed of all rolls made during a session
+
+### Phase 6 Exit Criteria
+- A full coterie can connect to a live session, roll dice, and see each other's results in real-time.
+- Storyteller actions (applying Conditions, awarding Beats) propagate to player sheets within 200ms.
+- Disconnected players can rejoin and receive the full current session state.
+- All realtime features have integration tests covering connection, broadcast, and reconnection scenarios.
 
 ---
 
-## 📅 Phase 7: End-to-End (E2E) Testing 
+## 📅 Phase 7: PWA & Offline Capabilities (The Hidden Refuge)
 
-- [ ] End-to-End (E2E) UI testing for critical player flows
-- [ ] Automated Accessibility (a11y) scanning integrated into E2E tests
-- [ ] Add E2E tests to the CI pipeline
+- [ ] **Service Worker Registration** — cache core application shell for offline access
+- [ ] **Offline Character Sheet** — full read/write access to character data without a network connection
+- [ ] **Offline Dice Rolling** — the Dice Nexus functions entirely offline
+- [ ] **Offline State Queue** — event-sourced state changes queued locally during offline play
+- [ ] **Reconnection Sync** — last-write-wins optimistic concurrency with conflict detection on reconnect
+- [ ] **Conflict Resolution UI** — when sync conflicts occur, present the player with a clear merge/override choice
+- [ ] **Install Prompt** — PWA install banner for mobile and desktop
+
+### Phase 7 Exit Criteria
+- A player can create a character, edit attributes, and roll dice with zero network connectivity.
+- When connectivity returns, all offline changes sync correctly without data loss.
+- The app is installable as a PWA on iOS, Android, and desktop browsers.
+- Conflict resolution is tested with deterministic scenarios (simultaneous edits to the same field).
+
+---
+
+## 📅 Phase 8: End-to-End (E2E) Testing & Accessibility
+
+- [ ] End-to-End (E2E) UI testing for critical player flows (character creation, dice rolling, XP spending)
+- [ ] End-to-End Storyteller flows (initiative, encounter management, Beat awarding)
+- [ ] **Automated Accessibility (a11y) Scanning** — WCAG 2.1 AA audit integrated into E2E tests
+- [ ] **Contrast Ratio Validation** — automated checks for the Gothic color palette against accessibility standards
+- [ ] **Screen Reader Testing** — verify ARIA labels and live regions for dice results and state changes
+- [ ] **Keyboard Navigation** — full app navigable via keyboard alone
+- [ ] Add all E2E and a11y tests to the CI pipeline
+
+### Phase 8 Exit Criteria
+- Every critical user flow (Player and Storyteller) is covered by an E2E test.
+- Zero WCAG 2.1 AA violations on any page.
+- The app is fully operable via keyboard navigation.
+- All E2E and accessibility tests run in CI and block merge on failure.
+
+---
+
+## 📅 Phase 9: The Global Embrace
+
+- [ ] **Localization and Internationalization (i18n)** — full language support for UI strings and game terms
+- [ ] **SEO & Rich Social Sharing** — Open Graph tags, structured data for chronicle/character sharing
+- [ ] **Third-Party API Integrations** — Discord bots, webhook notifications, calendar sync
+- [ ] **Public API** — documented REST API for community tool builders and third-party integrations
+- [ ] **Community Content Marketplace** — browse and share homebrew content packs
+
+### Phase 9 Exit Criteria
+- The app is fully localized in at least two languages.
+- Shared chronicle links render rich previews on Discord, Twitter, and other platforms.
+- The public API has versioned documentation and rate limiting in place.
 
 ---
 

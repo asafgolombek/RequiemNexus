@@ -2,6 +2,9 @@
 
 Please provide a formal exposition of this change. State clearly what issue is resolved, the motivation, and any dependencies invoked. Remember the Antigravity Philosophy: "Reduce cognitive weight, not add to it."
 
+> **📋 Type-specific templates are available.**
+> When creating a PR, append `&template=feature.md`, `&template=bugfix.md`, `&template=chore.md`, or `&template=docs.md` to the PR URL for a more targeted template.
+
 Fixes # (issue)
 
 ## ⚖️ Traceability Report
@@ -13,7 +16,6 @@ Fixes # (issue)
 
 ## 🔮 Type of Change
 
-Strike out options that do not apply:
 - [ ] Bug fix (Non-breaking alignment of logic)
 - [ ] New feature (Growth that adheres to the Modular Monolith boundaries)
 - [ ] Breaking change (Alters existing architectural pacts)
@@ -31,6 +33,10 @@ Describe the rites enacted to prove this change is sound. If a test relies on im
 * Browser:
 * Toolchain / SDK version (.NET 10 / Aspire): 
 
+## 📸 Screenshots / Recordings
+
+<!-- If this changes the UI, attach before/after screenshots. Delete this section if not applicable. -->
+
 ## 📜 The Antigravity Pacts
 
 Verify your commitment to the architecture before submitting:
@@ -40,3 +46,4 @@ Verify your commitment to the architecture before submitting:
 - [ ] I have updated the Grimoire (documentation) where applicable.
 - [ ] Technical milestones (e.g., EF Core mappings, Aspire orchestration, C# 14 Primary Constructors) are utilized transparently.
 - [ ] My changes pass the local Inquisition (`scripts/test-local.ps1`) warning-free.
+- [ ] I have run `dotnet format` and verified no style violations.

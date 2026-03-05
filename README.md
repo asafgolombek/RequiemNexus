@@ -1,32 +1,156 @@
 # 🩸 Requiem Nexus
 
-**Requiem Nexus** is a learning-driven, cloud-ready platform designed to eliminate the friction of character and campaign management for **Vampire: The Requiem (Chronicles of Darkness) second edition**.
+[![Build](https://github.com/asafgolombek/RequiemNexus/actions/workflows/ci.yml/badge.svg)](https://github.com/asafgolombek/RequiemNexus/actions)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
+![C# 14](https://img.shields.io/badge/C%23-14-239120?logo=csharp)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-## 🌌 Overview
+**Requiem Nexus** is a learning-driven, cloud-native platform that eliminates the friction of character and chronicle management for **Vampire: The Requiem (Chronicles of Darkness) Second Edition**.
 
-Built with the **Antigravity philosophy** on **.NET 10**, Requiem Nexus provides a fast, secure, and intuitive digital ecosystem for Storytellers and Players alike.
+Built with the **Antigravity Philosophy** on **.NET 10**, it provides a fast, secure, and immersive digital ecosystem where TTRPG tools disappear during play — leaving only the story.
 
-### Key Features
-
-- **The Living Sheet**: Auto-calculations for Health, Willpower, Defense, and Speed. Contextual rolling directly from the sheet.
-- **Campaign Management**: Centralized Coterie Hub, shared lore management, and group XP allocation.
-- **Storyteller Toolkit**: Real-time initiative tracker, private glimpse views, and encounter managers.
-- **The Dice Nexus**: High-throughput rolling service supporting Chronicles of Darkness specific mechanics (10-again, 9-again, rote actions, etc.).
-
-## 🚀 Getting Started
-
-To get started with local development:
-
-1. Use the provided build scripts in the `scripts/` directory.
-2. Run `.\scripts\build-debug.ps1` to boot the application locally.
-3. Ensure you have the appropriate .NET 10 SDK and Docker environment set up depending on your target configuration.
-
-## 📚 Technical Stack
-
-- **Framework**: .NET 10 (ASP.NET Core / EF Core)
-- **Architecture**: Modular Monolith organized into domain-specific projects (`Data`, `Web`, `Roll`).
-- **Deployment**: Containerized via Docker, cloud-agnostic, and orchestrated with .NET Aspire.
+> _"The blood is the life… but clarity is the power."_
 
 ---
 
-> _"The blood is the life... but the data is the legacy."_
+## 🌌 Who Is This For?
+
+- **🧛 Players** — Manage characters, roll dice, track Conditions and Aspirations.
+- **🎭 Storytellers** — Run chronicles, manage NPCs, distribute XP, and track the Danse Macabre.
+- **🧙 Developers (The Apprentice)** — Learn modern .NET architecture through a real-world project.
+
+---
+
+## 🎯 Key Features
+
+- **The Living Sheet** — Auto-calculated Health, Willpower, Defense, and Speed. Tap-to-roll directly from the sheet.
+- **Beat & Experience Ledger** — Immutable transaction history of Beats earned and XP spent. No more lost bookkeeping.
+- **Condition & Tilt Tracker** — First-class tracking with one-tap resolution to automatically award Beats.
+- **Campaign Management** — Coterie Hub, shared lore, NPC databases, and group XP allocation.
+- **Coterie & Domain Mapping** — Track feeding territories, city power structures, Touchstones, and NPC relationships.
+- **Storyteller Toolkit** — Initiative tracker, encounter manager, private Glimpse dashboard, and NPC stat blocks.
+- **The Dice Nexus** — High-throughput dice rolling with 10-again, 9-again, 8-again, rote actions, and deterministic seeded replay.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Docker](https://www.docker.com/get-started)
+
+### Quick Start
+
+```powershell
+# Clone the repository
+git clone https://github.com/asafgolombek/RequiemNexus.git
+cd RequiemNexus
+
+# Boot The Haven (local dev with hot reload via .NET Aspire)
+.\scripts\build-debug.ps1
+
+# Run the Inquisition (full test suite)
+.\scripts\test-local.ps1
+```
+
+A new developer should be able to run the project locally in **under 10 minutes**.
+
+---
+
+## 📚 Technical Stack
+
+| Component | Technology |
+|-----------|------------|
+| **Framework** | .NET 10 (ASP.NET Core, Blazor, EF Core) |
+| **Language** | C# 14 (Primary Constructors, Collection Expressions) |
+| **Architecture** | Modular Monolith — `Data`, `Domain`, `Web` |
+| **Real-Time** | SignalR |
+| **Database** | PostgreSQL (production), SQLite (local dev) |
+| **Caching** | Redis |
+| **Orchestration** | .NET Aspire |
+| **Deployment** | Docker → AWS ECS Fargate |
+| **CI/CD** | GitHub Actions |
+| **Observability** | Serilog + OpenTelemetry |
+
+---
+
+## 📐 Architecture
+
+Requiem Nexus follows the **Antigravity Philosophy**: systems must reduce cognitive weight, not add to it.
+
+The project is a **Modular Monolith** with strict layer boundaries:
+
+```
+Presentation (Web) → Application Layer → Domain Layer → Infrastructure (Data)
+```
+
+Dependencies always point inward. Infrastructure is a plugin to the domain, never the reverse.
+
+→ Read the full [Architecture Guide](./docs/Architecture.md)
+
+---
+
+## 📁 Project Structure
+
+```
+RequiemNexus/
+├── .github/                  # CI workflows, PR & issue templates
+├── docs/                     # Architecture and Mission documents
+├── scripts/                  # PowerShell automation (build, test, deploy)
+├── src/
+│   ├── RequiemNexus.Data/    # Infrastructure — EF Core, migrations, repositories
+│   ├── RequiemNexus.Domain/  # Domain — game rules, models, invariants
+│   └── RequiemNexus.Web/     # Presentation — Blazor components, SignalR hubs
+└── tests/
+    ├── RequiemNexus.Domain.Tests/       # Unit tests
+    ├── RequiemNexus.Data.Tests/         # Integration tests
+    └── RequiemNexus.PerformanceTests/   # Load & latency tests
+```
+
+---
+
+## 🗺️ Roadmap
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 1 | **The Neonate** — Character system & dice rolling | ✅ Complete |
+| 2 | **The Ascendant** — Validation, CI/CD, testing | ✅ Complete |
+| 3 | **The Masquerade Veil** — Account management & security | 🔄 In Progress |
+| 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | ⬚ Planned |
+| 5 | **Automated Deployments & Observability** | ⬚ Planned |
+| 6 | **The Blood Communion** — Realtime play | ⬚ Planned |
+| 7 | **The Hidden Refuge** — PWA & offline capabilities | ⬚ Planned |
+| 8 | **E2E Testing & Accessibility** | ⬚ Planned |
+| 9 | **The Global Embrace** — i18n, public API | ⬚ Planned |
+
+→ See the full roadmap with details in the [Mission Document](./docs/mission.md)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please read the [Contributing Guide](./Contributing.md) before submitting a PR.
+
+All contributions must uphold the **Antigravity Pledge**:
+- Reduce cognitive weight, not add to it.
+- Increase clarity and eliminate "magic".
+- Preserve an unbroken chain of traceability.
+
+---
+
+## 🛡️ Security
+
+Found a vulnerability? Please report it responsibly. See our [Security Policy](./SECURITY.md).
+
+**Do not** open a public issue for security vulnerabilities.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](./LICENSE).
+
+---
+
+> _"The blood remembers. The code must too."_

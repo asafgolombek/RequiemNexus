@@ -19,7 +19,7 @@ All contributions must:
 - Increase clarity and eliminate "magic".
 - Preserve an unbroken chain of traceability.
 
-If your change makes the system harder to reason about, it will be rejected—even if it “works”.
+If your change makes the system harder to reason about, it will be rejected—even if it "works".
 
 ---
 
@@ -47,9 +47,24 @@ Your local development environment is **"The Haven."** It must remain pure and p
 - Docker
 - PostgreSQL (The Blood of the System)
 
+### Repository Structure
+
+The project is organized into domain-specific modules. See the full layout in the [📁 Repository Structure](./docs/Architecture.md#-repository-structure) section of the Architecture guide.
+
+```
+src/
+├── RequiemNexus.Data/      # Infrastructure Layer — EF Core, migrations, repositories
+├── RequiemNexus.Domain/    # Domain Layer — game rules, models, invariants
+└── RequiemNexus.Web/       # Presentation Layer — Blazor components, SignalR hubs
+tests/
+├── RequiemNexus.Domain.Tests/       # Unit tests
+├── RequiemNexus.Data.Tests/         # Integration tests
+└── RequiemNexus.PerformanceTests/   # Load and latency tests
+```
+
 ### Local Startup
 
-```bash
+```powershell
 # Invokes The Haven with hot reload and .NET Aspire orchestration
 scripts/build-debug.ps1
 
@@ -61,12 +76,26 @@ scripts/build-release.ps1
 
 Before submitting a Pull Request, your code must survive the Inquisition locally:
 
-```bash
+```powershell
 # Runs full unit, integration, and E2E validations
 scripts/test-local.ps1
 ```
 
 If any tests fail, **cleanse them before opening the PR**. PRs with failing tests will be rejected without review.
+
+### 🎨 Code Formatting
+
+Requiem Nexus enforces code style via `.editorconfig` and CI. Before committing:
+
+```powershell
+# Check for style violations (same check CI runs)
+dotnet format --verify-no-changes
+
+# Auto-fix style violations
+dotnet format
+```
+
+PRs that fail `dotnet format --verify-no-changes` in CI will be blocked from merging.
 
 ### 🗄️ Database Configuration (The Blood of the System)
 
@@ -79,7 +108,7 @@ We treat automation as a first-class citizen.
 All Pull Requests must pass automated GitHub Actions workflows enforcing:
 - Successful compilation
 - 100% passing test suites
-- Code formatting and style enforcement
+- Code formatting and style enforcement (`dotnet format`)
 
 Covenants cannot be merged if any automated check fails. 
 
@@ -116,6 +145,36 @@ test(integration): validate The Blood of the System mapping
 
 ---
 
+## 📋 Pull Request Templates
+
+We provide type-specific PR templates for focused reviews. When creating a PR, you can use:
+
+| Type | Template | When to Use |
+|------|----------|-------------|
+| **Feature** | `feature.md` | New functionality |
+| **Bug Fix** | `bugfix.md` | Fixing a defect |
+| **Chore** | `chore.md` | Maintenance, dependencies, refactors |
+| **Docs** | `docs.md` | Documentation / Grimoire updates |
+
+Append `&template=feature.md` (or the appropriate template name) to the PR creation URL, or select the template from the GitHub UI.
+
+If none of the specific templates fit, the default template will be used automatically.
+
+---
+
+## 🧭 First-Time Contributors
+
+Not sure where to start? Here's your path:
+
+1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
+2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
+3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
+4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next.
+5. **Set up The Haven** — follow the Development Setup section above.
+6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
+
+---
+
 ## 👁️ Code Review Standards (The PR Inquisition)
 
 Every PR must receive at least one approving review before merging. Reviewers are Inquisitors ensuring architectural purity.
@@ -124,6 +183,11 @@ A valid approval confirms that:
 - The change provides a **Traceability Report** linking UI → Domain Logic → Data Persistence.
 - No new **implicit magic**, shared common libraries, or hidden dependencies infected the system.
 - C# 14 technical milestones are properly utilized as clear learning artifacts.
-- Automation scripts reflect any new manual steps. 
+- Automation scripts reflect any new manual steps.
+- `dotnet format` passes with no violations.
 
 > If you seek an architectural exemption, it must be documented explicitly in the PR. Undocumented deviations are inherently rejected.
+
+---
+
+> _"Every contribution is a strike against entropy. Make it count."_
