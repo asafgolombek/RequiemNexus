@@ -46,7 +46,7 @@ builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexu
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IAdvancementService, RequiemNexus.Web.Services.AdvancementService>();
 
-builder.Services.AddScoped<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(options =>

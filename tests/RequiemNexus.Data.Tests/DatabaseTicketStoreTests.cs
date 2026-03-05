@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Web.Services;
@@ -37,6 +38,13 @@ public class DatabaseTicketStoreTests
         public HttpContext? HttpContext { get; set; }
     }
 
+    private IServiceScopeFactory CreateScopeFactory()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped(sp => new ApplicationDbContext(_options));
+        return services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
+    }
+
     [Fact]
     public async Task StoreAsync_ValidTicket_SavesToDatabase()
     {
@@ -50,14 +58,15 @@ public class DatabaseTicketStoreTests
         context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
         mockHttpContextAccessor.HttpContext = context;
 
-        using var dbContext = new ApplicationDbContext(_options);
-        var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
+        var scopeFactory = CreateScopeFactory();
+        var store = new DatabaseTicketStore(scopeFactory, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
 
         // Act
         var resultId = await store.StoreAsync(ticket);
 
         // Assert
         Assert.False(string.IsNullOrEmpty(resultId));
+        using var dbContext = new ApplicationDbContext(_options);
         var savedSession = await dbContext.UserSessions.FindAsync(resultId);
         Assert.NotNull(savedSession);
         Assert.Equal(userId, savedSession.ApplicationUserId);
@@ -74,23 +83,16 @@ public class DatabaseTicketStoreTests
         var ticket = CreateMockTicket(userId);
         var mockHttpContextAccessor = new FakeHttpContextAccessor();
 
-        string sessionId = string.Empty;
-        using (var dbContext = new ApplicationDbContext(_options))
-        {
-            var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
-            sessionId = await store.StoreAsync(ticket);
-        }
+        var scopeFactory = CreateScopeFactory();
+        var store = new DatabaseTicketStore(scopeFactory, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
+        string sessionId = await store.StoreAsync(ticket);
 
         // Act
-        using (var dbContext = new ApplicationDbContext(_options))
-        {
-            var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
-            var retrievedTicket = await store.RetrieveAsync(sessionId);
+        var retrievedTicket = await store.RetrieveAsync(sessionId);
 
-            // Assert
-            Assert.NotNull(retrievedTicket);
-            Assert.Equal(userId, retrievedTicket.Principal.FindFirstValue(ClaimTypes.NameIdentifier));
-        }
+        // Assert
+        Assert.NotNull(retrievedTicket);
+        Assert.Equal(userId, retrievedTicket.Principal.FindFirstValue(ClaimTypes.NameIdentifier));
     }
 
     [Fact]
@@ -101,12 +103,9 @@ public class DatabaseTicketStoreTests
         var originalTicket = CreateMockTicket(userId);
         var mockHttpContextAccessor = new FakeHttpContextAccessor();
 
-        string sessionId = string.Empty;
-        using (var dbContext = new ApplicationDbContext(_options))
-        {
-            var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
-            sessionId = await store.StoreAsync(originalTicket);
-        }
+        var scopeFactory = CreateScopeFactory();
+        var store = new DatabaseTicketStore(scopeFactory, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
+        string sessionId = await store.StoreAsync(originalTicket);
 
         // Provide a new context for renewal, e.g. new IP or UserAgent, and new explicit expiration
         var renewContext = new DefaultHttpContext();
@@ -120,11 +119,7 @@ public class DatabaseTicketStoreTests
         var newTicket = CreateMockTicket(userId, newExpiration);
 
         // Act
-        using (var dbContext = new ApplicationDbContext(_options))
-        {
-            var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
-            await store.RenewAsync(sessionId, newTicket);
-        }
+        await store.RenewAsync(sessionId, newTicket);
 
         // Assert
         using (var dbContext = new ApplicationDbContext(_options))
@@ -145,19 +140,12 @@ public class DatabaseTicketStoreTests
         var ticket = CreateMockTicket(userId);
         var mockHttpContextAccessor = new FakeHttpContextAccessor();
 
-        string sessionId = string.Empty;
-        using (var dbContext = new ApplicationDbContext(_options))
-        {
-            var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
-            sessionId = await store.StoreAsync(ticket);
-        }
+        var scopeFactory = CreateScopeFactory();
+        var store = new DatabaseTicketStore(scopeFactory, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
+        string sessionId = await store.StoreAsync(ticket);
 
         // Act
-        using (var dbContext = new ApplicationDbContext(_options))
-        {
-            var store = new DatabaseTicketStore(dbContext, new NullLogger<DatabaseTicketStore>(), mockHttpContextAccessor);
-            await store.RemoveAsync(sessionId);
-        }
+        await store.RemoveAsync(sessionId);
 
         // Assert
         using (var dbContext = new ApplicationDbContext(_options))

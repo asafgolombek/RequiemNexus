@@ -14,6 +14,8 @@ public class ApplicationUser : IdentityUser
 
     public DateOnly? Birthday { get; set; }
 
+    public DateOnly? MemberSince { get; set; }
+
     // FIDO2 WebAuthn stored credentials for physical security keys
     public virtual ICollection<FidoStoredCredential> FidoStoredCredentials { get; set; } = new List<FidoStoredCredential>();
 }

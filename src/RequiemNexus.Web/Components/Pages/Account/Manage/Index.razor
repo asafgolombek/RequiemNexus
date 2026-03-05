@@ -16,8 +16,13 @@
     </div>
     
     <div class="mb-4">
-        <h5>Member Since</h5>
+        <h5>Date of Birth</h5>
         <p class="text-muted">@(user.Birthday?.ToString("d") ?? "N/A")</p>
+    </div>
+
+    <div class="mb-4">
+        <h5>Member Since</h5>
+        <p class="text-muted">@(user.MemberSince?.ToString("d") ?? "N/A")</p>
     </div>
 }
 else

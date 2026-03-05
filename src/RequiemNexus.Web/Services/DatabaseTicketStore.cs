@@ -3,10 +3,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-
 namespace RequiemNexus.Web.Services;
 
-public class DatabaseTicketStore(ApplicationDbContext dbContext, ILogger<DatabaseTicketStore> logger, IHttpContextAccessor httpContextAccessor) : ITicketStore
+public class DatabaseTicketStore(IServiceScopeFactory scopeFactory, ILogger<DatabaseTicketStore> logger, IHttpContextAccessor httpContextAccessor) : ITicketStore
 {
     public async Task<string> StoreAsync(AuthenticationTicket ticket)
     {
@@ -35,6 +34,9 @@ public class DatabaseTicketStore(ApplicationDbContext dbContext, ILogger<Databas
             IpAddress = ipAddress
         };
 
+        using var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         dbContext.UserSessions.Add(session);
         await dbContext.SaveChangesAsync();
 
@@ -43,6 +45,9 @@ public class DatabaseTicketStore(ApplicationDbContext dbContext, ILogger<Databas
 
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
+        using var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         var session = await dbContext.UserSessions.FindAsync(key);
         if (session != null)
         {
@@ -63,6 +68,9 @@ public class DatabaseTicketStore(ApplicationDbContext dbContext, ILogger<Databas
 
     public async Task<AuthenticationTicket?> RetrieveAsync(string key)
     {
+        using var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         var session = await dbContext.UserSessions.FindAsync(key);
         if (session == null)
             return null;
@@ -76,6 +84,9 @@ public class DatabaseTicketStore(ApplicationDbContext dbContext, ILogger<Databas
 
     public async Task RemoveAsync(string key)
     {
+        using var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         var session = await dbContext.UserSessions.FindAsync(key);
         if (session != null)
         {

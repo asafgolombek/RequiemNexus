@@ -104,7 +104,8 @@
         {
             UserName = registerModel.Email,
             Email = registerModel.Email,
-            Birthday = parsedBirthday
+            Birthday = parsedBirthday,
+            MemberSince = DateOnly.FromDateTime(DateTime.Now)
         };
 
         var result = await UserManager.CreateAsync(user, registerModel.Password);

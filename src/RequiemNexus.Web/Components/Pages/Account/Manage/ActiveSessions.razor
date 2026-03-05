@@ -93,11 +93,12 @@ else
     {
         if (_currentUserId == null) return;
 
-        _sessions = await DbContext.UserSessions
+        var sessions = await DbContext.UserSessions
             .AsNoTracking()
             .Where(s => s.ApplicationUserId == _currentUserId)
-            .OrderByDescending(s => s.LastActive)
             .ToListAsync();
+            
+        _sessions = sessions.OrderByDescending(s => s.LastActive).ToList();
     }
 
     private async Task RevokeSessionAsync(string sessionId)
