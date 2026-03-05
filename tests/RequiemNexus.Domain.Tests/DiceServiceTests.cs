@@ -1,4 +1,4 @@
-﻿using RequiemNexus.Domain.Services;
+using RequiemNexus.Domain.Services;
 using Xunit;
 namespace RequiemNexus.Domain.Tests;
 

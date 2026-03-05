@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 
@@ -10,8 +10,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Character> Characters { get; set; } = default!;
     public DbSet<Clan> Clans { get; set; } = default!;
     public DbSet<Campaign> Campaigns { get; set; } = default!;
+    public DbSet<UserSession> UserSessions { get; set; } = default!;
+    public DbSet<FidoStoredCredential> FidoStoredCredentials { get; set; } = null!;
     public DbSet<CharacterMerit> CharacterMerits { get; set; } = default!;
     public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; } = default!;
+    public DbSet<CharacterAttribute> CharacterAttributes { get; set; } = default!;
+    public DbSet<CharacterSkill> CharacterSkills { get; set; } = default!;
     public DbSet<Discipline> Disciplines { get; set; } = default!;
     public DbSet<DisciplinePower> DisciplinePowers { get; set; } = default!;
     public DbSet<Merit> Merits { get; set; } = default!;
@@ -100,5 +104,34 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany(c => c.Banes)
             .HasForeignKey(b => b.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // UserSession >- ApplicationUser configuration
+        builder.Entity<UserSession>()
+            .HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.ApplicationUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Character >- CharacterAttribute configuration
+        builder.Entity<CharacterAttribute>()
+            .HasOne(a => a.Character)
+            .WithMany(c => c.Attributes)
+            .HasForeignKey(a => a.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterAttribute>()
+            .HasIndex(a => new { a.CharacterId, a.Name })
+            .IsUnique();
+
+        // Character >- CharacterSkill configuration
+        builder.Entity<CharacterSkill>()
+            .HasOne(s => s.Character)
+            .WithMany(c => c.Skills)
+            .HasForeignKey(s => s.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterSkill>()
+            .HasIndex(s => new { s.CharacterId, s.Name })
+            .IsUnique();
     }
 }

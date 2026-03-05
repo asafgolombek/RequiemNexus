@@ -1,0 +1,120 @@
+@page "/Account/LoginWithRecoveryCode"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Data.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject ILogger<LoginWithRecoveryCode> Logger
+
+<PageTitle>Recovery code verification - Requiem Nexus</PageTitle>
+
+<div class="login-container">
+    <main class="login-card">
+        <div class="login-header">
+            <h2>Recovery Code Verification</h2>
+            <p>You have requested to log in with a recovery code. This login will not be remembered until you provide an authenticator app code at log in or disable 2FA and log in again.</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        <EditForm Model="Input" OnValidSubmit="HandleSubmit" FormName="login-with-recovery-code" class="login-form">
+            <DataAnnotationsValidator />
+            
+            <input type="hidden" name="Input.ReturnUrl" value="@Input.ReturnUrl" />
+
+            <div class="form-group mb-3">
+                <label for="recovery-code" class="form-label">Recovery Code</label>
+                <div class="input-container">
+                    <InputText id="recovery-code" class="form-control" autocomplete="off" @bind-Value="Input.RecoveryCode" placeholder="Enter a recovery code" />
+                </div>
+                <ValidationMessage For="() => Input.RecoveryCode" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn-login" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span>Verifying...</span>
+                }
+                else
+                {
+                    <span>Log in</span>
+                }
+            </button>
+        </EditForm>
+    </main>
+</div>
+
+@code {
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    [SupplyParameterFromForm]
+    public LoginWithRecoveryCodeModel Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        Input.ReturnUrl = ReturnUrl ?? "/home";
+
+        // Ensure the user has gone through the username & password screen first
+        var user = await SignInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+        {
+            errorMessage = "Unable to load two-factor authentication user.";
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        var user = await SignInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+        {
+            errorMessage = "Unable to load two-factor authentication user.";
+            isSubmitting = false;
+            return;
+        }
+
+        var recoveryCode = Input.RecoveryCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+        var result = await SignInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", user.Id);
+            NavigationManager.NavigateTo(Input.ReturnUrl ?? "/home", forceLoad: true);
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
+            errorMessage = "This account has been locked out, please try again later.";
+        }
+        else
+        {
+            Logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", user.Id);
+            errorMessage = "Invalid recovery code entered.";
+        }
+        
+        isSubmitting = false;
+    }
+
+    public class LoginWithRecoveryCodeModel
+    {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Recovery Code")]
+        public string RecoveryCode { get; set; } = string.Empty;
+
+        public string? ReturnUrl { get; set; }
+    }
+}

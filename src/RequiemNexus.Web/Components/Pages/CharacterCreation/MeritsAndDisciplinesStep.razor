@@ -1,4 +1,5 @@
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Helpers
 
 <div class="step-content">
     <h3>Merits & Disciplines</h3>
@@ -33,12 +34,22 @@
                 var m = AvailableMerits.FirstOrDefault(x => x.Id == cm.MeritId);
                 if (m != null)
                 {
+                    var isFixedCost = MeritRatingHelper.IsFixedCost(m.ValidRatings);
+                    var minRating = MeritRatingHelper.GetMinRating(m.ValidRatings);
+                    var maxRating = MeritRatingHelper.GetMaxRating(m.ValidRatings);
+
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background-color: #151515; padding: 5px 10px; border-radius: 4px;">
                         <span>@m.Name @(m.RequiresSpecification ? $" ({cm.Specification})" : "")</span>
                         <div>
-                            <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustMeritAndNotify(cm, -1)' disabled="@(cm.Rating <= 1)">-</button>
+                            @if (!isFixedCost)
+                            {
+                                <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustMeritAndNotify(cm, -1)' disabled="@(cm.Rating <= minRating)">-</button>
+                            }
                             <span style="display: inline-block; width: 15px; text-align: center;">@cm.Rating</span>
-                            <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustMeritAndNotify(cm, 1)' disabled="@(cm.Rating >= 5 || MeritPointsSpent >= 7)">+</button>
+                            @if (!isFixedCost)
+                            {
+                                <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustMeritAndNotify(cm, 1)' disabled="@(cm.Rating >= maxRating || MeritPointsSpent >= 7)">+</button>
+                            }
                             <button class="nav-btn" style="padding: 0px 6px; margin-left: 10px; background-color: #550000;" @onclick='() => RemoveMeritAndNotify(cm)'>X</button>
                         </div>
                     </div>

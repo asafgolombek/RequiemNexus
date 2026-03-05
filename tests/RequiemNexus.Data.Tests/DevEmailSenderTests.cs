@@ -16,7 +16,7 @@ public class DevEmailSenderTests
         var user = new ApplicationUser { Email = "test@example.com" };
 
         // Act
-        var exception = await Record.ExceptionAsync(() => 
+        var exception = await Record.ExceptionAsync(() =>
             sender.SendConfirmationLinkAsync(user, "test@example.com", "http://localhost/confirm"));
 
         // Assert
@@ -32,7 +32,7 @@ public class DevEmailSenderTests
         var user = new ApplicationUser { Email = "test@example.com" };
 
         // Act
-        var exception = await Record.ExceptionAsync(() => 
+        var exception = await Record.ExceptionAsync(() =>
             sender.SendPasswordResetCodeAsync(user, "test@example.com", "123456"));
 
         // Assert
@@ -48,7 +48,7 @@ public class DevEmailSenderTests
         var user = new ApplicationUser { Email = "test@example.com" };
 
         // Act
-        var exception = await Record.ExceptionAsync(() => 
+        var exception = await Record.ExceptionAsync(() =>
             sender.SendPasswordResetLinkAsync(user, "test@example.com", "http://localhost/reset"));
 
         // Assert

@@ -1,14 +1,16 @@
-﻿using Xunit;
+using Xunit;
 namespace RequiemNexus.Domain.Tests;
 
 public class CharacterCreationRulesTests
 {
+    private readonly CharacterCreationRules _rules = new();
+
     // --- CalculateInitialHealth ---
 
     [Fact]
     public void CalculateInitialHealth_ReturnsCorrectSum()
     {
-        var (maxHealth, currentHealth) = CharacterCreationRules.CalculateInitialHealth(size: 5, stamina: 2);
+        var (maxHealth, currentHealth) = _rules.CalculateInitialHealth(size: 5, stamina: 2);
 
         Assert.Equal(7, maxHealth);
         Assert.Equal(7, currentHealth);
@@ -17,7 +19,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void CalculateInitialHealth_NeonateStartsAtFullHealth()
     {
-        var (maxHealth, currentHealth) = CharacterCreationRules.CalculateInitialHealth(size: 5, stamina: 3);
+        var (maxHealth, currentHealth) = _rules.CalculateInitialHealth(size: 5, stamina: 3);
 
         Assert.Equal(maxHealth, currentHealth);
     }
@@ -28,7 +30,7 @@ public class CharacterCreationRulesTests
     [InlineData(4, 1, 5)]
     public void CalculateInitialHealth_VariousInputs(int size, int stamina, int expected)
     {
-        var (maxHealth, _) = CharacterCreationRules.CalculateInitialHealth(size, stamina);
+        var (maxHealth, _) = _rules.CalculateInitialHealth(size, stamina);
 
         Assert.Equal(expected, maxHealth);
     }
@@ -38,7 +40,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void CalculateInitialWillpower_ReturnsCorrectSum()
     {
-        var (maxWillpower, currentWillpower) = CharacterCreationRules.CalculateInitialWillpower(resolve: 2, composure: 3);
+        var (maxWillpower, currentWillpower) = _rules.CalculateInitialWillpower(resolve: 2, composure: 3);
 
         Assert.Equal(5, maxWillpower);
         Assert.Equal(5, currentWillpower);
@@ -47,7 +49,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void CalculateInitialWillpower_NeonateStartsAtFullWillpower()
     {
-        var (maxWillpower, currentWillpower) = CharacterCreationRules.CalculateInitialWillpower(resolve: 3, composure: 2);
+        var (maxWillpower, currentWillpower) = _rules.CalculateInitialWillpower(resolve: 3, composure: 2);
 
         Assert.Equal(maxWillpower, currentWillpower);
     }
@@ -58,7 +60,7 @@ public class CharacterCreationRulesTests
     [InlineData(5, 1, 6)]
     public void CalculateInitialWillpower_VariousInputs(int resolve, int composure, int expected)
     {
-        var (maxWillpower, _) = CharacterCreationRules.CalculateInitialWillpower(resolve, composure);
+        var (maxWillpower, _) = _rules.CalculateInitialWillpower(resolve, composure);
 
         Assert.Equal(expected, maxWillpower);
     }
@@ -68,7 +70,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void CalculateInitialBloodPotencyAndVitae_ReturnsStandardNeonateValues()
     {
-        var (bloodPotency, maxVitae, currentVitae) = CharacterCreationRules.CalculateInitialBloodPotencyAndVitae();
+        var (bloodPotency, maxVitae, currentVitae) = _rules.CalculateInitialBloodPotencyAndVitae();
 
         Assert.Equal(1, bloodPotency);
         Assert.Equal(10, maxVitae);
@@ -78,7 +80,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void CalculateInitialBloodPotencyAndVitae_NeonateStartsAtFullVitae()
     {
-        var (_, maxVitae, currentVitae) = CharacterCreationRules.CalculateInitialBloodPotencyAndVitae();
+        var (_, maxVitae, currentVitae) = _rules.CalculateInitialBloodPotencyAndVitae();
 
         Assert.Equal(maxVitae, currentVitae);
     }
@@ -88,7 +90,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void TryConvertBeats_ReturnsFalseWhenBeatsLessThanFive()
     {
-        bool converted = CharacterCreationRules.TryConvertBeats(4, out int newBeats, out int xpGained);
+        bool converted = _rules.TryConvertBeats(4, out int newBeats, out int xpGained);
 
         Assert.False(converted);
         Assert.Equal(4, newBeats);
@@ -98,7 +100,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void TryConvertBeats_ReturnsFalseWhenBeatsIsZero()
     {
-        bool converted = CharacterCreationRules.TryConvertBeats(0, out int newBeats, out int xpGained);
+        bool converted = _rules.TryConvertBeats(0, out int newBeats, out int xpGained);
 
         Assert.False(converted);
         Assert.Equal(0, newBeats);
@@ -108,7 +110,7 @@ public class CharacterCreationRulesTests
     [Fact]
     public void TryConvertBeats_ReturnsTrueAndConvertsAtExactlyFive()
     {
-        bool converted = CharacterCreationRules.TryConvertBeats(5, out int newBeats, out int xpGained);
+        bool converted = _rules.TryConvertBeats(5, out int newBeats, out int xpGained);
 
         Assert.True(converted);
         Assert.Equal(0, newBeats);
@@ -119,7 +121,7 @@ public class CharacterCreationRulesTests
     public void TryConvertBeats_RetainsSurplusBeatsAfterConversion()
     {
         // 7 beats → convert 5, keep 2
-        bool converted = CharacterCreationRules.TryConvertBeats(7, out int newBeats, out int xpGained);
+        bool converted = _rules.TryConvertBeats(7, out int newBeats, out int xpGained);
 
         Assert.True(converted);
         Assert.Equal(2, newBeats);
@@ -130,10 +132,11 @@ public class CharacterCreationRulesTests
     public void TryConvertBeats_OnlyConvertsOncePerCall()
     {
         // Even with 10 beats, a single call only converts 5 → 1 XP
-        bool converted = CharacterCreationRules.TryConvertBeats(10, out int newBeats, out int xpGained);
+        bool converted = _rules.TryConvertBeats(10, out int newBeats, out int xpGained);
 
         Assert.True(converted);
         Assert.Equal(5, newBeats); // 5 remain for the next call
         Assert.Equal(1, xpGained);
     }
 }
+

@@ -1,0 +1,37 @@
+@using Microsoft.AspNetCore.Components.Routing
+@inject NavigationManager NavigationManager
+
+<ul class="nav flex-column manage-nav">
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/Account/Manage" Match="NavLinkMatch.All">Profile</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/Account/Manage/ChangePassword">Password</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/Account/Manage/TwoFactorAuthentication">Two-Factor Authentication</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/Account/Manage/ActiveSessions">Active Sessions</NavLink>
+    </li>
+</ul>
+
+<style>
+    .manage-nav .nav-link {
+        color: var(--rn-text-muted);
+        padding: 0.75rem 1rem;
+        border-radius: var(--rn-radius-sm);
+        margin-bottom: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    .manage-nav .nav-link:hover {
+        color: var(--rn-text-light);
+        background-color: rgba(255,255,255,0.05);
+    }
+    .manage-nav .nav-link.active {
+        color: var(--rn-accent-red);
+        background-color: rgba(186, 24, 38, 0.1); /* faded rn-accent-red */
+        font-weight: 500;
+        border-left: 3px solid var(--rn-accent-red);
+    }
+</style>

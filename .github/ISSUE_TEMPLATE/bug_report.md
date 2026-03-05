@@ -1,37 +1,38 @@
 ---
-name: Bug report
-about: Create a report to help us improve Requiem Nexus
+name: Bug Report (Inquisition)
+about: Initiate a formal inquisition into a logical flaw or architectural breach.
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## 🩸 Bug Inquisition
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**Describe the Breach**
+Provide a bone-white and crimson clear description of the defect. Remember the Antigravity law: "If a bug cannot be observed, it cannot be fixed."
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Traceable Steps to Reproduce**
+A bug must be explicitly reproducible. No hidden state, no assumptions:
+1. Manifest state '...'
+2. Invoke action '....'
+3. Observe layer transition '....'
+4. Witness failure.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Expected Alignment**
+A clear description of the intended Antigravity behavior. How should the system explicitly respond without relying on implicit magic?
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser: [e.g. chrome, safari]
- - Version: [e.g. 22]
+**Visual Evidence (The Masquerade)**
+If the UI or Masquerade is visibly compromised, attach screenshots.
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser: [e.g. stock browser, safari]
- - Version: [e.g. 22]
+**The Haven (Environment Details):**
+ - OS: [e.g. Windows 11]
+ - Browser: [e.g. Edge, Chrome]
+ - .NET SDK Version: [e.g. 10.0.x]
 
-**Additional context**
-Add any other context about the problem here.
+**The Chronicle (Smartphone Details if applicable):**
+ - Device: [e.g. iPhone 15]
+ - OS: [e.g. iOS 18]
+ - Browser: [e.g. Safari]
+
+**Additional Context**
+Add any logs, correlation IDs, or metrics that expose the truth of the system.

@@ -44,6 +44,11 @@
                 </div>
             </div>
 
+            <div class="form-group form-check">
+                <InputCheckbox id="remember-me" @bind-Value="Input.RememberMe" class="form-check-input" />
+                <label for="remember-me" class="form-check-label">Remember Me</label>
+            </div>
+
             <button type="submit" class="btn-login">
                 Sign In
             </button>
@@ -57,24 +62,41 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
     [SupplyParameterFromForm]
     public LoginModel Input { get; set; } = default!;
 
     private string? errorMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Input ??= new LoginModel();
+
+        if (AuthenticationStateTask is not null)
+        {
+            var authState = await AuthenticationStateTask;
+            if (authState.User?.Identity?.IsAuthenticated == true)
+            {
+                NavigationManager.NavigateTo("/home");
+            }
+        }
     }
 
     private async Task HandleLogin()
     {
         Logger.LogInformation("User attempted to log in.");
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: true, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: Input.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
             NavigationManager.NavigateTo("/home", true); // true forces a reload so cookies are picked up by the app properly
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            var formattedUrl = $"/Account/LoginWith2fa?RememberMe={Input.RememberMe}&ReturnUrl=/home";
+            NavigationManager.NavigateTo(formattedUrl);
         }
         else if (result.IsNotAllowed)
         {
@@ -98,5 +120,7 @@
 
         [Required(ErrorMessage = "Password is required.")]
         public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
     }
 }

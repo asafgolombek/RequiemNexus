@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Fido2NetLib;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -24,12 +25,30 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+builder.Services.AddFido2(options =>
+{
+    options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost";
+    options.ServerName = "Requiem Nexus";
+    options.Origins = builder.Configuration.GetSection("Fido2:Origins").Get<HashSet<string>>() ?? new HashSet<string> { "https://localhost:5001", "https://localhost:7154" }; // Defaults for generic dev
+    options.TimestampDriftTolerance = 300000;
+});
+/* 
+.AddCachedMetadataService(config =>
+{
+    // config.AddFidoMetadataRepository(); // uncomment if we want FIDO MDS
+});
+*/
+
 // Application Services
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, RequiemNexus.Web.Services.CharacterService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus.Web.Services.ClanService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IAdvancementService, RequiemNexus.Web.Services.AdvancementService>();
+builder.Services.AddSingleton<RequiemNexus.Domain.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
+builder.Services.AddSingleton<RequiemNexus.Domain.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
+
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(options =>
@@ -39,10 +58,30 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
+builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
+    .Configure<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore>((options, store) =>
+    {
+        options.SessionStore = store;
+        options.ExpireTimeSpan = TimeSpan.FromDays(14); // Remember Me duration
+        options.SlidingExpiration = true;
+    });
+
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = true;
         options.User.RequireUniqueEmail = true;
+
+        // Account Lockout policies
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.AllowedForNewUsers = true;
+
+        // Explicit password rules for Production
+        options.Password.RequiredLength = 8;
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
 
         // Relaxed password rules are development-only
         if (builder.Environment.IsDevelopment())

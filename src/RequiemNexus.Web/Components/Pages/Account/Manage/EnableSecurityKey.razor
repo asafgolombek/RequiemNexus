@@ -1,0 +1,162 @@
+@page "/Account/Manage/EnableSecurityKey"
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Fido2NetLib
+@using Fido2NetLib.Objects
+@using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@inject IFido2 Fido2
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ApplicationDbContext DbContext
+@inject IJSRuntime JS
+@inject ILogger<EnableSecurityKey> Logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Add Security Key - Requiem Nexus</PageTitle>
+
+<h3>Set up a Security Key (FIDO2)</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
+}
+
+<div class="mt-4">
+    <p>A physical security key (like a YubiKey) or your device's built-in authenticator (Windows Hello, TouchID/FaceID) can be used for even stronger Two-Factor Authentication.</p>
+    
+    <button class="btn btn-primary mt-3" @onclick="RegisterKeyAsync" disabled="@isSubmitting">
+        @if (isSubmitting)
+        {
+            <span>Waiting for key...</span>
+        }
+        else
+        {
+            <span>Register New Key</span>
+        }
+    </button>
+</div>
+
+<div class="mt-4">
+    <a href="/Account/Manage/TwoFactorAuthentication" class="btn btn-outline-secondary">Return to 2FA Settings</a>
+</div>
+
+@code {
+    private ApplicationUser? user;
+    private string? errorMessage;
+    private bool isSubmitting;
+    
+    // Maintain options in state between request and result
+    private CredentialCreateOptions? currentOptions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            user = await UserManager.GetUserAsync(principal);
+        }
+    }
+
+    private async Task RegisterKeyAsync()
+    {
+        if (user is null) return;
+        
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            // 1. Get existing keys to exclude them
+            var existingKeys = await DbContext.FidoStoredCredentials
+                .Where(c => c.UserId == user.Id)
+                .Select(c => c.PublicKey)
+                .ToListAsync();
+
+            var fidoUser = new Fido2User
+            {
+                DisplayName = user.UserName,
+                Name = user.UserName,
+                Id = Encoding.UTF8.GetBytes(user.Id)
+            };
+
+            // 2. Request options from Fido2NetLib
+            currentOptions = Fido2.RequestNewCredential(new RequestNewCredentialParams
+            {
+                User = fidoUser,
+                ExcludeCredentials = existingKeys.Select(k => new PublicKeyCredentialDescriptor(k)).ToList(),
+                AuthenticatorSelection = AuthenticatorSelection.Default,
+                AttestationPreference = AttestationConveyancePreference.None
+            });
+
+            var optionsJson = JsonSerializer.Serialize(currentOptions, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+            // 3. Call JS Interop to trigger navigator.credentials.create
+            var responseJson = await JS.InvokeAsync<string>("window.fido2Interop.makeCredential", optionsJson);
+            
+            if (responseJson.Contains("\"error\""))
+            {
+                errorMessage = "Security key registration was cancelled or failed.";
+                isSubmitting = false;
+                return;
+            }
+
+            // 4. Parse the client's response
+            var attestationResponse = JsonSerializer.Deserialize<AuthenticatorAttestationRawResponse>(responseJson);
+            if (attestationResponse is null)
+            {
+                errorMessage = "Failed to parse the security key response.";
+                isSubmitting = false;
+                return;
+            }
+
+            // 5. Verify the response with Fido2NetLib
+            var success = await Fido2.MakeNewCredentialAsync(new MakeNewCredentialParams
+            {
+                AttestationResponse = attestationResponse,
+                OriginalOptions = currentOptions,
+                IsCredentialIdUniqueToUserCallback = async (args, cancellationToken) =>
+                {
+                    // Verify the credential is truly unique
+                    var exists = await DbContext.FidoStoredCredentials.AnyAsync(c => c.CredId == Convert.ToBase64String(args.CredentialId));
+                    return !exists;
+                }
+            });
+
+            // 6. Save the new credential in the DB
+            var newCred = new FidoStoredCredential
+            {
+                UserId = user.Id,
+                PublicKey = success.PublicKey,
+                UserHandle = Encoding.UTF8.GetBytes(user.Id),
+                SignatureCounter = success.SignCount,
+                CredType = success.Type.ToString() ?? "public-key",
+                RegDate = DateTime.UtcNow,
+                AaGuid = Guid.Empty,
+                CredId = Convert.ToBase64String(success.Id)
+            };
+
+            DbContext.FidoStoredCredentials.Add(newCred);
+            await DbContext.SaveChangesAsync();
+            
+            await UserManager.SetTwoFactorEnabledAsync(user, true);
+            
+            Logger.LogInformation("User with ID '{UserId}' successfully registered a new FIDO2 security key.", user.Id);
+            NavigationManager.NavigateTo("/Account/Manage/TwoFactorAuthentication");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error registering FIDO2 key.");
+            errorMessage = "An error occurred during registration. Make sure your browser supports FIDO2.";
+        }
+        finally
+        {
+            isSubmitting = false;
+            currentOptions = null;
+        }
+    }
+}

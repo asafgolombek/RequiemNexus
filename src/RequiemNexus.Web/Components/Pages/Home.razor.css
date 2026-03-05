@@ -10,3 +10,63 @@
     font-weight: 600;
     font-family: var(--font-heading);
 }
+
+.welcome-banner {
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
+    border-left: 4px solid var(--accent-color);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.welcome-banner h2 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #ff4d4d, #ffffff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    border: none;
+}
+
+.welcome-banner p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.dashboard-widgets {
+    margin-top: 2rem;
+}
+
+.widget-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-color);
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.widget-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+    transition: transform var(--transition-fast);
+    filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+
+.widget-card:hover .widget-icon {
+    transform: scale(1.15) translateY(-5px);
+}
+
+.widget-card h3 {
+    margin: 0;
+    color: var(--text-bright);
+}
+
+.widget-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}

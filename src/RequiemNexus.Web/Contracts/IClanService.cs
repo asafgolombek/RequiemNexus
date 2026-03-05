@@ -1,4 +1,4 @@
-﻿using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Web.Contracts;
 

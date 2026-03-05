@@ -33,9 +33,10 @@
     else
     {
         <div class="character-grid">
+            @{ int index = 1; }
             @foreach (var character in characters)
             {
-                <div class="character-card card-rn">
+                <div class="character-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
                     <div class="card-top">
                         <div class="char-avatar">
                             <span>@(character.Name?.Length > 0 ? character.Name[0].ToString().ToUpper() : "?")</span>

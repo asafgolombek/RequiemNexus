@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 using Xunit;
 namespace RequiemNexus.Data.Tests;

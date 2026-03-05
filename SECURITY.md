@@ -1,33 +1,82 @@
-# Security Policy
+# 🛡️ The Masquerade (Security Policy)
+
+Security in Requiem Nexus is intentional, explicit, and verifiable. **The Masquerade** must be upheld at every perimeter.
 
 ## Supported Versions
 
-Requiem Nexus is currently in active development. As such, there are no official releases that receive long-term security updates. However, we take security seriously and are committed to addressing any vulnerabilities found in the main branch or active development branches.
+Requiem Nexus is currently in active development. We address any vulnerabilities found in the main branch or active development branches to preserve the integrity of The Blood of the System.
 
 | Version | Supported |
 | ------- | ------------------ |
-| `main` branch | :white_check_mark: |
-| Pre-release versions | :x: |
+| `main` branch | ✅ |
+| Pre-release versions | ❌ |
 
-## Reporting a Vulnerability
+## Formal Inquisition (Reporting a Vulnerability)
 
-Security is intentional, explicit, and verifiable in Requiem Nexus. If you discover a security vulnerability, please do **not** open a public issue. 
+If you discover a breach in The Masquerade, do **not** open a public issue. Exposing the flaw publicly invites corruption.
 
-Instead, please report it privately by emailing the repository owner or using GitHub's private vulnerability reporting feature (if enabled on the repository).
+Instead, please report it privately via one of these channels:
+- **GitHub**: Use [GitHub's private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability) on this repository.
+- **Email**: Contact the repository owner directly via their GitHub profile.
 
-Please include the following in your report:
-- A description of the vulnerability.
-- Steps to reproduce the issue.
-- Potential impact (e.g., data leak, unauthorized access).
-- Any potential mitigation or fix you might suggest.
+### What to Include
 
-We will endeavor to respond to vulnerability reports within 48 hours and will keep you updated on the progress of the investigation and any subsequent fixes.
+Please provide a formalized audit:
+- A clear description of the vulnerability.
+- Traceable steps to reproduce the breach.
+- Expected impact (e.g., unauthorized access, data compromise, privilege escalation).
+- Any recommendations to reinforce the boundary.
 
-## Threat Modeling
+### Response Timeline
 
-As outlined in our Mission, every exposed endpoint in our application aims to document:
-- Trust boundaries
+| Action | Timeframe |
+|--------|-----------|
+| Acknowledgment of report | Within **48 hours** |
+| Initial assessment & severity classification | Within **7 days** |
+| Patch release for critical vulnerabilities | Within **14 days** |
+| Patch release for non-critical vulnerabilities | Within **30 days** |
+
+We will keep the reporter updated on progress throughout remediation.
+
+## Scope
+
+### In Scope
+
+- Authentication and authorization flaws (bypasses, privilege escalation)
+- BOLA / IDOR vulnerabilities (accessing another player's character or chronicle data)
+- Injection attacks (SQL, XSS, CSRF)
+- Session management weaknesses
+- Data exposure or privacy violations
+- Cryptographic weaknesses
+
+### Out of Scope
+
+- Vulnerabilities in third-party dependencies (report these upstream; we will track via Dependabot)
+- Local development environment issues
+- Denial of service via excessive load (unless it reveals an architectural flaw)
+- Social engineering attacks
+
+## Safe Harbor
+
+We are committed to working with security researchers in good faith. If you report a vulnerability responsibly:
+- We **will not** pursue legal action against you.
+- We **will not** publicly disclose your identity without your consent.
+- We will credit you in the security advisory (unless you prefer anonymity).
+
+We ask that researchers:
+- Make a good-faith effort to avoid privacy violations, data destruction, or disruption of service.
+- Only interact with accounts you own or with explicit permission.
+- Provide sufficient detail for us to reproduce and validate the issue.
+
+## Threat Modeling & Trust Boundaries
+
+Our security relies on a Zero-Trust identity protocol. Every exposed endpoint serves as a fortified gate and documents:
+- Trust boundaries (The Masquerade)
 - Expected attacker capabilities
 - Failure impact
 
-If you find a discrepancy between our documented threat model and the actual implementation, please feel free to report it as a vulnerability or submit a Pull Request to address the gap.
+If you find an undocumented variance between our threat model and the implemented code, it is your duty to report it as a vulnerability or submit a Pull Request to seal the breach.
+
+---
+
+> _"The Masquerade endures only through vigilance."_

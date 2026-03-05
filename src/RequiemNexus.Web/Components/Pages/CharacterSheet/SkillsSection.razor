@@ -1,0 +1,67 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Helpers
+
+<section class="cs-section cs-skills">
+    <h2>@Title</h2>
+    <div class="grid-3-col">
+        <div class="stat-col mental">
+            <h3>Mental</h3>
+            @foreach (var skill in TraitMetadata.MentalSkills)
+            {
+                var name = skill;
+                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, name)"
+                          ValueChanged="@((int val) => HandleValueChanged(name, val))"
+                          Label="@TraitMetadata.GetDisplayName(name)"
+                          OnLabelClick="OnLabelClick"
+                          OnRollClick="OnRollClick"
+                          ShowRollButton="@ShowRollButton" />
+            }
+        </div>
+        <div class="stat-col physical">
+            <h3>Physical</h3>
+            @foreach (var skill in TraitMetadata.PhysicalSkills)
+            {
+                var name = skill;
+                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, name)"
+                          ValueChanged="@((int val) => HandleValueChanged(name, val))"
+                          Label="@TraitMetadata.GetDisplayName(name)"
+                          OnLabelClick="OnLabelClick"
+                          OnRollClick="OnRollClick"
+                          ShowRollButton="@ShowRollButton" />
+            }
+        </div>
+        <div class="stat-col social">
+            <h3>Social</h3>
+            @foreach (var skill in TraitMetadata.SocialSkills)
+            {
+                var name = skill;
+                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, name)"
+                          ValueChanged="@((int val) => HandleValueChanged(name, val))"
+                          Label="@TraitMetadata.GetDisplayName(name)"
+                          OnLabelClick="OnLabelClick"
+                          OnRollClick="OnRollClick"
+                          ShowRollButton="@ShowRollButton" />
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = "Skills";
+    [Parameter] public bool ShowRollButton { get; set; } = true;
+    [Parameter] public EventCallback<string> OnLabelClick { get; set; }
+    [Parameter] public EventCallback<string> OnRollClick { get; set; }
+    [Parameter] public EventCallback<(string TraitName, int NewValue)> OnValueChanged { get; set; }
+
+    private async Task HandleValueChanged(string traitName, int newValue)
+    {
+        CharacterTraitHelper.SetTraitValue(Character, traitName, newValue);
+        if (OnValueChanged.HasDelegate)
+            await OnValueChanged.InvokeAsync((traitName, newValue));
+    }
+}

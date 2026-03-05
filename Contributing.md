@@ -6,7 +6,7 @@ This is not just a codebase—it is a **teaching system**, an **architectural re
 
 By contributing, you agree to uphold the **Antigravity Philosophy**.
 
-> Before you contribute, read:
+> Before you invoke the code, read:
 > - [🩸 Mission](./docs/mission.md) — _Why_ this project exists
 > - [📐 Architecture](./docs/Architecture.md) — _How_ this project is structured
 
@@ -15,82 +15,108 @@ By contributing, you agree to uphold the **Antigravity Philosophy**.
 ## 🪐 The Antigravity Pledge
 
 All contributions must:
+- Reduce cognitive weight, not add to it.
+- Increase clarity and eliminate "magic".
+- Preserve an unbroken chain of traceability.
 
-- Reduce cognitive load
-- Increase clarity
-- Preserve traceability
-
-If your change makes the system harder to reason about, it will be rejected—even if it “works”.
+If your change makes the system harder to reason about, it will be rejected—even if it "works".
 
 ---
 
 ## 🧠 Contribution Principles
 
-1. **Explicit over clever**  
-   Readability always wins.
-
+1. **Explicit over implicit**  
+   Readability always wins. "Magic" or hidden logic is an architectural failure.
 2. **Understanding over speed**  
-   Shipping fast is meaningless if the system becomes opaque.
-
+   Shipping fast is meaningless if the system becomes a labyrinth. 
 3. **Traceability is mandatory**  
-   Every change must be traceable from UI → logic → data.
-
-4. **Teach through code**  
-   Assume the next reader is learning.
+   Every change must trace a clear lineage from Presentation → Domain → Persistence.
+4. **Teach through code (The Grimoire)**  
+   Every line of code is an intentional strike against technical debt. Write it as a lesson for the next reader.
+5. **Automation is Documentation**  
+   If a deployment, build, or test step isn't meticulously scripted in PowerShell or bound to a GitHub Action, it does not exist.
 
 ---
 
-## 🛠️ Development Setup
+## 🛠️ The Haven (Development Setup)
+
+Your local development environment is **"The Haven."** It must remain pure and predictable.
 
 ### Prerequisites
-
-- .NET 10 SDK
+- .NET 10 SDK (Leveraging C# 14 primary constructors, collection expressions, etc.)
 - Docker
-- PostgreSQL (or Dockerized equivalent)
+- PostgreSQL (The Blood of the System)
+
+### Repository Structure
+
+The project is organized into domain-specific modules. See the full layout in the [📁 Repository Structure](./docs/Architecture.md#-repository-structure) section of the Architecture guide.
+
+```
+src/
+├── RequiemNexus.Data/      # Infrastructure Layer — EF Core, migrations, repositories
+├── RequiemNexus.Domain/    # Domain Layer — game rules, models, invariants
+└── RequiemNexus.Web/       # Presentation Layer — Blazor components, SignalR hubs
+tests/
+├── RequiemNexus.Domain.Tests/       # Unit tests
+├── RequiemNexus.Data.Tests/         # Integration tests
+└── RequiemNexus.PerformanceTests/   # Load and latency tests
+```
 
 ### Local Startup
 
-```bash
-# For local development with hot reload and debugging tools
+```powershell
+# Invokes The Haven with hot reload and .NET Aspire orchestration
 scripts/build-debug.ps1
 
 # To verify production-ready optimizations locally
 scripts/build-release.ps1
 ```
 
-### 🧪 Testing Expectations
+### 🧪 Testing Expectations (The Inquisition)
 
-Before submitting a Pull Request, you must validate your changes locally:
+Before submitting a Pull Request, your code must survive the Inquisition locally:
 
-```bash
-# Runs all unit, integration, and E2E tests
+```powershell
+# Runs full unit, integration, and E2E validations
 scripts/test-local.ps1
 ```
 
-If any tests fail, **fix them before opening the PR**. PRs with failing tests will not be reviewed.
+If any tests fail, **cleanse them before opening the PR**. PRs with failing tests will be rejected without review.
 
-### 🗄️ Database Configuration
+### 🎨 Code Formatting
 
-When running locally, the application is configured to connect to a local development database. 
-- Ensure your local connection strings in `appsettings.Development.json` or user secrets are configured correctly.
-- Do not check production connection strings into source control.
-- Ensure Docker is running if you rely on a containerized local database instance.
+Requiem Nexus enforces code style via `.editorconfig` and CI. Before committing:
 
-### 🚀 CI/CD & Pull Requests
+```powershell
+# Check for style violations (same check CI runs)
+dotnet format --verify-no-changes
+
+# Auto-fix style violations
+dotnet format
+```
+
+PRs that fail `dotnet format --verify-no-changes` in CI will be blocked from merging.
+
+### 🗄️ Database Configuration (The Blood of the System)
+
+- Ensure your local connection strings in `appsettings.Development.json` or user secrets point to a pure local instance.
+- **Never** commit production connection strings into source control.
+
+### 🚀 CI/CD & The Automated Masquerade
 
 We treat automation as a first-class citizen. 
-All Pull Requests must pass automated GitHub Actions workflows which enforce:
+All Pull Requests must pass automated GitHub Actions workflows enforcing:
 - Successful compilation
-- 100% passing test suites (Unit, Integration, E2E)
-- Code formatting and style enforcement
+- 100% passing test suites
+- Code formatting and style enforcement (`dotnet format`)
 
-Branches cannot be merged if any automated check fails.
+Covenants cannot be merged if any automated check fails. 
 
 ---
 
 ## 🌿 Branching Strategy
 
-All branches should be cut from `main` and follow the naming convention:
+Branches must be drawn from `main` with strict naming conventions, acting as a formalized audit trail.
 
 | Type | Pattern | Example |
 |---|---|---|
@@ -103,35 +129,65 @@ All branches should be cut from `main` and follow the naming convention:
 
 ## 📝 Commit Message Conventions
 
-All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/):
+Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) format, tracking explicit intent:
 
 ```
 <type>(<scope>): <short summary>
 ```
-
-Common types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`
 
 **Examples:**
 ```
 feat(domain): add Touchstone to character advancement
 fix(dice): correct 8-again explosion logic
 docs(arch): update deployment topology section
-test(integration): add EF Core migration validation test
+test(integration): validate The Blood of the System mapping
 ```
-
-This convention feeds into automated versioning and changelog generation in Phase 2+.
 
 ---
 
-## 👁️ Code Review Standards
+## 📋 Pull Request Templates
 
-Every PR must receive at least one approving review before merging.
+We provide type-specific PR templates for focused reviews. When creating a PR, you can use:
+
+| Type | Template | When to Use |
+|------|----------|-------------|
+| **Feature** | `feature.md` | New functionality |
+| **Bug Fix** | `bugfix.md` | Fixing a defect |
+| **Chore** | `chore.md` | Maintenance, dependencies, refactors |
+| **Docs** | `docs.md` | Documentation / Grimoire updates |
+
+Append `&template=feature.md` (or the appropriate template name) to the PR creation URL, or select the template from the GitHub UI.
+
+If none of the specific templates fit, the default template will be used automatically.
+
+---
+
+## 🧭 First-Time Contributors
+
+Not sure where to start? Here's your path:
+
+1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
+2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
+3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
+4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next.
+5. **Set up The Haven** — follow the Development Setup section above.
+6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
+
+---
+
+## 👁️ Code Review Standards (The PR Inquisition)
+
+Every PR must receive at least one approving review before merging. Reviewers are Inquisitors ensuring architectural purity.
 
 A valid approval confirms that:
+- The change provides a **Traceability Report** linking UI → Domain Logic → Data Persistence.
+- No new **implicit magic**, shared common libraries, or hidden dependencies infected the system.
+- C# 14 technical milestones are properly utilized as clear learning artifacts.
+- Automation scripts reflect any new manual steps.
+- `dotnet format` passes with no violations.
 
-- The change is **traceable** from UI → logic → data
-- No new **implicit state** or hidden dependencies were introduced
-- All new logic is **unit-tested** or has a documented reason for exemption
-- Commit messages follow the conventions above
+> If you seek an architectural exemption, it must be documented explicitly in the PR. Undocumented deviations are inherently rejected.
 
-> If you are unsure whether an architectural exception is justified, document it explicitly in the PR description. Undocumented exceptions will be rejected.
+---
+
+> _"Every contribution is a strike against entropy. Make it count."_

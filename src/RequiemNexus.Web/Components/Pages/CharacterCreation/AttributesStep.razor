@@ -1,4 +1,6 @@
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Domain
+@using RequiemNexus.Web.Helpers
 
 <div class="step-content">
     <h3>Attributes</h3>
@@ -12,92 +14,28 @@
     }
 
     <div class="attributes-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-        <!-- Mental -->
-        <div class="attribute-category">
-            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Mental (@MentalPointsSpent points spent)</h4>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Intelligence</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Intelligence), -1)' disabled="@(Character.Intelligence <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Intelligence</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Intelligence), 1)' disabled="@(Character.Intelligence >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
-                </div>
+        @foreach (var (category, traits, spent, limit) in new[] { 
+            ("Mental", TraitMetadata.MentalAttributes, MentalPointsSpent, GetCategoryLimit(PhysicalPointsSpent, SocialPointsSpent)),
+            ("Physical", TraitMetadata.PhysicalAttributes, PhysicalPointsSpent, GetCategoryLimit(MentalPointsSpent, SocialPointsSpent)),
+            ("Social", TraitMetadata.SocialAttributes, SocialPointsSpent, GetCategoryLimit(MentalPointsSpent, PhysicalPointsSpent))
+        })
+        {
+            <div class="attribute-category">
+                <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">@category (@spent points spent)</h4>
+                @foreach (var attr in traits)
+                {
+                    var val = CharacterTraitHelper.GetTraitValue(Character, attr);
+                    <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <span>@TraitMetadata.GetDisplayName(attr)</span>
+                        <div>
+                            <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(attr, -1)' disabled="@(val <= 1)">-</button>
+                            <span style="display: inline-block; width: 20px; text-align: center;">@val</span>
+                            <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(attr, 1)' disabled="@(val >= 5 || TotalAttributePointsSpent >= 12 || spent >= limit)">+</button>
+                        </div>
+                    </div>
+                }
             </div>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Wits</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Wits), -1)' disabled="@(Character.Wits <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Wits</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Wits), 1)' disabled="@(Character.Wits >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Resolve</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Resolve), -1)' disabled="@(Character.Resolve <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Resolve</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Resolve), 1)' disabled="@(Character.Resolve >= 5 || TotalAttributePointsSpent >= 12 || MentalPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Physical -->
-        <div class="attribute-category">
-            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Physical (@PhysicalPointsSpent points spent)</h4>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Strength</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Strength), -1)' disabled="@(Character.Strength <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Strength</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Strength), 1)' disabled="@(Character.Strength >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Dexterity</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Dexterity), -1)' disabled="@(Character.Dexterity <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Dexterity</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Dexterity), 1)' disabled="@(Character.Dexterity >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Stamina</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Stamina), -1)' disabled="@(Character.Stamina <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Stamina</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Stamina), 1)' disabled="@(Character.Stamina >= 5 || TotalAttributePointsSpent >= 12 || PhysicalPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Social -->
-        <div class="attribute-category">
-            <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Social (@SocialPointsSpent points spent)</h4>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Presence</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Presence), -1)' disabled="@(Character.Presence <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Presence</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Presence), 1)' disabled="@(Character.Presence >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Manipulation</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Manipulation), -1)' disabled="@(Character.Manipulation <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Manipulation</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Manipulation), 1)' disabled="@(Character.Manipulation >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-            <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <span>Composure</span>
-                <div>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Composure), -1)' disabled="@(Character.Composure <= 1)">-</button>
-                    <span style="display: inline-block; width: 20px; text-align: center;">@Character.Composure</span>
-                    <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(nameof(Character.Composure), 1)' disabled="@(Character.Composure >= 5 || TotalAttributePointsSpent >= 12 || SocialPointsSpent >= 5)">+</button>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 </div>
 
@@ -113,6 +51,25 @@
 
     [Parameter] public Action<string, int>? OnAdjustAttribute { get; set; }
     [Parameter] public EventCallback OnStateChanged { get; set; }
+
+    // Returns the max points this category can reach, given the other two categories' current points.
+    // Ensures a valid {3, 4, 5} distribution remains achievable.
+    private static int GetCategoryLimit(int otherA, int otherB)
+    {
+        int[] targets = { 5, 4, 3 };
+        foreach (var v in targets)
+        {
+            // If this category takes value 'v', check if the remaining two targets
+            // can be assigned to the other two categories (each must be >= current spent)
+            var remaining = targets.Where(t => t != v).OrderBy(x => x).ToArray();
+            if ((remaining[0] >= otherA && remaining[1] >= otherB) ||
+                (remaining[1] >= otherA && remaining[0] >= otherB))
+            {
+                return v;
+            }
+        }
+        return 0;
+    }
 
     private async Task AdjustAndNotify(string name, int change)
     {

@@ -1,4 +1,4 @@
-﻿using NBomber.Contracts.Stats;
+using NBomber.Contracts.Stats;
 using NBomber.CSharp;
 
 namespace RequiemNexus.PerformanceTests;

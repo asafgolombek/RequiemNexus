@@ -96,33 +96,21 @@ else
                     <section class="cs-section cs-attributes">
                         <h2>Attributes</h2>
                         <div class="grid-3-col">
-                            <div class="stat-col mental">
-                                <h3>Mental</h3>
-                                <DotScale @bind-Value="character.Intelligence" Label="Intelligence" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Wits" Label="Wits" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Resolve" Label="Resolve" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                            </div>
-                            <div class="stat-col physical">
-                                <h3>Physical</h3>
-                                <DotScale @bind-Value="character.Strength" Label="Strength" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Dexterity" Label="Dexterity" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Stamina" Label="Stamina" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                            </div>
-                            <div class="stat-col social">
-                                <h3>Social</h3>
-                                <DotScale @bind-Value="character.Presence" Label="Presence" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Manipulation" Label="Manipulation" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Composure" Label="Composure" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                            </div>
+                            @foreach (var (label, category) in new[] {
+                                ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
+                                ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
+                                ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                            })
+                            {
+                                <div class="stat-col @label.ToLower()">
+                                    <h3>@label</h3>
+                                    @foreach (var attr in character.Attributes.Where(a => a.Category == category))
+                                    {
+                                        <DotScale @bind-Value="attr.Rating" Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(attr.Name)" OnLabelClick="OpenReference"
+                                            OnRollClick="OpenRoller" />
+                                    }
+                                </div>
+                            }
                         </div>
                     </section>
 
@@ -130,63 +118,21 @@ else
                     <section class="cs-section cs-skills">
                         <h2>Skills</h2>
                         <div class="grid-3-col">
-                            <div class="stat-col mental">
-                                <h3>Mental</h3>
-                                <DotScale @bind-Value="character.Academics" Label="Academics" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Computer" Label="Computer" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Crafts" Label="Crafts" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Investigation" Label="Investigation"
-                                    OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Medicine" Label="Medicine" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Occult" Label="Occult" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Politics" Label="Politics" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Science" Label="Science" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                            </div>
-                            <div class="stat-col physical">
-                                <h3>Physical</h3>
-                                <DotScale @bind-Value="character.Athletics" Label="Athletics" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Brawl" Label="Brawl" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Drive" Label="Drive" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Firearms" Label="Firearms" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Larceny" Label="Larceny" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Stealth" Label="Stealth" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Survival" Label="Survival" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Weaponry" Label="Weaponry" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                            </div>
-                            <div class="stat-col social">
-                                <h3>Social</h3>
-                                <DotScale @bind-Value="character.AnimalKen" Label="Animal Ken" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Empathy" Label="Empathy" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Expression" Label="Expression" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Intimidation" Label="Intimidation" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Persuasion" Label="Persuasion" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Socialize" Label="Socialize" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Streetwise" Label="Streetwise" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                                <DotScale @bind-Value="character.Subterfuge" Label="Subterfuge" OnLabelClick="OpenReference"
-                                    OnRollClick="OpenRoller" />
-                            </div>
+                            @foreach (var (label, category) in new[] {
+                                ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
+                                ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
+                                ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                            })
+                            {
+                                <div class="stat-col @label.ToLower()">
+                                    <h3>@label</h3>
+                                    @foreach (var skill in character.Skills.Where(s => s.Category == category))
+                                    {
+                                        <DotScale @bind-Value="skill.Rating" Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(skill.Name)" OnLabelClick="OpenReference"
+                                            OnRollClick="OpenRoller" />
+                                    }
+                                </div>
+                            }
                         </div>
                     </section>
 
@@ -268,7 +214,7 @@ else
                                 <option value="0">-- Select Equipment --</option>
                                 @foreach (var eq in availableEquipment)
                                 {
-                                    <option value="@eq.Id">@eq.Name (@eq.Type.Trim())</option>
+                                    <option value="@eq.Id">@eq.Name (@eq.Type)</option>
                                 }
                             </select>
                             <input type="number" min="1" @bind="selectedEquipmentQuantity"
@@ -420,8 +366,11 @@ else
     private int GetTraitValue(string traitName)
     {
         if (character == null) return 0;
-        var prop = typeof(Character).GetProperty(traitName.Replace(" ", ""));
-        return (int)(prop?.GetValue(character) ?? 0);
+        var name = traitName.Replace(" ", "");
+        if (RequiemNexus.Domain.TraitMetadata.IsAttribute(name))
+            return character.GetAttributeRating(name);
+        else
+            return character.GetSkillRating(name);
     }
 
     private async Task AddBeat()

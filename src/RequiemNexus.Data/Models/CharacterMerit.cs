@@ -1,9 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RequiemNexus.Domain;
 
 namespace RequiemNexus.Data.Models;
 
-public class CharacterMerit
+public class CharacterMerit : IRatedTrait
 {
     [Key]
     public int Id { get; set; }
@@ -22,4 +23,10 @@ public class CharacterMerit
 
     [MaxLength(100)]
     public string? Specification { get; set; }
+
+    [NotMapped]
+    public string Name => Merit?.Name ?? string.Empty;
+
+    public int CalculateUpgradeCost(int toRating) => toRating;
 }
+

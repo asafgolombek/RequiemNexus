@@ -4,8 +4,11 @@
 @using RequiemNexus.Data
 @using RequiemNexus.Data.Models
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Create Campaign - Requiem Nexus</PageTitle>
 
@@ -49,20 +52,18 @@
 
     private async Task HandleValidSubmit()
     {
-        // For MVP, randomly pick a user from db or create a dummy user logic to be the ST
-        var user = await DbContext.Users.FirstOrDefaultAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (user == null)
+        if (string.IsNullOrEmpty(currentUserId))
         {
-            // If no user exists somehow, let's just abort or create an MVP user (if possible)
-            // But usually there's at least one from registration
             return;
         }
 
         var campaign = new Campaign
         {
             Name = campaignModel.Name,
-            StoryTellerId = user.Id
+            StoryTellerId = currentUserId
         };
 
         DbContext.Campaigns.Add(campaign);
