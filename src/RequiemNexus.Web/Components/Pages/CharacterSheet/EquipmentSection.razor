@@ -8,7 +8,7 @@
             <option value="0">-- Select Equipment --</option>
             @foreach (var eq in AvailableEquipment)
             {
-                <option value="@eq.Id">@eq.Name (@eq.Type.Trim())</option>
+                <option value="@eq.Id">@eq.Name (@eq.Type)</option>
             }
         </select>
         <input type="number" min="1" @bind="selectedQuantity" class="equipment-quantity" />

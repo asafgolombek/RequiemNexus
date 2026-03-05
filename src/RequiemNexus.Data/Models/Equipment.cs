@@ -11,8 +11,8 @@ public class Equipment
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(50)]
-    public string Type { get; set; } = string.Empty; // e.g., Weapon, Armor, General
+    [Required]
+    public EquipmentType Type { get; set; } = EquipmentType.General; // e.g., Weapon, Armor, General
 
     [MaxLength(500)]
     public string? Description { get; set; }

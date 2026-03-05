@@ -221,7 +221,7 @@ If a bug cannot be observed, it cannot be fixed.
   - Two-Factor Authentication (2FA) via Authenticator App (TOTP) or Email
   - FIDO2 / WebAuthn Physical Security Keys
   - Recovery backup codes for 2FA
-- [ ] **Session Management**
+- [x] **Session Management**
   - View active sessions across devices
   - Remote logout of other active sessions
   - Automatic timeout for inactivity
@@ -250,7 +250,6 @@ If a bug cannot be observed, it cannot be fixed.
 ### Phase 3 Testing & Security Criteria
 - **Unit Tests (Domain/Services):** Isolate and verify password hashing, token generation, lockout logic, and 2FA code validation.
 - **Integration Tests (API/DB):** Verify EF Core correctly saves user states (`EmailConfirmed`, `TwoFactorEnabled`) and endpoints return correct HTTP status codes.
-- **E2E UI Tests (Playwright/bUnit):** Automate the registration form submission, lockout UI triggers, and password swaps.
 - **Security Tests:** Ensure all session cookies have `HttpOnly`, `Secure`, and `SameSite` flags set correctly.
 
 ### Phase 3 Exit Criteria

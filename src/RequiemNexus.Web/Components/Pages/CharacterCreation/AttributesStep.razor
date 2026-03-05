@@ -15,9 +15,9 @@
 
     <div class="attributes-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
         @foreach (var (category, traits, spent, limit) in new[] { 
-            ("Mental", TraitMetadata.MentalAttributes, MentalPointsSpent, 5),
-            ("Physical", TraitMetadata.PhysicalAttributes, PhysicalPointsSpent, 5),
-            ("Social", TraitMetadata.SocialAttributes, SocialPointsSpent, 5)
+            ("Mental", TraitMetadata.MentalAttributes, MentalPointsSpent, GetCategoryLimit(PhysicalPointsSpent, SocialPointsSpent)),
+            ("Physical", TraitMetadata.PhysicalAttributes, PhysicalPointsSpent, GetCategoryLimit(MentalPointsSpent, SocialPointsSpent)),
+            ("Social", TraitMetadata.SocialAttributes, SocialPointsSpent, GetCategoryLimit(MentalPointsSpent, PhysicalPointsSpent))
         })
         {
             <div class="attribute-category">
@@ -51,6 +51,25 @@
 
     [Parameter] public Action<string, int>? OnAdjustAttribute { get; set; }
     [Parameter] public EventCallback OnStateChanged { get; set; }
+
+    // Returns the max points this category can reach, given the other two categories' current points.
+    // Ensures a valid {3, 4, 5} distribution remains achievable.
+    private static int GetCategoryLimit(int otherA, int otherB)
+    {
+        int[] targets = { 5, 4, 3 };
+        foreach (var v in targets)
+        {
+            // If this category takes value 'v', check if the remaining two targets
+            // can be assigned to the other two categories (each must be >= current spent)
+            var remaining = targets.Where(t => t != v).OrderBy(x => x).ToArray();
+            if ((remaining[0] >= otherA && remaining[1] >= otherB) ||
+                (remaining[1] >= otherA && remaining[0] >= otherB))
+            {
+                return v;
+            }
+        }
+        return 0;
+    }
 
     private async Task AdjustAndNotify(string name, int change)
     {
