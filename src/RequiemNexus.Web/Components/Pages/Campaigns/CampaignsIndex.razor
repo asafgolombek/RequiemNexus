@@ -29,9 +29,10 @@
     else
     {
         <div class="campaign-grid">
+            @{ int index = 1; }
             @foreach (var campaign in campaigns)
             {
-                <a href="/campaigns/@campaign.Id" class="campaign-card card-rn">
+                <a href="/campaigns/@campaign.Id" class="campaign-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
                     <h3>@campaign.Name</h3>
                     <p class="role-text">
                         @(IsStoryTeller(campaign) ? "👑 Story Teller" : "🗡️ Player")
