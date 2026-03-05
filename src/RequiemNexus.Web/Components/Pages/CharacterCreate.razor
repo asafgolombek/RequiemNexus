@@ -150,6 +150,11 @@
         }
 
         newCharacter.ApplicationUserId = currentUserId;
+
+        // Seed attribute and skill entity rows on the new character
+        CharacterTraitHelper.SeedAttributes(newCharacter);
+        CharacterTraitHelper.SeedSkills(newCharacter);
+
         availableClans = await ClanService.GetAllClansAsync();
         availableMerits = await MeritService.GetAllMeritsAsync();
         availableDisciplines = await DisciplineService.GetAllDisciplinesAsync();

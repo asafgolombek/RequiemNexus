@@ -113,8 +113,8 @@
     private RollResult? LastResult;
     private bool showTools = false;
 
-    private readonly string[] Attributes = { "Intelligence", "Wits", "Resolve", "Strength", "Dexterity", "Stamina", "Presence", "Manipulation", "Composure" };
-    private readonly string[] Skills = { "Academics", "Computer", "Crafts", "Investigation", "Medicine", "Occult", "Politics", "Science", "Athletics", "Brawl", "Drive", "Firearms", "Larceny", "Stealth", "Survival", "Weaponry", "Animal Ken", "Empathy", "Expression", "Intimidation", "Persuasion", "Socialize", "Streetwise", "Subterfuge" };
+    private readonly string[] Attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes;
+    private readonly string[] Skills = RequiemNexus.Domain.TraitMetadata.AllSkills;
 
     private int AssociatedTraitDice
     {
@@ -122,8 +122,10 @@
         {
             if (string.IsNullOrEmpty(AssociatedTraitName) || Character == null) return 0;
             var propName = AssociatedTraitName.Replace(" ", "");
-            var prop = typeof(RequiemNexus.Data.Models.Character).GetProperty(propName);
-            return (int)(prop?.GetValue(Character) ?? 0);
+            if (RequiemNexus.Domain.TraitMetadata.IsAttribute(propName))
+                return Character.GetAttributeRating(propName);
+            else
+                return Character.GetSkillRating(propName);
         }
     }
 

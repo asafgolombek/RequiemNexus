@@ -9,6 +9,10 @@
 @using RequiemNexus.Web.Contracts
 @inject ICharacterService CharacterService
 @inject IAdvancementService AdvancementService
+@inject IClanService ClanService
+@inject IMeritService MeritService
+@inject IDisciplineService DisciplineService
+@inject RequiemNexus.Domain.IExperienceCostRules ExperienceCostRules
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -45,24 +49,20 @@ else
                 <section class="cs-section cs-attributes">
                     <h2>Attributes (New Dot x 4 XP)</h2>
                     <div class="grid-3-col">
-                        <div class="stat-col mental">
-                            <h3>Mental</h3>
-                            <DotScale Value="character.Intelligence" ValueChanged='(int val) => TryUpgrade("Intelligence", character.Intelligence, val)' Label="Intelligence" ShowRollButton="false" />
-                            <DotScale Value="character.Wits" ValueChanged='(int val) => TryUpgrade("Wits", character.Wits, val)' Label="Wits" ShowRollButton="false" />
-                            <DotScale Value="character.Resolve" ValueChanged='(int val) => TryUpgrade("Resolve", character.Resolve, val)' Label="Resolve" ShowRollButton="false" />
-                        </div>
-                        <div class="stat-col physical">
-                            <h3>Physical</h3>
-                            <DotScale Value="character.Strength" ValueChanged='(int val) => TryUpgrade("Strength", character.Strength, val)' Label="Strength" ShowRollButton="false" />
-                            <DotScale Value="character.Dexterity" ValueChanged='(int val) => TryUpgrade("Dexterity", character.Dexterity, val)' Label="Dexterity" ShowRollButton="false" />
-                            <DotScale Value="character.Stamina" ValueChanged='(int val) => TryUpgrade("Stamina", character.Stamina, val)' Label="Stamina" ShowRollButton="false" />
-                        </div>
-                        <div class="stat-col social">
-                            <h3>Social</h3>
-                            <DotScale Value="character.Presence" ValueChanged='(int val) => TryUpgrade("Presence", character.Presence, val)' Label="Presence" ShowRollButton="false" />
-                            <DotScale Value="character.Manipulation" ValueChanged='(int val) => TryUpgrade("Manipulation", character.Manipulation, val)' Label="Manipulation" ShowRollButton="false" />
-                            <DotScale Value="character.Composure" ValueChanged='(int val) => TryUpgrade("Composure", character.Composure, val)' Label="Composure" ShowRollButton="false" />
-                        </div>
+                        @foreach (var (label, category) in new[] {
+                            ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
+                            ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
+                            ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                        })
+                        {
+                            <div class="stat-col @label.ToLower()">
+                                <h3>@label</h3>
+                                @foreach (var attr in character.Attributes.Where(a => a.Category == category))
+                                {
+                                    <DotScale Value="attr.Rating" ValueChanged='(int val) => TryUpgrade(attr.Name, attr.Rating, val)' Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(attr.Name)" ShowRollButton="false" />
+                                }
+                            </div>
+                        }
                     </div>
                 </section>
 
@@ -70,39 +70,20 @@ else
                 <section class="cs-section cs-skills">
                     <h2>Skills (New Dot x 2 XP)</h2>
                     <div class="grid-3-col">
-                        <div class="stat-col mental">
-                            <h3>Mental</h3>
-                            <DotScale Value="character.Academics" ValueChanged='(int val) => TryUpgrade("Academics", character.Academics, val)' Label="Academics" ShowRollButton="false" />
-                            <DotScale Value="character.Computer" ValueChanged='(int val) => TryUpgrade("Computer", character.Computer, val)' Label="Computer" ShowRollButton="false" />
-                            <DotScale Value="character.Crafts" ValueChanged='(int val) => TryUpgrade("Crafts", character.Crafts, val)' Label="Crafts" ShowRollButton="false" />
-                            <DotScale Value="character.Investigation" ValueChanged='(int val) => TryUpgrade("Investigation", character.Investigation, val)' Label="Investigation" ShowRollButton="false" />
-                            <DotScale Value="character.Medicine" ValueChanged='(int val) => TryUpgrade("Medicine", character.Medicine, val)' Label="Medicine" ShowRollButton="false" />
-                            <DotScale Value="character.Occult" ValueChanged='(int val) => TryUpgrade("Occult", character.Occult, val)' Label="Occult" ShowRollButton="false" />
-                            <DotScale Value="character.Politics" ValueChanged='(int val) => TryUpgrade("Politics", character.Politics, val)' Label="Politics" ShowRollButton="false" />
-                            <DotScale Value="character.Science" ValueChanged='(int val) => TryUpgrade("Science", character.Science, val)' Label="Science" ShowRollButton="false" />
-                        </div>
-                        <div class="stat-col physical">
-                            <h3>Physical</h3>
-                            <DotScale Value="character.Athletics" ValueChanged='(int val) => TryUpgrade("Athletics", character.Athletics, val)' Label="Athletics" ShowRollButton="false" />
-                            <DotScale Value="character.Brawl" ValueChanged='(int val) => TryUpgrade("Brawl", character.Brawl, val)' Label="Brawl" ShowRollButton="false" />
-                            <DotScale Value="character.Drive" ValueChanged='(int val) => TryUpgrade("Drive", character.Drive, val)' Label="Drive" ShowRollButton="false" />
-                            <DotScale Value="character.Firearms" ValueChanged='(int val) => TryUpgrade("Firearms", character.Firearms, val)' Label="Firearms" ShowRollButton="false" />
-                            <DotScale Value="character.Larceny" ValueChanged='(int val) => TryUpgrade("Larceny", character.Larceny, val)' Label="Larceny" ShowRollButton="false" />
-                            <DotScale Value="character.Stealth" ValueChanged='(int val) => TryUpgrade("Stealth", character.Stealth, val)' Label="Stealth" ShowRollButton="false" />
-                            <DotScale Value="character.Survival" ValueChanged='(int val) => TryUpgrade("Survival", character.Survival, val)' Label="Survival" ShowRollButton="false" />
-                            <DotScale Value="character.Weaponry" ValueChanged='(int val) => TryUpgrade("Weaponry", character.Weaponry, val)' Label="Weaponry" ShowRollButton="false" />
-                        </div>
-                        <div class="stat-col social">
-                            <h3>Social</h3>
-                            <DotScale Value="character.AnimalKen" ValueChanged='(int val) => TryUpgrade("AnimalKen", character.AnimalKen, val)' Label="Animal Ken" ShowRollButton="false" />
-                            <DotScale Value="character.Empathy" ValueChanged='(int val) => TryUpgrade("Empathy", character.Empathy, val)' Label="Empathy" ShowRollButton="false" />
-                            <DotScale Value="character.Expression" ValueChanged='(int val) => TryUpgrade("Expression", character.Expression, val)' Label="Expression" ShowRollButton="false" />
-                            <DotScale Value="character.Intimidation" ValueChanged='(int val) => TryUpgrade("Intimidation", character.Intimidation, val)' Label="Intimidation" ShowRollButton="false" />
-                            <DotScale Value="character.Persuasion" ValueChanged='(int val) => TryUpgrade("Persuasion", character.Persuasion, val)' Label="Persuasion" ShowRollButton="false" />
-                            <DotScale Value="character.Socialize" ValueChanged='(int val) => TryUpgrade("Socialize", character.Socialize, val)' Label="Socialize" ShowRollButton="false" />
-                            <DotScale Value="character.Streetwise" ValueChanged='(int val) => TryUpgrade("Streetwise", character.Streetwise, val)' Label="Streetwise" ShowRollButton="false" />
-                            <DotScale Value="character.Subterfuge" ValueChanged='(int val) => TryUpgrade("Subterfuge", character.Subterfuge, val)' Label="Subterfuge" ShowRollButton="false" />
-                        </div>
+                        @foreach (var (label, category) in new[] {
+                            ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
+                            ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
+                            ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                        })
+                        {
+                            <div class="stat-col @label.ToLower()">
+                                <h3>@label</h3>
+                                @foreach (var skill in character.Skills.Where(s => s.Category == category))
+                                {
+                                    <DotScale Value="skill.Rating" ValueChanged='(int val) => TryUpgrade(skill.Name, skill.Rating, val)' Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(skill.Name)" ShowRollButton="false" />
+                                }
+                            </div>
+                        }
                     </div>
                 </section>
                 

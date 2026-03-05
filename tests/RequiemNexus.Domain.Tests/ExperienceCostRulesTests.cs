@@ -3,13 +3,15 @@ namespace RequiemNexus.Domain.Tests;
 
 public class ExperienceCostRulesTests
 {
+    private readonly ExperienceCostRules _rules = new();
+
     [Theory]
     [InlineData(1, 2, 8)]   // 2 * 4 = 8
     [InlineData(1, 3, 20)]  // (2*4) + (3*4) = 8 + 12 = 20
     [InlineData(2, 4, 28)]  // (3*4) + (4*4) = 12 + 16 = 28
     public void CalculateAttributeUpgradeCost_ReturnsCorrectValue(int from, int to, int expected)
     {
-        int cost = ExperienceCostRules.CalculateAttributeUpgradeCost(from, to);
+        int cost = _rules.CalculateAttributeUpgradeCost(from, to);
         Assert.Equal(expected, cost);
     }
 
@@ -19,7 +21,7 @@ public class ExperienceCostRulesTests
     [InlineData(0, 5, 30)]  // (1+2+3+4+5)*2 = 15*2 = 30
     public void CalculateSkillUpgradeCost_ReturnsCorrectValue(int from, int to, int expected)
     {
-        int cost = ExperienceCostRules.CalculateSkillUpgradeCost(from, to);
+        int cost = _rules.CalculateSkillUpgradeCost(from, to);
         Assert.Equal(expected, cost);
     }
 
@@ -28,7 +30,7 @@ public class ExperienceCostRulesTests
     [InlineData(0, 3, 30)]  // (1+2+3)*5 = 30
     public void CalculateDisciplineUpgradeCost_ReturnsCorrectValue(int from, int to, int expected)
     {
-        int cost = ExperienceCostRules.CalculateDisciplineUpgradeCost(from, to);
+        int cost = _rules.CalculateDisciplineUpgradeCost(from, to);
         Assert.Equal(expected, cost);
     }
 
@@ -38,7 +40,7 @@ public class ExperienceCostRulesTests
     [InlineData(5, 5)]
     public void CalculateMeritCost_ReturnsRating(int rating, int expected)
     {
-        int cost = ExperienceCostRules.CalculateMeritCost(rating);
+        int cost = _rules.CalculateMeritCost(rating);
         Assert.Equal(expected, cost);
     }
 
@@ -49,3 +51,4 @@ public class ExperienceCostRulesTests
         Assert.Equal(0, ExperienceCostRules.CalculateUpgradeCost(3, 2, 4));
     }
 }
+

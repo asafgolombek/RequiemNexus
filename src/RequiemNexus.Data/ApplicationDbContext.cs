@@ -14,6 +14,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<FidoStoredCredential> FidoStoredCredentials { get; set; } = null!;
     public DbSet<CharacterMerit> CharacterMerits { get; set; } = default!;
     public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; } = default!;
+    public DbSet<CharacterAttribute> CharacterAttributes { get; set; } = default!;
+    public DbSet<CharacterSkill> CharacterSkills { get; set; } = default!;
     public DbSet<Discipline> Disciplines { get; set; } = default!;
     public DbSet<DisciplinePower> DisciplinePowers { get; set; } = default!;
     public DbSet<Merit> Merits { get; set; } = default!;
@@ -109,5 +111,27 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(s => s.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Character >- CharacterAttribute configuration
+        builder.Entity<CharacterAttribute>()
+            .HasOne(a => a.Character)
+            .WithMany(c => c.Attributes)
+            .HasForeignKey(a => a.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterAttribute>()
+            .HasIndex(a => new { a.CharacterId, a.Name })
+            .IsUnique();
+
+        // Character >- CharacterSkill configuration
+        builder.Entity<CharacterSkill>()
+            .HasOne(s => s.Character)
+            .WithMany(c => c.Skills)
+            .HasForeignKey(s => s.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterSkill>()
+            .HasIndex(s => new { s.CharacterId, s.Name })
+            .IsUnique();
     }
 }

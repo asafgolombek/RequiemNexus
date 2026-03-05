@@ -4,7 +4,7 @@ using RequiemNexus.Domain;
 
 namespace RequiemNexus.Data.Models;
 
-public class CharacterMerit : IRatedTrait
+public class CharacterSkill : IRatedTrait
 {
     [Key]
     public int Id { get; set; }
@@ -14,19 +14,17 @@ public class CharacterMerit : IRatedTrait
     [ForeignKey(nameof(CharacterId))]
     public virtual Character? Character { get; set; }
 
-    public int MeritId { get; set; }
+    [Required]
+    [MaxLength(50)]
+    public string Name { get; set; } = string.Empty;
 
-    [ForeignKey(nameof(MeritId))]
-    public virtual Merit? Merit { get; set; }
+    public TraitCategory Category { get; set; }
 
     public int Rating { get; set; }
 
     [MaxLength(100)]
-    public string? Specification { get; set; }
+    public string? Specialty { get; set; }
 
-    [NotMapped]
-    public string Name => Merit?.Name ?? string.Empty;
-
-    public int CalculateUpgradeCost(int toRating) => toRating;
+    public int CalculateUpgradeCost(int toRating)
+        => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, costMultiplier: 2);
 }
-

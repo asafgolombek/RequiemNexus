@@ -4,7 +4,7 @@ using RequiemNexus.Domain;
 
 namespace RequiemNexus.Data.Models;
 
-public class CharacterDiscipline : IRatedTrait
+public class CharacterAttribute : IRatedTrait
 {
     [Key]
     public int Id { get; set; }
@@ -14,17 +14,14 @@ public class CharacterDiscipline : IRatedTrait
     [ForeignKey(nameof(CharacterId))]
     public virtual Character? Character { get; set; }
 
-    public int DisciplineId { get; set; }
+    [Required]
+    [MaxLength(50)]
+    public string Name { get; set; } = string.Empty;
 
-    [ForeignKey(nameof(DisciplineId))]
-    public virtual Discipline? Discipline { get; set; }
+    public TraitCategory Category { get; set; }
 
-    public int Rating { get; set; }
-
-    [NotMapped]
-    public string Name => Discipline?.Name ?? string.Empty;
+    public int Rating { get; set; } = 1;
 
     public int CalculateUpgradeCost(int toRating)
-        => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, costMultiplier: 5);
+        => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, costMultiplier: 4);
 }
-

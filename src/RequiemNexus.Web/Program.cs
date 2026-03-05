@@ -45,6 +45,8 @@ builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IAdvancementService, RequiemNexus.Web.Services.AdvancementService>();
+builder.Services.AddSingleton<RequiemNexus.Domain.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
+builder.Services.AddSingleton<RequiemNexus.Domain.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 

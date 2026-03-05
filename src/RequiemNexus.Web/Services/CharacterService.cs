@@ -6,9 +6,10 @@ using RequiemNexus.Web.Contracts;
 
 namespace RequiemNexus.Web.Services;
 
-public class CharacterService(ApplicationDbContext dbContext) : ICharacterService
+public class CharacterService(ApplicationDbContext dbContext, ICharacterCreationRules creationRules) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly ICharacterCreationRules _creationRules = creationRules;
 
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
     {
@@ -24,6 +25,8 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
         return await _dbContext.Characters
             .Include(c => c.Clan)
             .Include(c => c.Campaign)
+            .Include(c => c.Attributes)
+            .Include(c => c.Skills)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
             .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
@@ -43,15 +46,19 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
     public async Task<Character> EmbraceCharacterAsync(Character newCharacter)
     {
         // Delegate derived stat calculations to the pure Domain layer
-        var (maxHealth, currentHealth) = CharacterCreationRules.CalculateInitialHealth(newCharacter.Size, newCharacter.Stamina);
+        int stamina = newCharacter.GetAttributeRating("Stamina");
+        int resolve = newCharacter.GetAttributeRating("Resolve");
+        int composure = newCharacter.GetAttributeRating("Composure");
+
+        var (maxHealth, currentHealth) = _creationRules.CalculateInitialHealth(newCharacter.Size, stamina);
         newCharacter.MaxHealth = maxHealth;
         newCharacter.CurrentHealth = currentHealth;
 
-        var (maxWillpower, currentWillpower) = CharacterCreationRules.CalculateInitialWillpower(newCharacter.Resolve, newCharacter.Composure);
+        var (maxWillpower, currentWillpower) = _creationRules.CalculateInitialWillpower(resolve, composure);
         newCharacter.MaxWillpower = maxWillpower;
         newCharacter.CurrentWillpower = currentWillpower;
 
-        var (bp, maxVitae, currentVitae) = CharacterCreationRules.CalculateInitialBloodPotencyAndVitae();
+        var (bp, maxVitae, currentVitae) = _creationRules.CalculateInitialBloodPotencyAndVitae();
         newCharacter.BloodPotency = bp;
         newCharacter.MaxVitae = maxVitae;
         newCharacter.CurrentVitae = currentVitae;
@@ -70,7 +77,7 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
     public async Task AddBeatAsync(Character character)
     {
         character.Beats++;
-        if (CharacterCreationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
+        if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
         {
             character.Beats = newBeats;
             character.ExperiencePoints += xpGained;
@@ -177,3 +184,4 @@ public class CharacterService(ApplicationDbContext dbContext) : ICharacterServic
         return cd;
     }
 }
+
