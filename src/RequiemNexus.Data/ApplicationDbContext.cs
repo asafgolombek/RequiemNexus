@@ -10,6 +10,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Character> Characters { get; set; } = default!;
     public DbSet<Clan> Clans { get; set; } = default!;
     public DbSet<Campaign> Campaigns { get; set; } = default!;
+    public DbSet<UserSession> UserSessions { get; set; } = default!;
     public DbSet<FidoStoredCredential> FidoStoredCredentials { get; set; } = null!;
     public DbSet<CharacterMerit> CharacterMerits { get; set; } = default!;
     public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; } = default!;
@@ -100,6 +101,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(b => b.Character)
             .WithMany(c => c.Banes)
             .HasForeignKey(b => b.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // UserSession >- ApplicationUser configuration
+        builder.Entity<UserSession>()
+            .HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

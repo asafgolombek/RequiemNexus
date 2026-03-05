@@ -1,0 +1,134 @@
+@page "/Account/Manage/ActiveSessions"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<ActiveSessions> Logger
+
+<PageTitle>Active Sessions</PageTitle>
+
+<h3 class="mb-4 text-theme-primary">Active Sessions</h3>
+
+<p class="mb-4">Here are all the devices and browsers currently logged into your account. You can revoke access from any session you don't recognize.</p>
+
+@if (!string.IsNullOrEmpty(_statusMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @_statusMessage
+    </div>
+}
+
+@if (_sessions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (_sessions.Count == 0)
+{
+    <p>No active sessions found.</p>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var session in _sessions)
+        {
+            var isCurrentSession = session.Id == _currentSessionId;
+            var cardClass = isCurrentSession ? "border-primary bg-primary bg-opacity-10" : "bg-dark bg-opacity-50";
+
+            <div class="card p-3 @cardClass">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 d-flex align-items-center gap-2">
+                            <i class="bi bi-display"></i>
+                            @GetFriendlyDeviceName(session.UserAgent)
+                            @if (isCurrentSession)
+                            {
+                                <span class="badge bg-primary text-white ms-2">Current Session</span>
+                            }
+                        </h5>
+                        
+                        <div class="text-muted small">
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="bi bi-geo-alt me-1"></i> IP Address: @(string.IsNullOrEmpty(session.IpAddress) ? "Unknown" : session.IpAddress)</li>
+                                <li><i class="bi bi-clock me-1"></i> Last Active: @session.LastActive.ToLocalTime().ToString("g")</li>
+                                <li><i class="bi bi-calendar me-1"></i> Created: @session.CreatedAt.ToLocalTime().ToString("g")</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    @if (!isCurrentSession)
+                    {
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RevokeSessionAsync(session.Id)">
+                            <i class="bi bi-x-circle me-1"></i> Revoke
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string? _statusMessage;
+    private List<UserSession>? _sessions;
+    private string? _currentUserId;
+    private string? _currentSessionId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _currentUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        // This relies on Identity adding a SessionId claim, but it doesn't do this by default.
+        // If we want to highlight the current session properly, we either need to identify it by the incoming Request Cookie, 
+        // which Blazor Server might not have direct access to easily inside a component without HttpContextAccessor.
+        // For now, we will identify it via a custom strategy or it will just be un-highlighted.
+        
+        await LoadSessionsAsync();
+    }
+
+    private async Task LoadSessionsAsync()
+    {
+        if (_currentUserId == null) return;
+
+        _sessions = await DbContext.UserSessions
+            .AsNoTracking()
+            .Where(s => s.ApplicationUserId == _currentUserId)
+            .OrderByDescending(s => s.LastActive)
+            .ToListAsync();
+    }
+
+    private async Task RevokeSessionAsync(string sessionId)
+    {
+        var session = await DbContext.UserSessions.FindAsync(sessionId);
+        if (session != null && session.ApplicationUserId == _currentUserId)
+        {
+            DbContext.UserSessions.Remove(session);
+            await DbContext.SaveChangesAsync();
+            
+            Logger.LogInformation("User {UserId} manually revoked session {SessionId}", _currentUserId, sessionId);
+            _statusMessage = "Session successfully revoked.";
+            
+            await LoadSessionsAsync();
+        }
+    }
+
+    private string GetFriendlyDeviceName(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
+        
+        // Very basic parsing for demo. In production, consider utilizing a library like UAParser.
+        if (userAgent.Contains("Windows NT 10.0"))
+            return "Windows PC";
+        if (userAgent.Contains("Mac OS X"))
+            return "Mac";
+        if (userAgent.Contains("iPhone"))
+            return "iPhone";
+        if (userAgent.Contains("Android"))
+            return "Android Device";
+            
+        return "Unknown Browser/Device";
+    }
+}

@@ -46,6 +46,8 @@ builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexu
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IAdvancementService, RequiemNexus.Web.Services.AdvancementService>();
 
+builder.Services.AddScoped<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(options =>
     {
@@ -53,6 +55,14 @@ builder.Services.AddAuthentication(options =>
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
     .AddIdentityCookies();
+
+builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
+    .Configure<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore>((options, store) =>
+    {
+        options.SessionStore = store;
+        options.ExpireTimeSpan = TimeSpan.FromDays(14); // Remember Me duration
+        options.SlidingExpiration = true;
+    });
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
