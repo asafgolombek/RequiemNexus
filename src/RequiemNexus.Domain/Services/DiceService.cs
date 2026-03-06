@@ -33,7 +33,7 @@ public class DiceService : IDiceService
         return result;
     }
 
-    private RollResult RollRegularPool(Random random, int dicePool, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
+    private static RollResult RollRegularPool(Random random, int dicePool, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
     {
         var result = new RollResult();
         int successes = 0;
