@@ -141,9 +141,9 @@ else
 
         sharedKey = FormatKey(unformattedKey!);
         
-        var email = await UserManager.GetEmailAsync(user);
-        // Note: authenticatorUri was removed as it was only used in commented-out UI code.
+        // Note: email lookup and authenticatorUri were removed as they were only used in commented-out UI code.
     }
+
 
 
     private static string FormatKey(string unformattedKey)

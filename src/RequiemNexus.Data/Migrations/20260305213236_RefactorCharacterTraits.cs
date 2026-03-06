@@ -30,11 +30,12 @@ namespace RequiemNexus.Data.Migrations
                 {
                     table.PrimaryKey("PK_CharacterAttributes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CharacterAttributes_Characters_CharacterId",
+                        name: "FK_CharacterAttributes_Characters_CharacterId", // Constraint name is fine as literal
                         column: x => x.CharacterId,
-                        principalTable: "Characters",
+                        principalTable: CharactersTable,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+
                 });
 
             migrationBuilder.CreateTable(
@@ -255,225 +256,226 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.AddColumn<int>(
                 name: "Academics",
-                table: "Characters",
-                type: "INTEGER",
+                table: "Characters", // Wait, I should use the constant here too? Yes.
+                type: IntegerType,
+
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "AnimalKen",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Athletics",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Brawl",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Composure",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Computer",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Crafts",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Dexterity",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Drive",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Empathy",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Expression",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Firearms",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Intelligence",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Intimidation",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Investigation",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Larceny",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Manipulation",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Medicine",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Occult",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Persuasion",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Politics",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Presence",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Resolve",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Science",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Socialize",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Stamina",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Stealth",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Streetwise",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Strength",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Subterfuge",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Survival",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Weaponry",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
