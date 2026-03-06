@@ -97,12 +97,14 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/RequiemNexus.slnx
 
-      - name: Migration Dry-Run
+      - name: Build (Diagnostic)
+        run: dotnet build src/RequiemNexus.slnx --configuration Debug --verbosity diagnostic
 
+      - name: Migration Dry-Run
         run: |
           dotnet ef database update \
           --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web \
-          --connection "Data Source=/tmp/migration-test.db"
+          --connection "Data Source=/tmp/migration-test.db" --verbose
         env:
           ASPNETCORE_ENVIRONMENT: Development
 
