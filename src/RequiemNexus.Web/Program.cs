@@ -32,14 +32,9 @@ builder.Services.AddFido2(options =>
     options.Origins = builder.Configuration.GetSection("Fido2:Origins").Get<HashSet<string>>() ?? new HashSet<string> { "https://localhost:5001", "https://localhost:7154" }; // Defaults for generic dev
     options.TimestampDriftTolerance = 300000;
 });
-/* 
-.AddCachedMetadataService(config =>
-{
-    // config.AddFidoMetadataRepository(); // uncomment if we want FIDO MDS
-});
-*/
 
 // Application Services
+
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, RequiemNexus.Web.Services.CharacterService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus.Web.Services.ClanService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();

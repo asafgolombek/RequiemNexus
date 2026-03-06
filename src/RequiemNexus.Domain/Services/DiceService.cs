@@ -19,7 +19,7 @@ public class DiceService : IDiceService
         return RollRegularPool(random, dicePool, tenAgain, nineAgain, eightAgain, isRote);
     }
 
-    private RollResult RollChanceDie(Random random)
+    private static RollResult RollChanceDie(Random random)
     {
         var result = new RollResult();
         int roll = random.Next(1, 11);
@@ -52,7 +52,8 @@ public class DiceService : IDiceService
         return result;
     }
 
-    private (int AdditionalDice, int NewSuccesses) ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result)
+    private static (int AdditionalDice, int NewSuccesses) ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result)
+
     {
         int additionalDice = 0;
         int newSuccesses = 0;

@@ -51,11 +51,12 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             }
 
             using var client = new SmtpClient(host, port);
+            client.EnableSsl = true;
             if (!string.IsNullOrEmpty(username))
             {
                 client.Credentials = new NetworkCredential(username, password);
-                client.EnableSsl = true;
             }
+
 
             var mailMessage = new MailMessage
             {

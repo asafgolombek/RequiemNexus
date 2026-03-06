@@ -29,7 +29,8 @@ public static class TraitMetadata
     /// Returns the display name for a trait (e.g. "AnimalKen" → "Animal Ken").
     /// </summary>
     public static string GetDisplayName(string propertyName)
-        => System.Text.RegularExpressions.Regex.Replace(propertyName, "(?<=[a-z])(?=[A-Z])", " ");
+        => System.Text.RegularExpressions.Regex.Replace(propertyName, "(?<=[a-z])(?=[A-Z])", " ", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromMilliseconds(250));
+
 
     /// <summary>
     /// Returns true if the given trait name is an Attribute (not a Skill).

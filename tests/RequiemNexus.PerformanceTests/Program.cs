@@ -3,11 +3,14 @@ using NBomber.CSharp;
 
 namespace RequiemNexus.PerformanceTests;
 
-public class Program
+public static class Program
 {
+    private const string DefaultTargetUrl = "http://localhost:5000";
+
     public static void Main(string[] args)
     {
-        var targetUrl = Environment.GetEnvironmentVariable("TARGET_URL") ?? "http://localhost:5000";
+        var targetUrl = Environment.GetEnvironmentVariable("TARGET_URL") ?? DefaultTargetUrl;
+
         var httpClient = new HttpClient();
 
         var scenario = Scenario.Create("home_page_scenario", async context =>
