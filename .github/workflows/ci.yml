@@ -2,73 +2,74 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build-and-test:
-    name: Build & Test
+    name: Build, Test & Analyze
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout the Grimoire
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Essential for SonarCloud blame/history accuracy
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+          cache: true # Built-in caching for efficiency
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'src/RequiemNexus.slnx') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+          java-version: 17
+          distribution: 'zulu'
 
-      - name: Restore dependencies
-        run: dotnet restore src/RequiemNexus.slnx
+      - name: Install Sonar Scanner & EF Tools
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-ef
 
-      - name: Check formatting
-        run: dotnet format src/RequiemNexus.slnx --verify-no-changes --verbosity diagnostic
+      - name: Begin SonarCloud Inquisition
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin /k:"Your_Project_Key" /o:"Your_Org_Name" \
+          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+          /d:sonar.host.url="https://sonarcloud.io" \
+          /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
+          /d:sonar.exclusions="src/RequiemNexus.Data/Migrations/**"
+
+      - name: Restore & Check Formatting
+        run: |
+          dotnet restore src/RequiemNexus.slnx
+          dotnet format src/RequiemNexus.slnx --verify-no-changes
 
       - name: Build (Release)
         run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Release
 
-      - name: Run unit tests (Domain)
+      - name: Run Domain & Logic Tests
         run: >
-          dotnet test tests/RequiemNexus.Domain.Tests/RequiemNexus.Domain.Tests.csproj
+          dotnet test src/RequiemNexus.slnx
           --no-build
           --configuration Release
           --collect:"XPlat Code Coverage"
-          --results-directory ./coverage/domain
-          --settings tests/coverage.runsettings
+          --results-directory ./coverage
           --
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdType=line
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
 
-      - name: Run integration tests (Data)
-        run: >
-          dotnet test tests/RequiemNexus.Data.Tests/RequiemNexus.Data.Tests.csproj
-          --no-build
-          --configuration Release
-          --collect:"XPlat Code Coverage"
-          --results-directory ./coverage/data
-          --settings tests/coverage.runsettings
-          --
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdType=line
-          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ThresholdStat=total
+      - name: End SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v7
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-${{ github.run_number }}
@@ -77,75 +78,39 @@ jobs:
 
   validate-migrations:
     name: Validate DB Migrations
+    needs: build-and-test
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'src/RequiemNexus.slnx') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore dependencies
-        run: dotnet restore src/RequiemNexus.slnx
-
-      - name: Build (Release)
-        run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Release
-
-      - name: Install EF Core tools
+          cache: true
+      - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
-
-      - name: Validate migrations against empty database
+      - name: Migration Dry-Run
         run: |
           dotnet ef database update \
-            --project src/RequiemNexus.Data \
-            --startup-project src/RequiemNexus.Web \
-            --configuration Release \
-            --no-build \
-            --connection "Data Source=/tmp/migration-test.db"
+          --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web \
+          --connection "Data Source=/tmp/migration-test.db"
         env:
           ASPNETCORE_ENVIRONMENT: Development
 
   security-scan:
-    name: Security & Vulnerability Scan
+    name: Vulnerability Scan
+    needs: build-and-test
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'src/RequiemNexus.slnx') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore dependencies
-        run: dotnet restore src/RequiemNexus.slnx
-
-      - name: Scan for vulnerable NuGet packages
+      - name: NuGet Audit
         run: |
           OUTPUT=$(dotnet list src/RequiemNexus.slnx package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
-            echo "❌ Vulnerable packages detected — fix them before merging."
+            echo "❌ Vulnerable packages detected."
             exit 1
           fi
           echo "✅ No vulnerable packages found."
