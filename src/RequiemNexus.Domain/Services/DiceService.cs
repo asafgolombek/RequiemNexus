@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace RequiemNexus.Domain.Services;
 
 public class RollResult

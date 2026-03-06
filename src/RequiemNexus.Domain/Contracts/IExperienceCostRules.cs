@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Contracts;
 
 /// <summary>
 /// Interface for XP cost calculations. Enables DI and testability.

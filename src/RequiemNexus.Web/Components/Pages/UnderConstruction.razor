@@ -1,0 +1,51 @@
+@page "/under-construction"
+@rendermode InteractiveServer
+
+<PageTitle>Under Construction - Requiem Nexus</PageTitle>
+
+<div class="page-container fade-in">
+    <div class="empty-state-rn card-rn text-center">
+        <div class="construction-icon">⛓️💎⛓️</div>
+        <h2 class="text-accent mt-3">Feature Under Construction</h2>
+        <p class="mb-4">Our scribes and architects are hard at work crafting this corner of the Nexus. It is not yet available in this chronicle.</p>
+        
+        <div class="mt-4">
+            <a href="/home" class="btn-primary-rn">
+                Return to Threshold
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .construction-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 0 15px var(--accent-glow));
+        animation: pulseGlow 3s infinite ease-in-out;
+    }
+
+    .empty-state-rn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 50vh;
+        gap: 0.5rem;
+    }
+
+    h2 {
+        font-size: 2.5rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        background: linear-gradient(to bottom, #ffffff, #888888);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    p {
+        max-width: 500px;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+</style>

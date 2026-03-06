@@ -1,3 +1,5 @@
+using RequiemNexus.Domain.Contracts;
+
 namespace RequiemNexus.Domain;
 
 /// <summary>

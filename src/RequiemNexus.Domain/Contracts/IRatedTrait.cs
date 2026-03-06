@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Contracts;
 
 /// <summary>
 /// Shared interface for any character trait that has a numeric rating and an XP upgrade cost.
