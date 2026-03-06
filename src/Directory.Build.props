@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
+
 
 </Project>

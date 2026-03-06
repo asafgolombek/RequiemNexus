@@ -1,7 +1,9 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
+
   <ItemGroup Label="ASP.NET Core / EF Core">
     <PackageVersion Include="Fido2" Version="4.0.0" />
     <PackageVersion Include="Fido2.AspNet" Version="4.0.0" />
