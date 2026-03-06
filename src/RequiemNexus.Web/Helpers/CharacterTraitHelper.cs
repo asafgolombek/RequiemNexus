@@ -1,4 +1,5 @@
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain;
 
 namespace RequiemNexus.Web.Helpers;

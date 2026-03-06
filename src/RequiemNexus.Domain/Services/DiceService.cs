@@ -1,16 +1,11 @@
+using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Models;
+
 namespace RequiemNexus.Domain.Services;
 
-public class RollResult
+public class DiceService : IDiceService
 {
-    public int Successes { get; set; }
-    public bool IsExceptionalSuccess => Successes >= 5;
-    public bool IsDramaticFailure { get; set; }
-    public List<int> DiceRolled { get; set; } = new List<int>();
-}
-
-public static class DiceService
-{
-    public static RollResult Roll(int dicePool, bool tenAgain = true, bool nineAgain = false, bool eightAgain = false, bool isRote = false, int? seed = null)
+    public RollResult Roll(int dicePool, bool tenAgain = true, bool nineAgain = false, bool eightAgain = false, bool isRote = false, int? seed = null)
     {
 #pragma warning disable S2245 // Using pseudorandom number generators (PRNGs) is security-sensitive
         var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
@@ -24,7 +19,7 @@ public static class DiceService
         return RollRegularPool(random, dicePool, tenAgain, nineAgain, eightAgain, isRote);
     }
 
-    private static RollResult RollChanceDie(Random random)
+    private RollResult RollChanceDie(Random random)
     {
         var result = new RollResult();
         int roll = random.Next(1, 11);
@@ -38,7 +33,7 @@ public static class DiceService
         return result;
     }
 
-    private static RollResult RollRegularPool(Random random, int dicePool, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
+    private RollResult RollRegularPool(Random random, int dicePool, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
     {
         var result = new RollResult();
         int successes = 0;
@@ -57,7 +52,7 @@ public static class DiceService
         return result;
     }
 
-    private static (int AdditionalDice, int NewSuccesses) ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result)
+    private (int AdditionalDice, int NewSuccesses) ProcessDiceRollBatch(Random random, int diceToRoll, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote, RollResult result)
     {
         int additionalDice = 0;
         int newSuccesses = 0;

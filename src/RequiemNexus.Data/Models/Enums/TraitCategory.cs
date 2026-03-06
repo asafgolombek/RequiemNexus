@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Data.Models.Enums;
 
 /// <summary>
 /// The three trait categories used in Vampire: The Requiem for Attributes and Skills.
