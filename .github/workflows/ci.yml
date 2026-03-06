@@ -41,11 +41,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"Your_Project_Key" /o:"Your_Org_Name" \
+          dotnet-sonarscanner begin /k:"asafgolombek_RequiemNexus" /o:"asafgolombek" \
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
           /d:sonar.exclusions="src/RequiemNexus.Data/Migrations/**"
+
 
       - name: Restore & Check Formatting
         run: |
