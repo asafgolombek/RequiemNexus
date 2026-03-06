@@ -97,9 +97,9 @@ else
                         <h2>Attributes</h2>
                         <div class="grid-3-col">
                             @foreach (var (label, category) in new[] {
-                                ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
-                                ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
-                                ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                                ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
+                                ("Physical", RequiemNexus.Data.Models.Enums.TraitCategory.Physical),
+                                ("Social", RequiemNexus.Data.Models.Enums.TraitCategory.Social)
                             })
                             {
                                 <div class="stat-col @label.ToLower()">
@@ -119,9 +119,9 @@ else
                         <h2>Skills</h2>
                         <div class="grid-3-col">
                             @foreach (var (label, category) in new[] {
-                                ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
-                                ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
-                                ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                                ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
+                                ("Physical", RequiemNexus.Data.Models.Enums.TraitCategory.Physical),
+                                ("Social", RequiemNexus.Data.Models.Enums.TraitCategory.Social)
                             })
                             {
                                 <div class="stat-col @label.ToLower()">
@@ -351,10 +351,11 @@ else
         }
     }
 
-    private void OpenReference(string traitName)
+    private static void OpenReference(string traitName)
     {
         Console.WriteLine($"Show Reference for: {traitName}");
     }
+
 
     private void OpenRoller(string traitName)
     {

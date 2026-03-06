@@ -73,7 +73,8 @@ else
     private string? _statusMessage;
     private List<UserSession>? _sessions;
     private string? _currentUserId;
-    private string? _currentSessionId = string.Empty;
+    private readonly string _currentSessionId = string.Empty;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -116,7 +117,8 @@ else
         }
     }
 
-    private string GetFriendlyDeviceName(string? userAgent)
+    private static string GetFriendlyDeviceName(string? userAgent)
+
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
         

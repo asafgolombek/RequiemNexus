@@ -3,11 +3,17 @@ using NBomber.CSharp;
 
 namespace RequiemNexus.PerformanceTests;
 
-public class Program
+public static class Program
 {
+#pragma warning disable S1075 // URIs should not be hardcoded. This is a local development default and can be overridden via TARGET_URL env var.
+    private const string DefaultTargetUrl = "http://localhost:5000";
+#pragma warning restore S1075
+
+
     public static void Main(string[] args)
     {
-        var targetUrl = Environment.GetEnvironmentVariable("TARGET_URL") ?? "http://localhost:5000";
+        var targetUrl = Environment.GetEnvironmentVariable("TARGET_URL") ?? DefaultTargetUrl;
+
         var httpClient = new HttpClient();
 
         var scenario = Scenario.Create("home_page_scenario", async context =>

@@ -3,6 +3,7 @@
 @using Microsoft.EntityFrameworkCore
 @using RequiemNexus.Data
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.Pages.CharacterCreation
@@ -108,14 +109,6 @@
 </div>
 
 @code {
-    public enum CreationStep
-    {
-        BasicInformation = 1,
-        Attributes = 2,
-        Skills = 3,
-        MeritsAndDisciplines = 4,
-        ReviewAndEmbrace = 5
-    }
 
     private CreationStep currentStep = CreationStep.BasicInformation;
     private readonly Character newCharacter = new Character();

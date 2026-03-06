@@ -32,21 +32,17 @@ builder.Services.AddFido2(options =>
     options.Origins = builder.Configuration.GetSection("Fido2:Origins").Get<HashSet<string>>() ?? new HashSet<string> { "https://localhost:5001", "https://localhost:7154" }; // Defaults for generic dev
     options.TimestampDriftTolerance = 300000;
 });
-/* 
-.AddCachedMetadataService(config =>
-{
-    // config.AddFidoMetadataRepository(); // uncomment if we want FIDO MDS
-});
-*/
 
 // Application Services
+
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.ICharacterService, RequiemNexus.Web.Services.CharacterService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IClanService, RequiemNexus.Web.Services.ClanService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IMeritService, RequiemNexus.Web.Services.MeritService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IDisciplineService, RequiemNexus.Web.Services.DisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Web.Contracts.IAdvancementService, RequiemNexus.Web.Services.AdvancementService>();
-builder.Services.AddSingleton<RequiemNexus.Domain.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
-builder.Services.AddSingleton<RequiemNexus.Domain.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
+builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
+builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
+builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 

@@ -1,5 +1,6 @@
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
+using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Web.Contracts;
 
 namespace RequiemNexus.Web.Services;

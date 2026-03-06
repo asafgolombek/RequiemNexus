@@ -12,7 +12,7 @@
 @inject IClanService ClanService
 @inject IMeritService MeritService
 @inject IDisciplineService DisciplineService
-@inject RequiemNexus.Domain.IExperienceCostRules ExperienceCostRules
+@inject RequiemNexus.Domain.Contracts.IExperienceCostRules ExperienceCostRules
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -50,9 +50,9 @@ else
                     <h2>Attributes (New Dot x 4 XP)</h2>
                     <div class="grid-3-col">
                         @foreach (var (label, category) in new[] {
-                            ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
-                            ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
-                            ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                            ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
+                            ("Physical", RequiemNexus.Data.Models.Enums.TraitCategory.Physical),
+                            ("Social", RequiemNexus.Data.Models.Enums.TraitCategory.Social)
                         })
                         {
                             <div class="stat-col @label.ToLower()">
@@ -71,9 +71,9 @@ else
                     <h2>Skills (New Dot x 2 XP)</h2>
                     <div class="grid-3-col">
                         @foreach (var (label, category) in new[] {
-                            ("Mental", RequiemNexus.Domain.TraitCategory.Mental),
-                            ("Physical", RequiemNexus.Domain.TraitCategory.Physical),
-                            ("Social", RequiemNexus.Domain.TraitCategory.Social)
+                            ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
+                            ("Physical", RequiemNexus.Data.Models.Enums.TraitCategory.Physical),
+                            ("Social", RequiemNexus.Data.Models.Enums.TraitCategory.Social)
                         })
                         {
                             <div class="stat-col @label.ToLower()">

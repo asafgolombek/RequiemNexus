@@ -1,5 +1,8 @@
+using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 using Xunit;
+
 namespace RequiemNexus.Domain.Tests;
 
 /// <summary>
@@ -9,6 +12,7 @@ namespace RequiemNexus.Domain.Tests;
 /// </summary>
 public class DiceServiceTests
 {
+    private static readonly DiceService _diceService = new();
 
 
     // -----------------------------------------------------------------------
@@ -19,7 +23,7 @@ public class DiceServiceTests
     public void ChanceDie_RollsExactlyOneDie()
     {
         // Any seed — we just care about die count
-        var result = DiceService.Roll(dicePool: 0, seed: 42);
+        var result = _diceService.Roll(dicePool: 0, seed: 42);
 
         Assert.Single(result.DiceRolled);
     }
@@ -27,7 +31,7 @@ public class DiceServiceTests
     [Fact]
     public void ChanceDie_NegativePool_TreatedAsChanceDie()
     {
-        var result = DiceService.Roll(dicePool: -3, seed: 42);
+        var result = _diceService.Roll(dicePool: -3, seed: 42);
 
         Assert.Single(result.DiceRolled);
     }
@@ -37,7 +41,7 @@ public class DiceServiceTests
     {
         // Find a seed that produces 10 on a single d10
         int seed = FindSeedForChanceDieValue(10);
-        var result = DiceService.Roll(dicePool: 0, seed: seed);
+        var result = _diceService.Roll(dicePool: 0, seed: seed);
 
         Assert.Equal(1, result.Successes);
         Assert.False(result.IsDramaticFailure);
@@ -47,7 +51,7 @@ public class DiceServiceTests
     public void ChanceDie_Roll1_IsDramaticFailure()
     {
         int seed = FindSeedForChanceDieValue(1);
-        var result = DiceService.Roll(dicePool: 0, seed: seed);
+        var result = _diceService.Roll(dicePool: 0, seed: seed);
 
         Assert.True(result.IsDramaticFailure);
         Assert.Equal(0, result.Successes);
@@ -60,7 +64,7 @@ public class DiceServiceTests
     public void ChanceDie_RollBetween2And9_NoSuccessNoDramaticFailure(int targetFace)
     {
         int seed = FindSeedForChanceDieValue(targetFace);
-        var result = DiceService.Roll(dicePool: 0, seed: seed);
+        var result = _diceService.Roll(dicePool: 0, seed: seed);
 
         Assert.Equal(0, result.Successes);
         Assert.False(result.IsDramaticFailure);
@@ -77,7 +81,7 @@ public class DiceServiceTests
         // Seed = 200 → produces [8, 8, 8] (verified below).
         int pool = 3;
         int seed = FindSeedWhereAllSucceed(pool);
-        var result = DiceService.Roll(dicePool: pool, tenAgain: false, seed: seed);
+        var result = _diceService.Roll(dicePool: pool, tenAgain: false, seed: seed);
 
         Assert.All(result.DiceRolled.Take(pool), die => Assert.True(die >= 8));
         Assert.Equal(pool, result.Successes);
@@ -88,7 +92,7 @@ public class DiceServiceTests
     {
         int pool = 3;
         int seed = FindSeedWhereAllFail(pool);
-        var result = DiceService.Roll(dicePool: pool, tenAgain: false, seed: seed);
+        var result = _diceService.Roll(dicePool: pool, tenAgain: false, seed: seed);
 
         Assert.Equal(0, result.Successes);
         Assert.False(result.IsDramaticFailure); // dramatic failure only applies to chance die
@@ -103,7 +107,7 @@ public class DiceServiceTests
     {
         // Roll pool=1 with ten-again. Find a seed that gives 10 on the first die.
         int seed = FindSeedForFirstDieValue(10);
-        var result = DiceService.Roll(dicePool: 1, tenAgain: true, seed: seed);
+        var result = _diceService.Roll(dicePool: 1, tenAgain: true, seed: seed);
 
         // At minimum 2 dice must have been rolled (original + 1 exploded)
         Assert.True(result.DiceRolled.Count >= 2);
@@ -115,7 +119,7 @@ public class DiceServiceTests
     {
         // Roll pool=1 with ten-again. Force a non-10, non-9/8 failure.
         int seed = FindSeedForFirstDieValue(5);
-        var result = DiceService.Roll(dicePool: 1, tenAgain: true, seed: seed);
+        var result = _diceService.Roll(dicePool: 1, tenAgain: true, seed: seed);
 
         Assert.Single(result.DiceRolled);
     }
@@ -124,7 +128,7 @@ public class DiceServiceTests
     public void NineAgain_RollOf9_AddsExtraDie()
     {
         int seed = FindSeedForFirstDieValue(9);
-        var result = DiceService.Roll(dicePool: 1, tenAgain: false, nineAgain: true, seed: seed);
+        var result = _diceService.Roll(dicePool: 1, tenAgain: false, nineAgain: true, seed: seed);
 
         Assert.True(result.DiceRolled.Count >= 2);
         Assert.Equal(9, result.DiceRolled[0]);
@@ -134,7 +138,7 @@ public class DiceServiceTests
     public void EightAgain_RollOf8_AddsExtraDie()
     {
         int seed = FindSeedForFirstDieValue(8);
-        var result = DiceService.Roll(dicePool: 1, tenAgain: false, eightAgain: true, seed: seed);
+        var result = _diceService.Roll(dicePool: 1, tenAgain: false, eightAgain: true, seed: seed);
 
         Assert.True(result.DiceRolled.Count >= 2);
         Assert.Equal(8, result.DiceRolled[0]);
@@ -150,7 +154,7 @@ public class DiceServiceTests
         // Pool=1, rote=true, force first die to fail (< 8)
         // The DiceRolled list will contain at least 2 entries (original + reroll)
         int seed = FindSeedForFirstDieValue(3); // 3 is a failure
-        var result = DiceService.Roll(dicePool: 1, tenAgain: false, isRote: true, seed: seed);
+        var result = _diceService.Roll(dicePool: 1, tenAgain: false, isRote: true, seed: seed);
 
         Assert.True(result.DiceRolled.Count >= 2, "Rote should add a reroll for the failed die");
     }
@@ -160,7 +164,7 @@ public class DiceServiceTests
     {
         int seed = FindSeedForFirstDieValue(9);
         // tenAgain=false so no explosion; just check no extra reroll
-        var result = DiceService.Roll(dicePool: 1, tenAgain: false, isRote: true, seed: seed);
+        var result = _diceService.Roll(dicePool: 1, tenAgain: false, isRote: true, seed: seed);
 
         // Success + no explosion → exactly 1 die
         Assert.Single(result.DiceRolled);
@@ -176,7 +180,7 @@ public class DiceServiceTests
         // Roll a large pool with a seed that guarantees ≥ 5 successes
         int pool = 8;
         int seed = FindSeedForAtLeastNSuccesses(pool, requiredSuccesses: 5);
-        var result = DiceService.Roll(dicePool: pool, tenAgain: false, seed: seed);
+        var result = _diceService.Roll(dicePool: pool, tenAgain: false, seed: seed);
 
         Assert.True(result.Successes >= 5);
         Assert.True(result.IsExceptionalSuccess);
@@ -254,7 +258,7 @@ public class DiceServiceTests
     {
         for (int s = 0; s < 100_000; s++)
         {
-            var result = DiceService.Roll(dicePool: pool, tenAgain: false, seed: s);
+            var result = _diceService.Roll(dicePool: pool, tenAgain: false, seed: s);
             if (result.Successes >= requiredSuccesses) return s;
         }
         throw new InvalidOperationException($"Could not find seed with ≥{requiredSuccesses} successes from pool {pool}");

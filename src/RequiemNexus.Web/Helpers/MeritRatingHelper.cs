@@ -77,7 +77,8 @@ public static class MeritRatingHelper
     public static int GetMinRating(string validRatings)
     {
         var ratings = ParseValidRatings(validRatings);
-        return ratings.Count > 0 ? ratings.First() : 1;
+        return ratings.Count > 0 ? ratings[0] : 1;
+
     }
 
     /// <summary>
@@ -86,7 +87,8 @@ public static class MeritRatingHelper
     public static int GetMaxRating(string validRatings)
     {
         var ratings = ParseValidRatings(validRatings);
-        return ratings.Count > 0 ? ratings.Last() : 5;
+        return ratings.Count > 0 ? ratings[ratings.Count - 1] : 5;
+
     }
 
     private static int CountBullets(string s)

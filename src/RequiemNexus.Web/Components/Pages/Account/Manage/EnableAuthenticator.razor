@@ -71,8 +71,8 @@ else
 @code {
     private ApplicationUser? user;
     private string? sharedKey;
-    private string? authenticatorUri;
     private string? errorMessage;
+
     private bool isSubmitting;
 
     [SupplyParameterFromForm]
@@ -141,16 +141,13 @@ else
 
         sharedKey = FormatKey(unformattedKey!);
         
-        var email = await UserManager.GetEmailAsync(user);
-        authenticatorUri = string.Format(
-            CultureInfo.InvariantCulture,
-            "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6",
-            UrlEncoder.Default.Encode("Requiem Nexus"),
-            UrlEncoder.Default.Encode(email!),
-            unformattedKey);
+        // Note: email lookup and authenticatorUri were removed as they were only used in commented-out UI code.
     }
 
-    private string FormatKey(string unformattedKey)
+
+
+    private static string FormatKey(string unformattedKey)
+
     {
         var result = new StringBuilder();
         int currentPosition = 0;

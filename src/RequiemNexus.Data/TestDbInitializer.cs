@@ -10,7 +10,10 @@ namespace RequiemNexus.Data;
 public static class TestDbInitializer
 {
     public const string TestUserEmail = "e2etest@requiemnexus.local";
+#pragma warning disable S2068 // "password" detected here, but this is a deterministic test-only credential
     public const string TestUserPassword = "test"; // Used in E2E tests
+#pragma warning restore S2068
+
 
     public static async Task InitializeAsync(ApplicationDbContext context)
     {

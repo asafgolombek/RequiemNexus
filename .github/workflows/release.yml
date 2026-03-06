@@ -7,20 +7,41 @@ on:
 
 permissions:
   contents: write
+  packages: write # Necessary if pushing to GitHub Container Registry in Phase 5
 
 jobs:
-  release:
-    name: Create GitHub Release
+  validate-and-release:
+    name: Validate, Build & Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout the Grimoire
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+
+      - name: Restore & Build (Release)
+        run: |
+          dotnet restore src/RequiemNexus.slnx
+          dotnet build src/RequiemNexus.slnx --configuration Release --no-restore
+
+      # 🧪 Last Rite: Ensure tests pass before the version is immortalized
+      - name: Run Critical Tests
+        run: dotnet test src/RequiemNexus.slnx --configuration Release --no-build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2 # Updated to v2
         with:
           generate_release_notes: true
+          # Artifacts can be added here once Phase 5 containerization is ready
+          # files: |
+          #   artifacts/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

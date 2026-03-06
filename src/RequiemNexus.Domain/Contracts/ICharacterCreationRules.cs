@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Contracts;
 
 /// <summary>
 /// Interface for character creation rule calculations. Enables DI and testability.

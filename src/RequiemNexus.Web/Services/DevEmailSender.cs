@@ -3,35 +3,59 @@ using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Web.Services;
 
-public class DevEmailSender(ILogger<DevEmailSender> logger) : IEmailSender<ApplicationUser>
+public partial class DevEmailSender : IEmailSender<ApplicationUser>
 {
+    private readonly ILogger<DevEmailSender> _logger;
+
+    public DevEmailSender(ILogger<DevEmailSender> logger)
+    {
+        _logger = logger;
+    }
+
     public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
     {
-        logger.LogInformation("--- DEV EMAIL SENDER ---");
-        logger.LogInformation("To: {Email}", email);
-        logger.LogInformation("Subject: Confirm your email");
-        logger.LogInformation("Link: {ConfirmationLink}", confirmationLink);
-        logger.LogInformation("------------------------");
+        LogConfirmationLink(_logger, email, confirmationLink);
         return Task.CompletedTask;
     }
+
 
     public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)
     {
-        logger.LogInformation("--- DEV EMAIL SENDER ---");
-        logger.LogInformation("To: {Email}", email);
-        logger.LogInformation("Subject: Reset your password");
-        logger.LogInformation("Code: {ResetCode}", resetCode);
-        logger.LogInformation("------------------------");
+        LogPasswordResetCode(_logger, email, resetCode);
         return Task.CompletedTask;
     }
 
+
     public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
     {
-        logger.LogInformation("--- DEV EMAIL SENDER ---");
-        logger.LogInformation("To: {Email}", email);
-        logger.LogInformation("Subject: Reset your password");
-        logger.LogInformation("Link: {ResetLink}", resetLink);
-        logger.LogInformation("------------------------");
+        LogPasswordResetLink(_logger, email, resetLink);
         return Task.CompletedTask;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = """
+        --- DEV EMAIL SENDER ---
+        To: {Email}
+        Subject: Confirm your email
+        Link: {ConfirmationLink}
+        ------------------------
+        """)]
+    static partial void LogConfirmationLink(ILogger logger, string email, string confirmationLink);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = """
+        --- DEV EMAIL SENDER ---
+        To: {Email}
+        Subject: Reset your password
+        Code: {ResetCode}
+        ------------------------
+        """)]
+    static partial void LogPasswordResetCode(ILogger logger, string email, string resetCode);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = """
+        --- DEV EMAIL SENDER ---
+        To: {Email}
+        Subject: Reset your password
+        Link: {ResetLink}
+        ------------------------
+        """)]
+    static partial void LogPasswordResetLink(ILogger logger, string email, string resetLink);
 }

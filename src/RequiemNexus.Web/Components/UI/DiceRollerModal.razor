@@ -1,4 +1,7 @@
 @using RequiemNexus.Domain.Services
+@using RequiemNexus.Domain.Contracts
+@using RequiemNexus.Domain.Models
+@inject IDiceService DiceService
 
 @if (IsVisible)
 {
@@ -22,17 +25,19 @@
                         <select @bind="AssociatedTraitName" class="roller-input" style="width: 100%; padding: 8px;">
                             <option value="">-- None --</option>
                             <optgroup label="Attributes">
-                                @foreach (var attr in Attributes)
+                                @foreach (var attr in Attributes.Where(a => a != TraitName))
                                 {
-                                    if (attr != TraitName) { <option value="@attr">@attr</option> }
+                                    <option value="@attr">@attr</option>
                                 }
                             </optgroup>
+
                             <optgroup label="Skills">
-                                @foreach (var skill in Skills)
+                                @foreach (var skill in Skills.Where(s => s != TraitName))
                                 {
-                                    if (skill != TraitName) { <option value="@skill">@skill</option> }
+                                    <option value="@skill">@skill</option>
                                 }
                             </optgroup>
+
                         </select>
                     </div>
                 }
