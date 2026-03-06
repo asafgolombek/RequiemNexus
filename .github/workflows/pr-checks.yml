@@ -91,7 +91,12 @@ jobs:
 
       - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
       - name: Migration Dry-Run
+
         run: |
           dotnet ef database update \
           --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web \
@@ -111,7 +116,11 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.lock.json'
 
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
       - name: NuGet Audit
+
         run: |
           OUTPUT=$(dotnet list src/RequiemNexus.slnx package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"

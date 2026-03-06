@@ -7,19 +7,24 @@ namespace RequiemNexus.Data.Migrations
     /// <inheritdoc />
     public partial class RefactorCharacterTraits : Migration
     {
+        private const string IntegerType = "INTEGER";
+        private const string CharactersTable = "Characters";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
+
         {
             migrationBuilder.CreateTable(
                 name: "CharacterAttributes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: IntegerType, nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CharacterId = table.Column<int>(type: IntegerType, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Category = table.Column<int>(type: "INTEGER", nullable: false),
-                    Rating = table.Column<int>(type: "INTEGER", nullable: false)
+                    Category = table.Column<int>(type: IntegerType, nullable: false),
+                    Rating = table.Column<int>(type: IntegerType, nullable: false)
+
                 },
                 constraints: table =>
                 {
@@ -36,12 +41,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterSkills",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: IntegerType, nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CharacterId = table.Column<int>(type: IntegerType, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Category = table.Column<int>(type: "INTEGER", nullable: false),
-                    Rating = table.Column<int>(type: "INTEGER", nullable: false),
+                    Category = table.Column<int>(type: IntegerType, nullable: false),
+                    Rating = table.Column<int>(type: IntegerType, nullable: false)
+,
                     Specialty = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
@@ -50,179 +56,180 @@ namespace RequiemNexus.Data.Migrations
                     table.ForeignKey(
                         name: "FK_CharacterSkills_Characters_CharacterId",
                         column: x => x.CharacterId,
-                        principalTable: "Characters",
+                        principalTable: CharactersTable,
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             // DATA MIGRATION: ATTRIBUTES
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Intelligence', 0, Intelligence FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Wits', 0, Wits FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Resolve', 0, Resolve FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Strength', 1, Strength FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Dexterity', 1, Dexterity FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Stamina', 1, Stamina FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Presence', 2, Presence FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Manipulation', 2, Manipulation FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Composure', 2, Composure FROM Characters;");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Intelligence', 0, Intelligence FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Wits', 0, Wits FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Resolve', 0, Resolve FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Strength', 1, Strength FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Dexterity', 1, Dexterity FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Stamina', 1, Stamina FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Presence', 2, Presence FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Manipulation', 2, Manipulation FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterAttributes (CharacterId, Name, Category, Rating) SELECT Id, 'Composure', 2, Composure FROM {CharactersTable};");
 
             // DATA MIGRATION: SKILLS
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Academics', 0, Academics FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Computer', 0, Computer FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Crafts', 0, Crafts FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Investigation', 0, Investigation FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Medicine', 0, Medicine FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Occult', 0, Occult FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Politics', 0, Politics FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Science', 0, Science FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Athletics', 1, Athletics FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Brawl', 1, Brawl FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Drive', 1, Drive FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Firearms', 1, Firearms FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Larceny', 1, Larceny FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Stealth', 1, Stealth FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Survival', 1, Survival FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Weaponry', 1, Weaponry FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'AnimalKen', 2, AnimalKen FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Empathy', 2, Empathy FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Expression', 2, Expression FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Intimidation', 2, Intimidation FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Persuasion', 2, Persuasion FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Socialize', 2, Socialize FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Streetwise', 2, Streetwise FROM Characters;");
-            migrationBuilder.Sql("INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Subterfuge', 2, Subterfuge FROM Characters;");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Academics', 0, Academics FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Computer', 0, Computer FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Crafts', 0, Crafts FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Investigation', 0, Investigation FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Medicine', 0, Medicine FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Occult', 0, Occult FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Politics', 0, Politics FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Science', 0, Science FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Athletics', 1, Athletics FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Brawl', 1, Brawl FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Drive', 1, Drive FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Firearms', 1, Firearms FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Larceny', 1, Larceny FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Stealth', 1, Stealth FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Survival', 1, Survival FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Weaponry', 1, Weaponry FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'AnimalKen', 2, AnimalKen FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Empathy', 2, Empathy FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Expression', 2, Expression FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Intimidation', 2, Intimidation FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Persuasion', 2, Persuasion FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Socialize', 2, Socialize FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Streetwise', 2, Streetwise FROM {CharactersTable};");
+            migrationBuilder.Sql($"INSERT INTO CharacterSkills (CharacterId, Name, Category, Rating) SELECT Id, 'Subterfuge', 2, Subterfuge FROM {CharactersTable};");
 
             migrationBuilder.DropColumn(
                 name: "Academics",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "AnimalKen",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Athletics",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Brawl",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Composure",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Computer",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Crafts",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Dexterity",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Drive",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Empathy",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Expression",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Firearms",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Intelligence",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Intimidation",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Investigation",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Larceny",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Manipulation",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Medicine",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Occult",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Persuasion",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Politics",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Presence",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Resolve",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Science",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Socialize",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Stamina",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Stealth",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Streetwise",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Strength",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Subterfuge",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Survival",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Weaponry",
-                table: "Characters");
+                table: CharactersTable);
 
             migrationBuilder.DropColumn(
                 name: "Wits",
-                table: "Characters");
+                table: CharactersTable);
+
 
             migrationBuilder.CreateIndex(
                 name: "IX_CharacterAttributes_CharacterId_Name",
@@ -472,10 +479,11 @@ namespace RequiemNexus.Data.Migrations
 
             migrationBuilder.AddColumn<int>(
                 name: "Wits",
-                table: "Characters",
-                type: "INTEGER",
+                table: CharactersTable,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
         }
     }
 }
+

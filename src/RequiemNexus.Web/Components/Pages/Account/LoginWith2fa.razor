@@ -66,7 +66,7 @@
     private bool isSubmitting;
 
     [SupplyParameterFromForm]
-    public LoginWith2faModel Input { get; set; } = default!;
+    public LoginWith2FaModel Input { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
@@ -126,8 +126,9 @@
         isSubmitting = false;
     }
 
-    public class LoginWith2faModel
+    public class LoginWith2FaModel
     {
+
         [Required]
         [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Text)]
