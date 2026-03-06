@@ -4,10 +4,6 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: read
-  pull-requests: read
-
 jobs:
   pr-checks:
     name: Build, Test & Analyze
@@ -17,13 +13,15 @@ jobs:
       - name: Checkout the Grimoire
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Essential for SonarCloud code history analysis
+          fetch-depth: 0 # Essential for SonarCloud and deep analysis
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          cache: true # Enforces Antigravity efficiency via NuGet caching
+          cache: true # Uses built-in v4 caching for NuGet efficiency
+          cache-dependency-path: '**/packages.lock.json'
+
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -31,7 +29,7 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - name: Install Tools
+      - name: Install Sonar Scanner & EF Tools
         run: |
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global dotnet-ef
@@ -47,12 +45,13 @@ jobs:
           /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
           /d:sonar.exclusions="src/RequiemNexus.Data/Migrations/**"
 
+
       - name: Restore & Check Formatting
         run: |
           dotnet restore src/RequiemNexus.slnx
           dotnet format src/RequiemNexus.slnx --verify-no-changes
 
-      - name: Build (Debug Verification)
+      - name: Build (Debug)
         run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Debug
 
       - name: Run Tests with Coverage
@@ -66,13 +65,12 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
 
       - name: End SonarCloud Analysis
-        if: always()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # Updated to v4 for current standards
         if: always()
         with:
           name: coverage-pr-${{ github.run_number }}
@@ -81,7 +79,7 @@ jobs:
 
   validate-migrations:
     name: Validate DB Migrations
-    needs: pr-checks # Only runs if the core build passes
+    needs: pr-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -89,16 +87,20 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
       - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
       - name: Migration Dry-Run
+
         run: |
-          # 🩸 Explicit build to catch DI failures before the migration rite
-          dotnet build src/RequiemNexus.slnx --configuration Debug
           dotnet ef database update \
-            --project src/RequiemNexus.Data \
-            --startup-project src/RequiemNexus.Web \
-            --connection "Data Source=/tmp/migration-test.db"
+          --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web \
+          --connection "Data Source=/tmp/migration-test.db"
         env:
           ASPNETCORE_ENVIRONMENT: Development
 
@@ -111,11 +113,18 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore dependencies
+        run: dotnet restore src/RequiemNexus.slnx
+
       - name: NuGet Audit
+
         run: |
           OUTPUT=$(dotnet list src/RequiemNexus.slnx package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
-            echo "❌ Vulnerable packages detected. Fix before merging."
+            echo "❌ Vulnerable packages detected."
             exit 1
           fi
