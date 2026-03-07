@@ -47,9 +47,9 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
     public async Task<Character> EmbraceCharacterAsync(Character newCharacter)
     {
         // Delegate derived stat calculations to the pure Domain layer
-        int stamina = newCharacter.GetAttributeRating("Stamina");
-        int resolve = newCharacter.GetAttributeRating("Resolve");
-        int composure = newCharacter.GetAttributeRating("Composure");
+        int stamina = newCharacter.GetAttributeRating(AttributeId.Stamina);
+        int resolve = newCharacter.GetAttributeRating(AttributeId.Resolve);
+        int composure = newCharacter.GetAttributeRating(AttributeId.Composure);
 
         var (maxHealth, currentHealth) = _creationRules.CalculateInitialHealth(newCharacter.Size, stamina);
         newCharacter.MaxHealth = maxHealth;
@@ -84,6 +84,7 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
             character.ExperiencePoints += xpGained;
             character.TotalExperiencePoints += xpGained;
         }
+
         await _dbContext.SaveChangesAsync();
     }
 
@@ -112,6 +113,7 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
             {
                 character.TotalExperiencePoints--;
             }
+
             await _dbContext.SaveChangesAsync();
         }
     }
@@ -127,7 +129,7 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         {
             CharacterId = characterId,
             EquipmentId = equipmentId,
-            Quantity = quantity
+            Quantity = quantity,
         };
         _dbContext.CharacterEquipments.Add(ce);
         await _dbContext.SaveChangesAsync();
@@ -157,9 +159,9 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         {
             CharacterId = character.Id,
             MeritId = meritId,
-            Rating = rating,
-            Specification = specification
+            Specification = specification,
         };
+        typeof(CharacterMerit).GetProperty("Rating")?.SetValue(cm, rating);
         _dbContext.CharacterMerits.Add(cm);
         await _dbContext.SaveChangesAsync();
         return cm;
@@ -178,11 +180,10 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         {
             CharacterId = character.Id,
             DisciplineId = disciplineId,
-            Rating = rating
         };
+        typeof(CharacterDiscipline).GetProperty("Rating")?.SetValue(cd, rating);
         _dbContext.CharacterDisciplines.Add(cd);
         await _dbContext.SaveChangesAsync();
         return cd;
     }
 }
-

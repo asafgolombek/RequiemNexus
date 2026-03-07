@@ -45,8 +45,8 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
 
             if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(portString) || !int.TryParse(portString, out int port))
             {
-                LogSmtpConfigMissing(_logger);
-                LogDevEmailSenderFallback(_logger, to, subject, htmlMessage);
+                LogSmtpConfigMissing();
+                LogDevEmailSenderFallback(to, subject, htmlMessage);
                 return;
             }
 
@@ -56,7 +56,6 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
             {
                 client.Credentials = new NetworkCredential(username, password);
             }
-
 
             var mailMessage = new MailMessage
             {
@@ -68,24 +67,25 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
             mailMessage.To.Add(to);
 
             await client.SendMailAsync(mailMessage);
-            LogEmailSent(_logger, to, subject);
+            LogEmailSent(to, subject);
         }
         catch (Exception ex)
         {
-            LogEmailSendError(_logger, ex, to);
+            LogEmailSendError(ex, to);
+
             // We don't throw here to avoid disrupting the user registration flow in case of SMTP misconfiguration
         }
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "SMTP configuration is missing or invalid. Falling back to log-only email sender.")]
-    static partial void LogSmtpConfigMissing(ILogger logger);
+    partial void LogSmtpConfigMissing();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "--- DEV EMAIL SENDER ---\nTo: {Email}\nSubject: {Subject}\nBody: {Body}\n------------------------")]
-    static partial void LogDevEmailSenderFallback(ILogger logger, string email, string subject, string body);
+    partial void LogDevEmailSenderFallback(string email, string subject, string body);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Email successfully sent to {Email} with subject {Subject}")]
-    static partial void LogEmailSent(ILogger logger, string email, string subject);
+    partial void LogEmailSent(string email, string subject);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "An error occurred while sending email to {Email}")]
-    static partial void LogEmailSendError(ILogger logger, Exception ex, string email);
+    partial void LogEmailSendError(Exception ex, string email);
 }

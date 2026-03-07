@@ -28,9 +28,9 @@
                     <div class="attribute-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                         <span>@TraitMetadata.GetDisplayName(attr)</span>
                         <div>
-                            <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(attr, -1)' disabled="@(val <= 1)">-</button>
+                            <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(attr.ToString(), -1)' disabled="@(val <= 1)">-</button>
                             <span style="display: inline-block; width: 20px; text-align: center;">@val</span>
-                            <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(attr, 1)' disabled="@(val >= 5 || TotalAttributePointsSpent >= 12 || spent >= limit)">+</button>
+                            <button class="nav-btn" style="padding: 2px 8px;" @onclick='() => AdjustAndNotify(attr.ToString(), 1)' disabled="@(val >= 5 || TotalAttributePointsSpent >= 12 || spent >= limit)">+</button>
                         </div>
                     </div>
                 }

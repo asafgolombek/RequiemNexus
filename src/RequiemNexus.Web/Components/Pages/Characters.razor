@@ -19,11 +19,11 @@
         <a href="/character/create" class="btn-primary-rn btn-create">Create New Character</a>
     </div>
 
-    @if (characters == null)
+    @if (_characters == null)
     {
         <p><em>Loading...</em></p>
     }
-    else if (!characters.Any())
+    else if (!_characters.Any())
     {
         <div class="empty-state-rn">
             <p>You haven't embraced any characters yet.</p>
@@ -34,7 +34,7 @@
     {
         <div class="character-grid">
             @{ int index = 1; }
-            @foreach (var character in characters)
+            @foreach (var character in _characters)
             {
                 <div class="character-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
                     <div class="card-top">
@@ -110,21 +110,21 @@
 </div>
 
 @code {
-    private List<Character>? characters;
-    private string? currentUserId;
+    private List<Character>? _characters;
+    private string? _currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!string.IsNullOrEmpty(currentUserId))
+        if (!string.IsNullOrEmpty(_currentUserId))
         {
-            characters = await CharacterService.GetCharactersByUserIdAsync(currentUserId);
+            _characters = await CharacterService.GetCharactersByUserIdAsync(_currentUserId);
         }
         else
         {
-            characters = new List<Character>();
+            _characters = new List<Character>();
         }
     }
 
@@ -134,7 +134,7 @@
         if (confirmed)
         {
             await CharacterService.DeleteCharacterAsync(character.Id);
-            characters?.Remove(character);
+            _characters?.Remove(character);
         }
     }
 }

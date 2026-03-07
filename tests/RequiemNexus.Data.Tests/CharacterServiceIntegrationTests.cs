@@ -36,11 +36,17 @@ public class CharacterServiceIntegrationTests
         CharacterTraitHelper.SeedSkills(character);
 
         // Set baseline attributes for tests
-        character.Attributes.First(a => a.Name == "Stamina").Rating = 2;
-        character.Attributes.First(a => a.Name == "Resolve").Rating = 2;
-        character.Attributes.First(a => a.Name == "Composure").Rating = 2;
+        SetRating(character, "Stamina", 2);
+        SetRating(character, "Resolve", 2);
+        SetRating(character, "Composure", 2);
 
         return character;
+    }
+
+    private static void SetRating(Character character, string name, int rating)
+    {
+        var trait = character.Attributes.First(a => a.Name == name);
+        typeof(CharacterAttribute).GetProperty("Rating")?.SetValue(trait, rating);
     }
 
     // -----------------------------------------------------------------------
@@ -54,7 +60,7 @@ public class CharacterServiceIntegrationTests
         var svc = new CharacterService(ctx, _creationRules);
         var character = BuildNewCharacter();
         character.Size = 5;
-        character.Attributes.First(a => a.Name == "Stamina").Rating = 2;
+        SetRating(character, "Stamina", 2);
 
         var result = await svc.EmbraceCharacterAsync(character);
 
@@ -69,8 +75,8 @@ public class CharacterServiceIntegrationTests
         using var ctx = CreateContext(nameof(EmbraceCharacter_SetsMaxWillpowerCorrectly));
         var svc = new CharacterService(ctx, _creationRules);
         var character = BuildNewCharacter();
-        character.Attributes.First(a => a.Name == "Resolve").Rating = 2;
-        character.Attributes.First(a => a.Name == "Composure").Rating = 3;
+        SetRating(character, "Resolve", 2);
+        SetRating(character, "Composure", 3);
 
         var result = await svc.EmbraceCharacterAsync(character);
 

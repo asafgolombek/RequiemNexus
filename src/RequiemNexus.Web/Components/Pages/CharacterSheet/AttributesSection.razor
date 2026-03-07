@@ -10,12 +10,12 @@
             <h3>Mental</h3>
             @foreach (var attr in TraitMetadata.MentalAttributes)
             {
-                var name = attr;
-                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, name)"
-                          ValueChanged="@((int val) => HandleValueChanged(name, val))"
-                          Label="@TraitMetadata.GetDisplayName(name)"
-                          OnLabelClick="OnLabelClick"
-                          OnRollClick="OnRollClick" 
+                var attrId = attr;
+                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, attrId)"
+                          ValueChanged="@((int val) => HandleValueChanged(attrId.ToString(), val))"
+                          Label="@TraitMetadata.GetDisplayName(attrId)"
+                          OnLabelClick="@((string label) => OnLabelClick.InvokeAsync(attrId.ToString()))"
+                          OnRollClick="@((string label) => OnRollClick.InvokeAsync(attrId.ToString()))" 
                           ShowRollButton="@ShowRollButton" />
             }
         </div>
@@ -23,12 +23,12 @@
             <h3>Physical</h3>
             @foreach (var attr in TraitMetadata.PhysicalAttributes)
             {
-                var name = attr;
-                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, name)"
-                          ValueChanged="@((int val) => HandleValueChanged(name, val))"
-                          Label="@TraitMetadata.GetDisplayName(name)"
-                          OnLabelClick="OnLabelClick"
-                          OnRollClick="OnRollClick"
+                var attrId = attr;
+                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, attrId)"
+                          ValueChanged="@((int val) => HandleValueChanged(attrId.ToString(), val))"
+                          Label="@TraitMetadata.GetDisplayName(attrId)"
+                          OnLabelClick="@((string label) => OnLabelClick.InvokeAsync(attrId.ToString()))"
+                          OnRollClick="@((string label) => OnRollClick.InvokeAsync(attrId.ToString()))"
                           ShowRollButton="@ShowRollButton" />
             }
         </div>
@@ -36,12 +36,12 @@
             <h3>Social</h3>
             @foreach (var attr in TraitMetadata.SocialAttributes)
             {
-                var name = attr;
-                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, name)"
-                          ValueChanged="@((int val) => HandleValueChanged(name, val))"
-                          Label="@TraitMetadata.GetDisplayName(name)"
-                          OnLabelClick="OnLabelClick"
-                          OnRollClick="OnRollClick"
+                var attrId = attr;
+                <DotScale Value="@CharacterTraitHelper.GetTraitValue(Character, attrId)"
+                          ValueChanged="@((int val) => HandleValueChanged(attrId.ToString(), val))"
+                          Label="@TraitMetadata.GetDisplayName(attrId)"
+                          OnLabelClick="@((string label) => OnLabelClick.InvokeAsync(attrId.ToString()))"
+                          OnRollClick="@((string label) => OnRollClick.InvokeAsync(attrId.ToString()))"
                           ShowRollButton="@ShowRollButton" />
             }
         </div>

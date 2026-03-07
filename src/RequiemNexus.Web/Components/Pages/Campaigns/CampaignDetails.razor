@@ -8,16 +8,16 @@
 <PageTitle>Campaign Details - Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
-    @if (campaign == null)
+    @if (_campaign == null)
     {
         <p><em>Loading or campaign not found...</em></p>
     }
     else
     {
         <div class="campaign-header">
-            <h2>@campaign.Name</h2>
+            <h2>@_campaign.Name</h2>
             <div class="storyteller-badge">
-                <span>👑 Story Teller:</span> @(campaign.StoryTeller?.UserName ?? campaign.StoryTeller?.Email ?? "Unknown")
+                <span>👑 Story Teller:</span> @(_campaign.StoryTeller?.UserName ?? _campaign.StoryTeller?.Email ?? "Unknown")
             </div>
         </div>
 
@@ -27,23 +27,23 @@
                 <button class="btn-primary-rn" @onclick="ToggleAddCharacter">Add Character</button>
             </div>
 
-            @if (showAddCharacter)
+            @if (_showAddCharacter)
             {
                 <div class="add-character-panel">
                     <h4>Add Character to Campaign</h4>
-                    <EditForm Model="addModel" OnValidSubmit="AddCharacterSubmit">
+                    <EditForm Model="_addModel" OnValidSubmit="AddCharacterSubmit">
                         <div class="add-character-row">
                             <div class="add-character-select">
-                                <InputSelect @bind-Value="addModel.CharacterId" class="form-control">
+                                <InputSelect @bind-Value="_addModel.CharacterId" class="form-control">
                                     <option value="0">-- Select an available character --</option>
-                                    @foreach (var c in availableCharacters)
+                                    @foreach (var c in _availableCharacters)
                                     {
                                         <option value="@c.Id">@c.Name (@c.User?.Email)</option>
                                     }
                                 </InputSelect>
                             </div>
                             <div class="add-character-actions">
-                                <button type="submit" class="btn-primary-rn" disabled="@(addModel.CharacterId == 0)">Add</button>
+                                <button type="submit" class="btn-primary-rn" disabled="@(_addModel.CharacterId == 0)">Add</button>
                                 <button type="button" class="btn-ghost" @onclick="ToggleAddCharacter">Cancel</button>
                             </div>
                         </div>
@@ -51,7 +51,7 @@
                 </div>
             }
 
-            @if (!campaign.Characters.Any())
+            @if (!_campaign.Characters.Any())
             {
                 <div class="empty-state-rn">
                     <p>No characters have joined this saga yet.</p>
@@ -60,7 +60,7 @@
             else
             {
                 <div class="character-grid">
-                    @foreach (var character in campaign.Characters)
+                    @foreach (var character in _campaign.Characters)
                     {
                         <div class="character-card card-rn">
                             <h4>@character.Name</h4>
@@ -85,11 +85,11 @@
     [Parameter]
     public int Id { get; set; }
 
-    private Campaign? campaign;
-    private List<Character> availableCharacters = new();
-    private bool showAddCharacter = false;
+    private Campaign? _campaign;
+    private List<Character> _availableCharacters = new();
+    private bool _showAddCharacter = false;
 
-    private readonly AddCharacterModel addModel = new();
+    private readonly AddCharacterModel _addModel = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,15 +98,15 @@
 
     private async Task LoadData()
     {
-        campaign = await DbContext.Campaigns
+        _campaign = await DbContext.Campaigns
             .Include(c => c.StoryTeller)
             .Include(c => c.Characters)
             .ThenInclude(ch => ch.User)
             .FirstOrDefaultAsync(c => c.Id == Id);
 
-        if (campaign != null)
+        if (_campaign != null)
         {
-            availableCharacters = await DbContext.Characters
+            _availableCharacters = await DbContext.Characters
                 .Include(c => c.User)
                 .Where(c => c.CampaignId == null)
                 .ToListAsync();
@@ -115,22 +115,22 @@
 
     private void ToggleAddCharacter()
     {
-        showAddCharacter = !showAddCharacter;
-        addModel.CharacterId = 0;
+        _showAddCharacter = !_showAddCharacter;
+        _addModel.CharacterId = 0;
     }
 
     private async Task AddCharacterSubmit()
     {
-        if (addModel.CharacterId > 0 && campaign != null)
+        if (_addModel.CharacterId > 0 && _campaign != null)
         {
-            var character = await DbContext.Characters.FindAsync(addModel.CharacterId);
+            var character = await DbContext.Characters.FindAsync(_addModel.CharacterId);
             if (character != null)
             {
-                character.CampaignId = campaign.Id;
+                character.CampaignId = _campaign.Id;
                 await DbContext.SaveChangesAsync();
                 
                 await LoadData();
-                showAddCharacter = false;
+                _showAddCharacter = false;
             }
         }
     }

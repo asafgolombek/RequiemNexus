@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+
 namespace RequiemNexus.Web.Services;
 
 public class DatabaseTicketStore(IServiceScopeFactory scopeFactory, ILogger<DatabaseTicketStore> logger, IHttpContextAccessor httpContextAccessor) : ITicketStore
@@ -31,7 +32,7 @@ public class DatabaseTicketStore(IServiceScopeFactory scopeFactory, ILogger<Data
             CreatedAt = DateTimeOffset.UtcNow,
             ExpiresAt = ticket.Properties.ExpiresUtc,
             UserAgent = userAgent,
-            IpAddress = ipAddress
+            IpAddress = ipAddress,
         };
 
         using var scope = scopeFactory.CreateScope();
@@ -73,12 +74,13 @@ public class DatabaseTicketStore(IServiceScopeFactory scopeFactory, ILogger<Data
 
         var session = await dbContext.UserSessions.FindAsync(key);
         if (session == null)
+        {
             return null;
+        }
 
-        // Optionally, update LastActive here as well. Note: reading a session happens often, 
-        // updating the DB on every read might impact performance. The RenewAsync method 
+        // Optionally, update LastActive here as well. Note: reading a session happens often,
+        // updating the DB on every read might impact performance. The RenewAsync method
         // handles updating sliding expirations, which is generally sufficient.
-
         return DeserializeFromBytes(session.Value);
     }
 

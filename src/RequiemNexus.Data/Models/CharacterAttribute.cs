@@ -26,4 +26,16 @@ public class CharacterAttribute : IRatedTrait
 
     public int CalculateUpgradeCost(int toRating)
         => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, costMultiplier: 4);
+
+    public int Upgrade(int toRating, IExperienceCostRules rules)
+    {
+        if (toRating <= Rating)
+        {
+            throw new ArgumentException("Upgrade must be to a higher rating.", nameof(toRating));
+        }
+
+        int cost = rules.CalculateAttributeUpgradeCost(Rating, toRating);
+        Rating = toRating;
+        return cost;
+    }
 }

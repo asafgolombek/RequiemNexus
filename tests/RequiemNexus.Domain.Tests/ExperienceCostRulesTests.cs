@@ -35,12 +35,12 @@ public class ExperienceCostRulesTests
     }
 
     [Theory]
-    [InlineData(1, 1)]
-    [InlineData(3, 3)]
-    [InlineData(5, 5)]
-    public void CalculateMeritCost_ReturnsRating(int rating, int expected)
+    [InlineData(0, 1, 1)]
+    [InlineData(1, 2, 1)]  // 1 XP per dot flat
+    [InlineData(0, 5, 5)]
+    public void CalculateMeritCost_ReturnsCorrectCost(int from, int to, int expected)
     {
-        int cost = _rules.CalculateMeritCost(rating);
+        int cost = _rules.CalculateMeritCost(from, to);
         Assert.Equal(expected, cost);
     }
 

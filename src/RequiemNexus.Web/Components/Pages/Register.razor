@@ -18,14 +18,14 @@
             <p>Join Requiem Nexus</p>
         </div>
 
-        @if (!string.IsNullOrEmpty(errorMessage))
+        @if (!string.IsNullOrEmpty(_errorMessage))
         {
             <div class="alert alert-danger" role="alert">
-                @errorMessage
+                @_errorMessage
             </div>
         }
 
-        @if (registrationSuccess)
+        @if (_registrationSuccess)
         {
             <div class="alert alert-success mt-4" role="alert">
                 Registration successful! Please check your email to verify your account before logging in.
@@ -36,31 +36,31 @@
         }
         else
         {
-            <EditForm Model="@registerModel" OnValidSubmit="HandleRegistration" FormName="registerForm" class="login-form">
+            <EditForm Model="@_registerModel" OnValidSubmit="HandleRegistration" FormName="registerForm" class="login-form">
                 <DataAnnotationsValidator />
 
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-container">
-                        <InputText id="email" type="email" @bind-Value="registerModel!.Email" class="form-control" placeholder="Enter your email" />
+                        <InputText id="email" type="email" @bind-Value="_registerModel!.Email" class="form-control" placeholder="Enter your email" />
                     </div>
-                    <ValidationMessage For="@(() => registerModel!.Email)" class="text-danger mt-1 text-sm" />
+                    <ValidationMessage For="@(() => _registerModel!.Email)" class="text-danger mt-1 text-sm" />
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="input-container">
-                        <InputText id="password" type="password" @bind-Value="registerModel!.Password" class="form-control" placeholder="Create a password" />
+                        <InputText id="password" type="password" @bind-Value="_registerModel!.Password" class="form-control" placeholder="Create a password" />
                     </div>
-                    <ValidationMessage For="@(() => registerModel!.Password)" class="text-danger mt-1 text-sm" />
+                    <ValidationMessage For="@(() => _registerModel!.Password)" class="text-danger mt-1 text-sm" />
                 </div>
 
                 <div class="form-group">
                     <label for="birthday">Birthday <small>(DD/MM/YYYY)</small></label>
                     <div class="input-container">
-                        <InputText id="birthday" @bind-Value="registerModel!.Birthday" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').substring(0,10)" />
+                        <InputText id="birthday" @bind-Value="_registerModel!.Birthday" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').substring(0,10)" />
                     </div>
-                    <ValidationMessage For="@(() => registerModel!.Birthday)" class="text-danger mt-1 text-sm" />
+                    <ValidationMessage For="@(() => _registerModel!.Birthday)" class="text-danger mt-1 text-sm" />
                 </div>
 
                 <button type="submit" class="btn-login mt-4">
@@ -77,38 +77,38 @@
 
 @code {
     [SupplyParameterFromForm]
-    private RegisterModel? registerModel { get; set; }
+    private RegisterModel? _registerModel { get; set; }
 
     protected override void OnInitialized()
     {
-        registerModel ??= new();
+        _registerModel ??= new();
     }
 
-    private string? errorMessage;
-    private bool registrationSuccess;
+    private string? _errorMessage;
+    private bool _registrationSuccess;
 
     private async Task HandleRegistration()
     {
-        errorMessage = null;
+        _errorMessage = null;
         
-        if (registerModel is null) return;
+        if (_registerModel is null) return;
 
         // Parse Birthday to DateOnly (DD/MM/YYYY)
-        if (!DateOnly.TryParseExact(registerModel.Birthday, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsedBirthday))
+        if (!DateOnly.TryParseExact(_registerModel.Birthday, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsedBirthday))
         {
-            errorMessage = "Invalid birthday format. Please use DD/MM/YYYY.";
+            _errorMessage = "Invalid birthday format. Please use DD/MM/YYYY.";
             return;
         }
 
         var user = new ApplicationUser
         {
-            UserName = registerModel.Email,
-            Email = registerModel.Email,
+            UserName = _registerModel.Email,
+            Email = _registerModel.Email,
             Birthday = parsedBirthday,
             MemberSince = DateOnly.FromDateTime(DateTime.Now)
         };
 
-        var result = await UserManager.CreateAsync(user, registerModel.Password);
+        var result = await UserManager.CreateAsync(user, _registerModel.Password);
 
         if (result.Succeeded)
         {
@@ -119,20 +119,20 @@
                 NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
                 new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
 
-            await EmailSender.SendConfirmationLinkAsync(user, registerModel.Email, HtmlEncoder.Default.Encode(callbackUrl));
+            await EmailSender.SendConfirmationLinkAsync(user, _registerModel.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
-            registrationSuccess = true;
+            _registrationSuccess = true;
         }
         else
         {
             // If email is duplicate or other issues
             if (result.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail"))
             {
-                errorMessage = "The account already exists.";
+                _errorMessage = "The account already exists.";
             }
             else
             {
-                errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+                _errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
             }
         }
     }

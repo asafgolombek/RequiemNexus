@@ -15,11 +15,11 @@
         <a href="/campaigns/create" class="btn-primary-rn btn-create">Create New Campaign</a>
     </div>
 
-    @if (campaigns == null)
+    @if (_campaigns == null)
     {
         <p><em>Loading...</em></p>
     }
-    else if (!campaigns.Any())
+    else if (!_campaigns.Any())
     {
         <div class="empty-state-rn">
             <p>You haven't joined or created any campaigns yet.</p>
@@ -30,7 +30,7 @@
     {
         <div class="campaign-grid">
             @{ int index = 1; }
-            @foreach (var campaign in campaigns)
+            @foreach (var campaign in _campaigns)
             {
                 <a href="/campaigns/@campaign.Id" class="campaign-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
                     <h3>@campaign.Name</h3>
@@ -47,31 +47,31 @@
 </div>
 
 @code {
-    private List<Campaign>? campaigns;
-    private string? currentUserId;
+    private List<Campaign>? _campaigns;
+    private string? _currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!string.IsNullOrEmpty(currentUserId))
+        if (!string.IsNullOrEmpty(_currentUserId))
         {
-            campaigns = await DbContext.Campaigns
+            _campaigns = await DbContext.Campaigns
                 .Include(c => c.Characters)
                 .Include(c => c.StoryTeller)
-                .Where(c => c.StoryTellerId == currentUserId || c.Characters.Any(ch => ch.ApplicationUserId == currentUserId))
+                .Where(c => c.StoryTellerId == _currentUserId || c.Characters.Any(ch => ch.ApplicationUserId == _currentUserId))
                 .AsNoTracking()
                 .ToListAsync();
         }
         else
         {
-            campaigns = new List<Campaign>();
+            _campaigns = new List<Campaign>();
         }
     }
 
     private bool IsStoryTeller(Campaign campaign)
     {
-        return campaign.StoryTellerId == currentUserId;
+        return campaign.StoryTellerId == _currentUserId;
     }
 }

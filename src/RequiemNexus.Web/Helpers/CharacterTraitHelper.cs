@@ -11,47 +11,89 @@ namespace RequiemNexus.Web.Helpers;
 public static class CharacterTraitHelper
 {
     /// <summary>
-    /// Gets the integer value of a trait from a Character by name.
+    /// Gets the integer value of an attribute from a Character.
     /// </summary>
-    public static int GetTraitValue(Character character, string traitName)
+    public static int GetTraitValue(Character character, AttributeId id)
+        => character.GetAttributeRating(id);
+
+    /// <summary>
+    /// Gets the integer value of a skill from a Character.
+    /// </summary>
+    public static int GetTraitValue(Character character, SkillId id)
+        => character.GetSkillRating(id);
+
+    /// <summary>
+    /// Gets the integer value of a trait (attribute or skill) by name.
+    /// </summary>
+    public static int GetTraitValue(Character character, string name)
     {
-        if (TraitMetadata.IsAttribute(traitName))
-            return character.GetAttributeRating(traitName);
-        else
-            return character.GetSkillRating(traitName);
+        if (Enum.TryParse<AttributeId>(name, out var attrId))
+        {
+            return GetTraitValue(character, attrId);
+        }
+
+        if (Enum.TryParse<SkillId>(name, out var skillId))
+        {
+            return GetTraitValue(character, skillId);
+        }
+
+        return 0;
     }
 
     /// <summary>
-    /// Sets the integer value of a trait on a Character by name.
-    /// Creates the trait entry if it doesn't exist yet (for character creation).
+    /// Sets the integer value of an attribute on a Character.
     /// </summary>
-    public static void SetTraitValue(Character character, string traitName, int value)
+    public static void SetTraitValue(Character character, AttributeId id, int value)
     {
-        if (TraitMetadata.IsAttribute(traitName))
+        var attr = character.Attributes.FirstOrDefault(a => a.Name == id.ToString());
+        if (attr != null)
         {
-            var attr = character.Attributes.FirstOrDefault(a => a.Name == traitName);
-            if (attr != null)
-                attr.Rating = value;
-            else
-                character.Attributes.Add(new CharacterAttribute
-                {
-                    Name = traitName,
-                    Category = GetAttributeCategory(traitName),
-                    Rating = value
-                });
+            attr.Rating = value;
         }
         else
         {
-            var skill = character.Skills.FirstOrDefault(s => s.Name == traitName);
-            if (skill != null)
-                skill.Rating = value;
-            else
-                character.Skills.Add(new CharacterSkill
-                {
-                    Name = traitName,
-                    Category = GetSkillCategory(traitName),
-                    Rating = value
-                });
+            character.Attributes.Add(new CharacterAttribute
+            {
+                Name = id.ToString(),
+                Category = GetAttributeCategory(id),
+                Rating = value,
+            });
+        }
+    }
+
+    /// <summary>
+    /// Sets the integer value of a skill on a Character.
+    /// </summary>
+    public static void SetTraitValue(Character character, SkillId id, int value)
+    {
+        var skill = character.Skills.FirstOrDefault(s => s.Name == id.ToString());
+        if (skill != null)
+        {
+            skill.Rating = value;
+        }
+        else
+        {
+            character.Skills.Add(new CharacterSkill
+            {
+                Name = id.ToString(),
+                Category = GetSkillCategory(id),
+                Rating = value,
+            });
+        }
+    }
+
+    /// <summary>
+    /// Sets a trait value by string name (useful for generic UI components).
+    /// </summary>
+    public static void SetTraitValue(Character character, string name, int value)
+    {
+        if (Enum.TryParse<AttributeId>(name, out var attrId))
+        {
+            SetTraitValue(character, attrId, value);
+        }
+        else if (Enum.TryParse<SkillId>(name, out var skillId))
+        {
+            SetTraitValue(character, skillId, value);
         }
     }
 
@@ -60,22 +102,19 @@ public static class CharacterTraitHelper
     /// </summary>
     public static void SeedAttributes(Character character)
     {
-        foreach (var (category, names) in new[]
+        foreach (var id in TraitMetadata.MentalAttributes)
         {
-            (TraitCategory.Mental, TraitMetadata.MentalAttributes),
-            (TraitCategory.Physical, TraitMetadata.PhysicalAttributes),
-            (TraitCategory.Social, TraitMetadata.SocialAttributes)
-        })
+            character.Attributes.Add(CreateAttribute(id, TraitCategory.Mental, 1));
+        }
+
+        foreach (var id in TraitMetadata.PhysicalAttributes)
         {
-            foreach (var name in names)
-            {
-                character.Attributes.Add(new CharacterAttribute
-                {
-                    Name = name,
-                    Category = category,
-                    Rating = 1
-                });
-            }
+            character.Attributes.Add(CreateAttribute(id, TraitCategory.Physical, 1));
+        }
+
+        foreach (var id in TraitMetadata.SocialAttributes)
+        {
+            character.Attributes.Add(CreateAttribute(id, TraitCategory.Social, 1));
         }
     }
 
@@ -84,37 +123,69 @@ public static class CharacterTraitHelper
     /// </summary>
     public static void SeedSkills(Character character)
     {
-        foreach (var (category, names) in new[]
+        foreach (var id in TraitMetadata.MentalSkills)
         {
-            (TraitCategory.Mental, TraitMetadata.MentalSkills),
-            (TraitCategory.Physical, TraitMetadata.PhysicalSkills),
-            (TraitCategory.Social, TraitMetadata.SocialSkills)
-        })
+            character.Skills.Add(CreateSkill(id, TraitCategory.Mental, 0));
+        }
+
+        foreach (var id in TraitMetadata.PhysicalSkills)
         {
-            foreach (var name in names)
-            {
-                character.Skills.Add(new CharacterSkill
-                {
-                    Name = name,
-                    Category = category,
-                    Rating = 0
-                });
-            }
+            character.Skills.Add(CreateSkill(id, TraitCategory.Physical, 0));
+        }
+
+        foreach (var id in TraitMetadata.SocialSkills)
+        {
+            character.Skills.Add(CreateSkill(id, TraitCategory.Social, 0));
         }
     }
 
-    private static TraitCategory GetAttributeCategory(string name)
+    private static CharacterAttribute CreateAttribute(AttributeId id, TraitCategory category, int rating)
     {
-        if (TraitMetadata.MentalAttributes.Contains(name)) return TraitCategory.Mental;
-        if (TraitMetadata.PhysicalAttributes.Contains(name)) return TraitCategory.Physical;
+        return new CharacterAttribute
+        {
+            Name = id.ToString(),
+            Category = category,
+            Rating = rating,
+        };
+    }
+
+    private static CharacterSkill CreateSkill(SkillId id, TraitCategory category, int rating)
+    {
+        return new CharacterSkill
+        {
+            Name = id.ToString(),
+            Category = category,
+            Rating = rating,
+        };
+    }
+
+    private static TraitCategory GetAttributeCategory(AttributeId id)
+    {
+        if (TraitMetadata.MentalAttributes.Contains(id))
+        {
+            return TraitCategory.Mental;
+        }
+
+        if (TraitMetadata.PhysicalAttributes.Contains(id))
+        {
+            return TraitCategory.Physical;
+        }
+
         return TraitCategory.Social;
     }
 
-    private static TraitCategory GetSkillCategory(string name)
+    private static TraitCategory GetSkillCategory(SkillId id)
     {
-        if (TraitMetadata.MentalSkills.Contains(name)) return TraitCategory.Mental;
-        if (TraitMetadata.PhysicalSkills.Contains(name)) return TraitCategory.Physical;
+        if (TraitMetadata.MentalSkills.Contains(id))
+        {
+            return TraitCategory.Mental;
+        }
+
+        if (TraitMetadata.PhysicalSkills.Contains(id))
+        {
+            return TraitCategory.Physical;
+        }
+
         return TraitCategory.Social;
     }
 }
-

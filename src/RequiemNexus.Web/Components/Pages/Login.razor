@@ -15,10 +15,10 @@
             <p>Sign in to Requiem Nexus</p>
         </div>
 
-        @if (!string.IsNullOrEmpty(errorMessage))
+        @if (!string.IsNullOrEmpty(_errorMessage))
         {
             <div class="alert alert-danger" role="alert">
-                @errorMessage
+                @_errorMessage
             </div>
         }
 
@@ -68,7 +68,7 @@
     [SupplyParameterFromForm]
     public LoginModel Input { get; set; } = default!;
 
-    private string? errorMessage;
+    private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,15 +100,15 @@
         }
         else if (result.IsNotAllowed)
         {
-            errorMessage = "You must confirm your email before logging in. Please check your email or resend the confirmation link.";
+            _errorMessage = "You must confirm your email before logging in. Please check your email or resend the confirmation link.";
         }
         else if (result.IsLockedOut)
         {
-            errorMessage = "This account has been locked out, please try again later.";
+            _errorMessage = "This account has been locked out, please try again later.";
         }
         else
         {
-            errorMessage = "Invalid login attempt.";
+            _errorMessage = "Invalid login attempt.";
         }
     }
 

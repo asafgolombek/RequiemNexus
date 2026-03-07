@@ -5,8 +5,11 @@ namespace RequiemNexus.Web.Contracts;
 public interface ICharacterService
 {
     Task<List<Character>> GetCharactersByUserIdAsync(string userId);
+
     Task<Character?> GetCharacterByIdAsync(int id, string userId);
+
     Task DeleteCharacterAsync(int id);
+
     Task<Character> EmbraceCharacterAsync(Character newCharacter);
 
     // Persistence
@@ -14,18 +17,26 @@ public interface ICharacterService
 
     // Beat & XP mutations
     Task AddBeatAsync(Character character);
+
     Task RemoveBeatAsync(Character character);
+
     Task AddXPAsync(Character character);
+
     Task RemoveXPAsync(Character character);
 
     // Equipment
     Task<List<Equipment>> GetAvailableEquipmentAsync();
+
     Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity);
+
     Task RemoveEquipmentAsync(int characterEquipmentId);
 
     // Merits & Disciplines
     Task<List<Merit>> GetAvailableMeritsAsync();
+
     Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost);
+
     Task<List<Discipline>> GetAvailableDisciplinesAsync();
+
     Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, int xpCost);
 }

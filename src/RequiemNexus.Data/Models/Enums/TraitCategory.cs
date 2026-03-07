@@ -7,5 +7,5 @@ public enum TraitCategory
 {
     Mental,
     Physical,
-    Social
+    Social,
 }

@@ -11,15 +11,18 @@ namespace RequiemNexus.Web.Helpers;
 /// </summary>
 public static class MeritRatingHelper
 {
-    private const char Bullet = '\u2022'; // •
+    private const char _bullet = '\u2022'; // •
 
     /// <summary>
     /// Parses ValidRatings into a sorted list of valid numeric ratings.
     /// </summary>
+    /// <param name="validRatings">The string representation of valid ratings (e.g. "•• or ••••").</param>
     public static List<int> ParseValidRatings(string validRatings)
     {
         if (string.IsNullOrWhiteSpace(validRatings))
+        {
             return new List<int> { 1 };
+        }
 
         var trimmed = validRatings.Trim();
 
@@ -52,13 +55,18 @@ public static class MeritRatingHelper
                 .Where(v => v > 0)
                 .OrderBy(v => v)
                 .ToList();
-            if (ratings.Count > 0) return ratings;
+            if (ratings.Count > 0)
+            {
+                return ratings;
+            }
         }
 
         // Single value (e.g. "••")
         int single = CountBullets(trimmed);
         if (single > 0)
+        {
             return new List<int> { single };
+        }
 
         return new List<int> { 1 };
     }
@@ -71,28 +79,24 @@ public static class MeritRatingHelper
         return ParseValidRatings(validRatings).Count <= 1;
     }
 
-    /// <summary>
-    /// Returns the minimum valid rating for a merit.
-    /// </summary>
+    /// <param name="validRatings">The string representation of valid ratings (e.g. "•• or ••••").</param>
+    /// <returns>The minimum valid rating.</returns>
     public static int GetMinRating(string validRatings)
     {
         var ratings = ParseValidRatings(validRatings);
         return ratings.Count > 0 ? ratings[0] : 1;
-
     }
 
-    /// <summary>
-    /// Returns the maximum valid rating for a merit.
-    /// </summary>
+    /// <param name="validRatings">The string representation of valid ratings (e.g. "•• or ••••").</param>
+    /// <returns>The maximum valid rating.</returns>
     public static int GetMaxRating(string validRatings)
     {
         var ratings = ParseValidRatings(validRatings);
         return ratings.Count > 0 ? ratings[ratings.Count - 1] : 5;
-
     }
 
     private static int CountBullets(string s)
     {
-        return s.Count(c => c == Bullet);
+        return s.Count(c => c == _bullet);
     }
 }
