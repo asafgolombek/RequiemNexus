@@ -7,11 +7,11 @@ namespace RequiemNexus.Web.Services;
 
 public class ClanService(ApplicationDbContext dbContext) : IClanService
 {
-    private readonly ApplicationDbContext dbContext = dbContext;
+    private readonly ApplicationDbContext _dbContext = dbContext;
 
     public async Task<List<Clan>> GetAllClansAsync()
     {
-        return await dbContext.Clans
+        return await _dbContext.Clans
             .AsNoTracking()
             .OrderBy(c => c.Name)
             .ToListAsync();

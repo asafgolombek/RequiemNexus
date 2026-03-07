@@ -20,13 +20,13 @@
                 <p>As a Story Teller, you will guide the neonates through the darkness.</p>
             </div>
 
-            <EditForm Model="@campaignModel" OnValidSubmit="HandleValidSubmit" FormName="createCampaign">
+            <EditForm Model="@_campaignModel" OnValidSubmit="HandleValidSubmit" FormName="createCampaign">
                 <DataAnnotationsValidator />
                 
                 <div class="form-group">
                     <label for="name">Campaign Name</label>
-                    <InputText id="name" @bind-Value="campaignModel.Name" class="form-control" placeholder="E.g., Shadows of the Damned" />
-                    <ValidationMessage For="@(() => campaignModel.Name)" class="text-danger" />
+                    <InputText id="name" @bind-Value="_campaignModel.Name" class="form-control" placeholder="E.g., Shadows of the Damned" />
+                    <ValidationMessage For="@(() => _campaignModel.Name)" class="text-danger" />
                 </div>
 
                 <div class="form-actions">
@@ -48,7 +48,7 @@
 </div>
 
 @code {
-    private readonly CampaignModel campaignModel = new();
+    private readonly CampaignModel _campaignModel = new();
 
     private async Task HandleValidSubmit()
     {
@@ -62,7 +62,7 @@
 
         var campaign = new Campaign
         {
-            Name = campaignModel.Name,
+            Name = _campaignModel.Name,
             StoryTellerId = currentUserId
         };
 

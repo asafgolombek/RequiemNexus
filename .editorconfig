@@ -19,7 +19,7 @@ dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
 # Naming conventions
-dotnet_naming_rule.private_fields_should_be_underscore.severity = suggestion
+dotnet_naming_rule.private_fields_should_be_underscore.severity = error
 dotnet_naming_rule.private_fields_should_be_underscore.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be_underscore.style = underscore_prefix_camel_case
 
@@ -72,4 +72,5 @@ dotnet_diagnostic.SA1633.severity = none # File should have header
 dotnet_diagnostic.SA1642.severity = none # Constructor summary documentation should begin with standard text
 dotnet_diagnostic.SA1649.severity = none # File name should match first type name
 dotnet_diagnostic.SA1402.severity = error # File may only contain a single type
+dotnet_diagnostic.SA1309.severity = none # Field names should not begin with an underscore
 dotnet_diagnostic.SA0001.severity = none # XML comment analysis is disabled due to project configuration

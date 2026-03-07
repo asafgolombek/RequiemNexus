@@ -11,10 +11,10 @@
         {
             var dotValue = i;
             <button type="button" 
-                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= hoveredValue ? "hover-filled" : "")" 
+                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= _hoveredValue ? "hover-filled" : "")" 
                     @onclick="() => SetValueAsync(dotValue)"
-                    @onmouseover="() => { if (IsEditable) hoveredValue = dotValue; }"
-                    @onmouseout="() => { if (IsEditable) hoveredValue = 0; }"
+                    @onmouseover="() => { if (IsEditable) _hoveredValue = dotValue; }"
+                    @onmouseout="() => { if (IsEditable) _hoveredValue = 0; }"
                     title="@(IsEditable ? $"Set {Label} to {dotValue}" : $"{Label}: {Value}")"
                     style="@(IsEditable ? "" : "cursor: default;")">
             </button>
@@ -58,7 +58,7 @@
     [CascadingParameter(Name = "IsEditable")]
     public bool IsEditable { get; set; } = true;
 
-    private int hoveredValue = 0;
+    private int _hoveredValue = 0;
 
     private async Task SetValueAsync(int newValue)
     {

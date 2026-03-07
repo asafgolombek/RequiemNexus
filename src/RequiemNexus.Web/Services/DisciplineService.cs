@@ -7,11 +7,11 @@ namespace RequiemNexus.Web.Services;
 
 public class DisciplineService(ApplicationDbContext dbContext) : IDisciplineService
 {
-    private readonly ApplicationDbContext dbContext = dbContext;
+    private readonly ApplicationDbContext _dbContext = dbContext;
 
     public async Task<List<Discipline>> GetAllDisciplinesAsync()
     {
-        return await dbContext.Disciplines
+        return await _dbContext.Disciplines
             .AsNoTracking()
             .OrderBy(d => d.Name)
             .ToListAsync();

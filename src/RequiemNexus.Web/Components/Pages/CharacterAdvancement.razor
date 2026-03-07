@@ -16,9 +16,9 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>Advancement: @(character?.Name ?? "Loading...") - Requiem Nexus</PageTitle>
+<PageTitle>Advancement: @(_character?.Name ?? "Loading...") - Requiem Nexus</PageTitle>
 
-@if (character == null)
+@if (_character == null)
 {
     <p><em>Loading immortal legacy...</em></p>
 }
@@ -27,17 +27,17 @@ else
     <div class="character-sheet fade-in">
         <header class="cs-header" style="justify-content: space-between;">
             <div>
-                <h1>Advancing @character.Name</h1>
+                <h1>Advancing @_character.Name</h1>
                 <p>Spend your Experiences to grow more powerful.</p>
             </div>
             <div class="char-xp" style="flex-direction: column; align-items: flex-end;">
                 <div class="xp-counter">
                     <strong class="xp-counter-label">Experiences</strong>
-                    <span class="xp-counter-value">@character.ExperiencePoints</span>
+                    <span class="xp-counter-value">@_character.ExperiencePoints</span>
                 </div>
-                @if (!string.IsNullOrEmpty(errorMessage))
+                @if (!string.IsNullOrEmpty(_errorMessage))
                 {
-                    <div style="color: #ff6666; margin-top: 10px; font-size: 0.9em;">@errorMessage</div>
+                    <div style="color: #ff6666; margin-top: 10px; font-size: 0.9em;">@_errorMessage</div>
                 }
                 <button class="btn-ghost" @onclick="GoBackToSheet" style="margin-top: 10px;">Return to Character Sheet</button>
             </div>
@@ -57,7 +57,7 @@ else
                         {
                             <div class="stat-col @label.ToLower()">
                                 <h3>@label</h3>
-                                @foreach (var attr in character.Attributes.Where(a => a.Category == category))
+                                @foreach (var attr in _character.Attributes.Where(a => a.Category == category))
                                 {
                                     var id = Enum.Parse<AttributeId>(attr.Name);
                                     <DotScale Value="attr.Rating" ValueChanged='(int val) => TryUpgrade(id, attr.Rating, val)' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
@@ -79,7 +79,7 @@ else
                         {
                             <div class="stat-col @label.ToLower()">
                                 <h3>@label</h3>
-                                @foreach (var skill in character.Skills.Where(s => s.Category == category))
+                                @foreach (var skill in _character.Skills.Where(s => s.Category == category))
                                 {
                                     var id = Enum.Parse<SkillId>(skill.Name);
                                     <DotScale Value="skill.Rating" ValueChanged='(int val) => TryUpgrade(id, skill.Rating, val)' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
@@ -89,12 +89,12 @@ else
                     </div>
                 </section>
                 
-                @if (character.Disciplines.Any())
+                @if (_character.Disciplines.Any())
                 {
                     <section class="cs-section cs-disciplines">
                         <h2>Disciplines (New Dot x 5 XP)</h2>
                         <ul class="trait-list disciplines-list" style="max-width: 400px;">
-                            @foreach (var disc in character.Disciplines)
+                            @foreach (var disc in _character.Disciplines)
                             {
                                 <li class="trait-item discipline-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <span style="flex-grow: 1;">@disc.Discipline?.Name</span>
@@ -109,9 +109,9 @@ else
                 <section class="cs-section cs-advantages">
                     <h2>Add New Merit (Rating x 1 XP)</h2>
                     <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <select @bind="selectedMeritId" class="equipment-select" style="min-width: 200px;">
+                        <select @bind="_selectedMeritId" class="equipment-select" style="min-width: 200px;">
                             <option value="0">-- Select Merit --</option>
-                            @foreach (var m in availableMerits)
+                            @foreach (var m in _availableMerits)
                             {
                                 <option value="@m.Id">@m.Name (@m.ValidRatings)</option>
                             }
@@ -119,15 +119,15 @@ else
 
                         @if (SelectedMeritRequiresSpec)
                         {
-                            <input type="text" @bind="newMeritSpecification" placeholder="Specification..." class="char-meta-input" style="width: 150px;" />
+                            <input type="text" @bind="_newMeritSpecification" placeholder="Specification..." class="char-meta-input" style="width: 150px;" />
                         }
 
                         <div style="display: flex; align-items: center; gap: 5px;">
                             <span>Rating:</span>
-                            <input type="number" min="1" max="5" @bind="newMeritRating" class="equipment-quantity" style="width: 60px;" />
+                            <input type="number" min="1" max="5" @bind="_newMeritRating" class="equipment-quantity" style="width: 60px;" />
                         </div>
 
-                        <button class="btn-primary-rn" @onclick="AddNewMerit" disabled="@(selectedMeritId == 0)">Add</button>
+                        <button class="btn-primary-rn" @onclick="AddNewMerit" disabled="@(_selectedMeritId == 0)">Add</button>
                     </div>
                 </section>
 
@@ -135,9 +135,9 @@ else
                 <section class="cs-section cs-disciplines">
                     <h2>Add New Discipline (Rating x 5 XP)</h2>
                     <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <select @bind="selectedDisciplineId" class="equipment-select" style="min-width: 200px;">
+                        <select @bind="_selectedDisciplineId" class="equipment-select" style="min-width: 200px;">
                             <option value="0">-- Select Discipline --</option>
-                            @foreach (var d in availableDisciplines.Where(ad => !character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
+                            @foreach (var d in _availableDisciplines.Where(ad => !_character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
                             {
                                 <option value="@d.Id">@d.Name</option>
                             }
@@ -145,10 +145,10 @@ else
 
                         <div style="display: flex; align-items: center; gap: 5px;">
                             <span>Starting Rating:</span>
-                            <input type="number" min="1" max="5" @bind="newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
+                            <input type="number" min="1" max="5" @bind="_newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
                         </div>
 
-                        <button class="btn-primary-rn" @onclick="AddNewDiscipline" disabled="@(selectedDisciplineId == 0)">Add</button>
+                        <button class="btn-primary-rn" @onclick="AddNewDiscipline" disabled="@(_selectedDisciplineId == 0)">Add</button>
                     </div>
                 </section>
             </div>
@@ -160,20 +160,20 @@ else
     [Parameter]
     public int Id { get; set; }
 
-    private Character? character;
-    private string? errorMessage;
+    private Character? _character;
+    private string? _errorMessage;
 
-    private List<Merit> availableMerits = new();
-    private int selectedMeritId = 0;
-    private int newMeritRating = 1;
-    private string? newMeritSpecification;
+    private List<Merit> _availableMerits = new();
+    private int _selectedMeritId = 0;
+    private int _newMeritRating = 1;
+    private string? _newMeritSpecification;
 
-    private List<Discipline> availableDisciplines = new();
-    private int selectedDisciplineId = 0;
-    private int newDisciplineRating = 1;
+    private List<Discipline> _availableDisciplines = new();
+    private int _selectedDisciplineId = 0;
+    private int _newDisciplineRating = 1;
 
     private bool SelectedMeritRequiresSpec => 
-        availableMerits.FirstOrDefault(m => m.Id == selectedMeritId)?.RequiresSpecification ?? false;
+        _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId)?.RequiresSpecification ?? false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -182,9 +182,9 @@ else
 
         if (!string.IsNullOrEmpty(currentUserId))
         {
-            character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
-            availableMerits = await CharacterService.GetAvailableMeritsAsync();
-            availableDisciplines = await CharacterService.GetAvailableDisciplinesAsync();
+            _character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
+            _availableMerits = await CharacterService.GetAvailableMeritsAsync();
+            _availableDisciplines = await CharacterService.GetAvailableDisciplinesAsync();
         }
     }
 
@@ -195,116 +195,116 @@ else
 
     private async Task TryUpgrade(AttributeId id, int currentRating, int newRating)
     {
-        if (character == null) return;
+        if (_character == null) return;
         
-        errorMessage = null;
+        _errorMessage = null;
 
         if (newRating > currentRating)
         {
-            bool success = AdvancementService.TryUpgradeCoreTrait(character, id, currentRating, newRating);
+            bool success = AdvancementService.TryUpgradeCoreTrait(_character, id, currentRating, newRating);
             if (success)
             {
                 if (id is AttributeId.Stamina or AttributeId.Resolve or AttributeId.Composure)
-                    AdvancementService.RecalculateDerivedStats(character);
-                await CharacterService.SaveAsync(character);
+                    AdvancementService.RecalculateDerivedStats(_character);
+                await CharacterService.SaveAsync(_character);
                 StateHasChanged();
             }
             else
             {
-                errorMessage = "Not enough Experiences to upgrade that attribute.";
+                _errorMessage = "Not enough Experiences to upgrade that attribute.";
             }
         }
     }
 
     private async Task TryUpgrade(SkillId id, int currentRating, int newRating)
     {
-        if (character == null) return;
+        if (_character == null) return;
         
-        errorMessage = null;
+        _errorMessage = null;
 
         if (newRating > currentRating)
         {
-            bool success = AdvancementService.TryUpgradeCoreTrait(character, id, currentRating, newRating);
+            bool success = AdvancementService.TryUpgradeCoreTrait(_character, id, currentRating, newRating);
             if (success)
             {
-                await CharacterService.SaveAsync(character);
+                await CharacterService.SaveAsync(_character);
                 StateHasChanged();
             }
             else
             {
-                errorMessage = "Not enough Experiences to upgrade that skill.";
+                _errorMessage = "Not enough Experiences to upgrade that skill.";
             }
         }
     }
 
     private async Task TryUpgradeDiscipline(CharacterDiscipline cd, int newRating)
     {
-        if (character == null || newRating <= cd.Rating) return;
+        if (_character == null || newRating <= cd.Rating) return;
 
-        errorMessage = null;
+        _errorMessage = null;
 
         // Use centralized ExperienceCostRules
         int totalCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(cd.Rating, newRating);
 
-        if (character.ExperiencePoints >= totalCost)
+        if (_character.ExperiencePoints >= totalCost)
         {
-            character.ExperiencePoints -= totalCost;
+            _character.ExperiencePoints -= totalCost;
             cd.Rating = newRating;
-            await CharacterService.SaveAsync(character);
+            await CharacterService.SaveAsync(_character);
             StateHasChanged();
         }
         else
         {
-            errorMessage = "Not enough Experiences to upgrade that discipline.";
+            _errorMessage = "Not enough Experiences to upgrade that discipline.";
         }
     }
 
     private async Task AddNewMerit()
     {
-        if (character == null || selectedMeritId == 0) return;
+        if (_character == null || _selectedMeritId == 0) return;
 
-        errorMessage = null;
-        int xpCost = ExperienceCostRules.CalculateMeritCost(0, newMeritRating);
+        _errorMessage = null;
+        int xpCost = ExperienceCostRules.CalculateMeritCost(0, _newMeritRating);
 
-        if (character.ExperiencePoints >= xpCost)
+        if (_character.ExperiencePoints >= xpCost)
         {
-            var merit = availableMerits.First(m => m.Id == selectedMeritId);
-            var cm = await CharacterService.AddMeritAsync(character, selectedMeritId, SelectedMeritRequiresSpec ? newMeritSpecification : null, newMeritRating, xpCost);
+            var merit = _availableMerits.First(m => m.Id == _selectedMeritId);
+            var cm = await CharacterService.AddMeritAsync(_character, _selectedMeritId, SelectedMeritRequiresSpec ? _newMeritSpecification : null, _newMeritRating, xpCost);
             cm.Merit = merit;
-            character.Merits.Add(cm);
+            _character.Merits.Add(cm);
 
-            selectedMeritId = 0;
-            newMeritRating = 1;
-            newMeritSpecification = string.Empty;
+            _selectedMeritId = 0;
+            _newMeritRating = 1;
+            _newMeritSpecification = string.Empty;
             StateHasChanged();
         }
         else
         {
-            errorMessage = $"Not enough Experiences to add that merit. Cost is {xpCost} XP.";
+            _errorMessage = $"Not enough Experiences to add that merit. Cost is {xpCost} XP.";
         }
     }
 
     private async Task AddNewDiscipline()
     {
-        if (character == null || selectedDisciplineId == 0) return;
+        if (_character == null || _selectedDisciplineId == 0) return;
 
-        errorMessage = null;
-        int xpCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(0, newDisciplineRating);
+        _errorMessage = null;
+        int xpCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(0, _newDisciplineRating);
 
-        if (character.ExperiencePoints >= xpCost)
+        if (_character.ExperiencePoints >= xpCost)
         {
-            var disc = availableDisciplines.First(d => d.Id == selectedDisciplineId);
-            var cd = await CharacterService.AddDisciplineAsync(character, selectedDisciplineId, newDisciplineRating, xpCost);
+            var disc = _availableDisciplines.First(d => d.Id == _selectedDisciplineId);
+            var cd = await CharacterService.AddDisciplineAsync(_character, _selectedDisciplineId, _newDisciplineRating, xpCost);
             cd.Discipline = disc;
-            character.Disciplines.Add(cd);
+            _character.Disciplines.Add(cd);
 
-            selectedDisciplineId = 0;
-            newDisciplineRating = 1;
+            _selectedDisciplineId = 0;
+            _newDisciplineRating = 1;
             StateHasChanged();
         }
         else
         {
-            errorMessage = $"Not enough Experiences to add that discipline. Cost is {xpCost} XP.";
+            _errorMessage = $"Not enough Experiences to add that discipline. Cost is {xpCost} XP.";
         }
     }
 }

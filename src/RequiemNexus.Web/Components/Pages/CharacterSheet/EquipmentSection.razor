@@ -4,14 +4,14 @@
     <h2>Equipment</h2>
 
     <div class="equipment-form">
-        <select @bind="selectedEquipmentId" class="equipment-select">
+        <select @bind="_selectedEquipmentId" class="equipment-select">
             <option value="0">-- Select Equipment --</option>
             @foreach (var eq in AvailableEquipment)
             {
                 <option value="@eq.Id">@eq.Name (@eq.Type)</option>
             }
         </select>
-        <input type="number" min="1" @bind="selectedQuantity" class="equipment-quantity" />
+        <input type="number" min="1" @bind="_selectedQuantity" class="equipment-quantity" />
         <button class="btn-primary-rn" @onclick="HandleAdd">Add</button>
     </div>
 
@@ -51,16 +51,16 @@
     [Parameter] public EventCallback<(int EquipmentId, int Quantity)> OnAddEquipment { get; set; }
     [Parameter] public EventCallback<int> OnRemoveEquipment { get; set; }
 
-    private int selectedEquipmentId = 0;
-    private int selectedQuantity = 1;
+    private int _selectedEquipmentId = 0;
+    private int _selectedQuantity = 1;
 
     private async Task HandleAdd()
     {
-        if (selectedEquipmentId > 0 && selectedQuantity > 0)
+        if (_selectedEquipmentId > 0 && _selectedQuantity > 0)
         {
-            await OnAddEquipment.InvokeAsync((selectedEquipmentId, selectedQuantity));
-            selectedEquipmentId = 0;
-            selectedQuantity = 1;
+            await OnAddEquipment.InvokeAsync((_selectedEquipmentId, _selectedQuantity));
+            _selectedEquipmentId = 0;
+            _selectedQuantity = 1;
         }
     }
 

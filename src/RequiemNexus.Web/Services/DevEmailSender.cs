@@ -5,28 +5,28 @@ namespace RequiemNexus.Web.Services;
 
 public partial class DevEmailSender : IEmailSender<ApplicationUser>
 {
-    private readonly ILogger<DevEmailSender> logger;
+    private readonly ILogger<DevEmailSender> _logger;
 
     public DevEmailSender(ILogger<DevEmailSender> logger)
     {
-        this.logger = logger;
+        _logger = logger;
     }
 
     public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
     {
-        LogConfirmationLink(logger, email, confirmationLink);
+        LogConfirmationLink(_logger, email, confirmationLink);
         return Task.CompletedTask;
     }
 
     public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)
     {
-        LogPasswordResetCode(logger, email, resetCode);
+        LogPasswordResetCode(_logger, email, resetCode);
         return Task.CompletedTask;
     }
 
     public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
     {
-        LogPasswordResetLink(logger, email, resetLink);
+        LogPasswordResetLink(_logger, email, resetLink);
         return Task.CompletedTask;
     }
 

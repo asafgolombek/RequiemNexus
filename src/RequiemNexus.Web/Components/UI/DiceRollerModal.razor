@@ -22,17 +22,17 @@
                 {
                     <div class="roller-form-group">
                         <label>Associated Trait</label>
-                        <select @bind="AssociatedTraitName" class="roller-input" style="width: 100%; padding: 8px;">
+                        <select @bind="_associatedTraitName" class="roller-input" style="width: 100%; padding: 8px;">
                             <option value="">-- None --</option>
                             <optgroup label="Attributes">
-                                @foreach (var attr in Attributes.Where(a => a != TraitName))
+                                @foreach (var attr in _attributes.Where(a => a != TraitName))
                                 {
                                     <option value="@attr">@attr</option>
                                 }
                             </optgroup>
 
                             <optgroup label="Skills">
-                                @foreach (var skill in Skills.Where(s => s != TraitName))
+                                @foreach (var skill in _skills.Where(s => s != TraitName))
                                 {
                                     <option value="@skill">@skill</option>
                                 }
@@ -44,7 +44,7 @@
 
                 <div class="roller-form-group">
                     <label>Modifiers (Bonus / Penalty)</label>
-                    <input type="number" @bind="Modifier" class="roller-input" />
+                    <input type="number" @bind="_modifier" class="roller-input" />
                 </div>
                 
                 <div class="roller-form-group">
@@ -53,43 +53,43 @@
                 </div>
 
                 <div class="options-group">
-                    <label class="option-label"><input type="checkbox" @bind="TenAgain" /> 10-Again</label>
-                    <label class="option-label"><input type="checkbox" @bind="NineAgain" /> 9-Again</label>
-                    <label class="option-label"><input type="checkbox" @bind="EightAgain" /> 8-Again</label>
-                    <label class="option-label"><input type="checkbox" @bind="IsRote" /> Rote Action</label>
+                    <label class="option-label"><input type="checkbox" @bind="_tenAgain" /> 10-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="_nineAgain" /> 9-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="_eightAgain" /> 8-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="_isRote" /> Rote Action</label>
                 </div>
                 
                 <div class="roller-actions">
                     <button class="btn-primary-rn roll-action-btn" @onclick="RollDice">Roll the Dice</button>
-                    @if (showTools)
+                    @if (_showTools)
                     {
                         <div class="debug-tools">
                             <label>Seed (Deterministic Mode)</label>
-                            <input type="number" @bind="Seed" class="roller-input" placeholder="Optional" />
+                            <input type="number" @bind="_seed" class="roller-input" placeholder="Optional" />
                         </div>
                     }
-                    <button class="btn-ghost debug-toggle" @onclick="() => showTools = !showTools">
-                        @(showTools ? "Hide" : "Show") Debug Tools
+                    <button class="btn-ghost debug-toggle" @onclick="() => _showTools = !_showTools">
+                        @(_showTools ? "Hide" : "Show") Debug Tools
                     </button>
                 </div>
                 
-                @if (LastResult != null)
+                @if (_lastResult != null)
                 {
-                    <div class="result-box @(LastResult.IsExceptionalSuccess ? "exceptional" : "") @(LastResult.IsDramaticFailure ? "dramatic-failure" : "")">
+                    <div class="result-box @(_lastResult.IsExceptionalSuccess ? "exceptional" : "") @(_lastResult.IsDramaticFailure ? "dramatic-failure" : "")">
                         <h4 class="result-title">
-                            @LastResult.Successes Success@(LastResult.Successes != 1 ? "es" : "")
+                            @_lastResult.Successes Success@(_lastResult.Successes != 1 ? "es" : "")
                         </h4>
-                        @if (LastResult.IsExceptionalSuccess)
+                        @if (_lastResult.IsExceptionalSuccess)
                         {
                             <span class="result-badge exceptional-badge">✨ Exceptional Success!</span>
                         }
-                        @if (LastResult.IsDramaticFailure)
+                        @if (_lastResult.IsDramaticFailure)
                         {
                             <span class="result-badge failure-badge">💀 Dramatic Failure!</span>
                         }
                         
                         <div class="dice-results">
-                            @foreach (var die in LastResult.DiceRolled)
+                            @foreach (var die in _lastResult.DiceRolled)
                             {
                                 <span class="die-result @(die >= 8 ? "success-die" : "fail-die")">@die</span>
                             }
@@ -108,25 +108,25 @@
     [Parameter] public int BaseDice { get; set; } = 1;
     [Parameter] public RequiemNexus.Data.Models.Character? Character { get; set; }
 
-    private string AssociatedTraitName { get; set; } = string.Empty;
-    private int Modifier { get; set; } = 0;
-    private bool TenAgain { get; set; } = true;
-    private bool NineAgain { get; set; } = false;
-    private bool EightAgain { get; set; } = false;
-    private bool IsRote { get; set; } = false;
-    private int? Seed { get; set; } = null;
-    private RollResult? LastResult;
-    private bool showTools = false;
+    private string _associatedTraitName { get; set; } = string.Empty;
+    private int _modifier { get; set; } = 0;
+    private bool _tenAgain { get; set; } = true;
+    private bool _nineAgain { get; set; } = false;
+    private bool _eightAgain { get; set; } = false;
+    private bool _isRote { get; set; } = false;
+    private int? _seed { get; set; } = null;
+    private RollResult? _lastResult;
+    private bool _showTools = false;
 
-    private readonly string[] Attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
-    private readonly string[] Skills = RequiemNexus.Domain.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
+    private readonly string[] _attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
+    private readonly string[] _skills = RequiemNexus.Domain.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
 
     private int AssociatedTraitDice
     {
         get
         {
-            if (string.IsNullOrEmpty(AssociatedTraitName) || Character == null) return 0;
-            var propName = AssociatedTraitName.Replace(" ", "");
+            if (string.IsNullOrEmpty(_associatedTraitName) || Character == null) return 0;
+            var propName = _associatedTraitName.Replace(" ", "");
             if (RequiemNexus.Domain.TraitMetadata.IsAttribute(propName))
                 return Character.GetAttributeRating(propName);
             else
@@ -134,19 +134,19 @@
         }
     }
 
-    private int TotalPool => BaseDice + AssociatedTraitDice + Modifier;
+    private int TotalPool => BaseDice + AssociatedTraitDice + _modifier;
 
     private async Task Close()
     {
         IsVisible = false;
-        LastResult = null;
-        AssociatedTraitName = string.Empty;
-        Modifier = 0;
+        _lastResult = null;
+        _associatedTraitName = string.Empty;
+        _modifier = 0;
         await IsVisibleChanged.InvokeAsync(IsVisible);
     }
 
     private void RollDice()
     {
-        LastResult = DiceService.Roll(TotalPool, TenAgain, NineAgain, EightAgain, IsRote, Seed);
+        _lastResult = DiceService.Roll(TotalPool, _tenAgain, _nineAgain, _eightAgain, _isRote, _seed);
     }
 }

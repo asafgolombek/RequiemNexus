@@ -10,9 +10,9 @@
 @inject IAdvancementService AdvancementService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>@(character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
+<PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
-@if (character == null)
+@if (_character == null)
 {
     <p><em>Loading your immortal legacy...</em></p>
 }
@@ -23,74 +23,74 @@ else
         <header class="cs-header">
             <div class="char-avatar"></div>
             <div class="char-info">
-                @if (isEditingName)
+                @if (_isEditingName)
                 {
-                    <input type="text" class="char-name-input" @bind="character.Name" @onblur="SaveNameOffBlur" @onkeyup="HandleNameKeyUp" autofocus />
+                    <input type="text" class="char-name-input" @bind="_character.Name" @onblur="SaveNameOffBlur" @onkeyup="HandleNameKeyUp" autofocus />
                 }
                 else
                 {
-                    <h1 @onclick="() => isEditingName = true" style="cursor: pointer;" title="Click to edit name">@character.Name <i class="edit-icon">✎</i></h1>
+                    <h1 @onclick="() => _isEditingName = true" style="cursor: pointer;" title="Click to edit name">@_character.Name <i class="edit-icon">✎</i></h1>
                 }
                 <div class="char-meta">
-                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(character.Concept) ? "???" : character.Concept)</span>
-                    <span><strong>Clan:</strong> @(character.Clan?.Name ?? "None")</span>
-                    <span><strong>Chronicle:</strong> @(character.Campaign?.Name ?? "None")</span>
-                    <span><strong>Mask:</strong> @(string.IsNullOrEmpty(character.Mask) ? "???" : character.Mask)</span>
-                    <span><strong>Dirge:</strong> @(string.IsNullOrEmpty(character.Dirge) ? "???" : character.Dirge)</span>
-                    @if (isFreeEditMode)
+                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(_character.Concept) ? "???" : _character.Concept)</span>
+                    <span><strong>Clan:</strong> @(_character.Clan?.Name ?? "None")</span>
+                    <span><strong>Chronicle:</strong> @(_character.Campaign?.Name ?? "None")</span>
+                    <span><strong>Mask:</strong> @(string.IsNullOrEmpty(_character.Mask) ? "???" : _character.Mask)</span>
+                    <span><strong>Dirge:</strong> @(string.IsNullOrEmpty(_character.Dirge) ? "???" : _character.Dirge)</span>
+                    @if (_isFreeEditMode)
                     {
-                        <span><strong>Touchstone:</strong> <input type="text" @bind="character.Touchstone" class="char-meta-input" placeholder="e.g. My sibling" /></span>
+                        <span><strong>Touchstone:</strong> <input type="text" @bind="_character.Touchstone" class="char-meta-input" placeholder="e.g. My sibling" /></span>
                     }
                     else
                     {
-                        <span><strong>Touchstone:</strong> @(string.IsNullOrEmpty(character.Touchstone) ? "???" : character.Touchstone)</span>
+                        <span><strong>Touchstone:</strong> @(string.IsNullOrEmpty(_character.Touchstone) ? "???" : _character.Touchstone)</span>
                     }
                 </div>
                 <div class="char-xp">
                     <div class="xp-counter">
                         <strong class="xp-counter-label">Beats</strong>
                         <button class="xp-counter-btn" @onclick="RemoveBeat"
-                            disabled="@(character.Beats <= 0)">-</button>
-                        <span class="xp-counter-value">@character.Beats</span>
+                            disabled="@(_character.Beats <= 0)">-</button>
+                        <span class="xp-counter-value">@_character.Beats</span>
                         <button class="xp-counter-btn" @onclick="AddBeat">+</button>
                     </div>
                     <div class="xp-counter">
                         <strong class="xp-counter-label">Experiences</strong>
                         <button class="xp-counter-btn" @onclick="RemoveXP"
-                            disabled="@(character.ExperiencePoints <= 0)">-</button>
-                        <span class="xp-counter-value">@character.ExperiencePoints</span>
+                            disabled="@(_character.ExperiencePoints <= 0)">-</button>
+                        <span class="xp-counter-value">@_character.ExperiencePoints</span>
                         <button class="xp-counter-btn" @onclick="AddXP">+</button>
                     </div>
                     <div class="xp-total">
                         <strong class="xp-counter-label">Total XP</strong>
-                        <span class="xp-counter-value">@character.TotalExperiencePoints</span>
+                        <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
                     </div>
 
                     <button class="btn-ghost mode-toggle-btn"
                     @onclick="GoToAdvancement">
                         Enter Advancement
                     </button>
-                    <button class="btn-ghost mode-toggle-btn @(isFreeEditMode ? "active" : "")"
+                    <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
                     @onclick="ToggleFreeEditMode">
-                        @(isFreeEditMode ? "Finish Edit" : "Edit Character")
+                        @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
                     </button>
                 </div>
             </div>
         </header>
 
         <div class="tab-bar">
-            <button class="tab-btn @(activeTab == "sheet" ? "active" : "")" @onclick='() => activeTab = "sheet"'>Character
+            <button class="tab-btn @(_activeTab == "sheet" ? "active" : "")" @onclick='() => _activeTab = "sheet"'>Character
                 Sheet</button>
-            <button class="tab-btn @(activeTab == "identity" ? "active" : "")"
-            @onclick='() => activeTab = "identity"'>Identity &amp; Backstory</button>
+            <button class="tab-btn @(_activeTab == "identity" ? "active" : "")"
+            @onclick='() => _activeTab = "identity"'>Identity &amp; Backstory</button>
         </div>
 
-        <CascadingValue Value="@(isAdvancementMode || isFreeEditMode)" Name="IsEditable">
-            @if (activeTab == "sheet")
+        <CascadingValue Value="@(isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
+            @if (_activeTab == "sheet")
             {
                 <div class="cs-grid">
                     <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
-                    <CharacterVitals Character="character" OnChanged="SaveCharacter" />
+                    <CharacterVitals Character="_character" OnChanged="SaveCharacter" />
 
                     <!-- ATTRIBUTES -->
                     <section class="cs-section cs-attributes">
@@ -104,7 +104,7 @@ else
                             {
                                 <div class="stat-col @label.ToLower()">
                                     <h3>@label</h3>
-                                    @foreach (var attr in character.Attributes.Where(a => a.Category == category))
+                                    @foreach (var attr in _character.Attributes.Where(a => a.Category == category))
                                     {
                                         <DotScale @bind-Value="attr.Rating" Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(attr.Name)" OnLabelClick="OpenReference"
                                             OnRollClick="OpenRoller" />
@@ -126,7 +126,7 @@ else
                             {
                                 <div class="stat-col @label.ToLower()">
                                     <h3>@label</h3>
-                                    @foreach (var skill in character.Skills.Where(s => s.Category == category))
+                                    @foreach (var skill in _character.Skills.Where(s => s.Category == category))
                                     {
                                         <DotScale @bind-Value="skill.Rating" Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(skill.Name)" OnLabelClick="OpenReference"
                                             OnRollClick="OpenRoller" />
@@ -140,14 +140,14 @@ else
                     <div class="grid-2-col">
                         <section class="cs-section cs-advantages">
                             <h2>Advantages</h2>
-                            <DotScale @bind-Value="character.BloodPotency" Label="Blood Potency" Max="10"
+                            <DotScale @bind-Value="_character.BloodPotency" Label="Blood Potency" Max="10"
                                 OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                            <DotScale @bind-Value="character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
+                            <DotScale @bind-Value="_character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
                                 OnRollClick="OpenRoller" />
 
                             <h3 class="trait-subheading">Merits</h3>
                             <ul class="trait-list">
-                                @foreach (var merit in character.Merits)
+                                @foreach (var merit in _character.Merits)
                                 {
                                     <li class="trait-item">
                                         <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" :
@@ -161,12 +161,12 @@ else
                         <section class="cs-section cs-disciplines">
                             <h2>Disciplines</h2>
                             <ul class="trait-list disciplines-list">
-                                @foreach (var disc in character.Disciplines)
+                                @foreach (var disc in _character.Disciplines)
                                 {
                                     <li class="trait-item discipline-item" style="flex-direction: column; align-items: stretch;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer;" @onclick="() => ToggleDiscipline(disc.DisciplineId)">
                                             <span>
-                                                @if (expandedDisciplines.Contains(disc.DisciplineId))
+                                                @if (_expandedDisciplines.Contains(disc.DisciplineId))
                                                 {
                                                     <i class="oi oi-chevron-bottom" style="font-size: 0.8em; margin-right: 5px;"></i>
                                                 }
@@ -179,7 +179,7 @@ else
                                             <span class="trait-dots">@(new string('•', disc.Rating))</span>
                                         </div>
                                         
-                                        @if (expandedDisciplines.Contains(disc.DisciplineId) && disc.Discipline?.Powers != null)
+                                        @if (_expandedDisciplines.Contains(disc.DisciplineId) && disc.Discipline?.Powers != null)
                                         {
                                             <div class="discipline-powers" style="margin-top: 10px; padding-left: 15px; border-left: 2px solid #550000; font-size: 0.9em; color: #d0d0d0;">
                                                 @foreach (var power in disc.Discipline.Powers.Where(p => p.Level <= disc.Rating).OrderBy(p => p.Level))
@@ -210,20 +210,20 @@ else
                         <h2>Equipment</h2>
 
                         <div class="equipment-form">
-                            <select @bind="selectedEquipmentId" class="equipment-select">
+                            <select @bind="_selectedEquipmentId" class="equipment-select">
                                 <option value="0">-- Select Equipment --</option>
-                                @foreach (var eq in availableEquipment)
+                                @foreach (var eq in _availableEquipment)
                                 {
                                     <option value="@eq.Id">@eq.Name (@eq.Type)</option>
                                 }
                             </select>
-                            <input type="number" min="1" @bind="selectedEquipmentQuantity"
+                            <input type="number" min="1" @bind="_selectedEquipmentQuantity"
                                 class="equipment-quantity" />
                             <button class="btn-primary-rn" @onclick="AddEquipment">Add</button>
                         </div>
 
                         <ul class="equipment-grid">
-                            @foreach (var ce in character.CharacterEquipments)
+                            @foreach (var ce in _character.CharacterEquipments)
                             {
                                 <li class="equipment-item">
                                     <div class="equipment-info">
@@ -252,14 +252,14 @@ else
 
                 </div>
             }
-            else if (activeTab == "identity")
+            else if (_activeTab == "identity")
             {
-        <CharacterIdentityTab Character="character" OnChanged="SaveCharacter" />
+        <CharacterIdentityTab Character="_character" OnChanged="SaveCharacter" />
             }
     </CascadingValue>
     </div>
 
-    <DiceRollerModal @bind-IsVisible="isRollerOpen" TraitName="@rollerTraitName" BaseDice="@rollerBaseDice" Character="character" />
+    <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" />
 }
 
 @code {
@@ -268,31 +268,31 @@ else
     [Parameter]
     public int Id { get; set; }
 
-    private Character? character;
-    private List<Equipment> availableEquipment = new List<Equipment>();
-    private int selectedEquipmentId = 0;
-    private int selectedEquipmentQuantity = 1;
+    private Character? _character;
+    private List<Equipment> _availableEquipment = new List<Equipment>();
+    private int _selectedEquipmentId = 0;
+    private int _selectedEquipmentQuantity = 1;
 
-    private bool isRollerOpen = false;
-    private string rollerTraitName = string.Empty;
-    private int rollerBaseDice = 1;
+    private bool _isRollerOpen = false;
+    private string _rollerTraitName = string.Empty;
+    private int _rollerBaseDice = 1;
 
     private bool isAdvancementMode = false;
-    private bool isFreeEditMode = false;
-    private string activeTab = "sheet";
-    private bool isEditingName = false;
+    private bool _isFreeEditMode = false;
+    private string _activeTab = "sheet";
+    private bool _isEditingName = false;
     
-    private readonly HashSet<int> expandedDisciplines = new HashSet<int>();
+    private readonly HashSet<int> _expandedDisciplines = new HashSet<int>();
 
     private void ToggleDiscipline(int disciplineId)
     {
-        if (expandedDisciplines.Contains(disciplineId))
+        if (_expandedDisciplines.Contains(disciplineId))
         {
-            expandedDisciplines.Remove(disciplineId);
+            _expandedDisciplines.Remove(disciplineId);
         }
         else
         {
-            expandedDisciplines.Add(disciplineId);
+            _expandedDisciplines.Add(disciplineId);
         }
     }
 
@@ -303,7 +303,7 @@ else
 
     private async Task SaveNameOffBlur()
     {
-        isEditingName = false;
+        _isEditingName = false;
         await SaveCharacter();
     }
 
@@ -319,11 +319,11 @@ else
 
     private async Task ToggleFreeEditMode()
     {
-        bool wasEditing = isFreeEditMode;
-        isFreeEditMode = !isFreeEditMode;
-        if (isFreeEditMode) isAdvancementMode = false;
+        bool wasEditing = _isFreeEditMode;
+        _isFreeEditMode = !_isFreeEditMode;
+        if (_isFreeEditMode) isAdvancementMode = false;
         // Save when the user finishes editing (transitions from ON → OFF)
-        if (!isFreeEditMode && wasEditing)
+        if (!_isFreeEditMode && wasEditing)
         {
             await SaveCharacter();
         }
@@ -331,9 +331,9 @@ else
 
     private async Task SaveCharacter()
     {
-        if (character != null)
+        if (_character != null)
         {
-            await CharacterService.SaveAsync(character);
+            await CharacterService.SaveAsync(_character);
         }
     }
 
@@ -346,8 +346,8 @@ else
 
         if (!string.IsNullOrEmpty(currentUserId))
         {
-            character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
-            availableEquipment = await CharacterService.GetAvailableEquipmentAsync();
+            _character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
+            _availableEquipment = await CharacterService.GetAvailableEquipmentAsync();
         }
     }
 
@@ -359,65 +359,65 @@ else
 
     private void OpenRoller(string traitName)
     {
-        rollerTraitName = traitName;
-        rollerBaseDice = GetTraitValue(traitName);
-        isRollerOpen = true;
+        _rollerTraitName = traitName;
+        _rollerBaseDice = GetTraitValue(traitName);
+        _isRollerOpen = true;
     }
 
     private int GetTraitValue(string traitName)
     {
-        if (character == null) return 0;
+        if (_character == null) return 0;
         var name = traitName.Replace(" ", "");
         if (RequiemNexus.Domain.TraitMetadata.IsAttribute(name))
-            return character.GetAttributeRating(name);
+            return _character.GetAttributeRating(name);
         else
-            return character.GetSkillRating(name);
+            return _character.GetSkillRating(name);
     }
 
     private async Task AddBeat()
     {
-        if (character != null)
-            await CharacterService.AddBeatAsync(character);
+        if (_character != null)
+            await CharacterService.AddBeatAsync(_character);
     }
 
     private async Task RemoveBeat()
     {
-        if (character != null)
-            await CharacterService.RemoveBeatAsync(character);
+        if (_character != null)
+            await CharacterService.RemoveBeatAsync(_character);
     }
 
     private async Task AddXP()
     {
-        if (character != null)
-            await CharacterService.AddXPAsync(character);
+        if (_character != null)
+            await CharacterService.AddXPAsync(_character);
     }
 
     private async Task RemoveXP()
     {
-        if (character != null)
-            await CharacterService.RemoveXPAsync(character);
+        if (_character != null)
+            await CharacterService.RemoveXPAsync(_character);
     }
 
     private async Task AddEquipment()
     {
-        if (character != null && selectedEquipmentId > 0 && selectedEquipmentQuantity > 0)
+        if (_character != null && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
         {
-            var ce = await CharacterService.AddEquipmentAsync(character.Id, selectedEquipmentId, selectedEquipmentQuantity);
-            ce.Equipment = availableEquipment.FirstOrDefault(e => e.Id == selectedEquipmentId);
-            character.CharacterEquipments.Add(ce);
+            var ce = await CharacterService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity);
+            ce.Equipment = _availableEquipment.FirstOrDefault(e => e.Id == _selectedEquipmentId);
+            _character.CharacterEquipments.Add(ce);
 
-            selectedEquipmentId = 0;
-            selectedEquipmentQuantity = 1;
+            _selectedEquipmentId = 0;
+            _selectedEquipmentQuantity = 1;
         }
     }
 
     private async Task RemoveEquipment(int ceId)
     {
-        if (character != null)
+        if (_character != null)
         {
             await CharacterService.RemoveEquipmentAsync(ceId);
-            var ce = character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
-            if (ce != null) character.CharacterEquipments.Remove(ce);
+            var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
+            if (ce != null) _character.CharacterEquipments.Remove(ce);
         }
     }
 }

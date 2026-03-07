@@ -11,7 +11,7 @@ namespace RequiemNexus.Web.Helpers;
 /// </summary>
 public static class MeritRatingHelper
 {
-    private const char Bullet = '\u2022'; // •
+    private const char _bullet = '\u2022'; // •
 
     /// <summary>
     /// Parses ValidRatings into a sorted list of valid numeric ratings.
@@ -97,6 +97,6 @@ public static class MeritRatingHelper
 
     private static int CountBullets(string s)
     {
-        return s.Count(c => c == Bullet);
+        return s.Count(c => c == _bullet);
     }
 }

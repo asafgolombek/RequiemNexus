@@ -22,9 +22,9 @@
         }
 
         <div class="header-actions">
-            @if (!string.IsNullOrEmpty(userName))
+            @if (!string.IsNullOrEmpty(_userName))
             {
-                <span class="welcome-text">Welcome back, @userName</span>
+                <span class="welcome-text">Welcome back, @_userName</span>
             }
             <a href="/Account/Manage" class="btn-ghost header-btn">Settings</a>
             <form method="post" action="/logout" class="logout-form">
@@ -56,12 +56,12 @@
     [Parameter] public bool ShowSubNav { get; set; } = true;
     [Parameter] public bool ShowSearch { get; set; } = true;
 
-    private string? userName;
+    private string? _userName;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        userName = authState.User.Identity?.Name;
+        _userName = authState.User.Identity?.Name;
     }
 
     private bool IsActivePath(string path)

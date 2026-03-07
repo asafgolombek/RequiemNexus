@@ -9,13 +9,13 @@ namespace RequiemNexus.Web.Services;
 
 public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
 {
-    private readonly ILogger<SmtpEmailSender> logger;
-    private readonly IConfiguration configuration;
+    private readonly ILogger<SmtpEmailSender> _logger;
+    private readonly IConfiguration _configuration;
 
     public SmtpEmailSender(ILogger<SmtpEmailSender> logger, IConfiguration configuration)
     {
-        this.logger = logger;
-        this.configuration = configuration;
+        _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
@@ -37,11 +37,11 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
     {
         try
         {
-            var host = configuration["Smtp:Host"];
-            var portString = configuration["Smtp:Port"];
-            var username = configuration["Smtp:Username"];
-            var password = configuration["Smtp:Password"];
-            var from = configuration["Smtp:From"] ?? "noreply@requiemnexus.com";
+            var host = _configuration["Smtp:Host"];
+            var portString = _configuration["Smtp:Port"];
+            var username = _configuration["Smtp:Username"];
+            var password = _configuration["Smtp:Password"];
+            var from = _configuration["Smtp:From"] ?? "noreply@requiemnexus.com";
 
             if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(portString) || !int.TryParse(portString, out int port))
             {
