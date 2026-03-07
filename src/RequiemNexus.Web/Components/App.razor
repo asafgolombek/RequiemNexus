@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Components.Web
+@namespace RequiemNexus.Web.Components
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -20,8 +23,8 @@
 <body>
     <Routes />
     <ReconnectModal />
-    @((MarkupString)$"<script src=\"{Assets["_framework/blazor.web.js"]}\"></script>")
-    <script src="js/fido2.js"></script>
+    @((MarkupString)"<script src=\"_framework/blazor.web.js\"></script>")
+    @((MarkupString)"<script src=\"js/fido2.js\"></script>")
 </body>
 
 </html>
