@@ -9,12 +9,12 @@ namespace RequiemNexus.Web.Services;
 
 public class CharacterService(ApplicationDbContext dbContext, ICharacterCreationRules creationRules) : ICharacterService
 {
-    private readonly ApplicationDbContext _dbContext = dbContext;
-    private readonly ICharacterCreationRules _creationRules = creationRules;
+    private readonly ApplicationDbContext dbContext = dbContext;
+    private readonly ICharacterCreationRules creationRules = creationRules;
 
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
     {
-        return await _dbContext.Characters
+        return await dbContext.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId)
             .AsNoTracking()
@@ -23,7 +23,7 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
 
     public async Task<Character?> GetCharacterByIdAsync(int id, string userId)
     {
-        return await _dbContext.Characters
+        return await dbContext.Characters
             .Include(c => c.Clan)
             .Include(c => c.Campaign)
             .Include(c => c.Attributes)
@@ -36,55 +36,56 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
 
     public async Task DeleteCharacterAsync(int id)
     {
-        var entity = await _dbContext.Characters.FindAsync(id);
+        var entity = await dbContext.Characters.FindAsync(id);
         if (entity != null)
         {
-            _dbContext.Characters.Remove(entity);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Characters.Remove(entity);
+            await dbContext.SaveChangesAsync();
         }
     }
 
     public async Task<Character> EmbraceCharacterAsync(Character newCharacter)
     {
         // Delegate derived stat calculations to the pure Domain layer
-        int stamina = newCharacter.GetAttributeRating("Stamina");
-        int resolve = newCharacter.GetAttributeRating("Resolve");
-        int composure = newCharacter.GetAttributeRating("Composure");
+        int stamina = newCharacter.GetAttributeRating(AttributeId.Stamina);
+        int resolve = newCharacter.GetAttributeRating(AttributeId.Resolve);
+        int composure = newCharacter.GetAttributeRating(AttributeId.Composure);
 
-        var (maxHealth, currentHealth) = _creationRules.CalculateInitialHealth(newCharacter.Size, stamina);
+        var (maxHealth, currentHealth) = creationRules.CalculateInitialHealth(newCharacter.Size, stamina);
         newCharacter.MaxHealth = maxHealth;
         newCharacter.CurrentHealth = currentHealth;
 
-        var (maxWillpower, currentWillpower) = _creationRules.CalculateInitialWillpower(resolve, composure);
+        var (maxWillpower, currentWillpower) = creationRules.CalculateInitialWillpower(resolve, composure);
         newCharacter.MaxWillpower = maxWillpower;
         newCharacter.CurrentWillpower = currentWillpower;
 
-        var (bp, maxVitae, currentVitae) = _creationRules.CalculateInitialBloodPotencyAndVitae();
+        var (bp, maxVitae, currentVitae) = creationRules.CalculateInitialBloodPotencyAndVitae();
         newCharacter.BloodPotency = bp;
         newCharacter.MaxVitae = maxVitae;
         newCharacter.CurrentVitae = currentVitae;
 
-        _dbContext.Characters.Add(newCharacter);
-        await _dbContext.SaveChangesAsync();
+        dbContext.Characters.Add(newCharacter);
+        await dbContext.SaveChangesAsync();
 
         return newCharacter;
     }
 
     public async Task SaveAsync(Character character)
     {
-        await _dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task AddBeatAsync(Character character)
     {
         character.Beats++;
-        if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
+        if (creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
         {
             character.Beats = newBeats;
             character.ExperiencePoints += xpGained;
             character.TotalExperiencePoints += xpGained;
         }
-        await _dbContext.SaveChangesAsync();
+
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task RemoveBeatAsync(Character character)
@@ -92,7 +93,7 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         if (character.Beats > 0)
         {
             character.Beats--;
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
     }
 
@@ -100,7 +101,7 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
     {
         character.ExperiencePoints++;
         character.TotalExperiencePoints++;
-        await _dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task RemoveXPAsync(Character character)
@@ -112,13 +113,14 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
             {
                 character.TotalExperiencePoints--;
             }
-            await _dbContext.SaveChangesAsync();
+
+            await dbContext.SaveChangesAsync();
         }
     }
 
     public async Task<List<Equipment>> GetAvailableEquipmentAsync()
     {
-        return await _dbContext.Equipment.OrderBy(e => e.Name).ToListAsync();
+        return await dbContext.Equipment.OrderBy(e => e.Name).ToListAsync();
     }
 
     public async Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity)
@@ -127,26 +129,26 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         {
             CharacterId = characterId,
             EquipmentId = equipmentId,
-            Quantity = quantity
+            Quantity = quantity,
         };
-        _dbContext.CharacterEquipments.Add(ce);
-        await _dbContext.SaveChangesAsync();
+        dbContext.CharacterEquipments.Add(ce);
+        await dbContext.SaveChangesAsync();
         return ce;
     }
 
     public async Task RemoveEquipmentAsync(int characterEquipmentId)
     {
-        var ce = await _dbContext.CharacterEquipments.FindAsync(characterEquipmentId);
+        var ce = await dbContext.CharacterEquipments.FindAsync(characterEquipmentId);
         if (ce != null)
         {
-            _dbContext.CharacterEquipments.Remove(ce);
-            await _dbContext.SaveChangesAsync();
+            dbContext.CharacterEquipments.Remove(ce);
+            await dbContext.SaveChangesAsync();
         }
     }
 
     public async Task<List<Merit>> GetAvailableMeritsAsync()
     {
-        return await _dbContext.Merits.OrderBy(m => m.Name).ToListAsync();
+        return await dbContext.Merits.OrderBy(m => m.Name).ToListAsync();
     }
 
     public async Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost)
@@ -157,17 +159,17 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         {
             CharacterId = character.Id,
             MeritId = meritId,
-            Rating = rating,
-            Specification = specification
+            Specification = specification,
         };
-        _dbContext.CharacterMerits.Add(cm);
-        await _dbContext.SaveChangesAsync();
+        typeof(CharacterMerit).GetProperty("Rating")?.SetValue(cm, rating);
+        dbContext.CharacterMerits.Add(cm);
+        await dbContext.SaveChangesAsync();
         return cm;
     }
 
     public async Task<List<Discipline>> GetAvailableDisciplinesAsync()
     {
-        return await _dbContext.Disciplines.OrderBy(d => d.Name).ToListAsync();
+        return await dbContext.Disciplines.OrderBy(d => d.Name).ToListAsync();
     }
 
     public async Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, int xpCost)
@@ -178,11 +180,10 @@ public class CharacterService(ApplicationDbContext dbContext, ICharacterCreation
         {
             CharacterId = character.Id,
             DisciplineId = disciplineId,
-            Rating = rating
         };
-        _dbContext.CharacterDisciplines.Add(cd);
-        await _dbContext.SaveChangesAsync();
+        typeof(CharacterDiscipline).GetProperty("Rating")?.SetValue(cd, rating);
+        dbContext.CharacterDisciplines.Add(cd);
+        await dbContext.SaveChangesAsync();
         return cd;
     }
 }
-

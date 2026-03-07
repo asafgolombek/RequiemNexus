@@ -118,8 +118,8 @@
     private RollResult? LastResult;
     private bool showTools = false;
 
-    private readonly string[] Attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes;
-    private readonly string[] Skills = RequiemNexus.Domain.TraitMetadata.AllSkills;
+    private readonly string[] Attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
+    private readonly string[] Skills = RequiemNexus.Domain.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
 
     private int AssociatedTraitDice
     {

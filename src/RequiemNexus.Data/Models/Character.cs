@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RequiemNexus.Domain;
 
 namespace RequiemNexus.Data.Models;
 
@@ -53,50 +54,70 @@ public class Character
 
     // Core specific stats for the Neonate Phase
     public int Humanity { get; set; } = 7;
+
     public int Size { get; set; } = 5;
+
     public int ExperiencePoints { get; set; }
+
     public int TotalExperiencePoints { get; set; }
+
     public int Beats { get; set; }
 
     public int MaxHealth { get; set; }
+
     public int CurrentHealth { get; set; }
 
     [MaxLength(50)]
     public string HealthDamage { get; set; } = string.Empty;
 
     public int MaxWillpower { get; set; }
+
     public int CurrentWillpower { get; set; }
 
     public int BloodPotency { get; set; } = 1;
 
     public int MaxVitae { get; set; }
+
     public int CurrentVitae { get; set; }
-
-    // --- Helpers for accessing traits by name ---
-    public int GetAttributeRating(string name)
-        => Attributes.FirstOrDefault(a => a.Name == name)?.Rating ?? 0;
-
-    public int GetSkillRating(string name)
-        => Skills.FirstOrDefault(s => s.Name == name)?.Rating ?? 0;
 
     // --- Derived Stats ---
     [NotMapped]
-    public int Speed => GetAttributeRating("Strength") + GetAttributeRating("Dexterity") + Size;
+    public int Speed => GetAttributeRating(AttributeId.Strength) + GetAttributeRating(AttributeId.Dexterity) + Size;
 
     [NotMapped]
-    public int Defense => Math.Min(GetAttributeRating("Wits"), GetAttributeRating("Dexterity"))
-                          + GetSkillRating("Athletics");
+    public int Defense => Math.Min(GetAttributeRating(AttributeId.Wits), GetAttributeRating(AttributeId.Dexterity))
+                          + GetSkillRating(SkillId.Athletics);
 
     [NotMapped]
     public int Armor => CharacterEquipments.Sum(e => e.Equipment?.ArmorRating ?? 0);
 
     // --- Collections ---
     public virtual ICollection<CharacterAttribute> Attributes { get; set; } = new List<CharacterAttribute>();
-    public virtual ICollection<CharacterSkill> Skills { get; set; } = new List<CharacterSkill>();
-    public virtual ICollection<CharacterAspiration> Aspirations { get; set; } = new List<CharacterAspiration>();
-    public virtual ICollection<CharacterBane> Banes { get; set; } = new List<CharacterBane>();
-    public virtual ICollection<CharacterMerit> Merits { get; set; } = new List<CharacterMerit>();
-    public virtual ICollection<CharacterDiscipline> Disciplines { get; set; } = new List<CharacterDiscipline>();
-    public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
-}
 
+    public virtual ICollection<CharacterSkill> Skills { get; set; } = new List<CharacterSkill>();
+
+    public virtual ICollection<CharacterAspiration> Aspirations { get; set; } = new List<CharacterAspiration>();
+
+    public virtual ICollection<CharacterBane> Banes { get; set; } = new List<CharacterBane>();
+
+    public virtual ICollection<CharacterMerit> Merits { get; set; } = new List<CharacterMerit>();
+
+    public virtual ICollection<CharacterDiscipline> Disciplines { get; set; } = new List<CharacterDiscipline>();
+
+    public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
+
+    // --- Helpers for accessing traits by name ---
+    public int GetAttributeRating(AttributeId id) => GetAttributeRating(id.ToString());
+
+    public int GetAttributeRating(string name)
+    {
+        return Attributes.FirstOrDefault(a => a.Name == name)?.Rating ?? 1;
+    }
+
+    public int GetSkillRating(SkillId id) => GetSkillRating(id.ToString());
+
+    public int GetSkillRating(string name)
+    {
+        return Skills.FirstOrDefault(s => s.Name == name)?.Rating ?? 0;
+    }
+}

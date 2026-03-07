@@ -7,11 +7,11 @@ namespace RequiemNexus.Web.Services;
 
 public class MeritService(ApplicationDbContext dbContext) : IMeritService
 {
-    private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly ApplicationDbContext dbContext = dbContext;
 
     public async Task<List<Merit>> GetAllMeritsAsync()
     {
-        return await _dbContext.Merits
+        return await dbContext.Merits
             .AsNoTracking()
             .OrderBy(m => m.Name)
             .ToListAsync();

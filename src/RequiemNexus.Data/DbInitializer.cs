@@ -35,7 +35,7 @@ public static class DbInitializer
             new() { Name = ClanGangrel, Description = "The savages, predators closer to the Beast than man." },
             new() { Name = ClanMekhet, Description = "The shadows, secretive keepers of occult knowledge." },
             new() { Name = ClanNosferatu, Description = "The haunts, terrifying monsters twisted by the Curse." },
-            new() { Name = ClanVentrue, Description = "The lords, aristocratic tyrants who demand fealty." }
+            new() { Name = ClanVentrue, Description = "The lords, aristocratic tyrants who demand fealty." },
         };
 
             await context.Clans.AddRangeAsync(clans);
@@ -142,11 +142,10 @@ public static class DbInitializer
                 // Ventrue: Animalism, Dominate, Resilience
                 new() { ClanId = clans.First(c => c.Name == ClanVentrue).Id, DisciplineId = disciplinesList.First(d => d.Name == "Animalism").Id },
                 new() { ClanId = clans.First(c => c.Name == ClanVentrue).Id, DisciplineId = disciplinesList.First(d => d.Name == "Dominate").Id },
-                new() { ClanId = clans.First(c => c.Name == ClanVentrue).Id, DisciplineId = disciplinesList.First(d => d.Name == "Resilience").Id }
+                new() { ClanId = clans.First(c => c.Name == ClanVentrue).Id, DisciplineId = disciplinesList.First(d => d.Name == "Resilience").Id },
             };
 
             await context.ClanDisciplines.AddRangeAsync(clanDisciplines);
-
         }
     }
 
@@ -179,7 +178,7 @@ public static class DbInitializer
         {
             var name = meritNode.TryGetProperty("name", out var node) ? node.GetString() : "Unknown Merit";
             var rating = meritNode.TryGetProperty("rating", out var node2) ? node2.GetString() : "•";
-            var desc = meritNode.TryGetProperty("desc", out var node3) ? node3.GetString() : "";
+            var desc = meritNode.TryGetProperty("desc", out var node3) ? node3.GetString() : string.Empty;
 
             if (string.IsNullOrWhiteSpace(name)) continue;
 
@@ -191,9 +190,9 @@ public static class DbInitializer
                 {
                     Name = truncatedName,
                     ValidRatings = rating ?? "•",
-                    Description = desc ?? "",
+                    Description = desc ?? string.Empty,
                     RequiresSpecification = false,
-                    CanBePurchasedMultipleTimes = false
+                    CanBePurchasedMultipleTimes = false,
                 };
                 await context.Merits.AddAsync(newMerit);
                 existingMerits.Add(truncatedName); // Add to local list to prevent duplicates from JSON

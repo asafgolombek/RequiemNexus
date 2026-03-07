@@ -59,7 +59,8 @@ else
                                 <h3>@label</h3>
                                 @foreach (var attr in character.Attributes.Where(a => a.Category == category))
                                 {
-                                    <DotScale Value="attr.Rating" ValueChanged='(int val) => TryUpgrade(attr.Name, attr.Rating, val)' Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(attr.Name)" ShowRollButton="false" />
+                                    var id = Enum.Parse<AttributeId>(attr.Name);
+                                    <DotScale Value="attr.Rating" ValueChanged='(int val) => TryUpgrade(id, attr.Rating, val)' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
                                 }
                             </div>
                         }
@@ -80,7 +81,8 @@ else
                                 <h3>@label</h3>
                                 @foreach (var skill in character.Skills.Where(s => s.Category == category))
                                 {
-                                    <DotScale Value="skill.Rating" ValueChanged='(int val) => TryUpgrade(skill.Name, skill.Rating, val)' Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(skill.Name)" ShowRollButton="false" />
+                                    var id = Enum.Parse<SkillId>(skill.Name);
+                                    <DotScale Value="skill.Rating" ValueChanged='(int val) => TryUpgrade(id, skill.Rating, val)' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
                                 }
                             </div>
                         }
@@ -191,7 +193,7 @@ else
         NavigationManager.NavigateTo($"/character/{Id}");
     }
 
-    private async Task TryUpgrade(string traitName, int currentRating, int newRating)
+    private async Task TryUpgrade(AttributeId id, int currentRating, int newRating)
     {
         if (character == null) return;
         
@@ -199,17 +201,38 @@ else
 
         if (newRating > currentRating)
         {
-            bool success = AdvancementService.TryUpgradeCoreTrait(character, traitName, currentRating, newRating);
+            bool success = AdvancementService.TryUpgradeCoreTrait(character, id, currentRating, newRating);
             if (success)
             {
-                if (traitName is "Stamina" or "Resolve" or "Composure")
+                if (id is AttributeId.Stamina or AttributeId.Resolve or AttributeId.Composure)
                     AdvancementService.RecalculateDerivedStats(character);
                 await CharacterService.SaveAsync(character);
                 StateHasChanged();
             }
             else
             {
-                errorMessage = "Not enough Experiences to upgrade that trait.";
+                errorMessage = "Not enough Experiences to upgrade that attribute.";
+            }
+        }
+    }
+
+    private async Task TryUpgrade(SkillId id, int currentRating, int newRating)
+    {
+        if (character == null) return;
+        
+        errorMessage = null;
+
+        if (newRating > currentRating)
+        {
+            bool success = AdvancementService.TryUpgradeCoreTrait(character, id, currentRating, newRating);
+            if (success)
+            {
+                await CharacterService.SaveAsync(character);
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = "Not enough Experiences to upgrade that skill.";
             }
         }
     }
@@ -241,7 +264,7 @@ else
         if (character == null || selectedMeritId == 0) return;
 
         errorMessage = null;
-        int xpCost = ExperienceCostRules.CalculateMeritCost(newMeritRating);
+        int xpCost = ExperienceCostRules.CalculateMeritCost(0, newMeritRating);
 
         if (character.ExperiencePoints >= xpCost)
         {

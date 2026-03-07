@@ -6,23 +6,38 @@ namespace RequiemNexus.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-
     public DbSet<Character> Characters { get; set; } = default!;
+
     public DbSet<Clan> Clans { get; set; } = default!;
+
     public DbSet<Campaign> Campaigns { get; set; } = default!;
+
     public DbSet<UserSession> UserSessions { get; set; } = default!;
+
     public DbSet<FidoStoredCredential> FidoStoredCredentials { get; set; } = null!;
+
     public DbSet<CharacterMerit> CharacterMerits { get; set; } = default!;
+
     public DbSet<CharacterDiscipline> CharacterDisciplines { get; set; } = default!;
+
     public DbSet<CharacterAttribute> CharacterAttributes { get; set; } = default!;
+
     public DbSet<CharacterSkill> CharacterSkills { get; set; } = default!;
+
     public DbSet<Discipline> Disciplines { get; set; } = default!;
+
     public DbSet<DisciplinePower> DisciplinePowers { get; set; } = default!;
+
     public DbSet<Merit> Merits { get; set; } = default!;
+
     public DbSet<ClanDiscipline> ClanDisciplines { get; set; } = default!;
+
     public DbSet<Equipment> Equipment { get; set; } = default!;
+
     public DbSet<CharacterEquipment> CharacterEquipments { get; set; } = default!;
+
     public DbSet<CharacterAspiration> CharacterAspirations { get; set; } = default!;
+
     public DbSet<CharacterBane> CharacterBanes { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)

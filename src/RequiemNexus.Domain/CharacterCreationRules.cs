@@ -20,10 +20,28 @@ public class CharacterCreationRules : ICharacterCreationRules
         return (maxWillpower, maxWillpower); // Neonates start at full willpower
     }
 
-    public (int BloodPotency, int MaxVitae, int CurrentVitae) CalculateInitialBloodPotencyAndVitae()
+    /// <summary>
+    /// Calculates initial Blood Potency and Max Vitae based on the VtR 2e table.
+    /// BP 1=10, 2=11, 3=12, 4=13, 5=15, 6=20, 7=25, 8=30, 9=50, 10=75.
+    /// </summary>
+    public (int BloodPotency, int MaxVitae, int CurrentVitae) CalculateInitialBloodPotencyAndVitae(int bloodPotency = 1)
     {
-        // A standard starting neonate has BP 1 and a Max Vitae pool of 10.
-        return (BloodPotency: 1, MaxVitae: 10, CurrentVitae: 10);
+        int maxVitae = bloodPotency switch
+        {
+            1 => 10,
+            2 => 11,
+            3 => 12,
+            4 => 13,
+            5 => 15,
+            6 => 20,
+            7 => 25,
+            8 => 30,
+            9 => 50,
+            10 => 75,
+            _ => 10, // Default to 10 for safety/neonate
+        };
+
+        return (BloodPotency: bloodPotency, MaxVitae: maxVitae, CurrentVitae: maxVitae);
     }
 
     /// <summary>

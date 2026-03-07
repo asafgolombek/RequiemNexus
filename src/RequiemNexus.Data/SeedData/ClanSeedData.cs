@@ -22,7 +22,6 @@ public static class ClanSeedData
         new() { Name = VentrueName, Description = "The lords, aristocratic tyrants who demand fealty." }
     ];
 
-
     /// <summary>
     /// Maps each clan to its three in-clan disciplines.
     /// Requires the clans and disciplines to already be saved (so they have IDs).
@@ -34,6 +33,7 @@ public static class ClanSeedData
 
         return
         [
+
             // Daeva: Celerity, Majesty, Vigor
             new() { ClanId = Clan(DaevaName).Id, DisciplineId = Disc("Celerity").Id },
             new() { ClanId = Clan(DaevaName).Id, DisciplineId = Disc("Majesty").Id },

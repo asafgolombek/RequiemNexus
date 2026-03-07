@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using RequiemNexus.Data.Models.Enums;
 
-
 namespace RequiemNexus.Data.Models;
 
 public class Equipment
@@ -26,6 +25,8 @@ public class Equipment
 
     // Optional weapon or armor specific stats
     public int Damage { get; set; }
+
     public int ArmorRating { get; set; }
+
     public int Penalty { get; set; }
 }

@@ -18,7 +18,9 @@ public class UserSession
     public required byte[] Value { get; set; }
 
     public DateTimeOffset LastActive { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
+
     public DateTimeOffset? ExpiresAt { get; set; }
 
     [MaxLength(512)]

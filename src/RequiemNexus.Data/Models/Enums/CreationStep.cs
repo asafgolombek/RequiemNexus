@@ -6,5 +6,5 @@ public enum CreationStep
     Attributes = 2,
     Skills = 3,
     MeritsAndDisciplines = 4,
-    ReviewAndEmbrace = 5
+    ReviewAndEmbrace = 5,
 }

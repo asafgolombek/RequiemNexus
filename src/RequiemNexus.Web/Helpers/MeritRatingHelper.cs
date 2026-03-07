@@ -16,6 +16,7 @@ public static class MeritRatingHelper
     /// <summary>
     /// Parses ValidRatings into a sorted list of valid numeric ratings.
     /// </summary>
+    /// <param name="validRatings">The string representation of valid ratings (e.g. "•• or ••••").</param>
     public static List<int> ParseValidRatings(string validRatings)
     {
         if (string.IsNullOrWhiteSpace(validRatings))
@@ -71,24 +72,20 @@ public static class MeritRatingHelper
         return ParseValidRatings(validRatings).Count <= 1;
     }
 
-    /// <summary>
-    /// Returns the minimum valid rating for a merit.
-    /// </summary>
+    /// <param name="validRatings">The string representation of valid ratings (e.g. "•• or ••••").</param>
+    /// <returns>The minimum valid rating.</returns>
     public static int GetMinRating(string validRatings)
     {
         var ratings = ParseValidRatings(validRatings);
         return ratings.Count > 0 ? ratings[0] : 1;
-
     }
 
-    /// <summary>
-    /// Returns the maximum valid rating for a merit.
-    /// </summary>
+    /// <param name="validRatings">The string representation of valid ratings (e.g. "•• or ••••").</param>
+    /// <returns>The maximum valid rating.</returns>
     public static int GetMaxRating(string validRatings)
     {
         var ratings = ParseValidRatings(validRatings);
         return ratings.Count > 0 ? ratings[ratings.Count - 1] : 5;
-
     }
 
     private static int CountBullets(string s)

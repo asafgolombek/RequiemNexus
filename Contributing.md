@@ -97,7 +97,14 @@ dotnet format
 
 PRs that fail `dotnet format --verify-no-changes` in CI will be blocked from merging.
 
-### 🗄️ Database Configuration (The Blood of the System)
+### 📏 Code Style (The Rule of One)
+
+Requiem Nexus enforces a strict **one type per file** policy (SA1402). 
+- Every `class`, `interface`, `record`, and `enum` must live in its own `.cs` file.
+- The file name must exactly match the type name.
+- There are **no exceptions**. This reduces cognitive load and ensures that the filesystem accurately reflects the domain model.
+
+PRs violating this rule will fail the CI pipeline as the build is configured with `/warnaserror`.
 
 - Ensure your local connection strings in `appsettings.Development.json` or user secrets point to a pure local instance.
 - **Never** commit production connection strings into source control.

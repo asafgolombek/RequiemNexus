@@ -28,6 +28,16 @@ public class CharacterMerit : IRatedTrait
     [NotMapped]
     public string Name => Merit?.Name ?? string.Empty;
 
-    public int CalculateUpgradeCost(int toRating) => toRating;
-}
+    public int CalculateUpgradeCost(int toRating)
+        => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, costMultiplier: 1);
 
+    public int Upgrade(int toRating, IExperienceCostRules rules)
+    {
+        if (toRating <= Rating)
+            throw new ArgumentException("Upgrade must be to a higher rating.", nameof(toRating));
+
+        int cost = rules.CalculateMeritCost(Rating, toRating);
+        Rating = toRating;
+        return cost;
+    }
+}

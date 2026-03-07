@@ -10,6 +10,27 @@ namespace RequiemNexus.Domain;
 public class ExperienceCostRules : IExperienceCostRules
 {
     /// <summary>
+    /// Generic upgrade cost calculation: sum of (dot × multiplier) for each new dot.
+    /// Returns 0 if the upgrade is invalid (newRating &lt;= currentRating).
+    /// This is kept static so entity classes can call it without DI.
+    /// </summary>
+    public static int CalculateUpgradeCost(int fromRating, int toRating, int costMultiplier)
+    {
+        if (toRating <= fromRating)
+        {
+            return 0;
+        }
+
+        int totalCost = 0;
+        for (int i = fromRating + 1; i <= toRating; i++)
+        {
+            totalCost += i * costMultiplier;
+        }
+
+        return totalCost;
+    }
+
+    /// <summary>
     /// Attribute upgrade cost: each new dot costs (dot level × 4).
     /// Example: upgrading from 2 → 4 costs (3×4)+(4×4) = 28 XP.
     /// </summary>
@@ -29,22 +50,9 @@ public class ExperienceCostRules : IExperienceCostRules
         => CalculateUpgradeCost(fromRating, toRating, costMultiplier: 5);
 
     /// <summary>
-    /// Merit purchase cost: 1 XP per dot of the merit's rating.
+    /// Merit purchase/upgrade cost: 1 XP per dot.
+    /// Example: upgrading from 2 → 4 costs 2 XP.
     /// </summary>
-    public int CalculateMeritCost(int rating) => rating;
-
-    /// <summary>
-    /// Generic upgrade cost calculation: sum of (dot × multiplier) for each new dot.
-    /// Returns 0 if the upgrade is invalid (newRating &lt;= currentRating).
-    /// This is kept static so entity classes can call it without DI.
-    /// </summary>
-    public static int CalculateUpgradeCost(int fromRating, int toRating, int costMultiplier)
-    {
-        if (toRating <= fromRating) return 0;
-
-        int totalCost = 0;
-        for (int i = fromRating + 1; i <= toRating; i++)
-            totalCost += i * costMultiplier;
-        return totalCost;
-    }
+    public int CalculateMeritCost(int fromRating, int toRating)
+        => Math.Max(0, toRating - fromRating);
 }

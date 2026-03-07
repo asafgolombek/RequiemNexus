@@ -14,7 +14,6 @@ public static class TestDbInitializer
     public const string TestUserPassword = "test"; // Used in E2E tests
 #pragma warning restore S2068
 
-
     public static async Task InitializeAsync(ApplicationDbContext context)
     {
         // Define a test user
@@ -30,14 +29,13 @@ public static class TestDbInitializer
                 Email = TestUserEmail,
                 NormalizedEmail = TestUserEmail.ToUpperInvariant(),
                 EmailConfirmed = true,
-                SecurityStamp = Guid.NewGuid().ToString()
+                SecurityStamp = Guid.NewGuid().ToString(),
             };
 
             newUser.PasswordHash = hasher.HashPassword(newUser, TestUserPassword);
 
             await context.Users.AddAsync(newUser);
             await context.SaveChangesAsync();
-
         }
     }
 }
