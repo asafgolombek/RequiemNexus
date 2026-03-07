@@ -153,7 +153,10 @@ public static class DbInitializer
     {
         // 4. Load Merits from JSON
         var meritsJsonPath = Environment.GetEnvironmentVariable("MERITS_JSON_PATH") ?? "scraped_data.json";
-        if (!File.Exists(meritsJsonPath)) return;
+        if (!File.Exists(meritsJsonPath))
+        {
+            return;
+        }
 
         try
         {
@@ -180,7 +183,10 @@ public static class DbInitializer
             var rating = meritNode.TryGetProperty("rating", out var node2) ? node2.GetString() : "•";
             var desc = meritNode.TryGetProperty("desc", out var node3) ? node3.GetString() : string.Empty;
 
-            if (string.IsNullOrWhiteSpace(name)) continue;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
 
             var truncatedName = name.Length > 100 ? name.Substring(0, 100) : name;
 

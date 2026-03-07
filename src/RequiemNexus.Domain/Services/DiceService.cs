@@ -26,9 +26,13 @@ public class DiceService : IDiceService
         result.DiceRolled.Add(roll);
 
         if (roll == 10)
+        {
             result.Successes = 1;
+        }
         else if (roll == 1)
+        {
             result.IsDramaticFailure = true;
+        }
 
         return result;
     }
@@ -70,7 +74,7 @@ public class DiceService : IDiceService
             }
             else if (isRote)
             {
-                // Rote action: reroll failed dice once. 
+                // Rote action: reroll failed dice once.
                 // In VtR 2e, if the reroll is a success, it can also explode if it meets the again-rule criteria.
                 int reroll = random.Next(1, 11);
                 result.DiceRolled.Add(reroll);
@@ -92,9 +96,21 @@ public class DiceService : IDiceService
     private static int CalculateExplosions(int roll, bool tenAgain, bool nineAgain, bool eightAgain)
     {
         int explosions = 0;
-        if (tenAgain && roll >= 10) explosions++;
-        if (nineAgain && roll == 9) explosions++;
-        if (eightAgain && roll == 8) explosions++;
+        if (tenAgain && roll >= 10)
+        {
+            explosions++;
+        }
+
+        if (nineAgain && roll == 9)
+        {
+            explosions++;
+        }
+
+        if (eightAgain && roll == 8)
+        {
+            explosions++;
+        }
+
         return explosions;
     }
 }

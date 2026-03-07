@@ -20,7 +20,9 @@ public static class MeritRatingHelper
     public static List<int> ParseValidRatings(string validRatings)
     {
         if (string.IsNullOrWhiteSpace(validRatings))
+        {
             return new List<int> { 1 };
+        }
 
         var trimmed = validRatings.Trim();
 
@@ -53,13 +55,18 @@ public static class MeritRatingHelper
                 .Where(v => v > 0)
                 .OrderBy(v => v)
                 .ToList();
-            if (ratings.Count > 0) return ratings;
+            if (ratings.Count > 0)
+            {
+                return ratings;
+            }
         }
 
         // Single value (e.g. "••")
         int single = CountBullets(trimmed);
         if (single > 0)
+        {
             return new List<int> { single };
+        }
 
         return new List<int> { 1 };
     }

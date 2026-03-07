@@ -74,10 +74,12 @@ public class DatabaseTicketStore(IServiceScopeFactory scopeFactory, ILogger<Data
 
         var session = await dbContext.UserSessions.FindAsync(key);
         if (session == null)
+        {
             return null;
+        }
 
-        // Optionally, update LastActive here as well. Note: reading a session happens often, 
-        // updating the DB on every read might impact performance. The RenewAsync method 
+        // Optionally, update LastActive here as well. Note: reading a session happens often,
+        // updating the DB on every read might impact performance. The RenewAsync method
         // handles updating sliding expirations, which is generally sufficient.
         return DeserializeFromBytes(session.Value);
     }

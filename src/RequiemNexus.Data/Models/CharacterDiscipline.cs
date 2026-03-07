@@ -31,7 +31,9 @@ public class CharacterDiscipline : IRatedTrait
     public int Upgrade(int toRating, IExperienceCostRules rules)
     {
         if (toRating <= Rating)
+        {
             throw new ArgumentException("Upgrade must be to a higher rating.", nameof(toRating));
+        }
 
         int cost = rules.CalculateDisciplineUpgradeCost(Rating, toRating);
         Rating = toRating;

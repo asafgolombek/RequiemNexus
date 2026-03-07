@@ -59,8 +59,6 @@ trim_trailing_whitespace = false
 [*.cs]
 dotnet_diagnostic.SA1200.severity = none # Using directives should be outside namespace
 dotnet_diagnostic.SA1101.severity = none # Prefix local calls with this
-dotnet_diagnostic.SA1503.severity = none # Braces should not be omitted
-dotnet_diagnostic.SA1028.severity = none # Code should not contain trailing whitespace
 dotnet_diagnostic.SA1600.severity = none # Elements should be documented
 dotnet_diagnostic.SA1601.severity = none # Partial elements should be documented
 dotnet_diagnostic.SA1602.severity = none # Enumeration items should be documented

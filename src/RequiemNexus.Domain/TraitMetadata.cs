@@ -50,9 +50,15 @@ public static class TraitMetadata
     public static string GetDisplayName(string name)
     {
         if (Enum.TryParse<AttributeId>(name, out var attrId))
+        {
             return GetDisplayName(attrId);
+        }
+
         if (Enum.TryParse<SkillId>(name, out var skillId))
+        {
             return GetDisplayName(skillId);
+        }
+
         return name;
     }
 

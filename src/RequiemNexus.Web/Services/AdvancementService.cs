@@ -62,7 +62,10 @@ public class AdvancementService : IAdvancementService
 
     private bool TryUpgradeTrait(Character character, IRatedTrait? trait, int newRating)
     {
-        if (trait == null || newRating <= trait.Rating || newRating > 5) return false;
+        if (trait == null || newRating <= trait.Rating || newRating > 5)
+        {
+            return false;
+        }
 
         int totalCost = trait.CalculateUpgradeCost(newRating);
 
