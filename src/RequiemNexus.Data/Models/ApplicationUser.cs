@@ -6,16 +6,22 @@ namespace RequiemNexus.Data.Models;
 public class ApplicationUser : IdentityUser
 {
     // A player or storyteller can have multiple characters
-    public virtual ICollection<Character> Characters { get; set; } = new List<Character>();
+    public virtual ICollection<Character> Characters { get; set; } = [];
 
     // A storyteller can run multiple campaigns
     [InverseProperty("StoryTeller")]
-    public virtual ICollection<Campaign> StoryToldCampaigns { get; set; } = new List<Campaign>();
+    public virtual ICollection<Campaign> StoryToldCampaigns { get; set; } = [];
 
     public DateOnly? Birthday { get; set; }
 
     public DateOnly? MemberSince { get; set; }
 
     // FIDO2 WebAuthn stored credentials for physical security keys
-    public virtual ICollection<FidoStoredCredential> FidoStoredCredentials { get; set; } = new List<FidoStoredCredential>();
+    public virtual ICollection<FidoStoredCredential> FidoStoredCredentials { get; set; } = [];
+
+    // Audit logs for security events
+    public virtual ICollection<AuditLog> AuditLogs { get; set; } = [];
+
+    // Soft-delete: when set, the account is scheduled for permanent deletion after the grace period.
+    public DateTimeOffset? DeletionScheduledAt { get; set; }
 }

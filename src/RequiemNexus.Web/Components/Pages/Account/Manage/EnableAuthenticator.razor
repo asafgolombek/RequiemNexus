@@ -4,11 +4,14 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<EnableAuthenticator> Logger
 @inject NavigationManager NavigationManager
+@inject IAuditLogService AuditLogService
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>Add Authenticator App - Requiem Nexus</PageTitle>
 
@@ -116,6 +119,9 @@ else
 
         await UserManager.SetTwoFactorEnabledAsync(user, true);
         Logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", user.Id);
+
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        await AuditLogService.LogAsync(user.Id, AuditEventType.TwoFactorEnabled, ipAddress, "Authenticator app");
         
         // Ensure there's a set of recovery codes available after enabling 2FA for the first time
         if (await UserManager.CountRecoveryCodesAsync(user) == 0)
