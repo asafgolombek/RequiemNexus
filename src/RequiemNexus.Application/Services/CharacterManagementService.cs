@@ -7,7 +7,7 @@ using RequiemNexus.Domain.Contracts;
 
 namespace RequiemNexus.Application.Services;
 
-public class CharacterService(ApplicationDbContext dbContext, ICharacterCreationRules creationRules) : ICharacterService
+public class CharacterManagementService(ApplicationDbContext dbContext, ICharacterCreationRules creationRules) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ICharacterCreationRules _creationRules = creationRules;

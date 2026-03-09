@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+ 
+  <ItemGroup>
+    <PackageReference Include="QuestPDF"/>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RequiemNexus.Data\RequiemNexus.Data.csproj" />

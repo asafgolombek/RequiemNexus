@@ -6,8 +6,11 @@
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
+@using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject IAdvancementService AdvancementService
+@inject ICharacterExportService ExportService
+@inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
@@ -73,6 +76,12 @@ else
                     <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
                     @onclick="ToggleFreeEditMode">
                         @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
+                    </button>
+                    <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
+                        Export JSON
+                    </button>
+                    <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
+                        Export PDF
                     </button>
                 </div>
             </div>
@@ -281,7 +290,8 @@ else
     private bool _isFreeEditMode = false;
     private string _activeTab = "sheet";
     private bool _isEditingName = false;
-    
+    private bool _isExporting = false;
+
     private readonly HashSet<int> _expandedDisciplines = new HashSet<int>();
 
     private void ToggleDiscipline(int disciplineId)
@@ -294,6 +304,26 @@ else
         {
             _expandedDisciplines.Add(disciplineId);
         }
+    }
+
+    private async Task ExportJson()
+    {
+        if (_character == null) return;
+        _isExporting = true;
+        var json = ExportService.ExportCharacterAsJson(_character);
+        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+        await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.json", "application/json", base64);
+        _isExporting = false;
+    }
+
+    private async Task ExportPdf()
+    {
+        if (_character == null) return;
+        _isExporting = true;
+        var pdfBytes = ExportService.ExportCharacterAsPdf(_character);
+        var base64 = Convert.ToBase64String(pdfBytes);
+        await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.pdf", "application/pdf", base64);
+        _isExporting = false;
     }
 
     private void GoToAdvancement()

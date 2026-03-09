@@ -312,7 +312,7 @@
       "requiemnexus.application": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "(, )",
+          "QuestPDF": "[2026.2.3, )",
           "RequiemNexus.Data": "[1.0.0, )",
           "RequiemNexus.Domain": "[1.0.0, )"
         }
@@ -394,6 +394,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "2.1.11",
           "SQLitePCLRaw.core": "2.1.11"
         }
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.3, )",
+        "resolved": "2026.2.3",
+        "contentHash": "el20n2otRqY6AXsijlwPcTf12A54vm2KucQZ67k+9N5htrzfsXaBxh+/gU44HhTS4kmRFdYerY6WE47ybHhFYA=="
       },
       "Serilog.AspNetCore": {
         "type": "CentralTransitive",
