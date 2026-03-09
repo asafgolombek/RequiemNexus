@@ -1,7 +1,7 @@
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 
-namespace RequiemNexus.Web.Contracts;
+namespace RequiemNexus.Application.Contracts;
 
 public interface IAdvancementService
 {

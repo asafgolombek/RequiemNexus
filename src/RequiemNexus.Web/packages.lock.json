@@ -454,6 +454,14 @@
           "System.Composition.Runtime": "9.0.0"
         }
       },
+      "requiemnexus.application": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "(, )",
+          "RequiemNexus.Data": "[1.0.0, )",
+          "RequiemNexus.Domain": "[1.0.0, )"
+        }
+      },
       "requiemnexus.data": {
         "type": "Project",
         "dependencies": {

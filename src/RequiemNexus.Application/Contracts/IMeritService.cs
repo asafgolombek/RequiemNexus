@@ -1,6 +1,6 @@
 using RequiemNexus.Data.Models;
 
-namespace RequiemNexus.Web.Contracts;
+namespace RequiemNexus.Application.Contracts;
 
 public interface IMeritService
 {

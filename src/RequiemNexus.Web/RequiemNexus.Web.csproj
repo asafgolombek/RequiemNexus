@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="..\RequiemNexus.Application\RequiemNexus.Application.csproj" />
     <ProjectReference Include="..\RequiemNexus.Data\RequiemNexus.Data.csproj" />
     <ProjectReference Include="..\RequiemNexus.Domain\RequiemNexus.Domain.csproj" />
   </ItemGroup>

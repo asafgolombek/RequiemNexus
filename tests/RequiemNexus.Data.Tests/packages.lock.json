@@ -309,6 +309,14 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "requiemnexus.application": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "(, )",
+          "RequiemNexus.Data": "[1.0.0, )",
+          "RequiemNexus.Domain": "[1.0.0, )"
+        }
+      },
       "requiemnexus.data": {
         "type": "Project",
         "dependencies": {
@@ -328,6 +336,7 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.3, )",
           "Microsoft.AspNetCore.Identity.UI": "[10.0.3, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.3, )",
+          "RequiemNexus.Application": "[1.0.0, )",
           "RequiemNexus.Data": "[1.0.0, )",
           "RequiemNexus.Domain": "[1.0.0, )",
           "Serilog.AspNetCore": "[10.0.0, )",

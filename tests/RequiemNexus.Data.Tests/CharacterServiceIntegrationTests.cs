@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
