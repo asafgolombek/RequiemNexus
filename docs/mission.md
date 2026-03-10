@@ -10,6 +10,25 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 
 ---
 
+## 📊 Phase Status
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 1 | The Neonate (Player Focus) | ✅ Complete |
+| 2 | Validation & Automation (The Ascendant) | ✅ Complete |
+| 3 | Account Management & Security (The Masquerade Veil) | 🔄 In Progress |
+| 4 | The Storyteller & The Danse Macabre | ⬜ Planned |
+| 5 | Automated Deployments & Observability | ⬜ Planned |
+| 6 | Realtime Play (The Blood Communion) | ⬜ Planned |
+| 7 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
+| 8 | End-to-End Testing & Accessibility | ⬜ Planned |
+| 9 | The Global Embrace | ⬜ Planned |
+
+> **Currently Active → [Phase 3](#-phase-3-account-management--security-the-masquerade-veil)**
+> Remaining: Password Reset via Email, Account Recovery, Rate Limiting, OAuth Connect, Role Management, Notification Preferences, Terms of Service & Privacy Policy.
+
+---
+
 ## 🧱 The Five Pillars
 
 Requiem Nexus is built on five guiding principles.
@@ -37,7 +56,7 @@ Requiem Nexus intentionally does **not** attempt to:
 ## 👥 Primary Users
 
 - **🧛 Player** — Manages characters, rolls dice, tracks conditions and aspirations.
-- **🎭 Storyteller** — Runs chronicles, manages NPCs, tracks player vitals, and organizes lore.
+- **🎭 Storyteller** — Runs chronicles, manages NPCs, tracks player vitals, and organizes lore. _(Storyteller-specific features are Phase 4 scope — not yet implemented.)_
 - **🧙 Developer (The Apprentice)** — Learns modern architecture through the project's Grimoire.
 
 ---
@@ -66,6 +85,8 @@ Every major subsystem must include:
 
 If it cannot be taught, it is not finished.
 
+> **Enforcement:** Learning artifacts are verified during PR review via the PR checklist — not automated CI. A PR that adds a major subsystem without a `README.md` must be rejected at review.
+
 ---
 
 ## ☁️ 2. Cloud-Native & Deployment (The Global Nexus)
@@ -76,8 +97,8 @@ The application is **cloud-agnostic** by design and deployable to any sanctuary:
 
 - **The Haven (Containerization)**  
   All services are isolated within Docker to ensure environment parity and uncorrupted local execution.
-- **Modular Monolith (The Sacred Covenants)**  
-  Logic is partitioned into domain-specific projects (`Data`, `Web`, `Roll`). They are isolated covenants—no shared dumping grounds are permitted.
+- **Modular Monolith (The Sacred Covenants)**
+  Logic is partitioned into four domain-specific projects (`Application`, `Data`, `Domain`, `Web`). They are isolated covenants—no shared dumping grounds are permitted.
 - **Service Orchestration**  
   **.NET Aspire** manages local resources, service discovery, and configuration. It is the ritual binding the services together.
 - **Stateless Scaling**  
@@ -137,8 +158,8 @@ The UI must _feel alive_, but never distracting.
 
 Security is intentional, explicit, and verifiable. The Masquerade is maintained at every perimeter.
 
-- **Zero-Trust Identity**  
-  OpenID Connect (OIDC) with short-lived JWTs. All service calls are authenticated.
+- **Zero-Trust Identity**
+  Currently implemented via **ASP.NET Core Identity** with secure cookie authentication. OpenID Connect (OIDC) with short-lived JWTs is the target for Phase 5+ service-to-service communication.
 - **BOLA / IDOR Prevention**  
   Strict ownership checks for characters and chronicles.
 - **Input Sanitization**  
@@ -172,37 +193,37 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 🎯 Key Objectives
 
-### 1. The Living Sheet
+### 1. The Living Sheet _(Phase 1 — ✅ Complete)_
 - Automatic calculation of Health, Willpower, Defense, and Speed.
 - Zero manual recalculation at any time.
 - Tap-to-roll integration with the Dice Nexus.
 
-### 2. The Beat & Experience Ledger
+### 2. The Beat & Experience Ledger _(Phase 4)_
 - An immutable, transactional history of how **Beats** were earned (Dramatic Failure, resolving a Condition, fulfilling an Aspiration).
 - Full audit trail of how **XP** was spent (Attribute dots, Discipline levels, Merits).
-- Eliminates the "Wait, did I add my Beats from last session?" problem forever.
+- Eliminates the “Wait, did I add my Beats from last session?” problem forever.
 
-### 3. Condition & Tilt Tracker
+### 3. Condition & Tilt Tracker _(Phase 4)_
 - First-class tracking for V:tR 2e **Conditions** (Guilty, Swooned, Tempted) and **Tilts** (Knocked Down, Stunned, Blinded).
 - One-tap resolution of Conditions to automatically award a Beat.
 - Mechanical effects of active Conditions/Tilts surfaced directly on the character sheet.
 
-### 4. Campaign Management (The Chronicle)
+### 4. Campaign Management (The Chronicle) _(Phase 4)_
 - Coterie Hub for shared chronicles.
 - Public lore, NPCs, and locations.
 - Group or individual XP allocation.
 
-### 5. Coterie & Domain Mapping (The Danse Macabre)
+### 5. Coterie & Domain Mapping (The Danse Macabre) _(Phase 4)_
 - Track feeding territories and hunting grounds.
 - Map the city's power structure: Prince, Primogen, Covenants, and their influence.
 - Manage NPC relationships and **Touchstones** — the mortal anchors that keep the Beast at bay.
 
-### 6. Storyteller Toolkit
+### 6. Storyteller Toolkit _(Phase 4)_
 - Real-time Initiative Tracker (Initiative Mod mechanics).
 - Private “Glimpse” view of player vitals.
 - Pre-built NPC stat-blocks for instant encounters.
 
-### 7. The Dice Nexus
+### 7. The Dice Nexus _(Phase 1 — ✅ Complete)_
 - High-throughput dice rolling.
 - Support for 10-again, 9-again, 8-again, and rote actions.
 - **Deterministic Mode** via seeded rolls for debugging and session replay.
@@ -236,6 +257,11 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Add Size, Speed, Defense, and Armor to the character sheet
 - [x] Add Mask and Dirge to the character and character sheet: include in character creation and ability to change them in the character sheet
 - [x] In the roll, add ability to choose the relevant ability to the roll
+- [x] Humanity tracking — dot-scale Humanity stat with Stain accumulation and degradation
+- [x] Vitae (Blood Pool) tracking — current/max Vitae with spend and replenish actions
+- [x] Blood Potency — core vampire stat affecting feeding and power level
+- [x] My Characters dashboard — character roster view with create, select, and manage actions
+- [ ] Predator Type — chosen at character creation; grants specific bonuses, feeding restrictions, and a starting Merit or Skill specialty
 
 ### Phase 1 Exit Criteria
 - A Neonate character can be created, advanced, and rolled entirely on mobile
@@ -257,7 +283,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Enforce minimum test coverage threshold in CI (fail the build if coverage drops below target)
 - [x] Configure branch protection rules on `main` (require CI + PR Checks to pass before merge)
 - [x] Enforce `.editorconfig` in CI (fail build if `dotnet format --verify-no-changes` fails)
-- [x] Performance / Load Testing baseline (e.g., k6 or NBomber smoke test to catch regressions on critical endpoints)
+- [x] Performance / Load Testing baseline (NBomber smoke test to catch regressions on critical endpoints)
 - [x] Test Data Seeding Strategy (repeatable, deterministic `TestDbInitializer` or fixture for integration and E2E tests)
 - [x] CI Caching & Build Time Optimization (cache NuGet packages and build artifacts in GitHub Actions)
 - [x] Automated Changelog / Release Notes (auto-generate from PR titles or conventional commits)
@@ -360,6 +386,13 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] **Touchstone Management** — track mortal Touchstones tied to Humanity anchors, with relationship status
 - [ ] **NPC Relationship Web** — visual or list-based relationship tracker between PCs, NPCs, and factions
 
+### Player Character Management
+- [ ] **Character Archiving / Retirement** — retire a character from active play without deleting them; archived characters remain viewable and exportable
+- [ ] **Saved Dice Macros** — save named dice pools (e.g., "Dexterity + Stealth") for one-tap reuse during play
+- [ ] **Character Notes & Session Journal** — free-form notes tied to a character or chronicle session
+- [ ] **Storyteller Secret Notes** — private per-character notes visible only to the Storyteller (hidden Banes, compromised Touchstones, etc.)
+- [ ] **Session Prep Workspace** — private Storyteller workspace for pre-session scene outlines and encounter planning, separate from shared chronicle lore
+
 ### Homebrew & Custom Content
 - [ ] **Custom Disciplines & Devotions** — create and share homebrew supernatural powers
 - [ ] **Custom Bloodlines** — define new Bloodlines with unique Disciplines and weaknesses
@@ -369,6 +402,7 @@ If a bug cannot be observed, it cannot be fixed.
 - A Storyteller can run a full session: track initiative, manage encounters, award Beats, and view player vitals — entirely from the Glimpse dashboard.
 - Conditions can be applied, mechanically tracked, and resolved for Beats without manual bookkeeping.
 - The city's political structure and feeding territories are viewable and editable by the Storyteller.
+- A player can retire a character, save a dice macro, and write session notes without developer intervention.
 - All features have full unit and integration test coverage.
 
 ---
@@ -409,6 +443,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] **Session Presence** — indicators showing which players are online and active in the chronicle
 - [ ] **Synchronized Chronicle State** — Storyteller actions (awarding Beats, applying Conditions, advancing scenes) push live to all connected players
 - [ ] **Dice Roll History Feed** — a shared, scrollable feed of all rolls made during a session
+- [ ] **Async / Play-by-Post Dice Sharing** — generate a shareable, permanent link to a roll result for groups that play asynchronously (no live session required)
 
 ### Phase 6 Exit Criteria
 - A full coterie can connect to a live session, roll dice, and see each other's results in real-time.

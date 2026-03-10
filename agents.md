@@ -2,6 +2,18 @@
 
 This document defines how AI coding agents (Claude Code, Copilot, etc.) should operate within this codebase. It is the **first file an agent should read** before making any changes.
 
+## Agent Startup Checklist
+
+Before touching any file, complete these steps in order:
+
+1. Read this file (`agents.md`) in full.
+2. Read [`docs/mission.md`](./docs/mission.md) — understand the current phase and what is already done.
+3. Read the existing tests for the area you are changing.
+4. Run `dotnet build` to confirm the baseline is healthy before you introduce any changes.
+5. Run `dotnet format --verify-no-changes` to confirm formatting is clean.
+
+If you are blocked or the requirements are ambiguous, stop and surface the question explicitly. Do not guess.
+
 ---
 
 ## Project Identity
@@ -18,7 +30,7 @@ It is also a **learning artifact** — the Grimoire. Every architectural decisio
 |---------|------------|
 | Framework | .NET 10, ASP.NET Core, Blazor |
 | Language | C# 14 (Primary Constructors, Collection Expressions) |
-| Architecture | Modular Monolith — `Data`, `Domain`, `Web` |
+| Architecture | Modular Monolith — `Application`, `Data`, `Domain`, `Web` |
 | ORM | EF Core (SQLite local, PostgreSQL production) |
 | Caching | Redis |
 | Real-Time | SignalR |
@@ -38,9 +50,10 @@ RequiemNexus/
 ├── docs/               # Architecture.md, mission.md
 ├── scripts/            # PowerShell automation
 ├── src/
-│   ├── RequiemNexus.Data/    # Infrastructure — EF Core, migrations, repositories
-│   ├── RequiemNexus.Domain/  # Domain — game rules, models, invariants
-│   └── RequiemNexus.Web/     # Presentation — Blazor components, SignalR hubs
+│   ├── RequiemNexus.Application/  # Application services, use-case orchestration, contracts
+│   ├── RequiemNexus.Data/         # Infrastructure — EF Core, migrations, repositories
+│   ├── RequiemNexus.Domain/       # Domain — game rules, models, invariants
+│   └── RequiemNexus.Web/          # Presentation — Blazor components, SignalR hubs
 └── tests/
     ├── RequiemNexus.Domain.Tests/      # Unit tests (deterministic, in-memory)
     ├── RequiemNexus.Data.Tests/        # Integration tests (EF Core, Dockerized DB)
@@ -60,6 +73,25 @@ RequiemNexus/
 ```
 
 A new developer (or agent) must be able to run the project in **under 10 minutes**.
+
+---
+
+## Git & Branch Conventions
+
+- **Branch naming:** `feature/{author}/{short-description}` — e.g., `feature/jdoe/add-totp-enrollment`
+- **Commit messages:** [Conventional Commits](https://www.conventionalcommits.org/) — `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
+- **One logical change per commit.** Do not batch unrelated changes.
+- **Never force-push to `main`.** All changes go through a PR.
+- Run `dotnet format` and `dotnet build` before committing.
+
+---
+
+## Secrets & Local Configuration
+
+- **Never store secrets in `appsettings.json`** or any file committed to the repository.
+- Use `dotnet user-secrets` for local development overrides (e.g., SMTP credentials, connection strings).
+- Use environment variables for CI and production secrets.
+- `appsettings.json` may contain placeholder values (e.g., `"YOUR_MAILTRAP_PASSWORD"`) — these are documentation, not live credentials.
 
 ---
 
@@ -133,10 +165,12 @@ Skipping step 3 is a security defect, not a shortcut.
 | Infrastructure | `RequiemNexus.Data.Tests` | Integration tests — Dockerized PostgreSQL |
 | Performance | `RequiemNexus.PerformanceTests` | Load tests enforcing latency budgets |
 
-**Performance budgets (enforced in CI):**
+**Performance budgets (enforced in CI via [NBomber](https://nbomber.com/)):**
 - Dice rolls: **< 200ms**
 - Character sheet TTI: **< 1.5s**
 - API response (p95): **< 300ms**
+
+Performance tests live in `tests/RequiemNexus.PerformanceTests/`. The target URL is configured via the `TARGET_URL` environment variable (defaults to `http://localhost:5000`).
 
 ---
 
@@ -186,11 +220,18 @@ Key rules of thumb:
 
 ## Current Phase
 
-The project is currently in **Phase 3: The Masquerade Veil** — Account Management & Security.
+See [`docs/mission.md`](./docs/mission.md) for the active phase, its goals, and the completion checklist. That file is the single source of truth — this section intentionally contains no duplicated detail to avoid drift.
 
-Active work involves: registration, email verification, login lockout, 2FA (TOTP + email + FIDO2), session management, data privacy (GDPR/CCPA), and role management.
+---
 
-See [docs/mission.md](./docs/mission.md) for the full phase roadmap and completion checklist.
+## What Agents Should Always Do
+
+- Verify ownership before any data-mutating operation.
+- Emit a structured Serilog log entry for new domain events or significant operations.
+- Add a unit test in `RequiemNexus.Domain.Tests` for any new domain logic.
+- Run `dotnet format` before committing — StyleCop failures block CI.
+- Add XML doc comments to all `public` members in `Domain` and `Application` services.
+- Confirm the build is green before declaring a task done (`dotnet build`).
 
 ---
 
@@ -206,6 +247,25 @@ See [docs/mission.md](./docs/mission.md) for the full phase roadmap and completi
 - Write a migration down-migration and rely on it for rollback.
 - Bypass StyleCop or editorconfig rules.
 - Swallow exceptions silently.
+
+---
+
+## Glossary
+
+Game-world terminology used as code identifiers — do not confuse with framework concepts.
+
+| Term | Meaning in Context |
+|------|--------------------|
+| **Requiem** | *Vampire: The Requiem* — the tabletop RPG this platform supports |
+| **Chronicle** | A campaign or ongoing story; maps to a `Campaign` entity |
+| **Covenant** | A vampire political faction (e.g., Invictus, Circle of the Crone); a character attribute |
+| **Clan** | A vampire bloodline with distinct powers; maps to a `Clan` entity |
+| **Discipline** | A supernatural power; maps to `Discipline` / `DisciplinePower` entities |
+| **Merit** | A character advantage; maps to the `Merit` entity |
+| **Touchstone** | A mortal anchor to a vampire's humanity; a character field |
+| **Beats** | Experience point increments in Chronicles of Darkness; maps to `Beats` on `Character` |
+| **The Masquerade** | (1) The vampire secret kept from mortals; (2) the security/auth phase of this project |
+| **Grimoire** | The project's role as a living learning artifact — every decision is teachable |
 
 ---
 
