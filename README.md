@@ -7,7 +7,7 @@
 
 **Requiem Nexus** is a learning-driven, cloud-native platform that eliminates the friction of character and chronicle management for **Vampire: The Requiem (Chronicles of Darkness) Second Edition**.
 
-Built with the **Antigravity Philosophy** on **.NET 10**, it provides a fast, secure, and immersive digital ecosystem where TTRPG tools disappear during play — leaving only the story.
+Built with the **Antigravity Philosophy** on **.NET 10**, it provides a fast, secure, and immersive digital ecosystem where TTRPG tools disappear during play — leaving only the story. The UI is forged in a **Modern Gothic Aesthetic** (bone-white and crimson), ensuring the digital environment matches the nocturnal atmosphere of the world.
 
 > _"The blood is the life… but clarity is the power."_
 
@@ -99,9 +99,10 @@ RequiemNexus/
 ├── docs/                     # Architecture and Mission documents
 ├── scripts/                  # PowerShell automation (build, test, deploy)
 ├── src/
-│   ├── RequiemNexus.Data/    # Infrastructure — EF Core, migrations, repositories
-│   ├── RequiemNexus.Domain/  # Domain — game rules, models, invariants
-│   └── RequiemNexus.Web/     # Presentation — Blazor components, SignalR hubs
+│   ├── RequiemNexus.Application/ # Application — orchestrates domain logic
+│   ├── RequiemNexus.Data/        # Infrastructure — EF Core, migrations, repositories
+│   ├── RequiemNexus.Domain/      # Domain — game rules, models, invariants
+│   └── RequiemNexus.Web/         # Presentation — Blazor components, SignalR hubs, gothic design system
 └── tests/
     ├── RequiemNexus.Domain.Tests/       # Unit tests
     ├── RequiemNexus.Data.Tests/         # Integration tests
@@ -116,8 +117,8 @@ RequiemNexus/
 |-------|------|--------|
 | 1 | **The Neonate** — Character system & dice rolling | ✅ Complete |
 | 2 | **The Ascendant** — Validation, CI/CD, testing | ✅ Complete |
-| 3 | **The Masquerade Veil** — Account management & security | 🔄 In Progress |
-| 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | ⬚ Planned |
+| 3 | **The Masquerade Veil** — Account management & security | ✅ Complete |
+| 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | 🔄 In Progress |
 | 5 | **Automated Deployments & Observability** | ⬚ Planned |
 | 6 | **The Blood Communion** — Realtime play | ⬚ Planned |
 | 7 | **The Hidden Refuge** — PWA & offline capabilities | ⬚ Planned |
