@@ -2,6 +2,12 @@
   "version": 2,
   "dependencies": {
     "net10.0": {
+      "AspNet.Security.OAuth.Discord": {
+        "type": "Direct",
+        "requested": "[9.0.0, )",
+        "resolved": "9.0.0",
+        "contentHash": "UEBj8Dm3yKs829/FPJqI6bJTEjJrmXsuY+b63I3njrtGYzPsGoQOCqh11RAWqhzo26Tm2zk8mmMAHSdcHCBVJQ=="
+      },
       "Fido2.AspNet": {
         "type": "Direct",
         "requested": "[4.0.0, )",
@@ -17,6 +23,12 @@
         "requested": "[10.0.3, )",
         "resolved": "10.0.3",
         "contentHash": "mr3Zn+ht8lijYvlMIasftw9opU9hsLKDdnOgQMmYI3RjWPJLOF9l8+YHDseRkTs97wOrULmJgo/NDCmzL/EGDg=="
+      },
+      "Microsoft.AspNetCore.Authentication.Google": {
+        "type": "Direct",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "yQa/PjN0tPgjDvT96J7ZlEpJ/KzL99MGVJIXPWJw3byVZZdEf5ahsZMtGhJGf7spy2tSWl8ULNdu2ZuKo4+2QA=="
       },
       "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
         "type": "Direct",
@@ -454,6 +466,14 @@
           "System.Composition.Runtime": "9.0.0"
         }
       },
+      "requiemnexus.application": {
+        "type": "Project",
+        "dependencies": {
+          "QuestPDF": "[2026.2.3, )",
+          "RequiemNexus.Data": "[1.0.0, )",
+          "RequiemNexus.Domain": "[1.0.0, )"
+        }
+      },
       "requiemnexus.data": {
         "type": "Project",
         "dependencies": {
@@ -475,6 +495,12 @@
           "Microsoft.IdentityModel.JsonWebTokens": "8.2.0",
           "NSec.Cryptography": "25.4.0"
         }
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.3, )",
+        "resolved": "2026.2.3",
+        "contentHash": "el20n2otRqY6AXsijlwPcTf12A54vm2KucQZ67k+9N5htrzfsXaBxh+/gU44HhTS4kmRFdYerY6WE47ybHhFYA=="
       }
     }
   }

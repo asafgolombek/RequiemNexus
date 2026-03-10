@@ -1,0 +1,99 @@
+@page "/Account/Manage/SecurityLog"
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuditLogService AuditLogService
+
+<PageTitle>Security Log - Requiem Nexus</PageTitle>
+
+<h3>Security Log</h3>
+<p class="text-muted">A record of security-relevant events on your account.</p>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (events.Count == 0)
+{
+    <div class="alert alert-secondary" role="alert">No security events recorded yet.</div>
+}
+else
+{
+    <div class="table-responsive mt-4">
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Event</th>
+                    <th scope="col">Date &amp; Time (UTC)</th>
+                    <th scope="col">IP Address</th>
+                    <th scope="col">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var evt in events)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge @GetBadgeClass(evt.EventType)">@FormatEventType(evt.EventType)</span>
+                        </td>
+                        <td>@evt.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@(evt.IpAddress ?? "—")</td>
+                        <td>@(evt.Details ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<AuditLog> events = [];
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            var user = await UserManager.GetUserAsync(principal);
+            if (user is not null)
+            {
+                events = await AuditLogService.GetRecentEventsAsync(user.Id);
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private static string FormatEventType(AuditEventType eventType) => eventType switch
+    {
+        AuditEventType.Login => "Login",
+        AuditEventType.PasswordChanged => "Password Changed",
+        AuditEventType.TwoFactorEnabled => "2FA Enabled",
+        AuditEventType.TwoFactorDisabled => "2FA Disabled",
+        AuditEventType.AccountDeletionRequested => "Deletion Requested",
+        AuditEventType.AccountDeletionCancelled => "Deletion Cancelled",
+        AuditEventType.PersonalDataDownloaded => "Data Downloaded",
+        AuditEventType.SecurityKeyAdded => "Security Key Added",
+        AuditEventType.SecurityKeyRemoved => "Security Key Removed",
+        _ => eventType.ToString(),
+    };
+
+    private static string GetBadgeClass(AuditEventType eventType) => eventType switch
+    {
+        AuditEventType.Login => "bg-success",
+        AuditEventType.PasswordChanged => "bg-warning text-dark",
+        AuditEventType.TwoFactorEnabled => "bg-info text-dark",
+        AuditEventType.TwoFactorDisabled => "bg-warning text-dark",
+        AuditEventType.AccountDeletionRequested => "bg-danger",
+        AuditEventType.AccountDeletionCancelled => "bg-secondary",
+        AuditEventType.PersonalDataDownloaded => "bg-primary",
+        AuditEventType.SecurityKeyAdded => "bg-info text-dark",
+        AuditEventType.SecurityKeyRemoved => "bg-warning text-dark",
+        _ => "bg-secondary",
+    };
+}

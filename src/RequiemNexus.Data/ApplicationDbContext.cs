@@ -40,6 +40,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<CharacterBane> CharacterBanes { get; set; } = default!;
 
+    public DbSet<AuditLog> AuditLogs { get; set; } = default!;
+
+    public DbSet<ConsentLog> ConsentLogs { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -126,6 +130,29 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(s => s.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // AuditLog >- ApplicationUser configuration
+        builder.Entity<AuditLog>()
+            .HasOne(l => l.User)
+            .WithMany(u => u.AuditLogs)
+            .HasForeignKey(l => l.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<AuditLog>()
+            .HasIndex(l => l.UserId);
+
+        builder.Entity<AuditLog>()
+            .HasIndex(l => l.OccurredAt);
+
+        // ConsentLog >- ApplicationUser configuration
+        builder.Entity<ConsentLog>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.ConsentLogs)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ConsentLog>()
+            .HasIndex(c => c.UserId);
 
         // Character >- CharacterAttribute configuration
         builder.Entity<CharacterAttribute>()

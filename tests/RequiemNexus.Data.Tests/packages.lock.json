@@ -309,6 +309,14 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "requiemnexus.application": {
+        "type": "Project",
+        "dependencies": {
+          "QuestPDF": "[2026.2.3, )",
+          "RequiemNexus.Data": "[1.0.0, )",
+          "RequiemNexus.Domain": "[1.0.0, )"
+        }
+      },
       "requiemnexus.data": {
         "type": "Project",
         "dependencies": {
@@ -323,17 +331,26 @@
       "requiemnexus.web": {
         "type": "Project",
         "dependencies": {
+          "AspNet.Security.OAuth.Discord": "[9.0.0, )",
           "Fido2.AspNet": "[4.0.0, )",
+          "Microsoft.AspNetCore.Authentication.Google": "[10.0.3, )",
           "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": "[10.0.3, )",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.3, )",
           "Microsoft.AspNetCore.Identity.UI": "[10.0.3, )",
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.3, )",
+          "RequiemNexus.Application": "[1.0.0, )",
           "RequiemNexus.Data": "[1.0.0, )",
           "RequiemNexus.Domain": "[1.0.0, )",
           "Serilog.AspNetCore": "[10.0.0, )",
           "Serilog.Sinks.Console": "[6.1.1, )",
           "Serilog.Sinks.File": "[7.0.0, )"
         }
+      },
+      "AspNet.Security.OAuth.Discord": {
+        "type": "CentralTransitive",
+        "requested": "[9.0.0, )",
+        "resolved": "9.0.0",
+        "contentHash": "UEBj8Dm3yKs829/FPJqI6bJTEjJrmXsuY+b63I3njrtGYzPsGoQOCqh11RAWqhzo26Tm2zk8mmMAHSdcHCBVJQ=="
       },
       "Fido2": {
         "type": "CentralTransitive",
@@ -355,6 +372,12 @@
           "Fido2": "4.0.0",
           "Fido2.Models": "4.0.0"
         }
+      },
+      "Microsoft.AspNetCore.Authentication.Google": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "yQa/PjN0tPgjDvT96J7ZlEpJ/KzL99MGVJIXPWJw3byVZZdEf5ahsZMtGhJGf7spy2tSWl8ULNdu2ZuKo4+2QA=="
       },
       "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
         "type": "CentralTransitive",
@@ -385,6 +408,12 @@
           "SQLitePCLRaw.bundle_e_sqlite3": "2.1.11",
           "SQLitePCLRaw.core": "2.1.11"
         }
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.3, )",
+        "resolved": "2026.2.3",
+        "contentHash": "el20n2otRqY6AXsijlwPcTf12A54vm2KucQZ67k+9N5htrzfsXaBxh+/gU44HhTS4kmRFdYerY6WE47ybHhFYA=="
       },
       "Serilog.AspNetCore": {
         "type": "CentralTransitive",

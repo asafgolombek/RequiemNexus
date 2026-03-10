@@ -39,6 +39,17 @@ public class DatabaseTicketStore(IServiceScopeFactory scopeFactory, ILogger<Data
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         dbContext.UserSessions.Add(session);
+
+        var auditLog = new AuditLog
+        {
+            UserId = userId,
+            EventType = AuditEventType.Login,
+            OccurredAt = DateTimeOffset.UtcNow,
+            IpAddress = ipAddress,
+            Details = userAgent,
+        };
+        dbContext.AuditLogs.Add(auditLog);
+
         await dbContext.SaveChangesAsync();
 
         return id;

@@ -1,0 +1,117 @@
+@page "/Account/ExternalLogin"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject IAuditLogService AuditLogService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+@inject ILogger<ExternalLogin> Logger
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        string? ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+
+        // Get the external login info from the callback
+        Microsoft.AspNetCore.Identity.ExternalLoginInfo? info = await SignInManager.GetExternalLoginInfoAsync();
+        if (info is null)
+        {
+            Logger.LogWarning("External login info not found during callback.");
+            NavigationManager.NavigateTo("/?error=external-login-failed");
+            return;
+        }
+
+        // Try to sign in with the external login
+        Microsoft.AspNetCore.Identity.SignInResult result = await SignInManager.ExternalLoginSignInAsync(
+            info.LoginProvider,
+            info.ProviderKey,
+            isPersistent: false,
+            bypassTwoFactor: true);
+
+        if (result.Succeeded)
+        {
+            ApplicationUser? existingUser = await UserManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (existingUser is not null)
+            {
+                await AuditLogService.LogAsync(existingUser.Id, AuditEventType.Login, ipAddress, $"Login via {info.LoginProvider}.");
+            }
+
+            NavigationManager.NavigateTo(ReturnUrl ?? "/home", true);
+            return;
+        }
+
+        if (result.IsLockedOut)
+        {
+            NavigationManager.NavigateTo("/?error=locked-out");
+            return;
+        }
+
+        // User does not have a local account — try to find by email to detect conflict
+        string? email = info.Principal.FindFirstValue(System.Security.Claims.ClaimTypes.Email);
+        if (string.IsNullOrEmpty(email))
+        {
+            Logger.LogWarning("External provider {Provider} did not supply an email address.", info.LoginProvider);
+            NavigationManager.NavigateTo("/?error=no-email-from-provider");
+            return;
+        }
+
+        ApplicationUser? userWithSameEmail = await UserManager.FindByEmailAsync(email);
+
+        if (userWithSameEmail is not null)
+        {
+            // Email exists but is linked to a local account — link the external login to it
+            Microsoft.AspNetCore.Identity.IdentityResult linkResult = await UserManager.AddLoginAsync(userWithSameEmail, info);
+            if (linkResult.Succeeded)
+            {
+                await SignInManager.SignInAsync(userWithSameEmail, isPersistent: false);
+                await AuditLogService.LogAsync(userWithSameEmail.Id, AuditEventType.ExternalLoginLinked, ipAddress, $"{info.LoginProvider} account linked and signed in.");
+                NavigationManager.NavigateTo(ReturnUrl ?? "/home", true);
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/?error=link-failed");
+            }
+
+            return;
+        }
+
+        // Create a new local account from the external login
+        ApplicationUser newUser = new()
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true, // Provider email is verified
+            MemberSince = DateOnly.FromDateTime(DateTime.UtcNow),
+        };
+
+        string? displayName = info.Principal.FindFirstValue(System.Security.Claims.ClaimTypes.Name);
+        if (!string.IsNullOrEmpty(displayName))
+        {
+            newUser.DisplayName = displayName;
+        }
+
+        Microsoft.AspNetCore.Identity.IdentityResult createResult = await UserManager.CreateAsync(newUser);
+        if (!createResult.Succeeded)
+        {
+            Logger.LogError("Failed to create user from external login {Provider}: {Errors}",
+                info.LoginProvider,
+                string.Join(", ", createResult.Errors.Select(e => e.Description)));
+            NavigationManager.NavigateTo("/?error=create-failed");
+            return;
+        }
+
+        await UserManager.AddToRoleAsync(newUser, "Player");
+        await UserManager.AddLoginAsync(newUser, info);
+        await SignInManager.SignInAsync(newUser, isPersistent: false);
+        await AuditLogService.LogAsync(newUser.Id, AuditEventType.ExternalLoginLinked, ipAddress, $"Account created and linked via {info.LoginProvider}.");
+
+        NavigationManager.NavigateTo(ReturnUrl ?? "/home", true);
+    }
+}

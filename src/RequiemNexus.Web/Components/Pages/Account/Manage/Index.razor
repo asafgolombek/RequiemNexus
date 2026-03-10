@@ -1,45 +1,282 @@
 @page "/Account/Manage"
+@using System.ComponentModel.DataAnnotations
+@using System.Text
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Services
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuditLogService AuditLogService
+@inject IRequiemEmailService EmailService
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>Profile - Requiem Nexus</PageTitle>
 
 <h3>Profile</h3>
 
+@if (!string.IsNullOrEmpty(profileStatusMessage))
+{
+    <div class="alert @(profileIsError ? "alert-danger" : "alert-success")" role="alert">
+        @profileStatusMessage
+    </div>
+}
+
 @if (user is not null)
 {
-    <div class="mb-4">
-        <h5>Email Address</h5>
-        <p class="text-muted">@user.Email</p>
-    </div>
-    
-    <div class="mb-4">
-        <h5>Date of Birth</h5>
-        <p class="text-muted">@(user.Birthday?.ToString("d") ?? "N/A")</p>
-    </div>
+    <section class="mb-5">
+        <h5 class="section-heading">Display Name &amp; Avatar</h5>
+        <EditForm Model="ProfileInput" OnValidSubmit="HandleProfileSave" FormName="profile" class="login-form mt-3">
+            <DataAnnotationsValidator />
 
-    <div class="mb-4">
-        <h5>Member Since</h5>
-        <p class="text-muted">@(user.MemberSince?.ToString("d") ?? "N/A")</p>
-    </div>
+            <div class="form-group">
+                <label for="display-name">Display Name</label>
+                <div class="input-container">
+                    <InputText id="display-name" @bind-Value="ProfileInput.DisplayName" class="form-control"
+                               placeholder="@(user.Email?.Split('@')[0] ?? "Your name")" />
+                </div>
+                <ValidationMessage For="() => ProfileInput.DisplayName" class="text-danger" />
+                <small class="text-muted">Shown in the UI instead of your email. Leave blank to use your email.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="avatar-url">Avatar URL</label>
+                <div class="input-container">
+                    <InputText id="avatar-url" @bind-Value="ProfileInput.AvatarUrl" class="form-control"
+                               placeholder="https://example.com/your-avatar.png" />
+                </div>
+                <ValidationMessage For="() => ProfileInput.AvatarUrl" class="text-danger" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ProfileInput.AvatarUrl))
+            {
+                <div class="mb-3">
+                    <img src="@ProfileInput.AvatarUrl" alt="Avatar preview" class="avatar-preview" />
+                </div>
+            }
+            else
+            {
+                <div class="avatar-initials mb-3">
+                    @GetInitials()
+                </div>
+            }
+
+            <button type="submit" class="btn-login" disabled="@isProfileSubmitting">
+                @(isProfileSubmitting ? "Saving..." : "Save Profile")
+            </button>
+        </EditForm>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="mb-5">
+        <h5 class="section-heading">Change Email</h5>
+
+        @if (!string.IsNullOrEmpty(emailStatusMessage))
+        {
+            <div class="alert @(emailIsError ? "alert-danger" : "alert-success")" role="alert">
+                @emailStatusMessage
+            </div>
+        }
+
+        <p class="text-muted mb-3">Current email: <strong>@user.Email</strong></p>
+
+        <EditForm Model="EmailInput" OnValidSubmit="HandleEmailChange" FormName="change-email" class="login-form">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label for="new-email">New Email Address</label>
+                <div class="input-container">
+                    <InputText id="new-email" type="email" @bind-Value="EmailInput.NewEmail" class="form-control"
+                               placeholder="new@example.com" autocomplete="email" />
+                </div>
+                <ValidationMessage For="() => EmailInput.NewEmail" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn-login" disabled="@isEmailSubmitting">
+                @(isEmailSubmitting ? "Sending..." : "Send Verification Email")
+            </button>
+        </EditForm>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="mb-4">
+        <h5 class="section-heading">Account Info</h5>
+        <div class="mb-3">
+            <span class="text-muted">Date of Birth:</span>
+            <span class="ms-2">@(user.Birthday?.ToString("d") ?? "N/A")</span>
+        </div>
+        <div class="mb-3">
+            <span class="text-muted">Member Since:</span>
+            <span class="ms-2">@(user.MemberSince?.ToString("d") ?? "N/A")</span>
+        </div>
+    </section>
 }
 else
 {
     <p>Loading profile...</p>
 }
 
+<style>
+    .section-heading {
+        color: var(--rn-text-light);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .avatar-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--rn-accent-red);
+    }
+    .avatar-initials {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(186, 24, 38, 0.2);
+        border: 2px solid var(--rn-accent-red);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--rn-accent-red);
+        text-transform: uppercase;
+    }
+    .divider {
+        border-color: rgba(255,255,255,0.1);
+        margin: 2rem 0;
+    }
+</style>
+
 @code {
+    [SupplyParameterFromForm(FormName = "profile")]
+    public ProfileModel ProfileInput { get; set; } = default!;
+
+    [SupplyParameterFromForm(FormName = "change-email")]
+    public EmailChangeModel EmailInput { get; set; } = default!;
+
     private ApplicationUser? user;
+    private string? profileStatusMessage;
+    private bool profileIsError;
+    private bool isProfileSubmitting;
+    private string? emailStatusMessage;
+    private bool emailIsError;
+    private bool isEmailSubmitting;
 
     protected override async Task OnInitializedAsync()
     {
+        ProfileInput ??= new();
+        EmailInput ??= new();
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var principal = authState.User;
         if (principal.Identity?.IsAuthenticated == true)
         {
             user = await UserManager.GetUserAsync(principal);
+            if (user is not null)
+            {
+                ProfileInput.DisplayName = user.DisplayName;
+                ProfileInput.AvatarUrl = user.AvatarUrl;
+            }
         }
+    }
+
+    private async Task HandleProfileSave()
+    {
+        if (user is null) return;
+
+        isProfileSubmitting = true;
+        profileStatusMessage = null;
+        profileIsError = false;
+
+        var nameChanged = user.DisplayName != ProfileInput.DisplayName;
+        user.DisplayName = ProfileInput.DisplayName;
+        user.AvatarUrl = ProfileInput.AvatarUrl;
+
+        var result = await UserManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            profileStatusMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            profileIsError = true;
+            isProfileSubmitting = false;
+            return;
+        }
+
+        if (nameChanged)
+        {
+            var ip = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            await AuditLogService.LogAsync(user.Id, AuditEventType.DisplayNameChanged, ip);
+        }
+
+        profileStatusMessage = "Profile saved.";
+        isProfileSubmitting = false;
+    }
+
+    private async Task HandleEmailChange()
+    {
+        if (user is null) return;
+
+        isEmailSubmitting = true;
+        emailStatusMessage = null;
+        emailIsError = false;
+
+        var newEmail = EmailInput.NewEmail.Trim();
+
+        if (string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            emailStatusMessage = "The new email address is the same as your current email.";
+            emailIsError = true;
+            isEmailSubmitting = false;
+            return;
+        }
+
+        var token = await UserManager.GenerateChangeEmailTokenAsync(user, newEmail);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        var encodedEmail = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(newEmail));
+
+        var baseUri = NavigationManager.BaseUri.TrimEnd('/');
+        var changeLink = $"{baseUri}/Account/ConfirmEmailChange?userId={Uri.EscapeDataString(user.Id)}&email={Uri.EscapeDataString(encodedEmail)}&code={Uri.EscapeDataString(encodedToken)}";
+
+        await EmailService.SendEmailChangeLinkAsync(user, newEmail, changeLink);
+
+        var ip = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        await AuditLogService.LogAsync(user.Id, AuditEventType.EmailChangeRequested, ip, $"Requested change to {newEmail}");
+
+        emailStatusMessage = $"A verification link has been sent to {newEmail}. Your email will change once you click the link.";
+        emailIsError = false;
+        EmailInput = new();
+        isEmailSubmitting = false;
+    }
+
+    private string GetInitials()
+    {
+        var name = user?.DisplayName ?? user?.Email ?? "?";
+        var parts = name.Split(['@', ' '], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}"
+            : name.Length > 0 ? name[0].ToString() : "?";
+    }
+
+    public class ProfileModel
+    {
+        [MaxLength(100, ErrorMessage = "Display name cannot exceed 100 characters.")]
+        public string? DisplayName { get; set; }
+
+        [MaxLength(500, ErrorMessage = "Avatar URL cannot exceed 500 characters.")]
+        [Url(ErrorMessage = "Please enter a valid URL.")]
+        public string? AvatarUrl { get; set; }
+    }
+
+    public class EmailChangeModel
+    {
+        [Required(ErrorMessage = "Please enter a new email address.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string NewEmail { get; set; } = string.Empty;
     }
 }

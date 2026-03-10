@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 
@@ -14,12 +15,25 @@ public static class DbInitializer
     private const string _costOneVitae = "1 Vitae";
     private const string _costOneWillpower = "1 Willpower";
 
-    public static async Task InitializeAsync(ApplicationDbContext context)
+    public static async Task InitializeAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager)
     {
         await context.Database.MigrateAsync();
 
+        await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
         await SeedMeritsFromJsonAsync(context);
+    }
+
+    private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
+    {
+        string[] roles = ["Player", "Storyteller", "Admin"];
+        foreach (string role in roles)
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
     }
 
     private static async Task SeedClansAndDisciplinesAsync(ApplicationDbContext context)

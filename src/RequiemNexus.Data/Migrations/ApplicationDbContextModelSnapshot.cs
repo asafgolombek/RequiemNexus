@@ -153,11 +153,20 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateOnly?>("Birthday")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("DeletionScheduledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
@@ -183,6 +192,15 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("NotifyOnAccountChanges")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotifyOnNewsletter")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotifyOnSecurityEvents")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("TEXT");
@@ -213,6 +231,39 @@ namespace RequiemNexus.Data.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Campaign", b =>
@@ -588,6 +639,40 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("ClanDisciplines");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.ConsentLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConsentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("ConsentedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ConsentLogs");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>
                 {
                     b.Property<int>("Id")
@@ -838,6 +923,17 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.AuditLog", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.ApplicationUser", "User")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Campaign", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.ApplicationUser", null)
@@ -998,6 +1094,17 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Discipline");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.ConsentLog", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.ApplicationUser", "User")
+                        .WithMany("ConsentLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.DisciplinePower", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Discipline", "Discipline")
@@ -1033,7 +1140,11 @@ namespace RequiemNexus.Data.Migrations
 
             modelBuilder.Entity("RequiemNexus.Data.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("AuditLogs");
+
                     b.Navigation("Characters");
+
+                    b.Navigation("ConsentLogs");
 
                     b.Navigation("FidoStoredCredentials");
 

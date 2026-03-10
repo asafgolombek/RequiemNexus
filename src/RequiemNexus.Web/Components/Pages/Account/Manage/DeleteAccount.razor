@@ -1,0 +1,211 @@
+@page "/Account/Manage/DeleteAccount"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuditLogService AuditLogService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete Account - Requiem Nexus</PageTitle>
+
+<h3>Delete Account</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (isDeletionScheduled)
+{
+    <div class="alert alert-warning" role="alert">
+        <strong>Account deletion is scheduled.</strong><br />
+        Your account and all associated data will be permanently deleted on
+        <strong>@deletionDate!.Value.ToString("MMMM dd, yyyy")</strong>.
+        You can cancel this request before that date.
+    </div>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">
+            @statusMessage
+        </div>
+    }
+
+    <button class="btn btn-outline-secondary mt-3" @onclick="HandleCancelDeletion" disabled="@isSubmitting">
+        @if (isSubmitting)
+        {
+            <span>Cancelling...</span>
+        }
+        else
+        {
+            <span>Cancel Account Deletion</span>
+        }
+    </button>
+}
+else
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>Warning:</strong> This action schedules your account for permanent deletion.
+        You will have a <strong>30-day grace period</strong> to cancel. After that, your account,
+        characters, and all associated data will be permanently and irreversibly deleted.
+    </div>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">
+            @statusMessage
+        </div>
+    }
+
+    <p class="mt-3">To confirm, please enter your password:</p>
+
+    <EditForm Model="Input" OnValidSubmit="HandleRequestDeletion" FormName="delete-account" class="login-form mt-3">
+        <DataAnnotationsValidator />
+
+        <div class="form-group">
+            <label for="confirm-password">Password</label>
+            <div class="input-container">
+                <InputText id="confirm-password" type="password" @bind-Value="Input.Password"
+                           class="form-control" autocomplete="current-password"
+                           placeholder="Enter your current password to confirm." />
+            </div>
+            <ValidationMessage For="() => Input.Password" class="text-danger" />
+        </div>
+
+        <button type="submit" class="btn btn-danger mt-3" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span>Processing...</span>
+            }
+            else
+            {
+                <span>Request Account Deletion</span>
+            }
+        </button>
+    </EditForm>
+}
+
+@code {
+    [SupplyParameterFromForm]
+    public DeleteAccountModel Input { get; set; } = default!;
+
+    private ApplicationUser? user;
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private bool isDeletionScheduled;
+    private DateTimeOffset? deletionDate;
+    private string? statusMessage;
+    private bool isError;
+
+    private static readonly TimeSpan GracePeriod = TimeSpan.FromDays(30);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            user = await UserManager.GetUserAsync(principal);
+            if (user is not null)
+            {
+                isDeletionScheduled = user.DeletionScheduledAt.HasValue;
+                deletionDate = user.DeletionScheduledAt;
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private async Task HandleRequestDeletion()
+    {
+        isSubmitting = true;
+        statusMessage = null;
+        isError = false;
+
+        if (user is null)
+        {
+            statusMessage = "Unable to load user.";
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        var passwordCheck = await UserManager.CheckPasswordAsync(user, Input.Password);
+        if (!passwordCheck)
+        {
+            statusMessage = "Incorrect password. Please try again.";
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        user.DeletionScheduledAt = DateTimeOffset.UtcNow.Add(GracePeriod);
+        var updateResult = await UserManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            statusMessage = "An error occurred. Please try again.";
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        await AuditLogService.LogAsync(
+            user.Id,
+            AuditEventType.AccountDeletionRequested,
+            ipAddress,
+            $"Scheduled for deletion on {user.DeletionScheduledAt.Value:yyyy-MM-dd}");
+
+        isDeletionScheduled = true;
+        deletionDate = user.DeletionScheduledAt;
+        statusMessage = $"Your account is scheduled for deletion on {deletionDate!.Value:MMMM dd, yyyy}.";
+        isSubmitting = false;
+    }
+
+    private async Task HandleCancelDeletion()
+    {
+        isSubmitting = true;
+        statusMessage = null;
+        isError = false;
+
+        if (user is null)
+        {
+            statusMessage = "Unable to load user.";
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        user.DeletionScheduledAt = null;
+        var updateResult = await UserManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            statusMessage = "An error occurred. Please try again.";
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        await AuditLogService.LogAsync(user.Id, AuditEventType.AccountDeletionCancelled, ipAddress);
+
+        isDeletionScheduled = false;
+        deletionDate = null;
+        statusMessage = "Account deletion has been cancelled. Your account is safe.";
+        isSubmitting = false;
+    }
+
+    public class DeleteAccountModel
+    {
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+    }
+}

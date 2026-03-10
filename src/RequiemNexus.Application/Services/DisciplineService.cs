@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Web.Contracts;
 
-namespace RequiemNexus.Web.Services;
+namespace RequiemNexus.Application.Services;
 
 public class DisciplineService(ApplicationDbContext dbContext) : IDisciplineService
 {

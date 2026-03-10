@@ -1,0 +1,96 @@
+@page "/Account/Manage/DownloadPersonalData"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuditLogService AuditLogService
+@inject IUserDataExportService UserDataExportService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JS
+
+<PageTitle>Download My Data - Requiem Nexus</PageTitle>
+
+<h3>Download My Data</h3>
+<p>
+    You can export a complete copy of your personal data held by Requiem Nexus.
+    The export includes your profile, all characters, and your security event history.
+</p>
+<p class="text-muted small">
+    This satisfies your rights under GDPR (Article 20 — Data Portability) and CCPA (Right to Know / Right to Data Portability).
+</p>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">
+        @statusMessage
+    </div>
+}
+
+<div class="mt-4">
+    <button class="btn btn-primary" @onclick="HandleDownload" disabled="@isDownloading">
+        @if (isDownloading)
+        {
+            <span>Preparing export...</span>
+        }
+        else
+        {
+            <span>Download Personal Data (JSON)</span>
+        }
+    </button>
+</div>
+
+@code {
+    private bool isDownloading;
+    private string? statusMessage;
+    private bool isError;
+    private ApplicationUser? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            user = await UserManager.GetUserAsync(principal);
+        }
+    }
+
+    private async Task HandleDownload()
+    {
+        if (user is null)
+        {
+            statusMessage = "Unable to load user.";
+            isError = true;
+            return;
+        }
+
+        isDownloading = true;
+        statusMessage = null;
+        isError = false;
+
+        try
+        {
+            var json = await UserDataExportService.ExportUserDataAsJsonAsync(user.Id);
+
+            var ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            await AuditLogService.LogAsync(user.Id, AuditEventType.PersonalDataDownloaded, ipAddress);
+
+            var fileName = $"requiem-nexus-data-{DateTime.UtcNow:yyyyMMdd}.json";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            var base64 = Convert.ToBase64String(bytes);
+
+            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/json", base64);
+        }
+        catch (Exception e)
+        {
+            statusMessage = $"An error occurred while preparing your data export. Please try again. {e}";
+            isError = true;
+        }
+
+        isDownloading = false;
+    }
+}

@@ -1,0 +1,192 @@
+@page "/account-recovery"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("account-recovery")]
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Services
+@inject UserManager<ApplicationUser> UserManager
+@inject IAuditLogService AuditLogService
+@inject IRequiemEmailService EmailService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Account Recovery - Requiem Nexus</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Account Recovery</h2>
+            <p>Regain access by disabling two-factor authentication</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        @if (currentStep == Step.EnterEmail)
+        {
+            <p class="mb-3">Enter the email address associated with your account. If your account has 2FA enabled, we will send you a recovery code.</p>
+
+            <EditForm Model="emailInput" OnValidSubmit="HandleEmailSubmit" FormName="recovery-email" class="login-form">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="recovery-email">Email Address</label>
+                    <div class="input-container">
+                        <InputText id="recovery-email" type="email" @bind-Value="emailInput.Email" class="form-control" placeholder="Enter your email" />
+                    </div>
+                    <ValidationMessage For="() => emailInput.Email" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn-login mt-3" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span>Sending...</span>
+                    }
+                    else
+                    {
+                        <span>Send Recovery Code</span>
+                    }
+                </button>
+            </EditForm>
+        }
+        else if (currentStep == Step.EnterCode)
+        {
+            <p class="mb-3">A recovery code has been sent to your email address. Enter it below to disable two-factor authentication.</p>
+
+            <EditForm Model="codeInput" OnValidSubmit="HandleCodeSubmit" FormName="recovery-code" class="login-form">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="recovery-code">Recovery Code</label>
+                    <div class="input-container">
+                        <InputText id="recovery-code" @bind-Value="codeInput.Code" class="form-control" placeholder="Enter the 6-digit code" autocomplete="off" />
+                    </div>
+                    <ValidationMessage For="() => codeInput.Code" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn-login mt-3" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span>Verifying...</span>
+                    }
+                    else
+                    {
+                        <span>Verify &amp; Disable 2FA</span>
+                    }
+                </button>
+            </EditForm>
+        }
+        else if (currentStep == Step.Success)
+        {
+            <div class="alert alert-success" role="alert">
+                Two-factor authentication has been disabled on your account.
+            </div>
+            <p>You can now log in with just your email and password. We strongly recommend setting up 2FA again once you have regained access.</p>
+            <div class="mt-3">
+                <a href="/" class="btn-login d-inline-block text-center text-decoration-none">Return to Sign In</a>
+            </div>
+        }
+
+        <div class="login-footer mt-4">
+            <p><a href="/">Back to Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private enum Step { EnterEmail, EnterCode, Success }
+
+    private Step currentStep = Step.EnterEmail;
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    // Stored in component state (safe in interactive server mode)
+    private string? recoveryUserId;
+
+    private EmailInputModel emailInput = new();
+    private CodeInputModel codeInput = new();
+
+    private async Task HandleEmailSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        // Find user but never reveal existence
+        var user = await UserManager.FindByEmailAsync(emailInput.Email);
+        if (user is not null && await UserManager.IsEmailConfirmedAsync(user) && await UserManager.GetTwoFactorEnabledAsync(user))
+        {
+            // Generate a 6-digit numeric token using DefaultEmailProvider with custom purpose
+            var token = await UserManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+
+            // We use only the first 6 digits for simplicity
+            var code = token.Length >= 6 ? token[..6] : token;
+
+            recoveryUserId = user.Id;
+
+            await EmailService.SendAccountRecoveryCodeAsync(user, user.Email!, code);
+        }
+
+        // Always advance to code step to prevent user enumeration
+        currentStep = Step.EnterCode;
+        isSubmitting = false;
+    }
+
+    private async Task HandleCodeSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        if (string.IsNullOrEmpty(recoveryUserId))
+        {
+            errorMessage = "Invalid recovery session. Please start the process again.";
+            currentStep = Step.EnterEmail;
+            isSubmitting = false;
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(recoveryUserId);
+        if (user is null)
+        {
+            errorMessage = "Unable to find the account. Please start the process again.";
+            currentStep = Step.EnterEmail;
+            isSubmitting = false;
+            return;
+        }
+
+        var isValid = await UserManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, codeInput.Code.Trim());
+        if (!isValid)
+        {
+            errorMessage = "The recovery code is invalid or has expired. Please try again.";
+            isSubmitting = false;
+            return;
+        }
+
+        // Disable 2FA and reset authenticator key
+        await UserManager.SetTwoFactorEnabledAsync(user, false);
+        await UserManager.ResetAuthenticatorKeyAsync(user);
+
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        await AuditLogService.LogAsync(user.Id, AuditEventType.AccountRecovery2faDisabled, ipAddress, "2FA disabled via account recovery flow.");
+
+        currentStep = Step.Success;
+        isSubmitting = false;
+    }
+
+    public class EmailInputModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class CodeInputModel
+    {
+        [Required(ErrorMessage = "Please enter the recovery code.")]
+        public string Code { get; set; } = string.Empty;
+    }
+}

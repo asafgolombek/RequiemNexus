@@ -1,0 +1,77 @@
+@page "/Account/Manage/ConsentHistory"
+@using Microsoft.EntityFrameworkCore
+@using RequiemNexus.Data
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Consent History - Requiem Nexus</PageTitle>
+
+<div class="card-grimoire p-4 mb-4">
+    <h3 class="font-heading tracking-widest mb-3" style="color:var(--bone-white); border-bottom: 1px solid var(--crimson); padding-bottom: 0.5rem;">CONSENT HISTORY</h3>
+
+    <p class="font-body text-secondary mb-4" style="font-size: 0.875rem;">This page shows your recorded acceptances of our Terms of Service and Privacy Policy.</p>
+
+    @if (consentLogs is null)
+    {
+        <p class="font-body text-hint"><em>Loading the archives...</em></p>
+    }
+    else if (consentLogs.Count == 0)
+    {
+        <div class="notification p-3 rounded mb-3">
+            <p class="font-body text-secondary mb-0">No consent records found in the chronicle.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-striped font-body" style="background: transparent;">
+                <thead>
+                    <tr>
+                        <th class="font-heading text-secondary" style="letter-spacing: 0.05em; font-size: 0.75rem; border-color: var(--muted-gray);">Date &amp; Time</th>
+                        <th class="font-heading text-secondary" style="letter-spacing: 0.05em; font-size: 0.75rem; border-color: var(--muted-gray);">Consent Type</th>
+                        <th class="font-heading text-secondary" style="letter-spacing: 0.05em; font-size: 0.75rem; border-color: var(--muted-gray);">Document Version</th>
+                        <th class="font-heading text-secondary" style="letter-spacing: 0.05em; font-size: 0.75rem; border-color: var(--muted-gray);">IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in consentLogs)
+                    {
+                        <tr>
+                            <td class="text-tertiary" style="border-color: var(--muted-gray);">@log.ConsentedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td class="text-bone-white" style="border-color: var(--muted-gray);">@log.ConsentType</td>
+                            <td class="text-bone-white" style="border-color: var(--muted-gray);">@log.DocumentVersion</td>
+                            <td class="text-tertiary" style="border-color: var(--muted-gray);">@(string.IsNullOrEmpty(log.IpAddress) ? "Unknown" : log.IpAddress)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ConsentLog>? consentLogs;
+    private string? currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (currentUserId is not null)
+        {
+            consentLogs = (await DbContext.ConsentLogs
+                .AsNoTracking()
+                .Where(c => c.UserId == currentUserId)
+                .ToListAsync())
+                .OrderByDescending(c => c.ConsentedAt)
+                .ToList();
+        }
+        else
+        {
+            consentLogs = [];
+        }
+    }
+}
