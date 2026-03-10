@@ -90,7 +90,7 @@ public class DanseMacabreServiceTests
         CityFaction faction = await service.CreateFactionAsync(campaign.Id, "Invictus", FactionType.Covenant, 3, string.Empty, "st-1");
         ChronicleNpc npc = await service.CreateNpcAsync(campaign.Id, "Elias", null, null, null, string.Empty, "st-1");
 
-        await service.UpdateNpcAsync(npc.Id, npc.Name, null, faction.Id, "Legate", string.Empty, string.Empty, null, "st-1");
+        await service.UpdateNpcAsync(npc.Id, npc.Name, null, faction.Id, "Legate", string.Empty, string.Empty, null, false, "{}", "{}", "st-1");
 
         ChronicleNpc? loaded = await ctx.ChronicleNpcs.FindAsync(npc.Id);
         Assert.Equal(faction.Id, loaded!.PrimaryFactionId);

@@ -39,4 +39,13 @@ public class ChronicleNpc
 
     /// <summary>Optional link to an <see cref="NpcStatBlock"/> for encounter use.</summary>
     public int? LinkedStatBlockId { get; set; }
+
+    /// <summary>Whether this NPC is a vampire (<c>true</c>) or a mortal (<c>false</c>).</summary>
+    public bool IsVampire { get; set; } = false;
+
+    /// <summary>JSON object mapping attribute names to dot values (1–5). Defaults all to 2.</summary>
+    public string AttributesJson { get; set; } = "{}";
+
+    /// <summary>JSON object mapping skill names to dot values (0–5). Defaults all to 2.</summary>
+    public string SkillsJson { get; set; } = "{}";
 }

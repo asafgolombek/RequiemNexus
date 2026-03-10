@@ -3,6 +3,7 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Application.Contracts
 @using System.Security.Claims
+@using System.Text.Json
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IDanseMacabreService DanseMacabreService
 @inject ICampaignService CampaignService
@@ -37,6 +38,14 @@
                 {
                     <span class="badge-rn" style="font-size:0.6em;">☠ Deceased</span>
                 }
+                @if (_npc.IsVampire)
+                {
+                    <span class="badge-rn" style="font-size:0.6em;margin-left:0.5rem;">🧛 Vampire</span>
+                }
+                else
+                {
+                    <span class="badge-rn" style="font-size:0.6em;margin-left:0.5rem;background:var(--color-surface-2,#444);">👤 Mortal</span>
+                }
             </h2>
         </div>
 
@@ -54,6 +63,19 @@
             <div class="form-group">
                 <label>Title</label>
                 <input class="form-control" placeholder="e.g. Prince, Harpy..." @bind="_editTitle" />
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <div style="display:flex;gap:1.5rem;align-items:center;margin-top:0.25rem;">
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                        <input type="radio" name="npcType" checked="@(!_editIsVampire)" @onchange="() => _editIsVampire = false" />
+                        👤 Mortal
+                    </label>
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                        <input type="radio" name="npcType" checked="@_editIsVampire" @onchange="() => _editIsVampire = true" />
+                        🧛 Vampire
+                    </label>
+                </div>
             </div>
             <div class="form-group">
                 <label>Faction</label>
@@ -93,7 +115,49 @@
             <button class="btn-primary-rn" disabled="@_busy" @onclick="SaveNpc">Save Changes</button>
         </div>
 
-        @* ── Stat Block section (wired in M7 when LinkedStatBlockId is set) ── *@
+        @* ── Attributes ────────────────────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3>Attributes</h3>
+            @foreach ((string category, string[] attrs) in AttributeCategories)
+            {
+                <h4 style="margin:0.75rem 0 0.4rem;font-size:0.9rem;color:var(--color-text-muted,#aaa);">@category</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+                    @foreach (string attr in attrs)
+                    {
+                        <label style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);min-width:110px;">
+                            @attr
+                            <input class="form-control"
+                                   type="number" min="1" max="5" style="width:80px;"
+                                   value="@_editAttributes[attr]"
+                                   @onchange="e => _editAttributes[attr] = int.TryParse(e.Value?.ToString(), out int v) ? Math.Clamp(v,1,5) : 2" />
+                        </label>
+                    }
+                </div>
+            }
+        </div>
+
+        @* ── Skills ────────────────────────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3>Skills</h3>
+            @foreach ((string category, string[] skills) in SkillCategories)
+            {
+                <h4 style="margin:0.75rem 0 0.4rem;font-size:0.9rem;color:var(--color-text-muted,#aaa);">@category</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+                    @foreach (string skill in skills)
+                    {
+                        <label style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);min-width:110px;">
+                            @skill
+                            <input class="form-control"
+                                   type="number" min="0" max="5" style="width:80px;"
+                                   value="@_editSkills[skill]"
+                                   @onchange="e => _editSkills[skill] = int.TryParse(e.Value?.ToString(), out int v) ? Math.Clamp(v,0,5) : 2" />
+                        </label>
+                    }
+                </div>
+            }
+        </div>
+
+        @* ── Stat Block ────────────────────────────────────────────────────────── *@
         <div class="card-rn" style="margin-bottom:1.5rem;">
             <h3>Stat Block</h3>
             @if (_npc.LinkedStatBlockId.HasValue)
@@ -139,6 +203,20 @@
     [Parameter]
     public int NpcId { get; set; }
 
+    private static readonly (string Category, string[] Items)[] AttributeCategories =
+    [
+        ("Physical", ["Strength", "Dexterity", "Stamina"]),
+        ("Mental",   ["Intelligence", "Wits", "Resolve"]),
+        ("Social",   ["Presence", "Manipulation", "Composure"]),
+    ];
+
+    private static readonly (string Category, string[] Items)[] SkillCategories =
+    [
+        ("Physical", ["Athletics", "Brawl", "Drive", "Firearms", "Larceny", "Stealth", "Survival", "Weaponry"]),
+        ("Mental",   ["Academics", "Computer", "Crafts", "Investigation", "Medicine", "Occult", "Politics", "Science"]),
+        ("Social",   ["Animal Ken", "Empathy", "Expression", "Intimidation", "Persuasion", "Socialize", "Streetwise", "Subterfuge"]),
+    ];
+
     private ChronicleNpc? _npc;
     private List<CityFaction> _allFactions = [];
     private bool _accessDenied = false;
@@ -155,6 +233,9 @@
     private string _editPublicDesc = string.Empty;
     private string _editStNotes = string.Empty;
     private int? _editStatBlockId;
+    private bool _editIsVampire = false;
+    private Dictionary<string, int> _editAttributes = [];
+    private Dictionary<string, int> _editSkills = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,8 +273,34 @@
         _editPublicDesc = _npc.PublicDescription;
         _editStNotes = _npc.StorytellerNotes;
         _editStatBlockId = _npc.LinkedStatBlockId;
+        _editIsVampire = _npc.IsVampire;
+
+        _editAttributes = DeserializeStats(_npc.AttributesJson, AttributeCategories);
+        _editSkills = DeserializeStats(_npc.SkillsJson, SkillCategories);
 
         _allFactions = await DanseMacabreService.GetFactionsAsync(CampaignId);
+    }
+
+    /// <summary>Parses a JSON stats blob; missing keys default to 2.</summary>
+    private static Dictionary<string, int> DeserializeStats(string json, (string, string[] Items)[] categories)
+    {
+        Dictionary<string, int> stored = [];
+        try
+        {
+            stored = JsonSerializer.Deserialize<Dictionary<string, int>>(json) ?? [];
+        }
+        catch (JsonException) { }
+
+        Dictionary<string, int> result = [];
+        foreach ((_, string[] items) in categories)
+        {
+            foreach (string key in items)
+            {
+                result[key] = stored.TryGetValue(key, out int v) ? v : 2;
+            }
+        }
+
+        return result;
     }
 
     private async Task SaveNpc()
@@ -216,6 +323,9 @@
                 _editPublicDesc,
                 _editStNotes,
                 _editStatBlockId,
+                _editIsVampire,
+                JsonSerializer.Serialize(_editAttributes),
+                JsonSerializer.Serialize(_editSkills),
                 _currentUserId);
             await LoadData();
             _feedbackMessage = "NPC saved.";
@@ -246,6 +356,9 @@
                 _npc.PublicDescription,
                 _npc.StorytellerNotes,
                 _editStatBlockId,
+                _npc.IsVampire,
+                _npc.AttributesJson,
+                _npc.SkillsJson,
                 _currentUserId);
             await LoadData();
             _feedbackMessage = "Stat block link updated.";

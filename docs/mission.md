@@ -298,43 +298,43 @@ If a bug cannot be observed, it cannot be fixed.
 > 🔄 **Currently Active**
 
 ### Chronicle & Storyteller Tools
-- [ ] **Initiative Tracker** — real-time initiative order using Initiative Mod mechanics
-- [ ] **Encounter Manager** — create, manage, and resolve combat encounters
-- [ ] **Storyteller Glimpse** — private dashboard showing player vitals (Health, Willpower, Humanity, active Conditions)
-- [ ] **Campaign Notes & Shared Lore** — collaborative lore database accessible to the coterie
-- [ ] **NPC Quick Stat Blocks** — pre-built and custom NPC stat blocks for instant encounters
-- [ ] **XP Distribution** — group or individual XP/Beat allocation from the Storyteller dashboard
+- [x] **Initiative Tracker** — real-time initiative order using Initiative Mod mechanics
+- [x] **Encounter Manager** — create, manage, and resolve combat encounters
+- [x] **Storyteller Glimpse** — private dashboard showing player vitals (Health, Willpower, Humanity, active Conditions)
+- [x] **Campaign Notes & Shared Lore** — collaborative lore database accessible to the coterie
+- [x] **NPC Quick Stat Blocks** — pre-built and custom NPC stat blocks for instant encounters
+- [x] **XP Distribution** — group or individual XP/Beat allocation from the Storyteller dashboard
 
 ### The Beat & Experience Ledger
-- [ ] **Beat Tracking** — immutable, transactional log of how Beats are earned
-- [ ] **XP Spend Audit Trail** — full history of how XP was spent
-- [ ] **Storyteller Beat Awards** — award Beats to individuals or the coterie with a tagged reason
+- [x] **Beat Tracking** — immutable, transactional log of how Beats are earned
+- [x] **XP Spend Audit Trail** — full history of how XP was spent
+- [x] **Storyteller Beat Awards** — award Beats to individuals or the coterie with a tagged reason
 
 ### Condition & Tilt Tracker
-- [ ] **Condition Management** — add, view, and resolve V:tR 2e Conditions
-- [ ] **Tilt Management** — track combat Tilts with mechanical effects
-- [ ] **One-Tap Resolution** — resolving a Condition automatically awards a Beat
-- [ ] **Active Effects Display** — mechanical effects surfaced directly on the character sheet
+- [x] **Condition Management** — add, view, and resolve V:tR 2e Conditions
+- [x] **Tilt Management** — track combat Tilts with mechanical effects
+- [x] **One-Tap Resolution** — resolving a Condition automatically awards a Beat
+- [x] **Active Effects Display** — mechanical effects surfaced directly on the character sheet
 
 ### Coterie & Domain Mapping (The Danse Macabre)
-- [ ] **Coterie Hub** — shared coterie identity, resources, and group aspirations
-- [ ] **Feeding Territories** — track hunting grounds and their ratings
-- [ ] **City Power Structure** — map the political landscape: Prince, Primogen, Covenants
-- [ ] **Touchstone Management** — track mortal Touchstones tied to Humanity anchors
-- [ ] **NPC Relationship Web** — relationship tracker between PCs, NPCs, and factions
+- [x] **Coterie Hub** — shared coterie identity, resources, and group aspirations
+- [x] **Feeding Territories** — track hunting grounds and their ratings
+- [x] **City Power Structure** — map the political landscape: Prince, Primogen, Covenants
+- [x] **Touchstone Management** — track mortal Touchstones tied to Humanity anchors
+- [x] **NPC Relationship Web** — relationship tracker between PCs, NPCs, and factions
 
 ### Player Character Management
-- [ ] **Predator Type** — chosen at character creation; grants specific bonuses, feeding restrictions, and a starting Merit or Skill specialty; surfaced in Feeding Territory and Coterie context
-- [ ] **Character Archiving / Retirement** — retire without deleting; archived characters remain viewable and exportable
-- [ ] **Saved Dice Macros** — save named dice pools for one-tap reuse during play
-- [ ] **Character Notes & Session Journal** — free-form notes tied to a character or session
-- [ ] **Storyteller Secret Notes** — private per-character notes visible only to the Storyteller
-- [ ] **Session Prep Workspace** — private Storyteller workspace for scene outlines and encounter planning
+- [x] **Predator Type** — chosen at character creation; grants specific bonuses, feeding restrictions, and a starting Merit or Skill specialty; surfaced in Feeding Territory and Coterie context
+- [x] **Character Archiving / Retirement** — retire without deleting; archived characters remain viewable and exportable
+- [x] **Saved Dice Macros** — save named dice pools for one-tap reuse during play
+- [x] **Character Notes & Session Journal** — free-form notes tied to a character or session
+- [x] **Storyteller Secret Notes** — private per-character notes visible only to the Storyteller
+- [x] **Session Prep Workspace** — private Storyteller workspace for scene outlines and encounter planning
 
 ### Homebrew & Custom Content
-- [ ] **Custom Disciplines & Devotions** — create and share homebrew supernatural powers
-- [ ] **Custom Bloodlines** — define new Bloodlines with unique Disciplines and weaknesses
-- [ ] **Content Sharing** — export/import homebrew content packs as JSON
+- [x] **Custom Disciplines & Devotions** — create and share homebrew supernatural powers
+- [x] **Custom Bloodlines** — define new Bloodlines with unique Disciplines and weaknesses
+- [x] **Content Sharing** — export/import homebrew content packs as JSON
 
 ### Phase 4 Exit Criteria
 - A Storyteller can run a full session from the Glimpse dashboard

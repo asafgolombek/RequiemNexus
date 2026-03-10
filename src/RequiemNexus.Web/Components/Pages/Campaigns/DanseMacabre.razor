@@ -51,10 +51,19 @@
 
                 <div class="add-form card-rn" style="margin-bottom:1.5rem;">
                     <h4>Add Territory</h4>
-                    <div class="form-row">
-                        <input class="form-control" placeholder="Name" @bind="_newTerritoryName" />
-                        <input class="form-control" placeholder="Description" @bind="_newTerritoryDesc" />
-                        <input class="form-control" type="number" min="1" max="5" placeholder="Rating (1-5)" @bind="_newTerritoryRating" />
+                    <div class="form-row" style="align-items:flex-end;">
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:2;">
+                            Name
+                            <input class="form-control" @bind="_newTerritoryName" />
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:3;">
+                            Description
+                            <input class="form-control" @bind="_newTerritoryDesc" />
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Rating (1–5)
+                            <input class="form-control" type="number" min="1" max="5" style="width:80px;" @bind="_newTerritoryRating" />
+                        </label>
                         <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newTerritoryName) || _busy)" @onclick="AddTerritory">Add</button>
                     </div>
                 </div>
@@ -97,15 +106,24 @@
 
                 <div class="add-form card-rn" style="margin-bottom:1.5rem;">
                     <h4>Add Faction</h4>
-                    <div class="form-row">
-                        <input class="form-control" placeholder="Faction name" @bind="_newFactionName" />
-                        <select class="form-control" @bind="_newFactionType">
-                            @foreach (FactionType ft in Enum.GetValues<FactionType>())
-                            {
-                                <option value="@ft">@ft</option>
-                            }
-                        </select>
-                        <input class="form-control" type="number" min="1" max="5" placeholder="Influence (1-5)" @bind="_newFactionInfluence" />
+                    <div class="form-row" style="align-items:flex-end;">
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:2;">
+                            Faction Name
+                            <input class="form-control" @bind="_newFactionName" />
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:1;">
+                            Type
+                            <select class="form-control" @bind="_newFactionType">
+                                @foreach (FactionType ft in Enum.GetValues<FactionType>())
+                                {
+                                    <option value="@ft">@ft</option>
+                                }
+                            </select>
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Influence (1–5)
+                            <input class="form-control" type="number" min="1" max="5" style="width:80px;" @bind="_newFactionInfluence" />
+                        </label>
                         <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newFactionName) || _busy)" @onclick="AddFaction">Add</button>
                     </div>
                 </div>
@@ -182,6 +200,7 @@
                                 {
                                     <p>Faction: <a href="/campaigns/@CampaignId/factions/@npc.PrimaryFactionId">@npc.PrimaryFaction.Name</a></p>
                                 }
+                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => DeleteNpc(npc.Id)">🗑 Delete</button>
                             </div>
                         }
                     </div>
@@ -201,6 +220,16 @@
     private int _activeTab = 0;
     private string? _currentUserId;
     private string? _feedbackMessage;
+
+    private void SetFeedback(string message)
+    {
+        _feedbackMessage = message;
+        _ = Task.Delay(3000).ContinueWith(_ =>
+        {
+            _feedbackMessage = null;
+            InvokeAsync(StateHasChanged);
+        });
+    }
 
     private List<FeedingTerritory> _territories = [];
     private List<CityFaction> _factions = [];
@@ -274,7 +303,7 @@
             _newTerritoryDesc = string.Empty;
             _newTerritoryRating = 3;
             _territories = await DanseMacabreService.GetTerritoriesAsync(CampaignId);
-            _feedbackMessage = "Territory added.";
+            SetFeedback("Territory added.");
         }
         finally
         {
@@ -294,7 +323,7 @@
         {
             await DanseMacabreService.DeleteTerritoryAsync(id, _currentUserId);
             _territories = await DanseMacabreService.GetTerritoriesAsync(CampaignId);
-            _feedbackMessage = "Territory deleted.";
+            SetFeedback("Territory deleted.");
         }
         finally
         {
@@ -316,7 +345,27 @@
             _newFactionName = string.Empty;
             _newFactionInfluence = 1;
             _factions = await DanseMacabreService.GetFactionsAsync(CampaignId);
-            _feedbackMessage = "Faction added.";
+            SetFeedback("Faction added.");
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteNpc(int id)
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await DanseMacabreService.DeleteNpcAsync(id, _currentUserId);
+            await LoadNpcs();
+            SetFeedback("NPC deleted.");
         }
         finally
         {
@@ -338,7 +387,7 @@
             _newNpcName = string.Empty;
             _newNpcTitle = string.Empty;
             await LoadNpcs();
-            _feedbackMessage = "NPC added.";
+            SetFeedback("NPC added.");
         }
         finally
         {

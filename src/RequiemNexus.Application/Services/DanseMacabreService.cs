@@ -188,6 +188,9 @@ public class DanseMacabreService(
         string publicDescription,
         string storytellerNotes,
         int? linkedStatBlockId,
+        bool isVampire,
+        string attributesJson,
+        string skillsJson,
         string stUserId)
     {
         ChronicleNpc npc = await _dbContext.ChronicleNpcs.FindAsync(npcId)
@@ -202,6 +205,9 @@ public class DanseMacabreService(
         npc.PublicDescription = publicDescription;
         npc.StorytellerNotes = storytellerNotes;
         npc.LinkedStatBlockId = linkedStatBlockId;
+        npc.IsVampire = isVampire;
+        npc.AttributesJson = attributesJson;
+        npc.SkillsJson = skillsJson;
 
         await _dbContext.SaveChangesAsync();
 

@@ -39,7 +39,7 @@ public interface IDanseMacabreService
     Task<ChronicleNpc> CreateNpcAsync(int campaignId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, string stUserId);
 
     /// <summary>Updates editable fields on the NPC. ST-only.</summary>
-    Task UpdateNpcAsync(int npcId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, string storytellerNotes, int? linkedStatBlockId, string stUserId);
+    Task UpdateNpcAsync(int npcId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, string storytellerNotes, int? linkedStatBlockId, bool isVampire, string attributesJson, string skillsJson, string stUserId);
 
     /// <summary>Sets the NPC's alive/deceased state. ST-only.</summary>
     Task SetNpcAliveAsync(int npcId, bool isAlive, string stUserId);
