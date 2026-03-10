@@ -52,6 +52,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<CharacterTilt> CharacterTilts { get; set; } = default!;
 
+    public DbSet<CombatEncounter> CombatEncounters { get; set; } = default!;
+
+    public DbSet<InitiativeEntry> InitiativeEntries { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -229,5 +233,32 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CharacterTilt>()
             .HasIndex(t => t.CharacterId);
+
+        // CombatEncounter >- Campaign
+        builder.Entity<CombatEncounter>()
+            .HasOne(e => e.Campaign)
+            .WithMany()
+            .HasForeignKey(e => e.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CombatEncounter>()
+            .HasIndex(e => e.CampaignId);
+
+        // InitiativeEntry >- CombatEncounter
+        builder.Entity<InitiativeEntry>()
+            .HasOne(i => i.Encounter)
+            .WithMany(e => e.InitiativeEntries)
+            .HasForeignKey(i => i.EncounterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<InitiativeEntry>()
+            .HasIndex(i => i.EncounterId);
+
+        // InitiativeEntry >- Character (optional FK, null for NPCs)
+        builder.Entity<InitiativeEntry>()
+            .HasOne(i => i.Character)
+            .WithMany()
+            .HasForeignKey(i => i.CharacterId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

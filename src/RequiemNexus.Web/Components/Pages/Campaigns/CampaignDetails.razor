@@ -23,15 +23,23 @@
             <div class="storyteller-badge">
                 <span>👑 Story Teller:</span> @(_campaign.StoryTeller?.UserName ?? _campaign.StoryTeller?.Email ?? "Unknown")
             </div>
+            @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+            {
+                <a href="/campaigns/@_campaign.Id/glimpse" class="btn-primary-rn" style="margin-top:0.5rem;">🔮 Glimpse Dashboard</a>
+                <a href="/campaigns/@_campaign.Id/encounters" class="btn-ghost" style="margin-top:0.5rem;">⚔️ Encounters</a>
+            }
         </div>
 
         <div class="characters-section">
             <div class="section-header">
                 <h3>Players in this Campaign</h3>
-                <button class="btn-primary-rn" @onclick="ToggleAddCharacter">Add Character</button>
+                @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                {
+                    <button class="btn-primary-rn" @onclick="ToggleAddCharacter">Add Character</button>
+                }
             </div>
 
-            @if (_showAddCharacter)
+            @if (_showAddCharacter && !CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
             {
                 <div class="add-character-panel">
                     <h4>Add Character to Campaign</h4>

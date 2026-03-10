@@ -70,18 +70,18 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
         var character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
-        // Only the Storyteller or the character's own player may enrol a character.
-        bool isStoryteller = campaign.StoryTellerId == userId;
+        // Only the character's own player may self-enrol.
+        // The Storyteller manages the roster by sharing the campaign URL; they do not add characters on behalf of players.
         bool isOwner = character.ApplicationUserId == userId;
 
-        if (!isStoryteller && !isOwner)
+        if (!isOwner)
         {
             _logger.LogWarning(
                 "Unauthorized attempt to add character {CharacterId} to campaign {CampaignId} by user {UserId}",
                 characterId,
                 campaignId,
                 userId);
-            throw new UnauthorizedAccessException("Only the Storyteller or the character owner may add a character to this campaign.");
+            throw new UnauthorizedAccessException("Only the character's owner may add it to a campaign.");
         }
 
         character.CampaignId = campaignId;

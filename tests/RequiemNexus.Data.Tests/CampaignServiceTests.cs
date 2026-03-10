@@ -110,9 +110,9 @@ public class CampaignServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public async Task AddCharacter_ByStoryteller_Succeeds()
+    public async Task AddCharacter_ByStoryteller_ThrowsUnauthorized()
     {
-        using ApplicationDbContext ctx = CreateContext(nameof(AddCharacter_ByStoryteller_Succeeds));
+        using ApplicationDbContext ctx = CreateContext(nameof(AddCharacter_ByStoryteller_ThrowsUnauthorized));
         Campaign campaign = new() { Name = "C", StoryTellerId = "st-1" };
         Character character = new() { ApplicationUserId = "player-1", Name = "V" };
         ctx.Campaigns.Add(campaign);
@@ -120,10 +120,10 @@ public class CampaignServiceTests
         await ctx.SaveChangesAsync();
 
         CampaignService service = CreateService(ctx);
-        await service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "st-1");
 
-        Character? updated = await ctx.Characters.FindAsync(character.Id);
-        Assert.Equal(campaign.Id, updated!.CampaignId);
+        // ST may not enrol a character they don't own — players self-enrol.
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "st-1"));
     }
 
     [Fact]

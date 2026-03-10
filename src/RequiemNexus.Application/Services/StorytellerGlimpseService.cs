@@ -1,0 +1,225 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
+using RequiemNexus.Data;
+using RequiemNexus.Data.Models;
+using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Enums;
+
+namespace RequiemNexus.Application.Services;
+
+/// <summary>
+/// Implements <see cref="IStorytellerGlimpseService"/>: ST-only dashboard operations for
+/// reading character vitals and awarding Beats / XP to campaign characters.
+/// </summary>
+public class StorytellerGlimpseService(
+    ApplicationDbContext dbContext,
+    IBeatLedgerService beatLedger,
+    ICharacterCreationRules creationRules,
+    ILogger<StorytellerGlimpseService> logger) : IStorytellerGlimpseService
+{
+    private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IBeatLedgerService _beatLedger = beatLedger;
+    private readonly ICharacterCreationRules _creationRules = creationRules;
+    private readonly ILogger<StorytellerGlimpseService> _logger = logger;
+
+    /// <inheritdoc />
+    public async Task<List<CharacterVitalsDto>> GetCampaignVitalsAsync(int campaignId, string storyTellerUserId)
+    {
+        await RequireStorytellerAsync(campaignId, storyTellerUserId);
+
+        List<Character> characters = await _dbContext.Characters
+            .Where(c => c.CampaignId == campaignId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        List<int> characterIds = characters.Select(c => c.Id).ToList();
+
+        // Count active conditions per character in a single query
+        Dictionary<int, int> activeConditionCounts = await _dbContext.CharacterConditions
+            .Where(cc => characterIds.Contains(cc.CharacterId) && !cc.IsResolved)
+            .GroupBy(cc => cc.CharacterId)
+            .Select(g => new { CharacterId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CharacterId, x => x.Count);
+
+        List<CharacterVitalsDto> vitals = [];
+        foreach (Character c in characters)
+        {
+            activeConditionCounts.TryGetValue(c.Id, out int conditionCount);
+            vitals.Add(new CharacterVitalsDto(
+                c.Id,
+                c.Name,
+                c.ApplicationUserId,
+                c.CurrentHealth,
+                c.MaxHealth,
+                c.CurrentWillpower,
+                c.MaxWillpower,
+                c.CurrentVitae,
+                c.MaxVitae,
+                c.Humanity,
+                c.Beats,
+                c.ExperiencePoints,
+                conditionCount));
+        }
+
+        return vitals;
+    }
+
+    /// <inheritdoc />
+    public async Task AwardBeatToCharacterAsync(
+        int campaignId,
+        int characterId,
+        string reason,
+        string storyTellerUserId)
+    {
+        await RequireStorytellerAsync(campaignId, storyTellerUserId);
+
+        Character character = await RequireCharacterInCampaignAsync(characterId, campaignId);
+
+        await AwardBeatInternalAsync(character, campaignId, reason, storyTellerUserId);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Storyteller {StoryTellerId} awarded Beat to character {CharacterId} in campaign {CampaignId}. Reason: {Reason}",
+            storyTellerUserId,
+            characterId,
+            campaignId,
+            reason);
+    }
+
+    /// <inheritdoc />
+    public async Task AwardBeatToCampaignAsync(int campaignId, string reason, string storyTellerUserId)
+    {
+        await RequireStorytellerAsync(campaignId, storyTellerUserId);
+
+        List<Character> characters = await _dbContext.Characters
+            .Where(c => c.CampaignId == campaignId)
+            .ToListAsync();
+
+        foreach (Character character in characters)
+        {
+            await AwardBeatInternalAsync(character, campaignId, reason, storyTellerUserId);
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Storyteller {StoryTellerId} awarded Beat to all {Count} characters in campaign {CampaignId}. Reason: {Reason}",
+            storyTellerUserId,
+            characters.Count,
+            campaignId,
+            reason);
+    }
+
+    /// <inheritdoc />
+    public async Task AwardXpToCharacterAsync(
+        int campaignId,
+        int characterId,
+        int amount,
+        string reason,
+        string storyTellerUserId)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "XP amount must be positive.");
+        }
+
+        await RequireStorytellerAsync(campaignId, storyTellerUserId);
+
+        Character character = await RequireCharacterInCampaignAsync(characterId, campaignId);
+
+        character.ExperiencePoints += amount;
+        character.TotalExperiencePoints += amount;
+
+        await _beatLedger.RecordXpCreditAsync(
+            character.Id,
+            campaignId,
+            amount,
+            XpSource.StorytellerAward,
+            reason,
+            storyTellerUserId);
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Storyteller {StoryTellerId} awarded {Amount} XP to character {CharacterId} in campaign {CampaignId}. Reason: {Reason}",
+            storyTellerUserId,
+            amount,
+            characterId,
+            campaignId,
+            reason);
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Increments a character's Beat count, writes the Beat ledger entry, and handles the
+    /// 5-Beat → 1-XP conversion. Does NOT call <c>SaveChangesAsync</c> — the caller must do that.
+    /// </summary>
+    private async Task AwardBeatInternalAsync(
+        Character character,
+        int campaignId,
+        string reason,
+        string storyTellerUserId)
+    {
+        character.Beats++;
+
+        await _beatLedger.RecordBeatAsync(
+            character.Id,
+            campaignId,
+            BeatSource.StorytellerAward,
+            reason,
+            storyTellerUserId);
+
+        if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
+        {
+            character.Beats = newBeats;
+            character.ExperiencePoints += xpGained;
+            character.TotalExperiencePoints += xpGained;
+
+            await _beatLedger.RecordXpCreditAsync(
+                character.Id,
+                campaignId,
+                xpGained,
+                XpSource.BeatConversion,
+                $"Converted 5 Beats to {xpGained} XP",
+                null);
+        }
+    }
+
+    /// <summary>
+    /// Throws <see cref="UnauthorizedAccessException"/> when the caller is not the
+    /// Storyteller of <paramref name="campaignId"/>.
+    /// </summary>
+    private async Task RequireStorytellerAsync(int campaignId, string storyTellerUserId)
+    {
+        bool isSt = await _dbContext.Campaigns
+            .AnyAsync(c => c.Id == campaignId && c.StoryTellerId == storyTellerUserId);
+
+        if (!isSt)
+        {
+            _logger.LogWarning(
+                "Unauthorized Glimpse access attempt on campaign {CampaignId} by user {UserId}",
+                campaignId,
+                storyTellerUserId);
+
+            throw new UnauthorizedAccessException(
+                "Only the campaign Storyteller may access the Glimpse dashboard.");
+        }
+    }
+
+    /// <summary>
+    /// Returns the character, verifying it belongs to <paramref name="campaignId"/>.
+    /// Throws <see cref="InvalidOperationException"/> if not found in that campaign.
+    /// </summary>
+    private async Task<Character> RequireCharacterInCampaignAsync(int characterId, int campaignId)
+    {
+        Character character = await _dbContext.Characters
+            .FirstOrDefaultAsync(c => c.Id == characterId && c.CampaignId == campaignId)
+            ?? throw new InvalidOperationException(
+                $"Character {characterId} is not enrolled in campaign {campaignId}.");
+
+        return character;
+    }
+}
