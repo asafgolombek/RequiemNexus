@@ -33,7 +33,7 @@
     {
         <div class="character-grid">
             @{ int index = 1; }
-            @foreach (var character in _characters)
+            @foreach (Character character in _characters)
             {
                 <div class="character-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
                     <div class="card-top">

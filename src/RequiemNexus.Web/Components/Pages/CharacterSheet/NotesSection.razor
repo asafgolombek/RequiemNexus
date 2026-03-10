@@ -1,0 +1,108 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject ICharacterNoteService NoteService
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3 style="margin-bottom:0.75rem;">Notes</h3>
+
+    @if (_notes.Count == 0)
+    {
+        <p style="color:var(--gothic-muted);font-size:0.9em;">No notes yet.</p>
+    }
+    else
+    {
+        @foreach (CharacterNote note in _notes)
+        {
+            <div class="card-rn" style="margin-bottom:0.75rem;border-left:3px solid @(note.IsStorytellerPrivate ? "var(--blood-red)" : "var(--gothic-muted)");">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <strong>@note.Title</strong>
+                        @if (note.IsStorytellerPrivate)
+                        {
+                            <span style="font-size:0.75em;color:var(--blood-red);margin-left:0.5rem;">[ST Private]</span>
+                        }
+                        <p style="margin:0.25rem 0 0;font-size:0.9em;white-space:pre-wrap;">@note.Body</p>
+                        <p style="font-size:0.75em;color:var(--gothic-muted);margin-top:0.35rem;">
+                            @note.UpdatedAt.ToLocalTime().ToString("g")
+                        </p>
+                    </div>
+                    @if (note.AuthorUserId == UserId || IsStoryteller)
+                    {
+                        <button class="btn-danger-rn"
+                                style="font-size:0.75em;padding:0.1rem 0.4rem;margin-left:0.5rem;"
+                                @onclick="() => DeleteNote(note.Id)">
+                            ✕
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+    @if (!ReadOnly)
+    {
+        <details>
+            <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Note</summary>
+            <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
+                <input class="form-control"
+                       placeholder="Title"
+                       @bind="_newTitle" />
+                <textarea class="form-control"
+                          rows="3"
+                          placeholder="Body"
+                          @bind="_newBody" />
+                @if (IsStoryteller)
+                {
+                    <label style="font-size:0.85em;">
+                        <input type="checkbox" @bind="_newPrivate" />
+                        ST Private (hidden from player)
+                    </label>
+                }
+                <button class="btn-primary-rn"
+                        style="font-size:0.85em;align-self:flex-start;"
+                        disabled="@(string.IsNullOrWhiteSpace(_newTitle))"
+                        @onclick="AddNote">
+                    Save Note
+                </button>
+            </div>
+        </details>
+    }
+</div>
+
+@code {
+    [Parameter] public int CharacterId { get; set; }
+    [Parameter] public int? CampaignId { get; set; }
+    [Parameter] public string UserId { get; set; } = string.Empty;
+    [Parameter] public bool IsStoryteller { get; set; }
+    [Parameter] public bool ReadOnly { get; set; }
+
+    private List<CharacterNote> _notes = [];
+    private string _newTitle = string.Empty;
+    private string _newBody = string.Empty;
+    private bool _newPrivate;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _notes = await NoteService.GetNotesAsync(CharacterId, UserId);
+    }
+
+    private async Task AddNote()
+    {
+        if (string.IsNullOrWhiteSpace(_newTitle))
+        {
+            return;
+        }
+
+        await NoteService.CreateNoteAsync(CharacterId, CampaignId, _newTitle.Trim(), _newBody.Trim(), _newPrivate, UserId);
+        _newTitle = string.Empty;
+        _newBody = string.Empty;
+        _newPrivate = false;
+        _notes = await NoteService.GetNotesAsync(CharacterId, UserId);
+    }
+
+    private async Task DeleteNote(int noteId)
+    {
+        await NoteService.DeleteNoteAsync(noteId, UserId);
+        _notes = await NoteService.GetNotesAsync(CharacterId, UserId);
+    }
+}

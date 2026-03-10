@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 
@@ -8,6 +9,8 @@ namespace RequiemNexus.Web.Services;
 /// <summary>
 /// Background service that permanently deletes accounts whose 30-day grace period has expired.
 /// Runs once daily. GDPR-compliant: data is erased when the user's deletion date is reached.
+/// Cascade order: (1) delete all campaigns the user storytells (null-outs enrolled characters),
+/// (2) delete all remaining user characters, (3) delete the identity user record.
 /// </summary>
 public class AccountDeletionCleanupService(
     IServiceScopeFactory scopeFactory,
@@ -36,13 +39,15 @@ public class AccountDeletionCleanupService(
 
     private async Task PurgeExpiredAccountsAsync()
     {
-        using var scope = scopeFactory.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        using IServiceScope scope = scopeFactory.CreateScope();
+        UserManager<ApplicationUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        ICampaignService campaignService = scope.ServiceProvider.GetRequiredService<ICampaignService>();
+        ICharacterService characterService = scope.ServiceProvider.GetRequiredService<ICharacterService>();
 
-        var now = DateTimeOffset.UtcNow;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
 
-        var dueForDeletion = await dbContext.Users
+        List<ApplicationUser> dueForDeletion = await dbContext.Users
             .Where(u => u.DeletionScheduledAt != null && u.DeletionScheduledAt <= now)
             .ToListAsync();
 
@@ -53,17 +58,40 @@ public class AccountDeletionCleanupService(
 
         logger.LogInformation("Purging {Count} account(s) past their deletion grace period.", dueForDeletion.Count);
 
-        foreach (var user in dueForDeletion)
+        foreach (ApplicationUser user in dueForDeletion)
         {
-            var result = await userManager.DeleteAsync(user);
-            if (result.Succeeded)
+            try
             {
-                logger.LogInformation("Permanently deleted account for user {UserId}.", user.Id);
+                // Step 1: Delete all campaigns the user storytells.
+                // This nulls out CampaignId on all enrolled characters before removing the campaign row.
+                List<Campaign> storytoldCampaigns = await campaignService.GetStorytoldCampaignsAsync(user.Id);
+                foreach (Campaign campaign in storytoldCampaigns)
+                {
+                    await campaignService.DeleteCampaignAsync(campaign.Id, user.Id);
+                }
+
+                // Step 2: Delete all remaining characters owned by the user.
+                List<Character> characters = await characterService.GetCharactersByUserIdAsync(user.Id);
+                foreach (Character character in characters)
+                {
+                    await characterService.DeleteCharacterAsync(character.Id);
+                }
+
+                // Step 3: Delete the identity record.
+                IdentityResult result = await userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    logger.LogInformation("Permanently deleted account for user {UserId}.", user.Id);
+                }
+                else
+                {
+                    string errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    logger.LogError("Failed to delete account for user {UserId}: {Errors}", user.Id, errors);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                logger.LogError("Failed to delete account for user {UserId}: {Errors}", user.Id, errors);
+                logger.LogError(ex, "Error purging account for user {UserId}.", user.Id);
             }
         }
     }

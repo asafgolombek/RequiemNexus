@@ -161,6 +161,7 @@ else
     public int Id { get; set; }
 
     private Character? _character;
+    private string? _userId;
     private string? _errorMessage;
 
     private List<Merit> _availableMerits = new();
@@ -177,12 +178,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!string.IsNullOrEmpty(currentUserId))
+        if (!string.IsNullOrEmpty(_userId))
         {
-            _character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
+            _character = await CharacterService.GetCharacterByIdAsync(Id, _userId);
             _availableMerits = await CharacterService.GetAvailableMeritsAsync();
             _availableDisciplines = await CharacterService.GetAvailableDisciplinesAsync();
         }
@@ -201,7 +202,7 @@ else
 
         if (newRating > currentRating)
         {
-            bool success = AdvancementService.TryUpgradeCoreTrait(_character, id, currentRating, newRating);
+            bool success = await AdvancementService.TryUpgradeCoreTrait(_character, id, currentRating, newRating, _userId);
             if (success)
             {
                 if (id is AttributeId.Stamina or AttributeId.Resolve or AttributeId.Composure)
@@ -224,7 +225,7 @@ else
 
         if (newRating > currentRating)
         {
-            bool success = AdvancementService.TryUpgradeCoreTrait(_character, id, currentRating, newRating);
+            bool success = await AdvancementService.TryUpgradeCoreTrait(_character, id, currentRating, newRating, _userId);
             if (success)
             {
                 await CharacterService.SaveAsync(_character);

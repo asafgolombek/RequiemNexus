@@ -23,4 +23,12 @@ public class Campaign
     public bool IsActive { get; set; } = true;
 
     public virtual ICollection<Character> Characters { get; set; } = new List<Character>();
+
+    public virtual ICollection<CityFaction> Factions { get; set; } = [];
+
+    public virtual ICollection<ChronicleNpc> Npcs { get; set; } = [];
+
+    public virtual ICollection<FeedingTerritory> Territories { get; set; } = [];
+
+    public virtual ICollection<FactionRelationship> FactionRelationships { get; set; } = [];
 }

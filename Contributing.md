@@ -45,7 +45,7 @@ Your local development environment is **"The Haven."** It must remain pure and p
 ### Prerequisites
 - .NET 10 SDK (Leveraging C# 14 primary constructors, collection expressions, etc.)
 - Docker
-- PostgreSQL (The Blood of the System)
+- SQLite (local dev) or PostgreSQL (for parity testing / integration)
 
 ### Repository Structure
 
@@ -108,6 +108,7 @@ PRs violating this rule will fail the CI pipeline as the build is configured wit
 
 - Ensure your local connection strings in `appsettings.Development.json` or user secrets point to a pure local instance.
 - **Never** commit production connection strings into source control.
+- Local database files are local-only artifacts (e.g. `.data/`) and must be ignored via `.gitignore` (never committed).
 
 ### 🚀 CI/CD & The Automated Masquerade
 
@@ -116,6 +117,13 @@ All Pull Requests must pass automated GitHub Actions workflows enforcing:
 - Successful compilation
 - 100% passing test suites
 - Code formatting and style enforcement (`dotnet format`)
+
+Planned additions (Phase 6 roadmap) harden the supply chain and security gates:
+- CodeQL scanning
+- Dependabot updates
+- Secret scanning / push protection
+- Container image scanning
+- SBOM generation and artifact signing/provenance for releases
 
 Covenants cannot be merged if any automated check fails. 
 

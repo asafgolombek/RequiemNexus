@@ -14,14 +14,14 @@ This document defines the **architectural laws** of our covenant. Breaking these
 
 These rules apply to **all layers**: UI, application logic, domain logic, and infrastructure.
 
-1. **If it’s implicit, it’s a bug waiting to happen**  
+1. **If it's implicit, it's a bug waiting to happen**  
    All state transitions must be explicit and traceable. "Magic" is forbidden.
 2. **State must be visible or eliminable**  
    Hidden state is a vulnerability. Cached state must be invalidatable.
 3. **Magic is debt**  
    Framework conveniences are acceptable only when fully understood, explicit, and documented.
 4. **Traceability beats cleverness**  
-   Code should be readable by a tired developer at 2 a.m. 
+   Code should be readable by a tired developer at 2 a.m.
 5. **One reason to change per module**  
    Violations of SRP are architectural defects.
 6. **No silent failure—ever**  
@@ -60,30 +60,32 @@ Dependencies **always point inward**. Infrastructure is a plugin to the domain, 
 
 The system is structured into **explicit layers** with strict boundaries, upheld as Sacred Covenants.
 
-### 1. Presentation Layer (`Web`)
+### 1. Presentation Layer (`RequiemNexus.Web`)
 
 - UI components and reactive state, painted in bone-white and crimson.
 - No business rules.
 - No database access.
 - All inputs validated before passing inward past the Masquerade.
-- **Real-Time boundaries**: The SignalR Hub is owned by the Web layer. It pushes state updates to clients but holds **no authoritative game state**—it is a pure output channel.
+- **Real-Time boundaries**: The SignalR Hub is owned by the Web layer. It pushes state updates to clients but holds **no authoritative game state** — it is a pure output channel.
 
-### 2. Application Layer
+### 2. Application Layer (`RequiemNexus.Application`)
 
 - Orchestrates use cases and coordinates domain operations.
 - Handles authorization and validation flows.
 - **Must not** contain persistence logic or encode game rules directly.
+- Every use case verifies ownership before executing — authorization is enforced here, never in the Presentation layer.
 
-### 3. Domain Layer
+### 3. Domain Layer (`RequiemNexus.Domain`)
 
 - Game rules, invariants, and derived stat calculations.
-- Stateless, Deterministic, and fully unit-testable.
+- Stateless, deterministic, and fully unit-testable.
+- **No dependency** on `Data`, `Web`, or `Application`.
 
-### 4. Infrastructure Layer (`Data`, external services)
+### 4. Infrastructure Layer (`RequiemNexus.Data`)
 
 - EF Core mappings and database migrations.
-- External integrations (Redis, Identity, etc.).
-- Infrastructure **serves** the domain, never the reverse.
+- External integrations (Redis, Identity, email, etc.).
+- Infrastructure **serves** the domain — it never drives it.
 
 ---
 
@@ -94,8 +96,8 @@ Each domain owns:
 - Its own invariants
 - Its own persistence mappings
 
-Cross-domain interaction is only allowed via **explicit contracts**. 
-🚫 Shared “Common” or “Utils” projects are strictly forbidden. The Modular Monolith boundaries are **Sacred Covenants**.
+Cross-domain interaction is only allowed via **explicit contracts**.  
+🚫 Shared `Common` or `Utils` projects are strictly forbidden. The Modular Monolith boundaries are **Sacred Covenants**.
 
 ---
 
@@ -159,7 +161,7 @@ This pattern is **not optional**. Skipping step 3 is a security defect.
 
 ### Secrets Flow
 
-- Local development: `dotnet user-secrets` or `.env` files (never committed).
+- Local development: `dotnet user-secrets` (never committed).
 - Staging / Production: AWS Secrets Manager, injected via environment variables at container startup.
 - Connection strings, API keys, and signing keys **never** appear in `appsettings.json` or source code.
 
@@ -174,6 +176,7 @@ Real-time communication enables live play sessions.
 - A single **SignalR Hub** handles all real-time communication.
 - Clients join **chronicle-scoped groups** — messages are broadcast only to players in the active session.
 - The Hub is a **thin relay** — it invokes Application Layer services and pushes results. It holds **no authoritative state**.
+- **Redis Backplane**: Redis is configured as the SignalR backplane to distribute messages across horizontally scaled nodes. Without it, messages sent to a hub on one ECS task would not reach clients connected to another.
 
 ### Data Flow Rules
 
@@ -219,7 +222,9 @@ Nothing important happens silently. If a behavior cannot be observed, the archit
 | **Logs** | Serilog (structured JSON) | Machine-queryable, human-readable event logs |
 | **Metrics** | OpenTelemetry | Dice roll latency, XP transactions, active sessions |
 | **Tracing** | OpenTelemetry | Distributed trace spans across layers |
-| **Alerts** | Monitoring dashboards | Threshold-based alerts for latency, error rate, and resource usage |
+| **Dashboards** | Grafana + AWS CloudWatch | Live visualization of metrics, traces, and alerts |
+| **Alerts** | CloudWatch Alarms | Threshold-based alerts for latency, error rate, and resource usage |
+| **Error Tracking** | Sentry / Raygun | Real-time exception alerts with stack traces and breadcrumbs |
 
 ### Rules
 
@@ -232,17 +237,55 @@ Nothing important happens silently. If a behavior cannot be observed, the archit
 
 ## 🧪 Testing Architecture & Boundaries
 
-Testing validates that our Covenants hold without fragile setup:
-- **Domain Layer → `RequiemNexus.Domain.Tests`**: 100% unit-testable. Deterministic. Runs purely in-memory.
-- **Infrastructure Layer → `RequiemNexus.Data.Tests`**: Validates EF Core mappings against The Blood of the System via Dockerized test databases.
-- **Performance → `RequiemNexus.PerformanceTests`**: Load and latency tests enforcing performance budgets.
-- **Presentation Layer → E2E Tests**: Verified via End-to-End tests simulating real user interactions.
+Testing validates that our Covenants hold without fragile setup.
+
+| Project | Layer | Approach |
+|---------|-------|----------|
+| `RequiemNexus.Domain.Tests` | Domain | Unit tests — deterministic, purely in-memory, no I/O |
+| `RequiemNexus.Application.Tests` | Application | Integration tests — use cases, authorization flows, service orchestration; in-memory or mocked infrastructure |
+| `RequiemNexus.Data.Tests` | Infrastructure | Integration tests — EF Core mappings and migrations against Dockerized PostgreSQL |
+| `RequiemNexus.PerformanceTests` | Cross-cutting | Load and latency tests enforcing performance budgets via NBomber |
+| E2E Tests | Presentation | End-to-end tests via Playwright simulating real user interactions |
+
+---
+
+## 🏎️ Performance Architecture
+
+Performance is a feature, not an optimization applied after the fact. These budgets are the **single source of truth** — referenced by `mission.md` and `agents.md` but defined only here.
+
+### Performance Budgets
+
+| Metric | Target | Enforcement |
+|--------|--------|-------------|
+| Dice roll latency | < 200ms | NBomber in CI (`RequiemNexus.PerformanceTests`) |
+| Character sheet TTI | < 1.5s | Lighthouse CI audit against staging URL |
+| API response time (p95) | < 300ms | NBomber in CI + OpenTelemetry alerts |
+
+### Lighthouse CI Configuration
+
+Lighthouse runs as a GitHub Actions step on every PR targeting `main`. It audits the staging deployment URL (`$STAGING_URL`) and fails the build if TTI exceeds 1.5s. The Lighthouse config file lives at `.github/lighthouse/config.json` and enforces the TTI budget alongside minimum scores for Performance and Accessibility.
+
+### Caching Strategy (Redis)
+
+| What | TTL | Invalidation Trigger |
+|------|-----|----------------------|
+| Session tokens | Sliding, per cookie config | Explicit on logout / revocation |
+| Character derived stats | 60s | Any attribute mutation |
+| Game reference data (Clans, Covenants, Disciplines) | 24h | Seed data update |
+| SignalR backplane messages | Transient | Delivered and discarded |
+
+### Query Rules
+
+- **No N+1 queries** — all related data loaded via eager loading or explicit `.Include()`.
+- **Use projections** — select only the columns needed. No `SELECT *` equivalents.
+- **Pagination required** — any endpoint returning a list must support pagination.
+- Performance is measured via **OpenTelemetry spans** on every database call and HTTP request.
 
 ---
 
 ## ⚙️ Configuration & Environment Strategy
 
-Configuration is explicit, layered, and validated.
+Configuration is explicit, layered, and validated at startup.
 
 ### Environments
 
@@ -257,88 +300,93 @@ Configuration is explicit, layered, and validated.
 - No conditional compilation (`#if DEBUG` is forbidden).
 - Missing required configuration **fails startup immediately** — no silent defaults.
 - Secrets are **never** stored in configuration files or the repository.
+- Local development databases are **local-only artifacts** (e.g. `.data/`) and must be ignored via `.gitignore` (never committed).
+- Local secrets use `dotnet user-secrets`. Staging/production secrets live in AWS Secrets Manager and are injected at container startup.
 - Environment-specific behavior is driven by configuration values, not code branches.
-
----
-
-## 🏎️ Performance Architecture
-
-Performance is a feature, not an optimization applied after the fact.
-
-### Performance Budgets
-
-| Metric | Target | Enforcement |
-|--------|--------|-------------|
-| Dice roll latency | < 200ms | PerformanceTests + CI |
-| Character sheet TTI | < 1.5s | Lighthouse in CI |
-| API response time (p95) | < 300ms | PerformanceTests + OpenTelemetry alerts |
-
-### Caching Strategy (Redis)
-
-| What | TTL | Invalidation |
-|------|-----|--------------|
-| Session tokens | Sliding, per cookie config | Explicit on logout / revocation |
-| Character derived stats | Short (e.g., 60s) | Invalidated on any attribute mutation |
-| Game reference data (Clans, Covenants, Disciplines) | Long (e.g., 24h) | Invalidated on seed data update |
-
-### Query Rules
-
-- **No N+1 queries** — all related data loaded via eager loading or explicit `.Include()`.
-- **Use projections** — select only the columns needed. No `SELECT *` equivalents.
-- **Pagination required** — any endpoint returning a list must support pagination.
-- Performance is measured via **OpenTelemetry spans** on every database call and HTTP request.
 
 ---
 
 ## 🗃️ Schema Evolution & Migration Strategy
 
-The database schema is a covenant — changes must be deliberate and reversible.
+The database schema is a covenant — changes must be deliberate and forward-only.
 
 ### Rules
 
 - **All schema changes** require an EF Core migration. Manual SQL against production is forbidden.
-- **Migrations are forward-only** — down migrations are not relied upon for rollback. Instead, a new corrective migration is created.
+- **Migrations are forward-only** — down migrations are not relied upon for rollback. A new corrective migration is created instead.
 - **Breaking changes** (column renames, type changes) require a multi-step migration: add new → migrate data → remove old.
 - **Seed data** (`DbInitializer`) evolves alongside migrations. New reference data (Clans, Disciplines, Conditions) is added via the initializer and tested in CI.
+- **Reference (rules) data** (Clans, Merits, Disciplines, etc.) is versioned with the codebase and applied idempotently via `DbInitializer`. Corrections for existing rows ship as forward-only migrations.
+- **Deploy-time migrations**: database migrations run **once per deploy** via a dedicated migration step (not “every web node on startup”) to avoid race conditions in ECS.
 - **CI validation**: Every PR runs migrations against an empty database to verify they apply cleanly.
 
 ---
 
 ## ☁️ Deployment Topology (AWS)
 
-While deployed to the cloud, Requiem Nexus retains the Antigravity philosophy:
+While deployed to the cloud, Requiem Nexus retains the Antigravity philosophy: no manual configuration, no hidden state.
+
 - **Stateless Web Nodes (ECS Fargate)**: Application servers hold no durable state, enabling seamless horizontal scaling.
 - **Managed Persistence (The Blood)**: RDS (PostgreSQL) and ElastiCache (Redis) are managed explicitly to reduce operational cognitive load.
-- **Explicit Infrastructure**: All infrastructure is defined via IaC. Zero manual AWS Console configuring.
+- **Explicit Infrastructure**: All infrastructure is defined via IaC — **AWS CDK** is the canonical path. Zero manual AWS Console configuration.
+- **Database Backups**: Automated RDS snapshots with point-in-time recovery. Player data must be recoverable to within **24 hours** of any failure — this is a non-negotiable SLA.
+
+### CI/CD Topology (GitHub Actions)
+
+Deployment automation is part of the architecture: it must be explicit, reproducible, and auditable.
+
+- **Authentication to AWS**: GitHub Actions assumes an AWS IAM role via **OIDC** (no long-lived AWS access keys in GitHub secrets).
+- **Environment gates**: `staging` auto-deploys from `main`; `production` requires an explicit approval gate (GitHub Environments).
+- **Infrastructure preview**: PRs run `cdk synth` and `cdk diff` to surface intended changes before merge.
+- **Migration ordering**: database migrations run as a **one-off** deploy step (dedicated migrator task) before updating the ECS service.
+- **Concurrency**: prevent overlapping deploys per environment to avoid split-brain releases.
+
+### AWS Service Map (Typical)
+
+Phase 5 infrastructure is expected to include:
+
+- **Networking**: VPC, public/private subnets, security groups
+- **Compute & ingress**: ECS Fargate, ECR, ALB
+- **Persistence**: RDS PostgreSQL, ElastiCache (Redis)
+- **Secrets & identity**: Secrets Manager, IAM roles/policies
+- **Email**: Amazon SES (optionally SNS for bounce/complaint routing)
+- **Static & CDN**: S3 + CloudFront (for Blazor WASM assets and cache-busting)
+- **Observability**: CloudWatch Logs/Metrics/Alarms (+ Grafana if used), OpenTelemetry Collector
+- **DNS/TLS**: Route 53 + ACM
+- **Cost controls**: AWS Budgets
+- **Optional edge hardening**: AWS WAF
 
 ---
 
 ## 📁 Repository Structure
 
-The repository follows a strict, navigable layout.
+The repository follows a strict, navigable layout. Every directory has a clear owner. If a file doesn't have an obvious home, the structure is wrong.
 
 ```
 RequiemNexus/
-├── .github/                  # GitHub Actions, PR templates, workflows
-├── docs/                     # Architecture.md, mission.md
-├── scripts/                  # PowerShell automation (build, test, deploy)
+├── .github/                          # GitHub Actions workflows, PR templates
+│   └── lighthouse/                   # Lighthouse CI configuration
+│       └── config.json
+├── docs/                             # Architecture.md, mission.md
+├── scripts/                          # PowerShell automation (build, test, deploy)
 ├── src/
-│   ├── RequiemNexus.Data/    # Infrastructure Layer — EF Core, migrations, repositories
-│   ├── RequiemNexus.Domain/  # Domain Layer — game rules, models, invariants
-│   ├── RequiemNexus.Web/     # Presentation Layer — Blazor components, SignalR hubs
-│   └── RequiemNexus.slnx     # Solution file
+│   ├── RequiemNexus.Application/     # Application Layer — use cases, orchestration, contracts
+│   ├── RequiemNexus.Data/            # Infrastructure Layer — EF Core, migrations, repositories
+│   ├── RequiemNexus.Domain/          # Domain Layer — game rules, models, invariants
+│   ├── RequiemNexus.Web/             # Presentation Layer — Blazor components, SignalR hubs
+│   └── RequiemNexus.slnx             # Solution file
 ├── tests/
-│   ├── RequiemNexus.Domain.Tests/       # Unit tests (deterministic, in-memory)
-│   ├── RequiemNexus.Data.Tests/         # Integration tests (EF Core, Dockerized DB)
-│   └── RequiemNexus.PerformanceTests/   # Load and latency tests
-├── .editorconfig             # Code style enforcement
-├── Directory.Packages.props  # Central NuGet package management
-├── Contributing.md           # Developer onboarding guide
-├── README.md                 # Project overview
-└── SECURITY.md               # Security policy and vulnerability reporting
+│   ├── RequiemNexus.Domain.Tests/        # Unit tests (deterministic, in-memory)
+│   ├── RequiemNexus.Application.Tests/   # Integration tests (use cases, authorization flows)
+│   ├── RequiemNexus.Data.Tests/          # Integration tests (EF Core, Dockerized DB)
+│   └── RequiemNexus.PerformanceTests/    # Load and latency tests (NBomber)
+├── .editorconfig                     # Code style enforcement
+├── Directory.Packages.props          # Central NuGet package management
+├── CLAUDE.md                         # Agent entry point
+├── Contributing.md                   # Developer onboarding guide
+├── README.md                         # Project overview
+└── SECURITY.md                       # Security policy and vulnerability reporting
 ```
-
-Every directory has a clear owner. If a file doesn't have an obvious home, the structure is wrong.
 
 ---
 

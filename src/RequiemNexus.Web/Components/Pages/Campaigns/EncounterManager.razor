@@ -1,0 +1,300 @@
+@page "/campaigns/{Id:int}/encounters"
+@rendermode InteractiveServer
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using System.Text.Json
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IEncounterService EncounterService
+@inject ICampaignService CampaignService
+@inject INpcStatBlockService NpcStatBlockService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Encounters - Requiem Nexus</PageTitle>
+
+<div class="page-container fade-in">
+    @if (_loading)
+    {
+        <p><em>Loading encounters...</em></p>
+    }
+    else if (_accessDenied)
+    {
+        <div class="alert-rn alert-danger">
+            <strong>Access Denied</strong> — only the campaign Storyteller may manage encounters.
+        </div>
+    }
+    else
+    {
+        <div class="campaign-header">
+            <h2>Encounter Manager</h2>
+            <a href="/campaigns/@Id" class="btn-ghost">← Back to Campaign</a>
+        </div>
+
+        @* ── Create New Encounter ─────────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3 style="margin-bottom:0.75rem;">Start New Encounter</h3>
+            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                <input class="form-control"
+                       style="flex:1;min-width:200px;"
+                       placeholder="Encounter name…"
+                       @bind="_newEncounterName" />
+                <button class="btn-primary-rn"
+                        disabled="@(string.IsNullOrWhiteSpace(_newEncounterName) || _busy)"
+                        @onclick="CreateEncounter">
+                    Create
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(_createError))
+            {
+                <p class="text-danger" style="margin-top:0.5rem;">@_createError</p>
+            }
+        </div>
+
+        @* ── NPC Stat Block Quick-Add ─────────────────────────────────────────── *@
+        @if (_activeEncounterForNpc.HasValue && _availableBlocks.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Add NPC from Stat Block</h3>
+                <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
+                    <select class="form-control" style="flex:1;min-width:200px;" @bind="_selectedBlockId">
+                        <option value="0">— Select a stat block —</option>
+                        @foreach (NpcStatBlock block in _availableBlocks)
+                        {
+                            <option value="@block.Id">@block.Name (@block.Concept)</option>
+                        }
+                    </select>
+                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                        Init Mod
+                        <input class="form-control"
+                               style="width:100px;"
+                               type="number"
+                               @bind="_npcInitMod" />
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                        Roll (1d10)
+                        <input class="form-control"
+                               style="width:100px;"
+                               type="number"
+                               @bind="_npcRoll" />
+                    </label>
+                    <button class="btn-primary-rn"
+                            disabled="@(_selectedBlockId == 0 || _busy)"
+                            @onclick="AddNpcFromStatBlock">
+                        Add to Encounter
+                    </button>
+                    <button class="btn-ghost" @onclick="() => _activeEncounterForNpc = null">Cancel</button>
+                </div>
+            </div>
+        }
+
+        @* ── Active Encounters ────────────────────────────────────────────────── *@
+        @if (ActiveEncounters.Any())
+        {
+            <h3 style="margin-bottom:0.75rem;">Active Encounters</h3>
+            <div class="character-grid" style="margin-bottom:1.5rem;">
+                @foreach (CombatEncounter enc in ActiveEncounters)
+                {
+                    <div class="card-rn">
+                        <h4>@enc.Name</h4>
+                        <p style="font-size:0.85em;color:var(--gothic-muted);">
+                            Started: @enc.CreatedAt.ToLocalTime().ToString("g")
+                        </p>
+                        <div class="card-actions" style="margin-top:0.75rem;">
+                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-primary-rn" style="font-size:0.85em;">
+                                ⚔️ Open Tracker
+                            </a>
+                            <button class="btn-ghost"
+                                    style="font-size:0.85em;"
+                                    disabled="@_busy"
+                                    @onclick="() => OpenNpcPicker(enc.Id)">
+                                + NPC
+                            </button>
+                            <button class="btn-ghost"
+                                    style="font-size:0.85em;"
+                                    disabled="@_busy"
+                                    @onclick="() => ResolveEncounter(enc.Id)">
+                                ✓ Resolve
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state-rn" style="margin-bottom:1.5rem;">
+                <p>No active encounters. Create one above to begin.</p>
+            </div>
+        }
+
+        @* ── Past Encounters ──────────────────────────────────────────────────── *@
+        @if (PastEncounters.Any())
+        {
+            <details>
+                <summary style="cursor:pointer;font-size:1rem;font-weight:600;margin-bottom:0.75rem;">
+                    Past Encounters (@PastEncounters.Count)
+                </summary>
+                <div class="character-grid" style="margin-top:0.75rem;">
+                    @foreach (CombatEncounter enc in PastEncounters)
+                    {
+                        <div class="card-rn" style="opacity:0.7;">
+                            <h4>@enc.Name</h4>
+                            <p style="font-size:0.85em;color:var(--gothic-muted);">
+                                Resolved: @(enc.ResolvedAt?.ToLocalTime().ToString("g") ?? "—")
+                            </p>
+                            <div class="card-actions" style="margin-top:0.75rem;">
+                                <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-ghost" style="font-size:0.85em;">
+                                    👁 View
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </details>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private List<CombatEncounter> _encounters = [];
+    private List<NpcStatBlock> _availableBlocks = [];
+    private bool _loading = true;
+    private bool _accessDenied;
+    private bool _busy;
+    private string? _currentUserId;
+    private string _newEncounterName = string.Empty;
+    private string _createError = string.Empty;
+    private int? _activeEncounterForNpc;
+    private int _selectedBlockId;
+    private int _npcInitMod;
+    private int _npcRoll;
+
+    private List<CombatEncounter> ActiveEncounters => _encounters.Where(e => e.IsActive).ToList();
+    private List<CombatEncounter> PastEncounters => _encounters.Where(e => !e.IsActive).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        await LoadEncounters();
+    }
+
+    private async Task LoadEncounters()
+    {
+        _loading = true;
+        try
+        {
+            // Verify the caller is the campaign ST by attempting to load encounters.
+            // If not, the UI just shows the access denied banner.
+            Campaign? campaign = await CampaignService.GetCampaignByIdAsync(Id, _currentUserId!);
+            if (campaign == null || !CampaignService.IsStoryteller(campaign, _currentUserId!))
+            {
+                _accessDenied = true;
+                return;
+            }
+
+            _encounters = await EncounterService.GetEncountersAsync(Id);
+            _availableBlocks = await NpcStatBlockService.GetAvailableBlocksAsync(Id);
+            _accessDenied = false;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CreateEncounter()
+    {
+        if (string.IsNullOrWhiteSpace(_newEncounterName) || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _createError = string.Empty;
+        try
+        {
+            await EncounterService.CreateEncounterAsync(Id, _newEncounterName.Trim(), _currentUserId!);
+            _newEncounterName = string.Empty;
+            await LoadEncounters();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _createError = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void OpenNpcPicker(int encounterId)
+    {
+        _activeEncounterForNpc = encounterId;
+        _selectedBlockId = 0;
+        _npcInitMod = 0;
+        _npcRoll = 0;
+    }
+
+    private async Task AddNpcFromStatBlock()
+    {
+        if (_selectedBlockId == 0 || !_activeEncounterForNpc.HasValue || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            NpcStatBlock? block = await NpcStatBlockService.GetBlockAsync(_selectedBlockId);
+            if (block is null)
+            {
+                return;
+            }
+
+            await EncounterService.AddNpcToEncounterAsync(
+                _activeEncounterForNpc.Value,
+                block.Name,
+                _npcInitMod,
+                _npcRoll,
+                _currentUserId!);
+
+            _activeEncounterForNpc = null;
+            await LoadEncounters();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ResolveEncounter(int encounterId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.ResolveEncounterAsync(encounterId, _currentUserId!);
+            await LoadEncounters();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

@@ -11,6 +11,26 @@ Requiem Nexus is currently in active development. We address any vulnerabilities
 | `main` branch | ✅ |
 | Pre-release versions | ❌ |
 
+## Security Automation (Phase 6 Roadmap)
+
+Requiem Nexus treats security automation as a first-class architectural boundary. As part of the Phase 6 roadmap, the CI/CD pipeline is expected to add:
+
+- **CodeQL** scanning for C#
+- **Dependabot** updates (NuGet + GitHub Actions)
+- **Secret scanning** (and push protection where supported)
+- **Container image** vulnerability scanning for release artifacts
+- **SBOM** generation for releases
+- **Artifact signing / provenance** (prefer keyless where possible)
+
+This section documents the intent and expected controls. The authoritative implementation lives in GitHub Actions workflows and branch protection rules.
+
+## Cloud Credentials (AWS)
+
+If/when AWS deployments are enabled (Phase 5+), GitHub Actions must authenticate to AWS via **OIDC assume-role**.
+
+- Do not use long-lived AWS access keys in GitHub Secrets.
+- Do not store cloud credentials in the repository.
+
 ## Formal Inquisition (Reporting a Vulnerability)
 
 If you discover a breach in The Masquerade, do **not** open a public issue. Exposing the flaw publicly invites corruption.

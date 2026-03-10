@@ -106,6 +106,20 @@ public class Character
 
     public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
 
+    /// <summary>Gets or sets a value indicating whether the character is retired from campaign play.
+    /// Retired characters stay on the campaign roster for historical reference.</summary>
+    public bool IsRetired { get; set; }
+
+    /// <summary>Gets or sets the UTC date-time when the character was retired, or null if active.</summary>
+    public DateTime? RetiredAt { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the character has been globally archived by the owner.
+    /// Archived characters are hidden from the active character list.</summary>
+    public bool IsArchived { get; set; }
+
+    /// <summary>Gets or sets the UTC date-time when the character was archived, or null if not archived.</summary>
+    public DateTime? ArchivedAt { get; set; }
+
     // --- Helpers for accessing traits by name ---
     public int GetAttributeRating(AttributeId id) => GetAttributeRating(id.ToString());
 

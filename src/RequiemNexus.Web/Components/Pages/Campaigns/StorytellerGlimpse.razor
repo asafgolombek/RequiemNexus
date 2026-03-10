@@ -1,0 +1,283 @@
+@page "/campaigns/{Id:int}/glimpse"
+@rendermode InteractiveServer
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IStorytellerGlimpseService GlimpseService
+@inject ICampaignService CampaignService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Storyteller Glimpse - Requiem Nexus</PageTitle>
+
+<div class="page-container fade-in">
+    @if (_loading)
+    {
+        <p><em>Loading campaign vitals...</em></p>
+    }
+    else if (_accessDenied)
+    {
+        <div class="alert-rn alert-danger">
+            <strong>Access Denied</strong> — only the campaign Storyteller may view this dashboard.
+        </div>
+    }
+    else
+    {
+        <div class="campaign-header">
+            <h2>Storyteller Glimpse</h2>
+            <a href="/campaigns/@Id" class="btn-ghost">← Back to Campaign</a>
+        </div>
+
+        @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3 style="margin-bottom:0.75rem;">Award Beat to Coterie</h3>
+            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                <input class="form-control"
+                       style="flex:1;min-width:200px;"
+                       placeholder="Reason for coterie Beat…"
+                       @bind="_coteReason" />
+                <button class="btn-primary-rn"
+                        disabled="@(string.IsNullOrWhiteSpace(_coteReason) || _awarding)"
+                        @onclick="AwardCoterieBeat">
+                    Award to All
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(_coteMessage))
+            {
+                <p class="feedback-ok" style="margin-top:0.5rem;">@_coteMessage</p>
+            }
+        </div>
+
+        @* ── Character Cards ─────────────────────────────────────────────────── *@
+        @if (!_vitals.Any())
+        {
+            <div class="empty-state-rn">
+                <p>No characters have joined this campaign yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="character-grid">
+                @foreach (CharacterVitalsDto v in _vitals)
+                {
+                    <div class="card-rn glimpse-card">
+                        <div class="glimpse-card-header">
+                            <h4>@v.Name</h4>
+                            <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                        </div>
+
+                        <div class="vitals-grid">
+                            <div class="vital-row">
+                                <span class="vital-label">❤️ Health</span>
+                                <div class="vital-bar-wrap">
+                                    <div class="vital-bar health-bar" style="width:@BarPct(v.CurrentHealth, v.MaxHealth)%"></div>
+                                </div>
+                                <span class="vital-value">@v.CurrentHealth / @v.MaxHealth</span>
+                            </div>
+                            <div class="vital-row">
+                                <span class="vital-label">🛡️ Willpower</span>
+                                <div class="vital-bar-wrap">
+                                    <div class="vital-bar willpower-bar" style="width:@BarPct(v.CurrentWillpower, v.MaxWillpower)%"></div>
+                                </div>
+                                <span class="vital-value">@v.CurrentWillpower / @v.MaxWillpower</span>
+                            </div>
+                            <div class="vital-row">
+                                <span class="vital-label">🍷 Vitae</span>
+                                <div class="vital-bar-wrap">
+                                    <div class="vital-bar vitae-bar" style="width:@BarPct(v.CurrentVitae, v.MaxVitae)%"></div>
+                                </div>
+                                <span class="vital-value">@v.CurrentVitae / @v.MaxVitae</span>
+                            </div>
+                        </div>
+
+                        <div class="glimpse-stats">
+                            <span>🕊️ Humanity: @v.Humanity</span>
+                            <span>⚫ Beats: @v.Beats</span>
+                            <span>✨ XP: @v.ExperiencePoints</span>
+                            @if (v.ActiveConditionCount > 0)
+                            {
+                                <span class="condition-badge">⚠️ @v.ActiveConditionCount Condition@(v.ActiveConditionCount > 1 ? "s" : "")</span>
+                            }
+                        </div>
+
+                        @* Beat award *@
+                        <div class="award-panel">
+                            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                                <input class="form-control"
+                                       style="flex:1;min-width:140px;font-size:0.85em;"
+                                       placeholder="Beat reason…"
+                                       @bind="_beatReasons[v.CharacterId]" />
+                                <button class="btn-primary-rn"
+                                        style="font-size:0.85em;"
+                                        disabled="@(string.IsNullOrWhiteSpace(_beatReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
+                                        @onclick="() => AwardBeat(v.CharacterId)">
+                                    + Beat
+                                </button>
+                            </div>
+                        </div>
+
+                        @* XP award *@
+                        <div class="award-panel" style="margin-top:0.5rem;">
+                            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                                <input type="number"
+                                       class="form-control"
+                                       style="width:70px;font-size:0.85em;"
+                                       min="1"
+                                       @bind="_xpAmounts[v.CharacterId]" />
+                                <input class="form-control"
+                                       style="flex:1;min-width:140px;font-size:0.85em;"
+                                       placeholder="XP reason…"
+                                       @bind="_xpReasons[v.CharacterId]" />
+                                <button class="btn-ghost"
+                                        style="font-size:0.85em;"
+                                        disabled="@(_xpAmounts.GetValueOrDefault(v.CharacterId) <= 0 || string.IsNullOrWhiteSpace(_xpReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
+                                        @onclick="() => AwardXp(v.CharacterId)">
+                                    + XP
+                                </button>
+                            </div>
+                        </div>
+
+                        @if (_feedbackMessages.TryGetValue(v.CharacterId, out string? msg) && !string.IsNullOrEmpty(msg))
+                        {
+                            <p class="feedback-ok" style="font-size:0.8em;margin-top:0.4rem;">@msg</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private List<CharacterVitalsDto> _vitals = [];
+    private bool _loading = true;
+    private bool _accessDenied;
+    private bool _awarding;
+    private string? _currentUserId;
+
+    // Per-character form state
+    private Dictionary<int, string> _beatReasons = [];
+    private Dictionary<int, string> _xpReasons = [];
+    private Dictionary<int, int> _xpAmounts = [];
+    private Dictionary<int, string> _feedbackMessages = [];
+
+    // Coterie award
+    private string _coteReason = string.Empty;
+    private string _coteMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        await LoadVitals();
+    }
+
+    private async Task LoadVitals()
+    {
+        _loading = true;
+        try
+        {
+            _vitals = await GlimpseService.GetCampaignVitalsAsync(Id, _currentUserId!);
+            _accessDenied = false;
+
+            // Initialise per-character state dictionaries
+            foreach (CharacterVitalsDto v in _vitals)
+            {
+                _beatReasons.TryAdd(v.CharacterId, string.Empty);
+                _xpReasons.TryAdd(v.CharacterId, string.Empty);
+                _xpAmounts.TryAdd(v.CharacterId, 1);
+                _feedbackMessages.TryAdd(v.CharacterId, string.Empty);
+            }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _accessDenied = true;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task AwardBeat(int characterId)
+    {
+        string reason = _beatReasons.GetValueOrDefault(characterId, string.Empty);
+        if (string.IsNullOrWhiteSpace(reason) || _awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await GlimpseService.AwardBeatToCharacterAsync(Id, characterId, reason, _currentUserId!);
+            _beatReasons[characterId] = string.Empty;
+            _feedbackMessages[characterId] = "Beat awarded.";
+            await LoadVitals();
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task AwardXp(int characterId)
+    {
+        int amount = _xpAmounts.GetValueOrDefault(characterId, 0);
+        string reason = _xpReasons.GetValueOrDefault(characterId, string.Empty);
+        if (amount <= 0 || string.IsNullOrWhiteSpace(reason) || _awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await GlimpseService.AwardXpToCharacterAsync(Id, characterId, amount, reason, _currentUserId!);
+            _xpReasons[characterId] = string.Empty;
+            _xpAmounts[characterId] = 1;
+            _feedbackMessages[characterId] = $"{amount} XP awarded.";
+            await LoadVitals();
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task AwardCoterieBeat()
+    {
+        if (string.IsNullOrWhiteSpace(_coteReason) || _awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await GlimpseService.AwardBeatToCampaignAsync(Id, _coteReason, _currentUserId!);
+            _coteMessage = $"Beat awarded to all {_vitals.Count} characters.";
+            _coteReason = string.Empty;
+            await LoadVitals();
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    /// <summary>Returns a 0–100 percentage, clamped, for CSS bar widths.</summary>
+    private static int BarPct(int current, int max) =>
+        max <= 0 ? 0 : Math.Clamp(current * 100 / max, 0, 100);
+}

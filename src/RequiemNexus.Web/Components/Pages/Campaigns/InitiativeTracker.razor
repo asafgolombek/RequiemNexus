@@ -1,0 +1,469 @@
+@page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
+@rendermode InteractiveServer
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IEncounterService EncounterService
+@inject ICampaignService CampaignService
+@inject IConditionService ConditionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Initiative Tracker - Requiem Nexus</PageTitle>
+
+<div class="page-container fade-in">
+    @if (_loading)
+    {
+        <p><em>Loading encounter...</em></p>
+    }
+    else if (_encounter == null)
+    {
+        <div class="empty-state-rn">
+            <p>Encounter not found.</p>
+            <a href="/campaigns/@CampaignId/encounters" class="btn-ghost">← Back to Encounters</a>
+        </div>
+    }
+    else
+    {
+        <div class="campaign-header">
+            <div>
+                <h2>⚔️ @_encounter.Name</h2>
+                <span style="font-size:0.85em;color:var(--gothic-muted);">
+                    @(_encounter.IsActive ? "Active" : $"Resolved {_encounter.ResolvedAt?.ToLocalTime():g}")
+                </span>
+            </div>
+            <a href="/campaigns/@CampaignId/encounters" class="btn-ghost">← Encounters</a>
+        </div>
+
+        @* ── Add Participant (ST only, active encounter) ──────────────────────── *@
+        @if (_isSt && _encounter.IsActive)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Add Participant</h3>
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+                    @* Type selector *@
+                    <div>
+                        <label style="font-size:0.8em;color:var(--gothic-muted);">Type</label>
+                        <select class="form-control" @bind="_addType" style="min-width:110px;">
+                            <option value="character">Character</option>
+                            <option value="npc">NPC</option>
+                        </select>
+                    </div>
+
+                    @if (_addType == "character")
+                    {
+                        <div style="flex:1;min-width:160px;">
+                            <label style="font-size:0.8em;color:var(--gothic-muted);">Character</label>
+                            <select class="form-control" @bind="_addCharacterId">
+                                <option value="0">-- Select character --</option>
+                                @foreach (Character c in _campaignCharacters)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="flex:1;min-width:160px;">
+                            <label style="font-size:0.8em;color:var(--gothic-muted);">NPC Name</label>
+                            <input class="form-control" placeholder="NPC name…" @bind="_addNpcName" />
+                        </div>
+                    }
+
+                    <div>
+                        <label style="font-size:0.8em;color:var(--gothic-muted);">Init Mod</label>
+                        <input type="number" class="form-control" style="width:80px;" @bind="_addInitMod" />
+                    </div>
+                    <div>
+                        <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1–10)</label>
+                        <input type="number" class="form-control" style="width:80px;" min="1" max="10" @bind="_addRoll" />
+                    </div>
+                    <button class="btn-primary-rn"
+                            disabled="@(!CanAddParticipant() || _busy)"
+                            @onclick="AddParticipant">
+                        Add
+                    </button>
+                </div>
+                @if (!string.IsNullOrEmpty(_addError))
+                {
+                    <p class="text-danger" style="margin-top:0.5rem;">@_addError</p>
+                }
+            </div>
+        }
+
+        @* ── Initiative Order ─────────────────────────────────────────────────── *@
+        @if (!SortedEntries.Any())
+        {
+            <div class="empty-state-rn">
+                <p>No participants yet. Add characters or NPCs above.</p>
+            </div>
+        }
+        else
+        {
+            <div style="margin-bottom:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+                @if (_isSt && _encounter.IsActive)
+                {
+                    <button class="btn-primary-rn"
+                            disabled="@_busy"
+                            @onclick="AdvanceTurn">
+                        ▶ Advance Turn
+                    </button>
+                }
+                @if (_isSt && _encounter.IsActive)
+                {
+                    <button class="btn-ghost"
+                            disabled="@_busy"
+                            @onclick="ResolveEncounter">
+                        ✓ Resolve Encounter
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(_actionFeedback))
+                {
+                    <span style="font-size:0.85em;color:var(--gothic-muted);">@_actionFeedback</span>
+                }
+            </div>
+
+            <div class="initiative-list">
+                @foreach (InitiativeEntry entry in SortedEntries)
+                {
+                    bool isCurrent = CurrentActor?.Id == entry.Id;
+                    string displayName = entry.Character?.Name ?? entry.NpcName ?? "Unknown";
+                    bool isNpc = entry.CharacterId == null;
+
+                    <div class="initiative-row @(isCurrent ? "initiative-current" : "") @(entry.HasActed ? "initiative-acted" : "")">
+                        <div class="initiative-order">@entry.Order</div>
+
+                        <div class="initiative-info">
+                            <span class="initiative-name">
+                                @if (isCurrent)
+                                {
+                                    <strong>▶ @displayName</strong>
+                                }
+                                else
+                                {
+                                    @displayName
+                                }
+                                @if (isNpc)
+                                {
+                                    <span class="badge-npc">NPC</span>
+                                }
+                            </span>
+                            <span class="initiative-total">
+                                Initiative: <strong>@entry.Total</strong>
+                                <span style="font-size:0.8em;color:var(--gothic-muted);">(@entry.InitiativeMod + @entry.RollResult)</span>
+                            </span>
+                            @if (entry.HasActed)
+                            {
+                                <span style="font-size:0.8em;color:var(--gothic-muted);">✓ acted</span>
+                            }
+                        </div>
+
+                        @* Tilt controls for player characters *@
+                        @if (_isSt && _encounter.IsActive && entry.CharacterId.HasValue)
+                        {
+                            <div class="initiative-tilts">
+                                @* Active tilts for this character *@
+                                @if (_activeTilts.TryGetValue(entry.CharacterId.Value, out List<CharacterTilt>? tilts) && tilts.Any())
+                                {
+                                    @foreach (CharacterTilt tilt in tilts)
+                                    {
+                                        <span class="tilt-badge">
+                                            @(tilt.CustomName ?? tilt.TiltType.ToString())
+                                            <button class="tilt-remove-btn"
+                                                    disabled="@_busy"
+                                                    @onclick="() => RemoveTilt(tilt.Id)">
+                                                ×
+                                            </button>
+                                        </span>
+                                    }
+                                }
+
+                                @* Apply tilt *@
+                                <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;margin-top:0.3rem;">
+                                    <select class="form-control"
+                                            style="font-size:0.8em;"
+                                            @bind="_tiltSelections[entry.CharacterId.Value]">
+                                        @foreach (TiltType t in Enum.GetValues<TiltType>())
+                                        {
+                                            <option value="@t">@t</option>
+                                        }
+                                    </select>
+                                    <button class="btn-ghost"
+                                            style="font-size:0.8em;"
+                                            disabled="@_busy"
+                                            @onclick="() => ApplyTilt(entry.CharacterId.Value)">
+                                        + Tilt
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        @* Remove from encounter (ST only) *@
+                        @if (_isSt && _encounter.IsActive)
+                        {
+                            <button class="btn-ghost"
+                                    style="font-size:0.75em;align-self:flex-start;"
+                                    disabled="@_busy"
+                                    @onclick="() => RemoveEntry(entry.Id)">
+                                Remove
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public int EncounterId { get; set; }
+
+    private CombatEncounter? _encounter;
+    private List<Character> _campaignCharacters = [];
+    private Dictionary<int, List<CharacterTilt>> _activeTilts = [];
+    private Dictionary<int, TiltType> _tiltSelections = [];
+    private bool _loading = true;
+    private bool _isSt;
+    private bool _busy;
+    private string? _currentUserId;
+
+    private List<InitiativeEntry> SortedEntries =>
+        _encounter?.InitiativeEntries.OrderBy(i => i.Order).ToList() ?? [];
+
+    private InitiativeEntry? CurrentActor =>
+        _encounter?.IsActive == true ? SortedEntries.FirstOrDefault(i => !i.HasActed) : null;
+
+    // Add participant form state
+    private string _addType = "character";
+    private int _addCharacterId;
+    private string _addNpcName = string.Empty;
+    private int _addInitMod;
+    private int _addRoll = 1;
+    private string _addError = string.Empty;
+    private string _actionFeedback = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        await LoadEncounter();
+    }
+
+    private async Task LoadEncounter()
+    {
+        _loading = true;
+        try
+        {
+            _encounter = await EncounterService.GetEncounterAsync(EncounterId);
+
+            if (_encounter == null)
+            {
+                return;
+            }
+
+            Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId, _currentUserId!);
+            _isSt = campaign != null && CampaignService.IsStoryteller(campaign, _currentUserId!);
+
+            // Load campaign characters for the add-participant dropdown.
+            if (_isSt && campaign != null)
+            {
+                _campaignCharacters = campaign.Characters.ToList();
+            }
+
+            // Load active tilts for each player character in the encounter.
+            await LoadActiveTiltsAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadActiveTiltsAsync()
+    {
+        if (_encounter == null)
+        {
+            return;
+        }
+
+        _activeTilts = [];
+        _tiltSelections = [];
+
+        foreach (InitiativeEntry entry in _encounter.InitiativeEntries)
+        {
+            if (!entry.CharacterId.HasValue)
+            {
+                continue;
+            }
+
+            int charId = entry.CharacterId.Value;
+            List<CharacterTilt> tilts = await ConditionService.GetActiveTiltsAsync(charId);
+            _activeTilts[charId] = tilts;
+            _tiltSelections.TryAdd(charId, TiltType.KnockedDown);
+        }
+    }
+
+    private bool CanAddParticipant()
+    {
+        if (_addType == "character")
+        {
+            return _addCharacterId > 0;
+        }
+
+        return !string.IsNullOrWhiteSpace(_addNpcName);
+    }
+
+    private async Task AddParticipant()
+    {
+        if (!CanAddParticipant() || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _addError = string.Empty;
+        try
+        {
+            if (_addType == "character")
+            {
+                await EncounterService.AddCharacterToEncounterAsync(
+                    EncounterId, _addCharacterId, _addInitMod, _addRoll, _currentUserId!);
+            }
+            else
+            {
+                await EncounterService.AddNpcToEncounterAsync(
+                    EncounterId, _addNpcName.Trim(), _addInitMod, _addRoll, _currentUserId!);
+            }
+
+            _addCharacterId = 0;
+            _addNpcName = string.Empty;
+            _addInitMod = 0;
+            _addRoll = 1;
+            await LoadEncounter();
+        }
+        catch (Exception ex)
+        {
+            _addError = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task AdvanceTurn()
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _actionFeedback = string.Empty;
+        try
+        {
+            await EncounterService.AdvanceTurnAsync(EncounterId, _currentUserId!);
+            await LoadEncounter();
+
+            // Show round-reset feedback when all entries had acted.
+            if (SortedEntries.All(i => !i.HasActed))
+            {
+                _actionFeedback = "New round!";
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ResolveEncounter()
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.ResolveEncounterAsync(EncounterId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RemoveEntry(int entryId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.RemoveEntryAsync(entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ApplyTilt(int characterId)
+    {
+        if (_busy || !_tiltSelections.TryGetValue(characterId, out TiltType tiltType))
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await ConditionService.ApplyTiltAsync(characterId, tiltType, null, EncounterId, _currentUserId!);
+            await LoadActiveTiltsAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RemoveTilt(int tiltId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await ConditionService.RemoveTiltAsync(tiltId, _currentUserId!);
+            await LoadActiveTiltsAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

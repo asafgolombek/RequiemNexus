@@ -64,12 +64,12 @@ A new developer should be able to run the project locally in **under 10 minutes*
 |-----------|------------|
 | **Framework** | .NET 10 (ASP.NET Core, Blazor, EF Core) |
 | **Language** | C# 14 (Primary Constructors, Collection Expressions) |
-| **Architecture** | Modular Monolith — `Data`, `Domain`, `Web` |
+| **Architecture** | Modular Monolith — `Web`, `Application`, `Domain`, `Data` |
 | **Real-Time** | SignalR |
 | **Database** | PostgreSQL (production), SQLite (local dev) |
 | **Caching** | Redis |
 | **Orchestration** | .NET Aspire |
-| **Deployment** | Docker → AWS ECS Fargate |
+| **Deployment** | Docker → AWS ECS Fargate (IaC via AWS CDK in Phase 5) |
 | **CI/CD** | GitHub Actions |
 | **Observability** | Serilog + OpenTelemetry |
 
@@ -120,10 +120,11 @@ RequiemNexus/
 | 3 | **The Masquerade Veil** — Account management & security | ✅ Complete |
 | 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | 🔄 In Progress |
 | 5 | **Automated Deployments & Observability** | ⬚ Planned |
-| 6 | **The Blood Communion** — Realtime play | ⬚ Planned |
-| 7 | **The Hidden Refuge** — PWA & offline capabilities | ⬚ Planned |
-| 8 | **E2E Testing & Accessibility** | ⬚ Planned |
-| 9 | **The Global Embrace** — i18n, public API | ⬚ Planned |
+| 6 | **CI/CD Hardening & Supply Chain** | ⬚ Planned |
+| 7 | **The Blood Communion** — Realtime play | ⬚ Planned |
+| 8 | **The Hidden Refuge** — PWA & offline capabilities | ⬚ Planned |
+| 9 | **E2E Testing & Accessibility** | ⬚ Planned |
+| 10 | **The Global Embrace** — i18n, public API | ⬚ Planned |
 
 → See the full roadmap with details in the [Mission Document](./docs/mission.md)
 

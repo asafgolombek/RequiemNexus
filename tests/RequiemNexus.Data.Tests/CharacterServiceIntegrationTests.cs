@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
-using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Web.Helpers;
 using RequiemNexus.Web.Services;
 using Xunit;
@@ -14,7 +13,8 @@ namespace RequiemNexus.Data.Tests;
 /// </summary>
 public class CharacterServiceIntegrationTests
 {
-    private readonly ICharacterCreationRules _creationRules = new CharacterCreationRules();
+    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
+        => new(ctx, new CharacterCreationRules(), new BeatLedgerService(ctx));
 
     private static ApplicationDbContext CreateContext(string dbName)
     {
@@ -58,7 +58,7 @@ public class CharacterServiceIntegrationTests
     public async Task EmbraceCharacter_SetsMaxHealthCorrectly()
     {
         using var ctx = CreateContext(nameof(EmbraceCharacter_SetsMaxHealthCorrectly));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = BuildNewCharacter();
         character.Size = 5;
         SetRating(character, "Stamina", 2);
@@ -74,7 +74,7 @@ public class CharacterServiceIntegrationTests
     public async Task EmbraceCharacter_SetsMaxWillpowerCorrectly()
     {
         using var ctx = CreateContext(nameof(EmbraceCharacter_SetsMaxWillpowerCorrectly));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = BuildNewCharacter();
         SetRating(character, "Resolve", 2);
         SetRating(character, "Composure", 3);
@@ -90,7 +90,7 @@ public class CharacterServiceIntegrationTests
     public async Task EmbraceCharacter_SetsBloodPotencyAndVitae()
     {
         using var ctx = CreateContext(nameof(EmbraceCharacter_SetsBloodPotencyAndVitae));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
 
         var result = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
@@ -103,7 +103,7 @@ public class CharacterServiceIntegrationTests
     public async Task EmbraceCharacter_PersistsCharacterToDatabase()
     {
         using var ctx = CreateContext(nameof(EmbraceCharacter_PersistsCharacterToDatabase));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
 
         await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
@@ -118,7 +118,7 @@ public class CharacterServiceIntegrationTests
     public async Task AddBeat_FourBeats_NoXpConversion()
     {
         using var ctx = CreateContext(nameof(AddBeat_FourBeats_NoXpConversion));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
         for (int i = 0; i < 4; i++)
@@ -132,7 +132,7 @@ public class CharacterServiceIntegrationTests
     public async Task AddBeat_FifthBeat_ConvertsToOneXp()
     {
         using var ctx = CreateContext(nameof(AddBeat_FifthBeat_ConvertsToOneXp));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
         for (int i = 0; i < 5; i++)
@@ -147,7 +147,7 @@ public class CharacterServiceIntegrationTests
     public async Task RemoveBeat_WhenBeatsIsZero_NoChange()
     {
         using var ctx = CreateContext(nameof(RemoveBeat_WhenBeatsIsZero_NoChange));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
         await svc.RemoveBeatAsync(character);
@@ -159,7 +159,7 @@ public class CharacterServiceIntegrationTests
     public async Task AddXP_IncrementsCurrentAndTotalXp()
     {
         using var ctx = CreateContext(nameof(AddXP_IncrementsCurrentAndTotalXp));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
         await svc.AddXPAsync(character);
@@ -172,7 +172,7 @@ public class CharacterServiceIntegrationTests
     public async Task RemoveXP_DecrementsXp()
     {
         using var ctx = CreateContext(nameof(RemoveXP_DecrementsXp));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
         await svc.AddXPAsync(character);
 
@@ -185,7 +185,7 @@ public class CharacterServiceIntegrationTests
     public async Task RemoveXP_WhenXpIsZero_NoChange()
     {
         using var ctx = CreateContext(nameof(RemoveXP_WhenXpIsZero_NoChange));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
         await svc.RemoveXPAsync(character);
@@ -201,7 +201,7 @@ public class CharacterServiceIntegrationTests
     public async Task GetCharacterByIdAsync_ReturnsCharacterForCorrectUser()
     {
         using var ctx = CreateContext(nameof(GetCharacterByIdAsync_ReturnsCharacterForCorrectUser));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter("owner-1"));
 
         var fetched = await svc.GetCharacterByIdAsync(character.Id, "owner-1");
@@ -214,7 +214,7 @@ public class CharacterServiceIntegrationTests
     public async Task GetCharacterByIdAsync_ReturnsNullForWrongUser()
     {
         using var ctx = CreateContext(nameof(GetCharacterByIdAsync_ReturnsNullForWrongUser));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter("owner-1"));
 
         var fetched = await svc.GetCharacterByIdAsync(character.Id, "different-user");
@@ -226,7 +226,7 @@ public class CharacterServiceIntegrationTests
     public async Task DeleteCharacterAsync_RemovesFromDatabase()
     {
         using var ctx = CreateContext(nameof(DeleteCharacterAsync_RemovesFromDatabase));
-        var svc = new CharacterManagementService(ctx, _creationRules);
+        var svc = CreateCharacterService(ctx);
         var character = await svc.EmbraceCharacterAsync(BuildNewCharacter());
 
         await svc.DeleteCharacterAsync(character.Id);

@@ -1,0 +1,252 @@
+@page "/homebrew"
+@rendermode InteractiveServer
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IHomebrewService HomebrewService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Homebrew Content - Requiem Nexus</PageTitle>
+
+<div class="page-container fade-in">
+    <div class="page-header-rn">
+        <h2>Homebrew Content</h2>
+        <p style="color:var(--gothic-muted);font-size:0.9em;">Custom Disciplines, Merits, and Bloodlines scoped to your account.</p>
+    </div>
+
+    @if (_loading)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        @* ── Export / Import ───────────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3>Pack Export / Import</h3>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
+                <button class="btn-primary-rn" @onclick="ExportPack">Export JSON Pack</button>
+            </div>
+            @if (!string.IsNullOrEmpty(_exportJson))
+            {
+                <textarea class="form-control" rows="6" style="margin-top:0.75rem;font-family:monospace;font-size:0.8em;" readonly>@_exportJson</textarea>
+            }
+            <details style="margin-top:1rem;">
+                <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">Import Pack JSON</summary>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">
+                    <textarea class="form-control" rows="6" placeholder="Paste JSON pack here..." @bind="_importJson" />
+                    <button class="btn-primary-rn" style="align-self:flex-start;" disabled="@string.IsNullOrWhiteSpace(_importJson)" @onclick="ImportPack">Import</button>
+                    @if (!string.IsNullOrEmpty(_importMessage))
+                    {
+                        <p style="color:var(--gothic-gold);">@_importMessage</p>
+                    }
+                </div>
+            </details>
+        </div>
+
+        @* ── Homebrew Disciplines ──────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3>Homebrew Disciplines</h3>
+            @if (_disciplines.Count == 0)
+            {
+                <p style="color:var(--gothic-muted);font-size:0.9em;">No homebrew disciplines yet.</p>
+            }
+            else
+            {
+                @foreach (Discipline d in _disciplines)
+                {
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0;border-bottom:1px solid var(--gothic-border);">
+                        <div>
+                            <strong>@d.Name</strong>
+                            @if (!string.IsNullOrEmpty(d.Description))
+                            {
+                                <span style="color:var(--gothic-muted);font-size:0.85em;margin-left:0.5rem;">@d.Description</span>
+                            }
+                        </div>
+                        <button class="btn-danger-rn" style="font-size:0.75em;" @onclick="() => DeleteDiscipline(d.Id)">Delete</button>
+                    </div>
+                }
+            }
+            <details style="margin-top:0.75rem;">
+                <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Discipline</summary>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;align-items:center;">
+                    <input class="form-control" style="flex:1;min-width:140px;" placeholder="Name" @bind="_newDisciplineName" />
+                    <input class="form-control" style="flex:2;min-width:200px;" placeholder="Description" @bind="_newDisciplineDesc" />
+                    <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newDisciplineName)" @onclick="CreateDiscipline">Save</button>
+                </div>
+            </details>
+        </div>
+
+        @* ── Homebrew Merits ───────────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3>Homebrew Merits</h3>
+            @if (_merits.Count == 0)
+            {
+                <p style="color:var(--gothic-muted);font-size:0.9em;">No homebrew merits yet.</p>
+            }
+            else
+            {
+                @foreach (Merit m in _merits)
+                {
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0;border-bottom:1px solid var(--gothic-border);">
+                        <div>
+                            <strong>@m.Name</strong>
+                            <span style="color:var(--gothic-muted);font-size:0.8em;margin-left:0.5rem;">[@m.ValidRatings]</span>
+                        </div>
+                        <button class="btn-danger-rn" style="font-size:0.75em;" @onclick="() => DeleteMerit(m.Id)">Delete</button>
+                    </div>
+                }
+            }
+            <details style="margin-top:0.75rem;">
+                <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Merit</summary>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;align-items:center;">
+                    <input class="form-control" style="flex:1;min-width:140px;" placeholder="Name" @bind="_newMeritName" />
+                    <input class="form-control" style="flex:2;min-width:200px;" placeholder="Description" @bind="_newMeritDesc" />
+                    <input class="form-control" style="width:100px;" placeholder="Ratings (1,2,3)" @bind="_newMeritRatings" />
+                    <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newMeritName)" @onclick="CreateMerit">Save</button>
+                </div>
+            </details>
+        </div>
+
+        @* ── Homebrew Bloodlines ───────────────────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3>Homebrew Bloodlines</h3>
+            @if (_clans.Count == 0)
+            {
+                <p style="color:var(--gothic-muted);font-size:0.9em;">No homebrew bloodlines yet.</p>
+            }
+            else
+            {
+                @foreach (Clan c in _clans)
+                {
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0;border-bottom:1px solid var(--gothic-border);">
+                        <strong>@c.Name</strong>
+                        <button class="btn-danger-rn" style="font-size:0.75em;" @onclick="() => DeleteClan(c.Id)">Delete</button>
+                    </div>
+                }
+            }
+            <details style="margin-top:0.75rem;">
+                <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Bloodline</summary>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;align-items:center;">
+                    <input class="form-control" style="flex:1;min-width:140px;" placeholder="Name" @bind="_newClanName" />
+                    <input class="form-control" style="flex:2;min-width:200px;" placeholder="Description" @bind="_newClanDesc" />
+                    <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newClanName)" @onclick="CreateClan">Save</button>
+                </div>
+            </details>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _loading = true;
+    private string? _currentUserId;
+    private List<Discipline> _disciplines = [];
+    private List<Merit> _merits = [];
+    private List<Clan> _clans = [];
+    private string _newDisciplineName = string.Empty;
+    private string _newDisciplineDesc = string.Empty;
+    private string _newMeritName = string.Empty;
+    private string _newMeritDesc = string.Empty;
+    private string _newMeritRatings = "1,2,3";
+    private string _newClanName = string.Empty;
+    private string _newClanDesc = string.Empty;
+    private string _exportJson = string.Empty;
+    private string _importJson = string.Empty;
+    private string _importMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(_currentUserId))
+        {
+            await Reload();
+        }
+
+        _loading = false;
+    }
+
+    private async Task Reload()
+    {
+        _disciplines = await HomebrewService.GetHomebrewDisciplinesAsync(_currentUserId!);
+        _merits = await HomebrewService.GetHomebrewMeritsAsync(_currentUserId!);
+        _clans = await HomebrewService.GetHomebrewClansAsync(_currentUserId!);
+    }
+
+    private async Task CreateDiscipline()
+    {
+        if (string.IsNullOrWhiteSpace(_newDisciplineName))
+        {
+            return;
+        }
+
+        await HomebrewService.CreateHomebrewDisciplineAsync(_newDisciplineName.Trim(), _newDisciplineDesc.Trim(), _currentUserId!);
+        _newDisciplineName = string.Empty;
+        _newDisciplineDesc = string.Empty;
+        _disciplines = await HomebrewService.GetHomebrewDisciplinesAsync(_currentUserId!);
+    }
+
+    private async Task DeleteDiscipline(int id)
+    {
+        await HomebrewService.DeleteHomebrewDisciplineAsync(id, _currentUserId!);
+        _disciplines = await HomebrewService.GetHomebrewDisciplinesAsync(_currentUserId!);
+    }
+
+    private async Task CreateMerit()
+    {
+        if (string.IsNullOrWhiteSpace(_newMeritName))
+        {
+            return;
+        }
+
+        await HomebrewService.CreateHomebrewMeritAsync(_newMeritName.Trim(), _newMeritDesc.Trim(), _newMeritRatings.Trim(), false, _currentUserId!);
+        _newMeritName = string.Empty;
+        _newMeritDesc = string.Empty;
+        _newMeritRatings = "1,2,3";
+        _merits = await HomebrewService.GetHomebrewMeritsAsync(_currentUserId!);
+    }
+
+    private async Task DeleteMerit(int id)
+    {
+        await HomebrewService.DeleteHomebrewMeritAsync(id, _currentUserId!);
+        _merits = await HomebrewService.GetHomebrewMeritsAsync(_currentUserId!);
+    }
+
+    private async Task CreateClan()
+    {
+        if (string.IsNullOrWhiteSpace(_newClanName))
+        {
+            return;
+        }
+
+        await HomebrewService.CreateHomebrewClanAsync(_newClanName.Trim(), _newClanDesc.Trim(), _currentUserId!);
+        _newClanName = string.Empty;
+        _newClanDesc = string.Empty;
+        _clans = await HomebrewService.GetHomebrewClansAsync(_currentUserId!);
+    }
+
+    private async Task DeleteClan(int id)
+    {
+        await HomebrewService.DeleteHomebrewClanAsync(id, _currentUserId!);
+        _clans = await HomebrewService.GetHomebrewClansAsync(_currentUserId!);
+    }
+
+    private async Task ExportPack()
+    {
+        _exportJson = await HomebrewService.ExportHomebrewPackAsync(_currentUserId!);
+    }
+
+    private async Task ImportPack()
+    {
+        if (string.IsNullOrWhiteSpace(_importJson))
+        {
+            return;
+        }
+
+        int count = await HomebrewService.ImportHomebrewPackAsync(_importJson.Trim(), _currentUserId!);
+        _importMessage = $"Imported {count} item(s) successfully.";
+        _importJson = string.Empty;
+        await Reload();
+    }
+}

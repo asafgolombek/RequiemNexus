@@ -14,5 +14,11 @@ public class Clan
     [MaxLength(250)]
     public string Description { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets a value indicating whether this is a user-created homebrew Clan/Bloodline.</summary>
+    public bool IsHomebrew { get; set; }
+
+    /// <summary>Gets or sets the user ID of the homebrew author, or null for official Clans.</summary>
+    public string? HombrewAuthorUserId { get; set; }
+
     public virtual ICollection<ClanDiscipline> ClanDisciplines { get; set; } = new List<ClanDiscipline>();
 }

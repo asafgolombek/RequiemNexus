@@ -1,10 +1,10 @@
 @page "/campaigns"
-@using Microsoft.EntityFrameworkCore
-@using RequiemNexus.Data
+@rendermode InteractiveServer
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Application.Contracts
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ApplicationDbContext DbContext
+@inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>My Campaigns - Requiem Nexus</PageTitle>
@@ -35,7 +35,7 @@
                 <a href="/campaigns/@campaign.Id" class="campaign-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
                     <h3>@campaign.Name</h3>
                     <p class="role-text">
-                        @(IsStoryTeller(campaign) ? "👑 Story Teller" : "🗡️ Player")
+                        @(CampaignService.IsStoryteller(campaign, _currentUserId!) ? "👑 Story Teller" : "🗡️ Player")
                     </p>
                     <div class="card-stats-line">
                         <span>👥 Characters: @(campaign.Characters?.Count ?? 0)</span>
@@ -52,26 +52,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (!string.IsNullOrEmpty(_currentUserId))
         {
-            _campaigns = await DbContext.Campaigns
-                .Include(c => c.Characters)
-                .Include(c => c.StoryTeller)
-                .Where(c => c.StoryTellerId == _currentUserId || c.Characters.Any(ch => ch.ApplicationUserId == _currentUserId))
-                .AsNoTracking()
-                .ToListAsync();
+            _campaigns = await CampaignService.GetCampaignsByUserIdAsync(_currentUserId);
         }
         else
         {
-            _campaigns = new List<Campaign>();
+            _campaigns = [];
         }
-    }
-
-    private bool IsStoryTeller(Campaign campaign)
-    {
-        return campaign.StoryTellerId == _currentUserId;
     }
 }

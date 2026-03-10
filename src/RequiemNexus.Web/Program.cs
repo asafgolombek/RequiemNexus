@@ -37,6 +37,10 @@ builder.Services.AddFido2(options =>
 });
 
 // Application Services
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBeatLedgerService, RequiemNexus.Application.Services.BeatLedgerService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IConditionService, RequiemNexus.Application.Services.ConditionService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IStorytellerGlimpseService, RequiemNexus.Application.Services.StorytellerGlimpseService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterService, RequiemNexus.Application.Services.CharacterManagementService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IClanService, RequiemNexus.Application.Services.ClanService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IMeritService, RequiemNexus.Application.Services.MeritService>();
@@ -47,8 +51,14 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IUserDataExportSer
 builder.Services.AddHostedService<RequiemNexus.Web.Services.AccountDeletionCleanupService>();
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
+builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.ConditionRules>();
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDanseMacabreService, RequiemNexus.Application.Services.DanseMacabreService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcStatBlockService, RequiemNexus.Application.Services.NpcStatBlockService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterNoteService, RequiemNexus.Application.Services.CharacterNoteService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewService, RequiemNexus.Application.Services.HomebrewService>();
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 
@@ -196,6 +206,14 @@ app.UseRateLimiter();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapPost("/Account/Logout", async (
+    SignInManager<ApplicationUser> signInManager,
+    [Microsoft.AspNetCore.Mvc.FromForm] string? returnUrl) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.LocalRedirect(returnUrl ?? "/");
+});
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
