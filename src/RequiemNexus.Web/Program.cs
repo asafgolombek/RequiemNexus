@@ -55,6 +55,10 @@ builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, Req
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDanseMacabreService, RequiemNexus.Application.Services.DanseMacabreService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcStatBlockService, RequiemNexus.Application.Services.NpcStatBlockService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterNoteService, RequiemNexus.Application.Services.CharacterNoteService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewService, RequiemNexus.Application.Services.HomebrewService>();
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 

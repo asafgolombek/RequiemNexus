@@ -56,6 +56,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<InitiativeEntry> InitiativeEntries { get; set; } = default!;
 
+    public DbSet<CityFaction> CityFactions { get; set; } = default!;
+
+    public DbSet<ChronicleNpc> ChronicleNpcs { get; set; } = default!;
+
+    public DbSet<FeedingTerritory> FeedingTerritories { get; set; } = default!;
+
+    public DbSet<FactionRelationship> FactionRelationships { get; set; } = default!;
+
+    public DbSet<NpcStatBlock> NpcStatBlocks { get; set; } = default!;
+
+    public DbSet<DiceMacro> DiceMacros { get; set; } = default!;
+
+    public DbSet<CharacterNote> CharacterNotes { get; set; } = default!;
+
+    public DbSet<CampaignLore> CampaignLore { get; set; } = default!;
+
+    public DbSet<SessionPrepNote> SessionPrepNotes { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -260,5 +278,135 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(i => i.CharacterId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // CityFaction >- Campaign
+        builder.Entity<CityFaction>()
+            .HasOne(f => f.Campaign)
+            .WithMany(c => c.Factions)
+            .HasForeignKey(f => f.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // CityFaction LeaderNpc self-reference (optional)
+        builder.Entity<CityFaction>()
+            .HasOne(f => f.LeaderNpc)
+            .WithMany()
+            .HasForeignKey(f => f.LeaderNpcId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<CityFaction>()
+            .HasIndex(f => f.CampaignId);
+
+        // ChronicleNpc >- Campaign
+        builder.Entity<ChronicleNpc>()
+            .HasOne(n => n.Campaign)
+            .WithMany(c => c.Npcs)
+            .HasForeignKey(n => n.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ChronicleNpc >- PrimaryFaction (optional)
+        builder.Entity<ChronicleNpc>()
+            .HasOne(n => n.PrimaryFaction)
+            .WithMany(f => f.Members)
+            .HasForeignKey(n => n.PrimaryFactionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<ChronicleNpc>()
+            .HasIndex(n => n.CampaignId);
+
+        // FeedingTerritory >- Campaign
+        builder.Entity<FeedingTerritory>()
+            .HasOne(t => t.Campaign)
+            .WithMany(c => c.Territories)
+            .HasForeignKey(t => t.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // FeedingTerritory >- ControlledByFaction (optional)
+        builder.Entity<FeedingTerritory>()
+            .HasOne(t => t.ControlledByFaction)
+            .WithMany(f => f.ControlledTerritories)
+            .HasForeignKey(t => t.ControlledByFactionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<FeedingTerritory>()
+            .HasIndex(t => t.CampaignId);
+
+        // FactionRelationship >- Campaign
+        builder.Entity<FactionRelationship>()
+            .HasOne(r => r.Campaign)
+            .WithMany(c => c.FactionRelationships)
+            .HasForeignKey(r => r.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // FactionRelationship >- FactionA / FactionB (no cascade to avoid cycles)
+        builder.Entity<FactionRelationship>()
+            .HasOne(r => r.FactionA)
+            .WithMany()
+            .HasForeignKey(r => r.FactionAId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<FactionRelationship>()
+            .HasOne(r => r.FactionB)
+            .WithMany()
+            .HasForeignKey(r => r.FactionBId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<FactionRelationship>()
+            .HasIndex(r => r.CampaignId);
+
+        // NpcStatBlock >- Campaign (optional — null for prebuilt blocks)
+        builder.Entity<NpcStatBlock>()
+            .HasOne(s => s.Campaign)
+            .WithMany()
+            .HasForeignKey(s => s.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<NpcStatBlock>()
+            .HasIndex(s => s.CampaignId);
+
+        builder.Entity<NpcStatBlock>()
+            .HasIndex(s => s.IsPrebuilt);
+
+        // DiceMacro >- Character
+        builder.Entity<DiceMacro>()
+            .HasOne(m => m.Character)
+            .WithMany()
+            .HasForeignKey(m => m.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DiceMacro>()
+            .HasIndex(m => m.CharacterId);
+
+        // CharacterNote >- Character
+        builder.Entity<CharacterNote>()
+            .HasOne(n => n.Character)
+            .WithMany()
+            .HasForeignKey(n => n.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterNote>()
+            .HasIndex(n => n.CharacterId);
+
+        builder.Entity<CharacterNote>()
+            .HasIndex(n => n.CampaignId);
+
+        // CampaignLore >- Campaign
+        builder.Entity<CampaignLore>()
+            .HasOne(l => l.Campaign)
+            .WithMany()
+            .HasForeignKey(l => l.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CampaignLore>()
+            .HasIndex(l => l.CampaignId);
+
+        // SessionPrepNote >- Campaign
+        builder.Entity<SessionPrepNote>()
+            .HasOne(s => s.Campaign)
+            .WithMany()
+            .HasForeignKey(s => s.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SessionPrepNote>()
+            .HasIndex(s => s.CampaignId);
     }
 }

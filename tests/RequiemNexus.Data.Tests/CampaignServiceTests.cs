@@ -243,4 +243,94 @@ public class CampaignServiceTests
 
         Assert.Null(result);
     }
+
+    // -----------------------------------------------------------------------
+    // DeleteCampaignAsync
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task DeleteCampaign_BySt_RemovesCampaignAndNullsCharacters()
+    {
+        using ApplicationDbContext ctx = CreateContext(nameof(DeleteCampaign_BySt_RemovesCampaignAndNullsCharacters));
+        Campaign campaign = new() { Name = "Saga", StoryTellerId = "st-1" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        Character character = new() { ApplicationUserId = "player-1", Name = "V", CampaignId = campaign.Id };
+        ctx.Characters.Add(character);
+        await ctx.SaveChangesAsync();
+
+        CampaignService service = CreateService(ctx);
+        await service.DeleteCampaignAsync(campaign.Id, "st-1");
+
+        Assert.Null(await ctx.Campaigns.FindAsync(campaign.Id));
+        Character? loaded = await ctx.Characters.FindAsync(character.Id);
+        Assert.NotNull(loaded);
+        Assert.Null(loaded!.CampaignId);
+    }
+
+    [Fact]
+    public async Task DeleteCampaign_ByNonSt_ThrowsUnauthorized()
+    {
+        using ApplicationDbContext ctx = CreateContext(nameof(DeleteCampaign_ByNonSt_ThrowsUnauthorized));
+        Campaign campaign = new() { Name = "Saga", StoryTellerId = "st-1" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        CampaignService service = CreateService(ctx);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => service.DeleteCampaignAsync(campaign.Id, "player-1"));
+    }
+
+    // -----------------------------------------------------------------------
+    // LeaveCampaignAsync
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task LeaveCampaign_PlayerWithCharacter_NullsCampaignId()
+    {
+        using ApplicationDbContext ctx = CreateContext(nameof(LeaveCampaign_PlayerWithCharacter_NullsCampaignId));
+        Campaign campaign = new() { Name = "Saga", StoryTellerId = "st-1" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        Character character = new() { ApplicationUserId = "player-1", Name = "V", CampaignId = campaign.Id };
+        ctx.Characters.Add(character);
+        await ctx.SaveChangesAsync();
+
+        CampaignService service = CreateService(ctx);
+        await service.LeaveCampaignAsync(campaign.Id, "player-1");
+
+        Character? loaded = await ctx.Characters.FindAsync(character.Id);
+        Assert.Null(loaded!.CampaignId);
+    }
+
+    [Fact]
+    public async Task LeaveCampaign_PlayerWithNoCharacter_ThrowsInvalidOperation()
+    {
+        using ApplicationDbContext ctx = CreateContext(nameof(LeaveCampaign_PlayerWithNoCharacter_ThrowsInvalidOperation));
+        Campaign campaign = new() { Name = "Saga", StoryTellerId = "st-1" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        CampaignService service = CreateService(ctx);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.LeaveCampaignAsync(campaign.Id, "player-99"));
+    }
+
+    [Fact]
+    public async Task LeaveCampaign_BySt_ThrowsInvalidOperation()
+    {
+        using ApplicationDbContext ctx = CreateContext(nameof(LeaveCampaign_BySt_ThrowsInvalidOperation));
+        Campaign campaign = new() { Name = "Saga", StoryTellerId = "st-1" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        CampaignService service = CreateService(ctx);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.LeaveCampaignAsync(campaign.Id, "st-1"));
+    }
 }

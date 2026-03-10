@@ -22,4 +22,10 @@ public class Merit
 
     // Indicates if a character can purchase this merit multiple times for different things
     public bool CanBePurchasedMultipleTimes { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether this is a user-created homebrew Merit.</summary>
+    public bool IsHomebrew { get; set; }
+
+    /// <summary>Gets or sets the user ID of the homebrew author, or null for official Merits.</summary>
+    public string? HombrewAuthorUserId { get; set; }
 }

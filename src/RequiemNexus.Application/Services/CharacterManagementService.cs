@@ -21,7 +21,17 @@ public class CharacterManagementService(
     {
         return await _dbContext.Characters
             .Include(c => c.Clan)
-            .Where(c => c.ApplicationUserId == userId)
+            .Where(c => c.ApplicationUserId == userId && !c.IsArchived)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    /// <summary>Returns the archived characters owned by the given user.</summary>
+    public async Task<List<Character>> GetArchivedCharactersAsync(string userId)
+    {
+        return await _dbContext.Characters
+            .Include(c => c.Clan)
+            .Where(c => c.ApplicationUserId == userId && c.IsArchived)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -41,9 +51,11 @@ public class CharacterManagementService(
 
     public async Task DeleteCharacterAsync(int id)
     {
-        var entity = await _dbContext.Characters.FindAsync(id);
+        Character? entity = await _dbContext.Characters.FindAsync(id);
         if (entity != null)
         {
+            // Null out CampaignId first so the campaign roster stays consistent.
+            entity.CampaignId = null;
             _dbContext.Characters.Remove(entity);
             await _dbContext.SaveChangesAsync();
         }
@@ -286,5 +298,130 @@ public class CharacterManagementService(
 
         // No access.
         return null;
+    }
+
+    /// <inheritdoc />
+    public async Task RetireCharacterAsync(int characterId, string userId)
+    {
+        Character character = await _dbContext.Characters
+            .Include(c => c.Campaign)
+            .FirstOrDefaultAsync(c => c.Id == characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        bool isOwner = character.ApplicationUserId == userId;
+        bool isCampaignSt = character.Campaign?.StoryTellerId == userId;
+
+        if (!isOwner && !isCampaignSt)
+        {
+            throw new UnauthorizedAccessException("Only the character owner or campaign Storyteller may retire a character.");
+        }
+
+        character.IsRetired = true;
+        character.RetiredAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task UnretireCharacterAsync(int characterId, string userId)
+    {
+        Character character = await _dbContext.Characters
+            .Include(c => c.Campaign)
+            .FirstOrDefaultAsync(c => c.Id == characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        bool isOwner = character.ApplicationUserId == userId;
+        bool isCampaignSt = character.Campaign?.StoryTellerId == userId;
+
+        if (!isOwner && !isCampaignSt)
+        {
+            throw new UnauthorizedAccessException("Only the character owner or campaign Storyteller may un-retire a character.");
+        }
+
+        character.IsRetired = false;
+        character.RetiredAt = null;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task ArchiveCharacterAsync(int characterId, string userId)
+    {
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        if (character.ApplicationUserId != userId)
+        {
+            throw new UnauthorizedAccessException("Only the character owner may archive a character.");
+        }
+
+        character.IsArchived = true;
+        character.ArchivedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task UnarchiveCharacterAsync(int characterId, string userId)
+    {
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        if (character.ApplicationUserId != userId)
+        {
+            throw new UnauthorizedAccessException("Only the character owner may un-archive a character.");
+        }
+
+        character.IsArchived = false;
+        character.ArchivedAt = null;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<List<DiceMacro>> GetDiceMacrosAsync(int characterId)
+    {
+        return await _dbContext.DiceMacros
+            .Where(m => m.CharacterId == characterId)
+            .OrderBy(m => m.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<DiceMacro> CreateDiceMacroAsync(int characterId, string name, int dicePool, string description, string userId)
+    {
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        if (character.ApplicationUserId != userId)
+        {
+            throw new UnauthorizedAccessException("Only the character owner may create dice macros.");
+        }
+
+        DiceMacro macro = new()
+        {
+            CharacterId = characterId,
+            Name = name,
+            DicePool = dicePool,
+            Description = description,
+        };
+
+        _dbContext.DiceMacros.Add(macro);
+        await _dbContext.SaveChangesAsync();
+        return macro;
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteDiceMacroAsync(int macroId, string userId)
+    {
+        DiceMacro macro = await _dbContext.DiceMacros
+            .Include(m => m.Character)
+            .FirstOrDefaultAsync(m => m.Id == macroId)
+            ?? throw new InvalidOperationException($"Macro {macroId} not found.");
+
+        if (macro.Character?.ApplicationUserId != userId)
+        {
+            throw new UnauthorizedAccessException("Only the character owner may delete dice macros.");
+        }
+
+        _dbContext.DiceMacros.Remove(macro);
+        await _dbContext.SaveChangesAsync();
     }
 }

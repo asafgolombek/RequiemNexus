@@ -2,10 +2,12 @@
 @rendermode InteractiveServer
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
+@using System.Text.Json
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IEncounterService EncounterService
 @inject ICampaignService CampaignService
+@inject INpcStatBlockService NpcStatBlockService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -49,6 +51,39 @@
             }
         </div>
 
+        @* ── NPC Stat Block Quick-Add ─────────────────────────────────────────── *@
+        @if (_activeEncounterForNpc.HasValue && _availableBlocks.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Add NPC from Stat Block</h3>
+                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                    <select class="form-control" style="flex:1;min-width:200px;" @bind="_selectedBlockId">
+                        <option value="0">— Select a stat block —</option>
+                        @foreach (NpcStatBlock block in _availableBlocks)
+                        {
+                            <option value="@block.Id">@block.Name (@block.Concept)</option>
+                        }
+                    </select>
+                    <input class="form-control"
+                           style="width:120px;"
+                           type="number"
+                           placeholder="Init Mod"
+                           @bind="_npcInitMod" />
+                    <input class="form-control"
+                           style="width:120px;"
+                           type="number"
+                           placeholder="Roll (1d10)"
+                           @bind="_npcRoll" />
+                    <button class="btn-primary-rn"
+                            disabled="@(_selectedBlockId == 0 || _busy)"
+                            @onclick="AddNpcFromStatBlock">
+                        Add to Encounter
+                    </button>
+                    <button class="btn-ghost" @onclick="() => _activeEncounterForNpc = null">Cancel</button>
+                </div>
+            </div>
+        }
+
         @* ── Active Encounters ────────────────────────────────────────────────── *@
         @if (ActiveEncounters.Any())
         {
@@ -65,6 +100,12 @@
                             <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-primary-rn" style="font-size:0.85em;">
                                 ⚔️ Open Tracker
                             </a>
+                            <button class="btn-ghost"
+                                    style="font-size:0.85em;"
+                                    disabled="@_busy"
+                                    @onclick="() => OpenNpcPicker(enc.Id)">
+                                + NPC
+                            </button>
                             <button class="btn-ghost"
                                     style="font-size:0.85em;"
                                     disabled="@_busy"
@@ -116,12 +157,17 @@
     public int Id { get; set; }
 
     private List<CombatEncounter> _encounters = [];
+    private List<NpcStatBlock> _availableBlocks = [];
     private bool _loading = true;
     private bool _accessDenied;
     private bool _busy;
     private string? _currentUserId;
     private string _newEncounterName = string.Empty;
     private string _createError = string.Empty;
+    private int? _activeEncounterForNpc;
+    private int _selectedBlockId;
+    private int _npcInitMod;
+    private int _npcRoll;
 
     private List<CombatEncounter> ActiveEncounters => _encounters.Where(e => e.IsActive).ToList();
     private List<CombatEncounter> PastEncounters => _encounters.Where(e => !e.IsActive).ToList();
@@ -155,6 +201,7 @@
             }
 
             _encounters = await EncounterService.GetEncountersAsync(Id);
+            _availableBlocks = await NpcStatBlockService.GetAvailableBlocksAsync(Id);
             _accessDenied = false;
         }
         finally
@@ -181,6 +228,46 @@
         catch (UnauthorizedAccessException ex)
         {
             _createError = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void OpenNpcPicker(int encounterId)
+    {
+        _activeEncounterForNpc = encounterId;
+        _selectedBlockId = 0;
+        _npcInitMod = 0;
+        _npcRoll = 0;
+    }
+
+    private async Task AddNpcFromStatBlock()
+    {
+        if (_selectedBlockId == 0 || !_activeEncounterForNpc.HasValue || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            NpcStatBlock? block = await NpcStatBlockService.GetBlockAsync(_selectedBlockId);
+            if (block is null)
+            {
+                return;
+            }
+
+            await EncounterService.AddNpcToEncounterAsync(
+                _activeEncounterForNpc.Value,
+                block.Name,
+                _npcInitMod,
+                _npcRoll,
+                _currentUserId!);
+
+            _activeEncounterForNpc = null;
+            await LoadEncounters();
         }
         finally
         {

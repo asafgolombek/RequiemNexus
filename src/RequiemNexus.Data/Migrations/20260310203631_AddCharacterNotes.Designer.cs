@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RequiemNexus.Data;
 
@@ -10,9 +11,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310203631_AddCharacterNotes")]
+    partial class AddCharacterNotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -336,40 +339,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("StoryTellerId");
 
                     b.ToTable("Campaigns");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CampaignLore", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AuthorUserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CampaignId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CampaignId");
-
-                    b.ToTable("CampaignLore");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Character", b =>
@@ -908,12 +877,6 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("HombrewAuthorUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsHomebrew")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1048,12 +1011,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<string>("HombrewAuthorUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsHomebrew")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1295,12 +1252,6 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("HombrewAuthorUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsHomebrew")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1377,36 +1328,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("IsPrebuilt");
 
                     b.ToTable("NpcStatBlocks");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.SessionPrepNote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CampaignId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CampaignId");
-
-                    b.ToTable("SessionPrepNotes");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.UserSession", b =>
@@ -1582,17 +1503,6 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("StoryTeller");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CampaignLore", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
-                        .WithMany()
-                        .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Campaign");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Character", b =>
@@ -1933,17 +1843,6 @@ namespace RequiemNexus.Data.Migrations
                         .WithMany()
                         .HasForeignKey("CampaignId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Campaign");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.SessionPrepNote", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
-                        .WithMany()
-                        .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("Campaign");
                 });

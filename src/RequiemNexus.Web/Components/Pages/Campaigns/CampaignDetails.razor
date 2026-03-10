@@ -27,6 +27,7 @@
             {
                 <a href="/campaigns/@_campaign.Id/glimpse" class="btn-primary-rn" style="margin-top:0.5rem;">🔮 Glimpse Dashboard</a>
                 <a href="/campaigns/@_campaign.Id/encounters" class="btn-ghost" style="margin-top:0.5rem;">⚔️ Encounters</a>
+                <a href="/campaigns/@_campaign.Id/danse-macabre" class="btn-ghost" style="margin-top:0.5rem;">🌹 Danse Macabre</a>
             }
         </div>
 
@@ -90,6 +91,17 @@
                                 @if (isOwn)
                                 {
                                     <a href="/character/@character.Id" class="btn-ghost" style="font-size:0.8em;">Edit Sheet</a>
+                                    @if (_confirmRemoveCharacterId == character.Id)
+                                    {
+                                        <span style="font-size:0.8em;">Remove from campaign?
+                                            <button class="btn-primary-rn" style="font-size:0.8em;" @onclick="() => ConfirmRemoveCharacter(character.Id)">Yes</button>
+                                            <button class="btn-ghost" style="font-size:0.8em;" @onclick="CancelConfirm">No</button>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => AskRemoveCharacter(character.Id)">Remove from Campaign</button>
+                                    }
                                 }
                                 else
                                 {
@@ -101,6 +113,115 @@
                 </div>
             }
         </div>
+
+        @* ── Campaign Lore (all members) ──────────────────────────────────── *@
+        <div class="card-rn" style="margin-top:2rem;">
+            <h3 style="margin-bottom:0.75rem;">Campaign Lore</h3>
+            @if (_loreEntries.Count == 0)
+            {
+                <p style="color:var(--gothic-muted);font-size:0.9em;">No lore entries yet.</p>
+            }
+            else
+            {
+                @foreach (CampaignLore lore in _loreEntries)
+                {
+                    <div class="card-rn" style="margin-bottom:0.75rem;">
+                        <strong>@lore.Title</strong>
+                        <p style="margin:0.25rem 0 0;font-size:0.9em;white-space:pre-wrap;">@lore.Body</p>
+                        @if (lore.AuthorUserId == _currentUserId || CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                        {
+                            <button class="btn-danger-rn" style="font-size:0.75em;margin-top:0.35rem;" @onclick="() => DeleteLore(lore.Id)">Remove</button>
+                        }
+                    </div>
+                }
+            }
+            <details style="margin-top:0.5rem;">
+                <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Lore Entry</summary>
+                <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
+                    <input class="form-control" placeholder="Title" @bind="_newLoreTitle" />
+                    <textarea class="form-control" rows="3" placeholder="Body" @bind="_newLoreBody" />
+                    <button class="btn-primary-rn" style="font-size:0.85em;align-self:flex-start;" disabled="@(string.IsNullOrWhiteSpace(_newLoreTitle))" @onclick="CreateLore">Save</button>
+                </div>
+            </details>
+        </div>
+
+        @* ── Session Prep Notes (ST only) ──────────────────────────────────── *@
+        @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+        {
+            <div class="card-rn" style="margin-top:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Session Prep <span style="font-size:0.75em;color:var(--gothic-muted);">[ST Only]</span></h3>
+                @if (_sessionPrepNotes.Count == 0)
+                {
+                    <p style="color:var(--gothic-muted);font-size:0.9em;">No prep notes yet.</p>
+                }
+                else
+                {
+                    @foreach (SessionPrepNote prepNote in _sessionPrepNotes)
+                    {
+                        <div class="card-rn" style="margin-bottom:0.75rem;border-left:3px solid var(--blood-red);">
+                            <strong>@prepNote.Title</strong>
+                            <p style="margin:0.25rem 0 0;font-size:0.9em;white-space:pre-wrap;">@prepNote.Body</p>
+                            <button class="btn-danger-rn" style="font-size:0.75em;margin-top:0.35rem;" @onclick="() => DeleteSessionPrepNote(prepNote.Id)">Remove</button>
+                        </div>
+                    }
+                }
+                <details style="margin-top:0.5rem;">
+                    <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Prep Note</summary>
+                    <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
+                        <input class="form-control" placeholder="Title" @bind="_newPrepTitle" />
+                        <textarea class="form-control" rows="3" placeholder="Body" @bind="_newPrepBody" />
+                        <button class="btn-primary-rn" style="font-size:0.85em;align-self:flex-start;" disabled="@(string.IsNullOrWhiteSpace(_newPrepTitle))" @onclick="CreateSessionPrepNote">Save</button>
+                    </div>
+                </details>
+            </div>
+        }
+
+        @* ── Leave Campaign (non-ST members with an enrolled character) ──── *@
+        @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty)
+             && _campaign.Characters.Any(c => c.ApplicationUserId == _currentUserId))
+        {
+            <div class="danger-zone" style="margin-top:2rem;">
+                @if (_showConfirmLeave)
+                {
+                    <div class="confirm-card card-rn">
+                        <p>Leave this campaign? Your character will return to your unassigned pool.</p>
+                        <button class="btn-primary-rn" disabled="@_busy" @onclick="ConfirmLeaveCampaign">Yes, Leave</button>
+                        <button class="btn-ghost" @onclick="CancelConfirm">Cancel</button>
+                        @if (!string.IsNullOrEmpty(_errorMessage))
+                        {
+                            <p class="feedback-error">@_errorMessage</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <button class="btn-ghost" @onclick="() => _showConfirmLeave = true">Leave Campaign</button>
+                }
+            </div>
+        }
+
+        @* ── Delete Campaign (ST only) ────────────────────────────────────── *@
+        @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+        {
+            <div class="danger-zone" style="margin-top:2rem;">
+                @if (_showConfirmDelete)
+                {
+                    <div class="confirm-card card-rn">
+                        <p>⚠️ Delete campaign <strong>@_campaign.Name</strong>? This cannot be undone. All enrolled characters will be returned to their players.</p>
+                        <button class="btn-primary-rn" disabled="@_busy" @onclick="ConfirmDeleteCampaign">Yes, Delete</button>
+                        <button class="btn-ghost" @onclick="CancelConfirm">Cancel</button>
+                        @if (!string.IsNullOrEmpty(_errorMessage))
+                        {
+                            <p class="feedback-error">@_errorMessage</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <button class="btn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete Campaign</button>
+                }
+            </div>
+        }
     }
 </div>
 
@@ -112,6 +233,17 @@
     private List<Character> _availableCharacters = [];
     private bool _showAddCharacter = false;
     private string? _currentUserId;
+    private bool _showConfirmDelete = false;
+    private bool _showConfirmLeave = false;
+    private int _confirmRemoveCharacterId = 0;
+    private bool _busy = false;
+    private string? _errorMessage;
+    private List<CampaignLore> _loreEntries = [];
+    private List<SessionPrepNote> _sessionPrepNotes = [];
+    private string _newLoreTitle = string.Empty;
+    private string _newLoreBody = string.Empty;
+    private string _newPrepTitle = string.Empty;
+    private string _newPrepBody = string.Empty;
 
     private readonly AddCharacterModel _addModel = new();
 
@@ -137,13 +269,152 @@
             // Show only characters that are not yet in any campaign, for the add-character dropdown.
             List<Character> allUserCharacters = await CharacterService.GetCharactersByUserIdAsync(_currentUserId);
             _availableCharacters = allUserCharacters.Where(c => c.CampaignId == null).ToList();
+
+            _loreEntries = await CampaignService.GetLoreAsync(_campaign.Id);
+
+            if (CampaignService.IsStoryteller(_campaign, _currentUserId))
+            {
+                _sessionPrepNotes = await CampaignService.GetSessionPrepNotesAsync(_campaign.Id, _currentUserId);
+            }
         }
+    }
+
+    private async Task CreateLore()
+    {
+        if (string.IsNullOrWhiteSpace(_newLoreTitle) || _campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CampaignService.CreateLoreAsync(_campaign.Id, _newLoreTitle.Trim(), _newLoreBody.Trim(), _currentUserId);
+        _newLoreTitle = string.Empty;
+        _newLoreBody = string.Empty;
+        _loreEntries = await CampaignService.GetLoreAsync(_campaign.Id);
+    }
+
+    private async Task DeleteLore(int loreId)
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CampaignService.DeleteLoreAsync(loreId, _currentUserId);
+        _loreEntries = await CampaignService.GetLoreAsync(_campaign!.Id);
+    }
+
+    private async Task CreateSessionPrepNote()
+    {
+        if (string.IsNullOrWhiteSpace(_newPrepTitle) || _campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CampaignService.CreateSessionPrepNoteAsync(_campaign.Id, _newPrepTitle.Trim(), _newPrepBody.Trim(), _currentUserId);
+        _newPrepTitle = string.Empty;
+        _newPrepBody = string.Empty;
+        _sessionPrepNotes = await CampaignService.GetSessionPrepNotesAsync(_campaign.Id, _currentUserId);
+    }
+
+    private async Task DeleteSessionPrepNote(int noteId)
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CampaignService.DeleteSessionPrepNoteAsync(noteId, _currentUserId);
+        _sessionPrepNotes = await CampaignService.GetSessionPrepNotesAsync(_campaign!.Id, _currentUserId);
     }
 
     private void ToggleAddCharacter()
     {
         _showAddCharacter = !_showAddCharacter;
         _addModel.CharacterId = 0;
+    }
+
+    private void CancelConfirm()
+    {
+        _showConfirmDelete = false;
+        _showConfirmLeave = false;
+        _confirmRemoveCharacterId = 0;
+        _errorMessage = null;
+    }
+
+    private void AskRemoveCharacter(int characterId)
+    {
+        _confirmRemoveCharacterId = characterId;
+    }
+
+    private async Task ConfirmRemoveCharacter(int characterId)
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _busy = true;
+        _errorMessage = null;
+        try
+        {
+            await CampaignService.RemoveCharacterFromCampaignAsync(_campaign.Id, characterId, _currentUserId);
+            _confirmRemoveCharacterId = 0;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ConfirmLeaveCampaign()
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _busy = true;
+        _errorMessage = null;
+        try
+        {
+            await CampaignService.LeaveCampaignAsync(_campaign.Id, _currentUserId);
+            _showConfirmLeave = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ConfirmDeleteCampaign()
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _busy = true;
+        _errorMessage = null;
+        try
+        {
+            await CampaignService.DeleteCampaignAsync(_campaign.Id, _currentUserId);
+            NavigationManager.NavigateTo("/campaigns");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            _busy = false;
+        }
     }
 
     private async Task AddCharacterSubmit()
@@ -154,6 +425,28 @@
             await LoadData();
             _showAddCharacter = false;
         }
+    }
+
+    private async Task RetireCharacter(int characterId)
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CharacterService.RetireCharacterAsync(characterId, _currentUserId);
+        await LoadData();
+    }
+
+    private async Task UnretireCharacter(int characterId)
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CharacterService.UnretireCharacterAsync(characterId, _currentUserId);
+        await LoadData();
     }
 
     public class AddCharacterModel

@@ -1,0 +1,103 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject ICharacterService CharacterService
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3 style="margin-bottom:0.75rem;">Dice Macros</h3>
+
+    @if (_macros.Count == 0)
+    {
+        <p style="color:var(--gothic-muted);font-size:0.9em;">No macros saved yet.</p>
+    }
+    else
+    {
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+            @foreach (DiceMacro macro in _macros)
+            {
+                <div style="display:flex;align-items:center;gap:0.35rem;">
+                    <button class="btn-ghost"
+                            style="font-size:0.85em;"
+                            title="@macro.Description"
+                            @onclick="() => OnMacroSelected.InvokeAsync(macro.DicePool)">
+                        🎲 @macro.Name (@macro.DicePool d)
+                    </button>
+                    @if (!ReadOnly)
+                    {
+                        <button class="btn-danger-rn"
+                                style="font-size:0.75em;padding:0.1rem 0.4rem;"
+                                @onclick="() => DeleteMacro(macro.Id)">
+                            ✕
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (!ReadOnly)
+    {
+        <details>
+            <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Macro</summary>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;align-items:center;">
+                <input class="form-control"
+                       style="flex:1;min-width:140px;"
+                       placeholder="Name (e.g. Dex+Stealth)"
+                       @bind="_newName" />
+                <input class="form-control"
+                       style="width:100px;"
+                       type="number"
+                       min="1"
+                       max="20"
+                       placeholder="Dice"
+                       @bind="_newPool" />
+                <input class="form-control"
+                       style="flex:1;min-width:140px;"
+                       placeholder="Description (optional)"
+                       @bind="_newDesc" />
+                <button class="btn-primary-rn"
+                        style="font-size:0.85em;"
+                        disabled="@(string.IsNullOrWhiteSpace(_newName) || _newPool < 1)"
+                        @onclick="AddMacro">
+                    Save
+                </button>
+            </div>
+        </details>
+    }
+</div>
+
+@code {
+    [Parameter] public int CharacterId { get; set; }
+    [Parameter] public string UserId { get; set; } = string.Empty;
+    [Parameter] public bool ReadOnly { get; set; }
+    [Parameter] public EventCallback<int> OnMacroSelected { get; set; }
+
+    private List<DiceMacro> _macros = [];
+    private string _newName = string.Empty;
+    private int _newPool = 1;
+    private string _newDesc = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _macros = await CharacterService.GetDiceMacrosAsync(CharacterId);
+    }
+
+    private async Task AddMacro()
+    {
+        if (string.IsNullOrWhiteSpace(_newName) || _newPool < 1)
+        {
+            return;
+        }
+
+        await CharacterService.CreateDiceMacroAsync(CharacterId, _newName.Trim(), _newPool, _newDesc.Trim(), UserId);
+        _newName = string.Empty;
+        _newPool = 1;
+        _newDesc = string.Empty;
+        _macros = await CharacterService.GetDiceMacrosAsync(CharacterId);
+    }
+
+    private async Task DeleteMacro(int macroId)
+    {
+        await CharacterService.DeleteDiceMacroAsync(macroId, UserId);
+        _macros = await CharacterService.GetDiceMacrosAsync(CharacterId);
+    }
+}
