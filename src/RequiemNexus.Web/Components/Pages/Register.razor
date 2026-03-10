@@ -1,6 +1,8 @@
 @page "/register"
+@attribute [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("register")]
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Data
 @using RequiemNexus.Data.Models
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager NavigationManager
@@ -8,6 +10,8 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @inject IEmailSender<ApplicationUser> EmailSender
+@inject ApplicationDbContext DbContext
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>Register - Requiem Nexus</PageTitle>
 
@@ -63,6 +67,14 @@
                     <ValidationMessage For="@(() => _registerModel!.Birthday)" class="text-danger mt-1 text-sm" />
                 </div>
 
+                <div class="form-group form-check mt-3">
+                    <InputCheckbox id="accept-terms" @bind-Value="_registerModel!.AcceptedTerms" class="form-check-input" />
+                    <label for="accept-terms" class="form-check-label">
+                        I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+                    </label>
+                    <ValidationMessage For="@(() => _registerModel!.AcceptedTerms)" class="text-danger mt-1 text-sm d-block" />
+                </div>
+
                 <button type="submit" class="btn-login mt-4">
                     Register
                 </button>
@@ -90,7 +102,7 @@
     private async Task HandleRegistration()
     {
         _errorMessage = null;
-        
+
         if (_registerModel is null) return;
 
         // Parse Birthday to DateOnly (DD/MM/YYYY)
@@ -112,6 +124,22 @@
 
         if (result.Succeeded)
         {
+            // Assign default Player role
+            await UserManager.AddToRoleAsync(user, "Player");
+
+            // Save consent log
+            var ipAddress = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            var consentLog = new ConsentLog
+            {
+                UserId = user.Id,
+                ConsentedAt = DateTimeOffset.UtcNow,
+                DocumentVersion = "1.0",
+                IpAddress = ipAddress,
+                ConsentType = "TermsAndPrivacy"
+            };
+            DbContext.ConsentLogs.Add(consentLog);
+            await DbContext.SaveChangesAsync();
+
             var userId = await UserManager.GetUserIdAsync(user);
             var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -150,5 +178,8 @@
         [Required(ErrorMessage = "Birthday is required.")]
         [RegularExpression(@"^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$", ErrorMessage = "Format must be DD/MM/YYYY.")]
         public string Birthday { get; set; } = string.Empty;
+
+        [Range(typeof(bool), "true", "true", ErrorMessage = "You must accept the Terms of Service and Privacy Policy.")]
+        public bool AcceptedTerms { get; set; }
     }
 }

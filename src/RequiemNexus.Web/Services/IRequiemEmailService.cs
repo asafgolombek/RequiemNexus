@@ -6,4 +6,6 @@ namespace RequiemNexus.Web.Services;
 public interface IRequiemEmailService : IEmailSender<ApplicationUser>
 {
     Task SendEmailChangeLinkAsync(ApplicationUser user, string newEmail, string changeLink);
+
+    Task SendAccountRecoveryCodeAsync(ApplicationUser user, string email, string code);
 }

@@ -42,6 +42,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<AuditLog> AuditLogs { get; set; } = default!;
 
+    public DbSet<ConsentLog> ConsentLogs { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -141,6 +143,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<AuditLog>()
             .HasIndex(l => l.OccurredAt);
+
+        // ConsentLog >- ApplicationUser configuration
+        builder.Entity<ConsentLog>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.ConsentLogs)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ConsentLog>()
+            .HasIndex(c => c.UserId);
 
         // Character >- CharacterAttribute configuration
         builder.Entity<CharacterAttribute>()

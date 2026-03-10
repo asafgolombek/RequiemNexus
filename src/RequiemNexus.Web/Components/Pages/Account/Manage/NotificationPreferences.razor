@@ -1,0 +1,127 @@
+@page "/Account/Manage/NotificationPreferences"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Notification Preferences - Requiem Nexus</PageTitle>
+
+<h3>Notification Preferences</h3>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">
+        @statusMessage
+    </div>
+}
+
+<p class="text-muted mb-4">Choose which email notifications you would like to receive.</p>
+
+<EditForm Model="Input" OnValidSubmit="HandleSubmit" FormName="notification-preferences" class="login-form mt-4">
+    <DataAnnotationsValidator />
+
+    <div class="form-group form-check mb-3">
+        <InputCheckbox id="notify-security" @bind-Value="Input.NotifyOnSecurityEvents" class="form-check-input" />
+        <label for="notify-security" class="form-check-label">
+            <strong>Security Events</strong>
+            <div class="text-muted small">Receive emails for login alerts, password changes, and 2FA activity.</div>
+        </label>
+    </div>
+
+    <div class="form-group form-check mb-3">
+        <InputCheckbox id="notify-account" @bind-Value="Input.NotifyOnAccountChanges" class="form-check-input" />
+        <label for="notify-account" class="form-check-label">
+            <strong>Account Changes</strong>
+            <div class="text-muted small">Receive emails when your profile or account settings are updated.</div>
+        </label>
+    </div>
+
+    <div class="form-group form-check mb-4">
+        <InputCheckbox id="notify-newsletter" @bind-Value="Input.NotifyOnNewsletter" class="form-check-input" />
+        <label for="notify-newsletter" class="form-check-label">
+            <strong>Newsletter &amp; Updates</strong>
+            <div class="text-muted small">Receive occasional news and updates about Requiem Nexus.</div>
+        </label>
+    </div>
+
+    <button type="submit" class="btn-login" disabled="@isSubmitting">
+        @if (isSubmitting)
+        {
+            <span>Saving...</span>
+        }
+        else
+        {
+            <span>Save Preferences</span>
+        }
+    </button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    public NotificationPreferencesModel Input { get; set; } = default!;
+
+    private string? statusMessage;
+    private bool isError;
+    private bool isSubmitting;
+    private ApplicationUser? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            user = await UserManager.GetUserAsync(principal);
+        }
+
+        Input ??= new();
+
+        if (user is not null)
+        {
+            Input.NotifyOnSecurityEvents = user.NotifyOnSecurityEvents;
+            Input.NotifyOnAccountChanges = user.NotifyOnAccountChanges;
+            Input.NotifyOnNewsletter = user.NotifyOnNewsletter;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        statusMessage = null;
+        isError = false;
+
+        if (user is null)
+        {
+            statusMessage = "Unable to load user.";
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        user.NotifyOnSecurityEvents = Input.NotifyOnSecurityEvents;
+        user.NotifyOnAccountChanges = Input.NotifyOnAccountChanges;
+        user.NotifyOnNewsletter = Input.NotifyOnNewsletter;
+
+        var updateResult = await UserManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            statusMessage = string.Join(" ", updateResult.Errors.Select(e => e.Description));
+            isError = true;
+            isSubmitting = false;
+            return;
+        }
+
+        statusMessage = "Your notification preferences have been updated.";
+        isSubmitting = false;
+    }
+
+    public class NotificationPreferencesModel
+    {
+        public bool NotifyOnSecurityEvents { get; set; } = true;
+
+        public bool NotifyOnAccountChanges { get; set; } = true;
+
+        public bool NotifyOnNewsletter { get; set; } = false;
+    }
+}

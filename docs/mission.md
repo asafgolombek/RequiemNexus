@@ -16,7 +16,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 |-------|------|--------|
 | 1 | The Neonate (Player Focus) | ✅ Complete |
 | 2 | Validation & Automation (The Ascendant) | ✅ Complete |
-| 3 | Account Management & Security (The Masquerade Veil) | 🔄 In Progress |
+| 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
 | 4 | The Storyteller & The Danse Macabre | ⬜ Planned |
 | 5 | Automated Deployments & Observability | ⬜ Planned |
 | 6 | Realtime Play (The Blood Communion) | ⬜ Planned |
@@ -24,8 +24,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 8 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 9 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 3](#-phase-3-account-management--security-the-masquerade-veil)**
-> Remaining: Password Reset via Email, Account Recovery, Rate Limiting, OAuth Connect, Role Management, Notification Preferences, Terms of Service & Privacy Policy.
+> **Currently Active → [Phase 4](#-phase-4-the-storyteller--the-danse-macabre)**
 
 ---
 
@@ -329,19 +328,19 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] **Profile Management**
   - Update display name, avatar, and email address
   - Email change flow with re-verification of the new address before it takes effect
-- [ ] **Password Reset via Email**
+- [x] **Password Reset via Email**
   - Request link → email with time-limited token → reset form → invalidate old sessions
-- [ ] **Account Recovery**
+- [x] **Account Recovery**
   - Define recovery path for users who lose 2FA device and recovery codes
-- [ ] **Rate Limiting**
+- [x] **Rate Limiting**
   - Throttle login attempts, password reset requests, and registration endpoints to prevent brute-force
-- [ ] **OAuth Connect**
+- [x] **OAuth Connect**
   - Link/unlink Google, Discord, or Apple accounts to an existing local account
-- [ ] **Role Management**
+- [x] **Role Management**
   - Player vs Storyteller authorization policies
-- [ ] **Notification Preferences**
+- [x] **Notification Preferences**
   - Opt in/out of email notifications (security alerts, campaign updates)
-- [ ] **Terms of Service & Privacy Policy**
+- [x] **Terms of Service & Privacy Policy**
   - Track user consent acceptance with timestamps (required for GDPR compliance)
 
 ### Phase 3 Testing & Security Criteria

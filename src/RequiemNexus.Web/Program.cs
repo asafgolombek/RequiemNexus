@@ -1,5 +1,6 @@
-using Fido2NetLib;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -59,6 +60,19 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
+// External OAuth providers — chained via a second AddAuthentication() call (no-op on defaults)
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "not-configured";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "not-configured";
+    })
+    .AddDiscord(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Discord:ClientId"] ?? "not-configured";
+        options.ClientSecret = builder.Configuration["Authentication:Discord:ClientSecret"] ?? "not-configured";
+    });
+
 builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
     .Configure<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore>((options, store) =>
     {
@@ -94,6 +108,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
             options.Password.RequireLowercase = false;
         }
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -102,12 +117,58 @@ builder.Services.AddScoped<RequiemNexus.Web.Services.SmtpEmailSender>();
 builder.Services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
 builder.Services.AddScoped<RequiemNexus.Web.Services.IRequiemEmailService>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
 
-var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
+builder.Services.AddRateLimiter(options =>
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DbInitializer.InitializeAsync(context);
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Login: 10 attempts per 15 minutes per IP
+    options.AddSlidingWindowLimiter("login", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(15);
+        opt.SegmentsPerWindow = 3;
+        opt.PermitLimit = 10;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+
+    // Password reset: 5 requests per hour per IP to prevent email flooding
+    options.AddSlidingWindowLimiter("forgot-password", opt =>
+    {
+        opt.Window = TimeSpan.FromHours(1);
+        opt.SegmentsPerWindow = 4;
+        opt.PermitLimit = 5;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+
+    // Registration: 10 attempts per hour per IP
+    options.AddSlidingWindowLimiter("register", opt =>
+    {
+        opt.Window = TimeSpan.FromHours(1);
+        opt.SegmentsPerWindow = 4;
+        opt.PermitLimit = 10;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+
+    // Account recovery: 3 attempts per hour per IP
+    options.AddSlidingWindowLimiter("account-recovery", opt =>
+    {
+        opt.Window = TimeSpan.FromHours(1);
+        opt.SegmentsPerWindow = 4;
+        opt.PermitLimit = 3;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+});
+
+WebApplication app = builder.Build();
+
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    await DbInitializer.InitializeAsync(context, roleManager);
 
     if (app.Environment.IsDevelopment())
     {
@@ -131,6 +192,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseAntiforgery();
 
 app.MapStaticAssets();

@@ -35,6 +35,9 @@ public partial class SmtpEmailSender : IRequiemEmailService
     public Task SendEmailChangeLinkAsync(ApplicationUser user, string newEmail, string changeLink) =>
         SendEmailAsync(newEmail, "Confirm your new email address", $"Please confirm your new email address by <a href='{changeLink}'>clicking here</a>. If you did not request this change, you can ignore this email.");
 
+    public Task SendAccountRecoveryCodeAsync(ApplicationUser user, string email, string code) =>
+        SendEmailAsync(email, "Requiem Nexus Account Recovery", $"Your account recovery code is: <strong>{code}</strong>. This code expires in 15 minutes. Use it to disable 2FA and regain access to your account.");
+
     private async Task SendEmailAsync(string to, string subject, string htmlMessage)
     {
         try

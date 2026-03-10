@@ -17,6 +17,9 @@ public enum AuditEventType
     DisplayNameChanged = 10,
     EmailChangeRequested = 11,
     EmailChanged = 12,
+    AccountRecovery2faDisabled = 13,
+    ExternalLoginLinked = 14,
+    ExternalLoginUnlinked = 15,
 }
 
 public class AuditLog

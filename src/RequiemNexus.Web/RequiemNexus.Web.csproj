@@ -17,6 +17,8 @@
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+    <PackageReference Include="AspNet.Security.OAuth.Discord" />
   </ItemGroup>
 
   <ItemGroup>

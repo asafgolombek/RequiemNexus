@@ -30,4 +30,14 @@ public class ApplicationUser : IdentityUser
 
     // Soft-delete: when set, the account is scheduled for permanent deletion after the grace period.
     public DateTimeOffset? DeletionScheduledAt { get; set; }
+
+    // Notification preferences
+    public bool NotifyOnSecurityEvents { get; set; } = true;
+
+    public bool NotifyOnAccountChanges { get; set; } = true;
+
+    public bool NotifyOnNewsletter { get; set; } = false;
+
+    // Consent logs for Terms of Service / Privacy Policy acceptance
+    public virtual ICollection<ConsentLog> ConsentLogs { get; set; } = [];
 }
