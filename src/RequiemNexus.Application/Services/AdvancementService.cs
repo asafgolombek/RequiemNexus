@@ -2,29 +2,70 @@ using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Application.Services;
 
-public class AdvancementService : IAdvancementService
+public class AdvancementService(IBeatLedgerService ledger) : IAdvancementService
 {
-    public bool TryUpgradeCoreTrait(Character character, AttributeId id, int currentRating, int newRating)
+    private readonly IBeatLedgerService _ledger = ledger;
+
+    /// <inheritdoc />
+    public async Task<bool> TryUpgradeCoreTrait(
+        Character character,
+        AttributeId id,
+        int currentRating,
+        int newRating,
+        string? actingUserId = null)
     {
         string traitName = id.ToString();
-        var trait = character.Attributes.FirstOrDefault(a => a.Name == traitName);
-        return TryUpgradeTrait(character, trait, newRating);
+        CharacterAttribute? trait = character.Attributes.FirstOrDefault(a => a.Name == traitName);
+        bool success = TryUpgradeTrait(character, trait, newRating);
+
+        if (success)
+        {
+            await _ledger.RecordXpSpendAsync(
+                character.Id,
+                character.CampaignId,
+                trait!.CalculateUpgradeCost(newRating),
+                XpExpense.Attribute,
+                $"Upgraded {id} to {newRating}",
+                actingUserId);
+        }
+
+        return success;
     }
 
-    public bool TryUpgradeCoreTrait(Character character, SkillId id, int currentRating, int newRating)
+    /// <inheritdoc />
+    public async Task<bool> TryUpgradeCoreTrait(
+        Character character,
+        SkillId id,
+        int currentRating,
+        int newRating,
+        string? actingUserId = null)
     {
         string traitName = id.ToString();
-        var trait = character.Skills.FirstOrDefault(s => s.Name == traitName);
-        return TryUpgradeTrait(character, trait, newRating);
+        CharacterSkill? trait = character.Skills.FirstOrDefault(s => s.Name == traitName);
+        bool success = TryUpgradeTrait(character, trait, newRating);
+
+        if (success)
+        {
+            await _ledger.RecordXpSpendAsync(
+                character.Id,
+                character.CampaignId,
+                trait!.CalculateUpgradeCost(newRating),
+                XpExpense.Skill,
+                $"Upgraded {id} to {newRating}",
+                actingUserId);
+        }
+
+        return success;
     }
 
     public void UpdateCoreTrait(Character character, AttributeId id, int newRating)
     {
         string traitName = id.ToString();
-        var trait = character.Attributes.FirstOrDefault(a => a.Name == traitName);
+        CharacterAttribute? trait = character.Attributes.FirstOrDefault(a => a.Name == traitName);
         if (trait != null)
         {
             // Internal bypass for creation/editing where XP isn't involved
@@ -35,7 +76,7 @@ public class AdvancementService : IAdvancementService
     public void UpdateCoreTrait(Character character, SkillId id, int newRating)
     {
         string traitName = id.ToString();
-        var trait = character.Skills.FirstOrDefault(s => s.Name == traitName);
+        CharacterSkill? trait = character.Skills.FirstOrDefault(s => s.Name == traitName);
         if (trait != null)
         {
             typeof(CharacterSkill).GetProperty("Rating")?.SetValue(trait, newRating);
@@ -60,7 +101,7 @@ public class AdvancementService : IAdvancementService
         character.CurrentWillpower = Math.Clamp(character.CurrentWillpower + willpowerDiff, 0, newMaxWillpower);
     }
 
-    private bool TryUpgradeTrait(Character character, IRatedTrait? trait, int newRating)
+    private static bool TryUpgradeTrait(Character character, IRatedTrait? trait, int newRating)
     {
         if (trait == null || newRating <= trait.Rating || newRating > 5)
         {
@@ -72,9 +113,6 @@ public class AdvancementService : IAdvancementService
         if (character.ExperiencePoints >= totalCost)
         {
             character.ExperiencePoints -= totalCost;
-
-            // Use the new Upgrade method which handles Rating update and returns cost
-            // (Even though we already calculated it, this preserves domain integrity)
             trait.Upgrade(newRating, new ExperienceCostRules());
             return true;
         }

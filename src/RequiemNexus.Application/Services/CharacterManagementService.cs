@@ -4,13 +4,18 @@ using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Application.Services;
 
-public class CharacterManagementService(ApplicationDbContext dbContext, ICharacterCreationRules creationRules) : ICharacterService
+public class CharacterManagementService(
+    ApplicationDbContext dbContext,
+    ICharacterCreationRules creationRules,
+    IBeatLedgerService beatLedger) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ICharacterCreationRules _creationRules = creationRules;
+    private readonly IBeatLedgerService _beatLedger = beatLedger;
 
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
     {
@@ -78,11 +83,27 @@ public class CharacterManagementService(ApplicationDbContext dbContext, ICharact
     public async Task AddBeatAsync(Character character)
     {
         character.Beats++;
+
+        await _beatLedger.RecordBeatAsync(
+            character.Id,
+            character.CampaignId,
+            BeatSource.ManualAdjustment,
+            "Beat added",
+            null);
+
         if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
         {
             character.Beats = newBeats;
             character.ExperiencePoints += xpGained;
             character.TotalExperiencePoints += xpGained;
+
+            await _beatLedger.RecordXpCreditAsync(
+                character.Id,
+                character.CampaignId,
+                xpGained,
+                XpSource.BeatConversion,
+                $"Converted 5 Beats to {xpGained} XP",
+                null);
         }
 
         await _dbContext.SaveChangesAsync();
@@ -101,6 +122,15 @@ public class CharacterManagementService(ApplicationDbContext dbContext, ICharact
     {
         character.ExperiencePoints++;
         character.TotalExperiencePoints++;
+
+        await _beatLedger.RecordXpCreditAsync(
+            character.Id,
+            character.CampaignId,
+            1,
+            XpSource.ManualAdjustment,
+            "XP added manually",
+            null);
+
         await _dbContext.SaveChangesAsync();
     }
 
@@ -113,6 +143,14 @@ public class CharacterManagementService(ApplicationDbContext dbContext, ICharact
             {
                 character.TotalExperiencePoints--;
             }
+
+            await _beatLedger.RecordXpSpendAsync(
+                character.Id,
+                character.CampaignId,
+                1,
+                XpExpense.ManualAdjustment,
+                "XP removed manually",
+                null);
 
             await _dbContext.SaveChangesAsync();
         }
@@ -155,7 +193,7 @@ public class CharacterManagementService(ApplicationDbContext dbContext, ICharact
     {
         character.ExperiencePoints -= xpCost;
 
-        var cm = new CharacterMerit
+        CharacterMerit cm = new()
         {
             CharacterId = character.Id,
             MeritId = meritId,
@@ -163,6 +201,15 @@ public class CharacterManagementService(ApplicationDbContext dbContext, ICharact
         };
         typeof(CharacterMerit).GetProperty("Rating")?.SetValue(cm, rating);
         _dbContext.CharacterMerits.Add(cm);
+
+        await _beatLedger.RecordXpSpendAsync(
+            character.Id,
+            character.CampaignId,
+            xpCost,
+            XpExpense.Merit,
+            $"Purchased Merit (Id={meritId}, rating={rating})",
+            null);
+
         await _dbContext.SaveChangesAsync();
         return cm;
     }
@@ -176,14 +223,68 @@ public class CharacterManagementService(ApplicationDbContext dbContext, ICharact
     {
         character.ExperiencePoints -= xpCost;
 
-        var cd = new CharacterDiscipline
+        CharacterDiscipline cd = new()
         {
             CharacterId = character.Id,
             DisciplineId = disciplineId,
         };
         typeof(CharacterDiscipline).GetProperty("Rating")?.SetValue(cd, rating);
         _dbContext.CharacterDisciplines.Add(cd);
+
+        await _beatLedger.RecordXpSpendAsync(
+            character.Id,
+            character.CampaignId,
+            xpCost,
+            XpExpense.Discipline,
+            $"Purchased Discipline (Id={disciplineId}, rating={rating})",
+            null);
+
         await _dbContext.SaveChangesAsync();
         return cd;
+    }
+
+    /// <inheritdoc />
+    public async Task<(Character Character, bool IsOwner)?> GetCharacterWithAccessCheckAsync(int characterId, string requestingUserId)
+    {
+        Character? character = await _dbContext.Characters
+            .Include(c => c.Clan)
+            .Include(c => c.Campaign)
+            .Include(c => c.Attributes)
+            .Include(c => c.Skills)
+            .Include(c => c.Merits).ThenInclude(m => m.Merit)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
+            .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
+            .Include(c => c.Aspirations)
+            .Include(c => c.Banes)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == characterId);
+
+        if (character == null)
+        {
+            return null;
+        }
+
+        // Owner: full edit access.
+        if (character.ApplicationUserId == requestingUserId)
+        {
+            return (character, true);
+        }
+
+        // Campaign member (Storyteller or fellow player): read-only access.
+        if (character.CampaignId.HasValue)
+        {
+            bool isMember = await _dbContext.Campaigns
+                .AnyAsync(c => c.Id == character.CampaignId
+                    && (c.StoryTellerId == requestingUserId
+                        || c.Characters.Any(ch => ch.ApplicationUserId == requestingUserId)));
+
+            if (isMember)
+            {
+                return (character, false);
+            }
+        }
+
+        // No access.
+        return null;
     }
 }

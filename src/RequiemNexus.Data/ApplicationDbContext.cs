@@ -44,6 +44,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ConsentLog> ConsentLogs { get; set; } = default!;
 
+    public DbSet<BeatLedgerEntry> BeatLedger { get; set; } = default!;
+
+    public DbSet<XpLedgerEntry> XpLedger { get; set; } = default!;
+
+    public DbSet<CharacterCondition> CharacterConditions { get; set; } = default!;
+
+    public DbSet<CharacterTilt> CharacterTilts { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -175,5 +183,51 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<CharacterSkill>()
             .HasIndex(s => new { s.CharacterId, s.Name })
             .IsUnique();
+
+        // BeatLedgerEntry >- Character
+        builder.Entity<BeatLedgerEntry>()
+            .HasOne(b => b.Character)
+            .WithMany()
+            .HasForeignKey(b => b.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BeatLedgerEntry>()
+            .HasIndex(b => b.CharacterId);
+
+        builder.Entity<BeatLedgerEntry>()
+            .HasIndex(b => b.OccurredAt);
+
+        // XpLedgerEntry >- Character
+        builder.Entity<XpLedgerEntry>()
+            .HasOne(x => x.Character)
+            .WithMany()
+            .HasForeignKey(x => x.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<XpLedgerEntry>()
+            .HasIndex(x => x.CharacterId);
+
+        builder.Entity<XpLedgerEntry>()
+            .HasIndex(x => x.OccurredAt);
+
+        // CharacterCondition >- Character
+        builder.Entity<CharacterCondition>()
+            .HasOne(c => c.Character)
+            .WithMany()
+            .HasForeignKey(c => c.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterCondition>()
+            .HasIndex(c => c.CharacterId);
+
+        // CharacterTilt >- Character
+        builder.Entity<CharacterTilt>()
+            .HasOne(t => t.Character)
+            .WithMany()
+            .HasForeignKey(t => t.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterTilt>()
+            .HasIndex(t => t.CharacterId);
     }
 }

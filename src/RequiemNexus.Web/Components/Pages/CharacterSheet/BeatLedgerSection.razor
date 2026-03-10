@@ -1,0 +1,137 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+@inject IBeatLedgerService BeatLedgerService
+
+<div class="ledger-section">
+    <div class="ledger-toggle" @onclick="ToggleBeats">
+        <h4>Beat History <span class="ledger-count">(@_beatLedger.Count entries)</span></h4>
+        <span class="toggle-icon">@(_showBeats ? "▲" : "▼")</span>
+    </div>
+
+    @if (_showBeats)
+    {
+        @if (_beatLedger.Count == 0)
+        {
+            <p class="ledger-empty">No Beat entries yet.</p>
+        }
+        else
+        {
+            <table class="ledger-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Source</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (BeatLedgerEntry entry in _beatLedger)
+                    {
+                        <tr>
+                            <td class="ledger-date">@entry.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="ledger-source">@FormatBeatSource(entry.Source)</td>
+                            <td>@entry.Reason</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <div class="ledger-toggle" @onclick="ToggleXp">
+        <h4>XP History <span class="ledger-count">(@_xpLedger.Count entries)</span></h4>
+        <span class="toggle-icon">@(_showXp ? "▲" : "▼")</span>
+    </div>
+
+    @if (_showXp)
+    {
+        @if (_xpLedger.Count == 0)
+        {
+            <p class="ledger-empty">No XP entries yet.</p>
+        }
+        else
+        {
+            <table class="ledger-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Delta</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (XpLedgerEntry entry in _xpLedger)
+                    {
+                        <tr class="@(entry.Delta > 0 ? "ledger-credit" : "ledger-debit")">
+                            <td class="ledger-date">@entry.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="ledger-source">@FormatXpType(entry)</td>
+                            <td class="ledger-delta">@(entry.Delta > 0 ? $"+{entry.Delta}" : entry.Delta.ToString())</td>
+                            <td>@entry.Reason</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CharacterId { get; set; }
+
+    private List<BeatLedgerEntry> _beatLedger = [];
+    private List<XpLedgerEntry> _xpLedger = [];
+    private bool _showBeats;
+    private bool _showXp;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _beatLedger = await BeatLedgerService.GetBeatLedgerAsync(CharacterId);
+        _xpLedger = await BeatLedgerService.GetXpLedgerAsync(CharacterId);
+    }
+
+    private void ToggleBeats() => _showBeats = !_showBeats;
+    private void ToggleXp() => _showXp = !_showXp;
+
+    private static string FormatBeatSource(BeatSource source) => source switch
+    {
+        BeatSource.DramaticFailure => "Dramatic Failure",
+        BeatSource.ConditionResolved => "Condition Resolved",
+        BeatSource.AspirationFulfilled => "Aspiration Fulfilled",
+        BeatSource.StorytellerAward => "Storyteller Award",
+        BeatSource.SessionAward => "Session Award",
+        BeatSource.ManualAdjustment => "Manual",
+        _ => source.ToString(),
+    };
+
+    private static string FormatXpType(XpLedgerEntry entry)
+    {
+        if (entry.Delta > 0 && entry.Source.HasValue)
+        {
+            return entry.Source.Value switch
+            {
+                XpSource.BeatConversion => "Beat Conversion",
+                XpSource.StorytellerAward => "Storyteller Award",
+                XpSource.ManualAdjustment => "Manual",
+                _ => entry.Source.Value.ToString(),
+            };
+        }
+
+        if (entry.Delta < 0 && entry.Expense.HasValue)
+        {
+            return entry.Expense.Value switch
+            {
+                XpExpense.Attribute => "Attribute",
+                XpExpense.Skill => "Skill",
+                XpExpense.Discipline => "Discipline",
+                XpExpense.Merit => "Merit",
+                XpExpense.ManualAdjustment => "Manual",
+                _ => entry.Expense.Value.ToString(),
+            };
+        }
+
+        return "—";
+    }
+}

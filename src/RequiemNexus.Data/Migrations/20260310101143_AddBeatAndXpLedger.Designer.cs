@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RequiemNexus.Data;
 
@@ -10,9 +11,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310101143_AddBeatAndXpLedger")]
+    partial class AddBeatAndXpLedger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -523,49 +526,6 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("CharacterBanes");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCondition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AppliedByUserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("AwardsBeat")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ConditionType")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CustomName")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsResolved")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("ResolvedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("CharacterConditions");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
                 {
                     b.Property<int>("Id")
@@ -676,45 +636,6 @@ namespace RequiemNexus.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("CharacterSkills");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterTilt", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AppliedByUserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CustomName")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("EncounterId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("RemovedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TiltType")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("CharacterTilts");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Clan", b =>
@@ -1188,17 +1109,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCondition", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany()
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Character", "Character")
@@ -1260,17 +1170,6 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.HasOne("RequiemNexus.Data.Models.Character", "Character")
                         .WithMany("Skills")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterTilt", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany()
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

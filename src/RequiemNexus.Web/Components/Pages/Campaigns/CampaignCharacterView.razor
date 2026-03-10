@@ -1,0 +1,356 @@
+@page "/campaigns/{CampaignId:int}/characters/{CharacterId:int}"
+@rendermode InteractiveServer
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
+@using RequiemNexus.Domain
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Components.Pages.CharacterSheet
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ICharacterService CharacterService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(_character?.Name ?? "Character") - View Only - Requiem Nexus</PageTitle>
+
+@if (_character == null && !_loaded)
+{
+    <p><em>Loading character...</em></p>
+}
+else if (_character == null)
+{
+    <div class="page-container">
+        <div class="empty-state-rn">
+            <p>Character not found or you do not have access.</p>
+            <a href="/campaigns/@CampaignId" class="btn-primary-rn">Back to Campaign</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="character-sheet fade-in">
+        <!-- VIEW-ONLY BANNER -->
+        <div class="view-only-banner" style="background:#1a0000;border-bottom:1px solid #550000;padding:8px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="color:#990000;font-family:'Cinzel',serif;font-size:0.85em;letter-spacing:2px;text-transform:uppercase;">
+                👁 View Only — @(_character.ApplicationUserId == _currentUserId ? "Your Character" : "Campaign Member Access")
+            </span>
+            <a href="/campaigns/@CampaignId" class="btn-ghost" style="font-size:0.8em;">← Back to Campaign</a>
+        </div>
+
+        <!-- HEADER -->
+        <header class="cs-header">
+            <div class="char-avatar"></div>
+            <div class="char-info">
+                <h1>@_character.Name</h1>
+                <div class="char-meta">
+                    <span><strong>Concept:</strong> @(string.IsNullOrEmpty(_character.Concept) ? "???" : _character.Concept)</span>
+                    <span><strong>Clan:</strong> @(_character.Clan?.Name ?? "None")</span>
+                    <span><strong>Chronicle:</strong> @(_character.Campaign?.Name ?? "None")</span>
+                    <span><strong>Mask:</strong> @(string.IsNullOrEmpty(_character.Mask) ? "???" : _character.Mask)</span>
+                    <span><strong>Dirge:</strong> @(string.IsNullOrEmpty(_character.Dirge) ? "???" : _character.Dirge)</span>
+                    <span><strong>Touchstone:</strong> @(string.IsNullOrEmpty(_character.Touchstone) ? "???" : _character.Touchstone)</span>
+                </div>
+                <div class="char-xp">
+                    <div class="xp-counter">
+                        <strong class="xp-counter-label">Beats</strong>
+                        <span class="xp-counter-value">@_character.Beats</span>
+                    </div>
+                    <div class="xp-counter">
+                        <strong class="xp-counter-label">Experiences</strong>
+                        <span class="xp-counter-value">@_character.ExperiencePoints</span>
+                    </div>
+                    <div class="xp-total">
+                        <strong class="xp-counter-label">Total XP</strong>
+                        <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- All interactive traits are read-only via CascadingValue -->
+        <CascadingValue Value="false" Name="IsEditable">
+            <div class="cs-grid">
+
+                <!-- VITALS (static display — no click interaction) -->
+                <section class="cs-section cs-vitals">
+                    <h2>Vitals</h2>
+                    <div class="vitals-trackers">
+                        <div class="tracker-item">
+                            <span class="tracker-label">Health</span>
+                            <div class="tracker-boxes">
+                                @for (int i = 0; i < _character.MaxHealth; i++)
+                                {
+                                    string dmg = GetHealthChar(i);
+                                    <div class="tracker-box health-box">@dmg</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="tracker-item">
+                            <span class="tracker-label">Willpower</span>
+                            <div class="tracker-boxes">
+                                @for (int i = 0; i < _character.MaxWillpower; i++)
+                                {
+                                    <div class="tracker-box @(i < _character.CurrentWillpower ? "filled" : "")"></div>
+                                }
+                            </div>
+                        </div>
+                        <div class="tracker-item">
+                            <span class="tracker-label">Vitae</span>
+                            <div class="tracker-boxes">
+                                @for (int i = 0; i < _character.MaxVitae; i++)
+                                {
+                                    <div class="tracker-box @(i < _character.CurrentVitae ? "filled dark" : "")"></div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="derived-stats" style="margin-top:20px;display:flex;gap:20px;font-family:'Cinzel',serif;color:#d0c0b0;border-top:1px solid #330000;padding-top:15px;">
+                        <div style="text-align:center;flex:1;"><div style="font-size:0.8em;color:#990000;text-transform:uppercase;letter-spacing:1px;">Size</div><div style="font-size:1.5em;">@_character.Size</div></div>
+                        <div style="text-align:center;flex:1;"><div style="font-size:0.8em;color:#990000;text-transform:uppercase;letter-spacing:1px;">Speed</div><div style="font-size:1.5em;">@_character.Speed</div></div>
+                        <div style="text-align:center;flex:1;"><div style="font-size:0.8em;color:#990000;text-transform:uppercase;letter-spacing:1px;">Defense</div><div style="font-size:1.5em;">@_character.Defense</div></div>
+                        <div style="text-align:center;flex:1;"><div style="font-size:0.8em;color:#990000;text-transform:uppercase;letter-spacing:1px;">Armor</div><div style="font-size:1.5em;">@_character.Armor</div></div>
+                    </div>
+                </section>
+
+                <!-- ATTRIBUTES -->
+                <section class="cs-section cs-attributes">
+                    <h2>Attributes</h2>
+                    <div class="grid-3-col">
+                        @foreach (var (label, category) in new[] {
+                            ("Mental", TraitCategory.Mental),
+                            ("Physical", TraitCategory.Physical),
+                            ("Social", TraitCategory.Social)
+                        })
+                        {
+                            <div class="stat-col @label.ToLower()">
+                                <h3>@label</h3>
+                                @foreach (var attr in _character.Attributes.Where(a => a.Category == category))
+                                {
+                                    <DotScale Value="@attr.Rating"
+                                              Label="@TraitMetadata.GetDisplayName(attr.Name)"
+                                              OnRollClick="OpenRoller" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <!-- SKILLS -->
+                <section class="cs-section cs-skills">
+                    <h2>Skills</h2>
+                    <div class="grid-3-col">
+                        @foreach (var (label, category) in new[] {
+                            ("Mental", TraitCategory.Mental),
+                            ("Physical", TraitCategory.Physical),
+                            ("Social", TraitCategory.Social)
+                        })
+                        {
+                            <div class="stat-col @label.ToLower()">
+                                <h3>@label</h3>
+                                @foreach (var skill in _character.Skills.Where(s => s.Category == category))
+                                {
+                                    <DotScale Value="@skill.Rating"
+                                              Label="@TraitMetadata.GetDisplayName(skill.Name)"
+                                              OnRollClick="OpenRoller" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <!-- ADVANTAGES & DISCIPLINES -->
+                <div class="grid-2-col">
+                    <section class="cs-section cs-advantages">
+                        <h2>Advantages</h2>
+                        <DotScale Value="@_character.BloodPotency" Label="Blood Potency" Max="10" />
+                        <DotScale Value="@_character.Humanity" Label="Humanity" Max="10" />
+
+                        <h3 class="trait-subheading">Merits</h3>
+                        <ul class="trait-list">
+                            @foreach (var merit in _character.Merits)
+                            {
+                                <li class="trait-item">
+                                    <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" : $"({merit.Specification})")</span>
+                                    <span class="trait-dots">@(new string('•', merit.Rating))</span>
+                                </li>
+                            }
+                        </ul>
+
+                        @if (_character.Aspirations.Any())
+                        {
+                            <h3 class="trait-subheading">Aspirations</h3>
+                            <ul class="trait-list">
+                                @foreach (var asp in _character.Aspirations)
+                                {
+                                    <li class="trait-item">
+                                        <span>@asp.Description</span>
+                                        <span style="font-size:0.75em;color:#770000;">@(asp.IsLongTerm ? "Long-term" : "Short-term")</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        @if (_character.Banes.Any())
+                        {
+                            <h3 class="trait-subheading">Banes</h3>
+                            <ul class="trait-list">
+                                @foreach (var bane in _character.Banes)
+                                {
+                                    <li class="trait-item"><span>@bane.Description</span></li>
+                                }
+                            </ul>
+                        }
+                    </section>
+
+                    <section class="cs-section cs-disciplines">
+                        <h2>Disciplines</h2>
+                        <ul class="trait-list disciplines-list">
+                            @foreach (var disc in _character.Disciplines)
+                            {
+                                <li class="trait-item discipline-item" style="flex-direction:column;align-items:stretch;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;"
+                                         @onclick="() => ToggleDiscipline(disc.DisciplineId)">
+                                        <span>
+                                            @if (_expandedDisciplines.Contains(disc.DisciplineId))
+                                            {
+                                                <i class="oi oi-chevron-bottom" style="font-size:0.8em;margin-right:5px;"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="oi oi-chevron-right" style="font-size:0.8em;margin-right:5px;"></i>
+                                            }
+                                            @disc.Discipline?.Name
+                                        </span>
+                                        <span class="trait-dots">@(new string('•', disc.Rating))</span>
+                                    </div>
+                                    @if (_expandedDisciplines.Contains(disc.DisciplineId) && disc.Discipline?.Powers != null)
+                                    {
+                                        <div class="discipline-powers" style="margin-top:10px;padding-left:15px;border-left:2px solid #550000;font-size:0.9em;color:#d0d0d0;">
+                                            @foreach (var power in disc.Discipline.Powers.Where(p => p.Level <= disc.Rating).OrderBy(p => p.Level))
+                                            {
+                                                <div class="power-item" style="margin-bottom:8px;">
+                                                    <strong>Level @power.Level - @power.Name:</strong>
+                                                    <p style="margin:2px 0 0 0;font-size:0.85em;color:#a0a0a0;">@power.Description</p>
+                                                    @if (!string.IsNullOrEmpty(power.DicePool) || !string.IsNullOrEmpty(power.Cost))
+                                                    {
+                                                        <div style="font-size:0.8em;color:#808080;margin-top:2px;">
+                                                            @(string.IsNullOrEmpty(power.DicePool) ? "" : $"Pool: {power.DicePool}")
+                                                            @(string.IsNullOrEmpty(power.DicePool) || string.IsNullOrEmpty(power.Cost) ? "" : " | ")
+                                                            @(string.IsNullOrEmpty(power.Cost) ? "" : $"Cost: {power.Cost}")
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </section>
+                </div>
+
+                <!-- EQUIPMENT (read-only list, no add/remove) -->
+                @if (_character.CharacterEquipments.Any())
+                {
+                    <section class="cs-section cs-equipment">
+                        <h2>Equipment</h2>
+                        <ul class="equipment-grid">
+                            @foreach (var ce in _character.CharacterEquipments)
+                            {
+                                <li class="equipment-item">
+                                    <div class="equipment-info">
+                                        <strong class="equipment-name">@ce.Equipment?.Name (x@ce.Quantity)</strong>
+                                        <div class="equipment-meta">
+                                            <span>Type: @ce.Equipment?.Type</span>
+                                            @if (ce.Equipment?.Damage > 0) { <span>| Dmg: @ce.Equipment?.Damage</span> }
+                                            @if (ce.Equipment?.ArmorRating > 0) { <span>| Arm: @ce.Equipment?.ArmorRating</span> }
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </section>
+                }
+
+                <ConditionsSection CharacterId="_character.Id"
+                                   UserId="@(_currentUserId ?? string.Empty)"
+                                   CanEdit="false" />
+
+            </div>
+        </CascadingValue>
+
+        <DiceRollerModal @bind-IsVisible="_isRollerOpen"
+                         TraitName="@_rollerTraitName"
+                         BaseDice="@_rollerBaseDice"
+                         Character="_character" />
+    </div>
+}
+
+@code {
+    [Parameter] public int CampaignId { get; set; }
+    [Parameter] public int CharacterId { get; set; }
+
+    private Character? _character;
+    private string? _currentUserId;
+    private bool _loaded = false;
+
+    private bool _isRollerOpen = false;
+    private string _rollerTraitName = string.Empty;
+    private int _rollerBaseDice = 1;
+
+    private readonly HashSet<int> _expandedDisciplines = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(_currentUserId))
+        {
+            (Character Character, bool IsOwner)? result = await CharacterService.GetCharacterWithAccessCheckAsync(CharacterId, _currentUserId);
+            _character = result?.Character;
+        }
+
+        _loaded = true;
+    }
+
+    private void ToggleDiscipline(int disciplineId)
+    {
+        if (!_expandedDisciplines.Add(disciplineId))
+        {
+            _expandedDisciplines.Remove(disciplineId);
+        }
+    }
+
+    private void OpenRoller(string traitName)
+    {
+        _rollerTraitName = traitName;
+        _rollerBaseDice = GetTraitValue(traitName);
+        _isRollerOpen = true;
+    }
+
+    private int GetTraitValue(string traitName)
+    {
+        if (_character == null)
+        {
+            return 0;
+        }
+
+        string name = traitName.Replace(" ", string.Empty);
+        return TraitMetadata.IsAttribute(name)
+            ? _character.GetAttributeRating(name)
+            : _character.GetSkillRating(name);
+    }
+
+    private string GetHealthChar(int index)
+    {
+        if (string.IsNullOrEmpty(_character?.HealthDamage) || index >= _character.HealthDamage.Length)
+        {
+            return string.Empty;
+        }
+
+        char dmg = _character.HealthDamage[index];
+        return dmg == ' ' ? string.Empty : dmg.ToString();
+    }
+}

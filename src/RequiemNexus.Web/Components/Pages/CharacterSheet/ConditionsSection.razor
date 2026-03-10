@@ -1,0 +1,226 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Contracts
+@using RequiemNexus.Domain.Enums
+@inject IConditionService ConditionService
+@inject IConditionRules ConditionRules
+
+<section class="cs-section">
+    <h3 class="section-title">Conditions &amp; Tilts</h3>
+
+    @* ── Active Conditions ─────────────────────────────────────────────────── *@
+    <div class="conditions-group">
+        <h4>Conditions</h4>
+
+        @if (_activeConditions.Count == 0)
+        {
+            <p class="empty-state-sm">No active conditions.</p>
+        }
+        else
+        {
+            <ul class="condition-list">
+                @foreach (CharacterCondition c in _activeConditions)
+                {
+                    string label = c.ConditionType == ConditionType.Custom
+                        ? (c.CustomName ?? "Custom")
+                        : c.ConditionType.ToString();
+                    string description = c.Description
+                        ?? ConditionRules.GetConditionDescription(c.ConditionType);
+
+                    <li class="condition-item">
+                        <div class="condition-header">
+                            <strong>@label</strong>
+                            @if (c.AwardsBeat)
+                            {
+                                <span class="beat-badge" title="Awards a Beat on resolution">●</span>
+                            }
+                            @if (CanEdit)
+                            {
+                                <button class="btn-ghost btn-sm resolve-btn"
+                                        @onclick="() => ResolveCondition(c.Id)"
+                                        title="Resolve">
+                                    ✓ Resolve
+                                </button>
+                            }
+                        </div>
+                        <p class="condition-desc">@description</p>
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (CanEdit)
+        {
+            <div class="add-condition-row">
+                <select @bind="_newConditionType" class="form-control condition-select">
+                    @foreach (ConditionType type in Enum.GetValues<ConditionType>())
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </select>
+                @if (_newConditionType == ConditionType.Custom)
+                {
+                    <input @bind="_newCustomName" placeholder="Custom name" class="form-control" maxlength="100" />
+                }
+                <button class="btn-primary-rn btn-sm" @onclick="AddCondition">+ Add</button>
+            </div>
+        }
+    </div>
+
+    @* ── Active Tilts ──────────────────────────────────────────────────────── *@
+    <div class="conditions-group">
+        <h4>Tilts</h4>
+
+        @if (_activeTilts.Count == 0)
+        {
+            <p class="empty-state-sm">No active tilts.</p>
+        }
+        else
+        {
+            <ul class="condition-list">
+                @foreach (CharacterTilt t in _activeTilts)
+                {
+                    string label = t.TiltType == TiltType.Custom
+                        ? (t.CustomName ?? "Custom")
+                        : t.TiltType.ToString();
+                    string description = ConditionRules.GetTiltDescription(t.TiltType);
+
+                    <li class="condition-item">
+                        <div class="condition-header">
+                            <strong>@label</strong>
+                            @if (CanEdit)
+                            {
+                                <button class="btn-ghost btn-sm resolve-btn"
+                                        @onclick="() => RemoveTilt(t.Id)"
+                                        title="Remove Tilt">
+                                    ✕ Remove
+                                </button>
+                            }
+                        </div>
+                        <p class="condition-desc">@description</p>
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (CanEdit)
+        {
+            <div class="add-condition-row">
+                <select @bind="_newTiltType" class="form-control condition-select">
+                    @foreach (TiltType type in Enum.GetValues<TiltType>())
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </select>
+                @if (_newTiltType == TiltType.Custom)
+                {
+                    <input @bind="_newTiltCustomName" placeholder="Custom name" class="form-control" maxlength="100" />
+                }
+                <button class="btn-primary-rn btn-sm" @onclick="AddTilt">+ Add</button>
+            </div>
+        }
+    </div>
+
+    @* ── Resolved Conditions (collapsed) ──────────────────────────────────── *@
+    @if (_resolvedConditions.Count > 0)
+    {
+        <div class="conditions-group resolved-group">
+            <button class="ledger-toggle" @onclick="ToggleResolved">
+                <span>Resolved Conditions (@_resolvedConditions.Count)</span>
+                <span>@(_showResolved ? "▲" : "▼")</span>
+            </button>
+            @if (_showResolved)
+            {
+                <ul class="condition-list resolved-list">
+                    @foreach (CharacterCondition c in _resolvedConditions)
+                    {
+                        string label = c.ConditionType == ConditionType.Custom
+                            ? (c.CustomName ?? "Custom")
+                            : c.ConditionType.ToString();
+                        <li class="condition-item resolved-item">
+                            <span>@label</span>
+                            <span class="resolved-date">
+                                @(c.ResolvedAt?.ToLocalTime().ToString("yyyy-MM-dd") ?? string.Empty)
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CharacterId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string UserId { get; set; } = string.Empty;
+
+    /// <summary>When false the component is read-only (no add/resolve buttons).</summary>
+    [Parameter]
+    public bool CanEdit { get; set; } = true;
+
+    private List<CharacterCondition> _activeConditions = [];
+    private List<CharacterCondition> _resolvedConditions = [];
+    private List<CharacterTilt> _activeTilts = [];
+
+    private ConditionType _newConditionType = ConditionType.Guilty;
+    private string? _newCustomName;
+    private TiltType _newTiltType = TiltType.KnockedDown;
+    private string? _newTiltCustomName;
+    private bool _showResolved;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        List<CharacterCondition> all = await ConditionService.GetConditionsAsync(CharacterId);
+        _activeConditions = all.Where(c => !c.IsResolved).ToList();
+        _resolvedConditions = all.Where(c => c.IsResolved).OrderByDescending(c => c.ResolvedAt).ToList();
+        _activeTilts = await ConditionService.GetActiveTiltsAsync(CharacterId);
+    }
+
+    private async Task AddCondition()
+    {
+        await ConditionService.ApplyConditionAsync(
+            CharacterId,
+            _newConditionType,
+            _newConditionType == ConditionType.Custom ? _newCustomName : null,
+            null,
+            UserId);
+
+        _newCustomName = null;
+        await LoadAsync();
+    }
+
+    private async Task ResolveCondition(int conditionId)
+    {
+        await ConditionService.ResolveConditionAsync(conditionId, UserId);
+        await LoadAsync();
+    }
+
+    private async Task AddTilt()
+    {
+        await ConditionService.ApplyTiltAsync(
+            CharacterId,
+            _newTiltType,
+            _newTiltType == TiltType.Custom ? _newTiltCustomName : null,
+            null,
+            UserId);
+
+        _newTiltCustomName = null;
+        await LoadAsync();
+    }
+
+    private async Task RemoveTilt(int tiltId)
+    {
+        await ConditionService.RemoveTiltAsync(tiltId, UserId);
+        await LoadAsync();
+    }
+
+    private void ToggleResolved() => _showResolved = !_showResolved;
+}

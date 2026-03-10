@@ -92,6 +92,8 @@ else
                 Sheet</button>
             <button class="tab-btn @(_activeTab == "identity" ? "active" : "")"
             @onclick='() => _activeTab = "identity"'>Identity &amp; Backstory</button>
+            <button class="tab-btn @(_activeTab == "history" ? "active" : "")"
+            @onclick='() => _activeTab = "history"'>XP History</button>
         </div>
 
         <CascadingValue Value="@(isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
@@ -259,11 +261,18 @@ else
                         </ul>
                     </section>
 
+                    <ConditionsSection CharacterId="_character.Id"
+                                       UserId="@(_currentUserId ?? string.Empty)" />
+
                 </div>
             }
             else if (_activeTab == "identity")
             {
         <CharacterIdentityTab Character="_character" OnChanged="SaveCharacter" />
+            }
+            else if (_activeTab == "history")
+            {
+        <BeatLedgerSection CharacterId="_character.Id" />
             }
     </CascadingValue>
     </div>
@@ -278,6 +287,7 @@ else
     public int Id { get; set; }
 
     private Character? _character;
+    private string? _currentUserId;
     private List<Equipment> _availableEquipment = new List<Equipment>();
     private int _selectedEquipmentId = 0;
     private int _selectedEquipmentQuantity = 1;
@@ -371,12 +381,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!string.IsNullOrEmpty(currentUserId))
+        if (!string.IsNullOrEmpty(_currentUserId))
         {
-            _character = await CharacterService.GetCharacterByIdAsync(Id, currentUserId);
+            _character = await CharacterService.GetCharacterByIdAsync(Id, _currentUserId);
             _availableEquipment = await CharacterService.GetAvailableEquipmentAsync();
         }
     }
