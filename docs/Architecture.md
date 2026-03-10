@@ -300,6 +300,8 @@ Configuration is explicit, layered, and validated at startup.
 - No conditional compilation (`#if DEBUG` is forbidden).
 - Missing required configuration **fails startup immediately** — no silent defaults.
 - Secrets are **never** stored in configuration files or the repository.
+- Local development databases are **local-only artifacts** (e.g. `.data/`) and must be ignored via `.gitignore` (never committed).
+- Local secrets use `dotnet user-secrets`. Staging/production secrets live in AWS Secrets Manager and are injected at container startup.
 - Environment-specific behavior is driven by configuration values, not code branches.
 
 ---
@@ -314,6 +316,8 @@ The database schema is a covenant — changes must be deliberate and forward-onl
 - **Migrations are forward-only** — down migrations are not relied upon for rollback. A new corrective migration is created instead.
 - **Breaking changes** (column renames, type changes) require a multi-step migration: add new → migrate data → remove old.
 - **Seed data** (`DbInitializer`) evolves alongside migrations. New reference data (Clans, Disciplines, Conditions) is added via the initializer and tested in CI.
+- **Reference (rules) data** (Clans, Merits, Disciplines, etc.) is versioned with the codebase and applied idempotently via `DbInitializer`. Corrections for existing rows ship as forward-only migrations.
+- **Deploy-time migrations**: database migrations run **once per deploy** via a dedicated migration step (not “every web node on startup”) to avoid race conditions in ECS.
 - **CI validation**: Every PR runs migrations against an empty database to verify they apply cleanly.
 
 ---
@@ -324,8 +328,33 @@ While deployed to the cloud, Requiem Nexus retains the Antigravity philosophy: n
 
 - **Stateless Web Nodes (ECS Fargate)**: Application servers hold no durable state, enabling seamless horizontal scaling.
 - **Managed Persistence (The Blood)**: RDS (PostgreSQL) and ElastiCache (Redis) are managed explicitly to reduce operational cognitive load.
-- **Explicit Infrastructure**: All infrastructure is defined via IaC (AWS CDK or Terraform). Zero manual AWS Console configuration.
+- **Explicit Infrastructure**: All infrastructure is defined via IaC — **AWS CDK** is the canonical path. Zero manual AWS Console configuration.
 - **Database Backups**: Automated RDS snapshots with point-in-time recovery. Player data must be recoverable to within **24 hours** of any failure — this is a non-negotiable SLA.
+
+### CI/CD Topology (GitHub Actions)
+
+Deployment automation is part of the architecture: it must be explicit, reproducible, and auditable.
+
+- **Authentication to AWS**: GitHub Actions assumes an AWS IAM role via **OIDC** (no long-lived AWS access keys in GitHub secrets).
+- **Environment gates**: `staging` auto-deploys from `main`; `production` requires an explicit approval gate (GitHub Environments).
+- **Infrastructure preview**: PRs run `cdk synth` and `cdk diff` to surface intended changes before merge.
+- **Migration ordering**: database migrations run as a **one-off** deploy step (dedicated migrator task) before updating the ECS service.
+- **Concurrency**: prevent overlapping deploys per environment to avoid split-brain releases.
+
+### AWS Service Map (Typical)
+
+Phase 5 infrastructure is expected to include:
+
+- **Networking**: VPC, public/private subnets, security groups
+- **Compute & ingress**: ECS Fargate, ECR, ALB
+- **Persistence**: RDS PostgreSQL, ElastiCache (Redis)
+- **Secrets & identity**: Secrets Manager, IAM roles/policies
+- **Email**: Amazon SES (optionally SNS for bounce/complaint routing)
+- **Static & CDN**: S3 + CloudFront (for Blazor WASM assets and cache-busting)
+- **Observability**: CloudWatch Logs/Metrics/Alarms (+ Grafana if used), OpenTelemetry Collector
+- **DNS/TLS**: Route 53 + ACM
+- **Cost controls**: AWS Budgets
+- **Optional edge hardening**: AWS WAF
 
 ---
 

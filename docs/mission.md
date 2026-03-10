@@ -19,14 +19,15 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
 | 4 | The Storyteller & The Danse Macabre | 🔄 Active |
 | 5 | Automated Deployments & Observability | ⬜ Planned |
-| 6 | Realtime Play (The Blood Communion) | ⬜ Planned |
-| 7 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
-| 8 | End-to-End Testing & Accessibility | ⬜ Planned |
-| 9 | The Global Embrace | ⬜ Planned |
+| 6 | CI/CD Hardening & Supply Chain | ⬜ Planned |
+| 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
+| 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
+| 9 | End-to-End Testing & Accessibility | ⬜ Planned |
+| 10 | The Global Embrace | ⬜ Planned |
 
 > **Currently Active → [Phase 4](#-phase-4-the-storyteller--the-danse-macabre)**
 
-> ⚠️ **Phases 5–9 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 4 unless explicitly instructed.**
+> ⚠️ **Phases 5–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 4 unless explicitly instructed.**
 
 ---
 
@@ -347,22 +348,70 @@ If a bug cannot be observed, it cannot be fixed.
 ## 📅 Phase 5: Automated Deployments & Observability
 
 - [ ] Automated Versioning & Git Tagging
-- [ ] Infrastructure as Code (IaC) — AWS CDK, Terraform, or CloudFormation
+- [ ] GitHub Environments (Staging auto-deploy, Production approvals)
+- [ ] GitHub Actions → AWS via OIDC (no long-lived AWS keys)
+- [ ] Infrastructure as Code (IaC) — **AWS CDK** (TypeScript or C#) is the canonical path
+- [ ] PR Infrastructure Preview (CDK synth + diff posted to PR)
 - [ ] Secrets & environment variable management (AWS Secrets Manager)
 - [ ] Expose `/health` and `/ready` endpoints
 - [ ] Containerize application and push to Container Registry
 - [ ] Configure AWS Environments (Staging, Production)
 - [ ] Application Configurations (.NET Environments & appsettings)
 - [ ] Define migration deployment strategy
+- [ ] Enforce deploy concurrency (no overlapping deployments per environment)
 - [ ] Automated deployments to staging and production
 - [ ] Post-deploy smoke test
 - [ ] Define and test rollback strategy (ECS task revision rollback or blue/green)
+- [ ] Release automation (Conventional Commits → changelog + version + git tag)
 - [ ] **Observability Stack** — configure OpenTelemetry collector with a live dashboard (Grafana + CloudWatch or equivalent); traces, metrics, and logs must be queryable in one place
 - [ ] **Error Tracking** — Sentry or Raygun integration for real-time exception alerts
 - [ ] **Database Backup Strategy** — automated PostgreSQL snapshots (RDS), point-in-time recovery verified; meets 24-hour data recovery SLA
 - [ ] **CDN / Static Asset Strategy** — Blazor WASM assets served via CloudFront or equivalent; cache-busting on deploy
 - [ ] **Cost Alerting** — AWS budget alarms to catch runaway ECS tasks or unexpected traffic spikes
 - [ ] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded; see [Architecture.md](./Architecture.md#-performance-architecture) for targets
+
+### Phase 5 Implementation Notes (AWS + CDK)
+
+These notes are Phase 5 scope guidance only — do not scaffold infrastructure before Phase 5 begins.
+
+#### Database Choice
+
+- **Staging / Production**: **RDS PostgreSQL** (managed, backed up, supports PITR; aligns with the 24-hour recovery SLA).
+- **Local (The Haven)**: SQLite (fast, zero-ops) or local PostgreSQL orchestrated by .NET Aspire for parity testing.
+
+#### “Rules Data” (Clans, Merits, Disciplines, etc.)
+
+- Treat system-owned rules content as **reference data** that is versioned alongside the application.
+- Update and evolve reference data through `DbInitializer` (idempotent, safe to run multiple times).
+- If reference data must be corrected for existing rows, use an **EF Core migration** for deterministic forward-only updates (no manual SQL against production).
+
+#### Migration Strategy (No Races)
+
+- Apply EF Core migrations as a **one-off migration step** during deploy (not “on every app instance startup”).
+- Canonical AWS implementation: run a dedicated “migrator” ECS task (or a pre-deploy one-off task) against the target RDS database, then deploy the new ECS task revision.
+
+#### Local DB Without Committing It
+
+- Local database files must never be checked into git.
+- Store local DBs under a local-only directory (e.g. `.data/`) and ensure it is ignored (`.gitignore`).
+- Local secrets: `dotnet user-secrets`. Staging/production secrets: AWS Secrets Manager.
+
+#### Email Service
+
+- Use **Amazon SES** for transactional email (verification, password reset, account notifications).
+- Route bounces/complaints via SNS if/when needed.
+
+#### Minimal AWS Services (Typical)
+
+- **Networking**: VPC, subnets, security groups
+- **Compute**: ECS Fargate, ECR, ALB
+- **Persistence**: RDS PostgreSQL, ElastiCache (Redis)
+- **Secrets & IAM**: Secrets Manager, IAM roles/policies
+- **Observability**: CloudWatch Logs/Metrics/Alarms (and/or Grafana), OpenTelemetry Collector
+- **Static/CDN**: S3 + CloudFront
+- **DNS/TLS**: Route 53 + ACM
+- **Cost**: AWS Budgets
+- **Optional**: WAF
 
 ### Phase 5 Exit Criteria
 - Every merge to `main` automatically deploys to staging
@@ -376,7 +425,28 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 6: Realtime Play (The Blood Communion)
+## 📅 Phase 6: CI/CD Hardening & Supply Chain
+
+- [ ] CodeQL scanning (C#) enforced on PRs
+- [ ] Dependabot updates (NuGet + GitHub Actions), with safe auto-merge policy for patch releases
+- [ ] Secret scanning + push protection enabled
+- [ ] Container image vulnerability scanning in CI (fail on high/critical)
+- [ ] SBOM generation for release artifacts (CycloneDX or equivalent)
+- [ ] Image signing + provenance (keyless via GitHub OIDC where possible)
+- [ ] Coverage reporting + minimum thresholds enforced for changed code
+- [ ] Nightly performance regression workflow (budget enforcement trends over time)
+- [ ] Branch protection rules + `CODEOWNERS` for security/infra sensitive paths
+- [ ] Test results + logs uploaded as CI artifacts (TRX, coverage, etc.)
+
+### Phase 6 Exit Criteria
+- Required security scans are enabled and required for merges
+- Release artifacts include an SBOM and are signed (or have published provenance)
+- Nightly performance runs are automated and visible
+- Branch protections prevent bypassing required checks
+
+---
+
+## 📅 Phase 7: Realtime Play (The Blood Communion)
 
 - [ ] **Live Dice Rolls** — dice results broadcast to the coterie in real-time via SignalR
 - [ ] **SignalR Backplane** — configure Redis as the SignalR backplane to support horizontal scaling
@@ -389,7 +459,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] **Rate Limiting on SignalR Hubs** — throttle message frequency per connection to prevent hub abuse
 - [ ] **Async / Play-by-Post Dice Sharing** — shareable permanent link to a roll result for async groups
 
-### Phase 6 Exit Criteria
+### Phase 7 Exit Criteria
 - A full coterie can connect, roll dice, and see each other's results in real-time
 - Storyteller actions propagate to player sheets within 200ms
 - Disconnected players rejoin and receive full current session state
@@ -398,7 +468,7 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 7: PWA & Offline Capabilities (The Hidden Refuge)
+## 📅 Phase 8: PWA & Offline Capabilities (The Hidden Refuge)
 
 - [ ] **Service Worker Registration** — cache core application shell for offline access
 - [ ] **Offline Character Sheet** — full read/write access to character data without network
@@ -410,7 +480,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] **Storage Quota Management** — monitor IndexedDB usage; warn player and gracefully degrade before quota is exceeded
 - [ ] **Install Prompt** — PWA install banner for mobile and desktop
 
-### Phase 7 Exit Criteria
+### Phase 8 Exit Criteria
 - A player can create a character, edit attributes, and roll dice with zero network connectivity
 - All offline changes sync correctly on reconnect without data loss
 - The app is installable as a PWA on iOS, Android, and desktop browsers
@@ -419,7 +489,7 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 8: End-to-End Testing & Accessibility
+## 📅 Phase 9: End-to-End Testing & Accessibility
 
 - [ ] E2E UI testing for critical player flows (character creation, dice rolling, XP spending)
 - [ ] E2E Storyteller flows (initiative, encounter management, Beat awarding)
@@ -432,7 +502,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] **Cross-Browser Testing Matrix** — explicitly verify: Chrome, Firefox, Safari (iOS + macOS), Edge; document any known limitations
 - [ ] Add all E2E and a11y tests to the CI pipeline
 
-### Phase 8 Exit Criteria
+### Phase 9 Exit Criteria
 - Every critical user flow is covered by an E2E test
 - Zero WCAG 2.1 AA violations on any page
 - The app is fully operable via keyboard navigation
@@ -441,7 +511,7 @@ If a bug cannot be observed, it cannot be fixed.
 
 ---
 
-## 📅 Phase 9: The Global Embrace
+## 📅 Phase 10: The Global Embrace
 
 - [ ] **Localization & i18n** — full language support for UI strings; priority languages: French, German, Spanish (largest TTRPG markets after English)
 - [ ] **Game Term Localization Strategy** — define canonical policy: sacred terms (Discipline, Covenant, Touchstone, Coterie) are documented as translate-or-preserve per language; no silent drift
@@ -451,7 +521,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [ ] **GDPR Per-Region Compliance Review** — multi-region deployments introduce new data residency obligations; audit and document per-region requirements before expanding infrastructure
 - [ ] **Community Content Marketplace** — browse and share homebrew content packs
 
-### Phase 9 Exit Criteria
+### Phase 10 Exit Criteria
 - The app is fully localized in at least two languages
 - Game term localization policy is documented and applied consistently
 - Shared chronicle links render rich previews on Discord and social platforms
