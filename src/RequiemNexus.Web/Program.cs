@@ -98,7 +98,9 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<IEmailSender<ApplicationUser>, RequiemNexus.Web.Services.SmtpEmailSender>();
+builder.Services.AddScoped<RequiemNexus.Web.Services.SmtpEmailSender>();
+builder.Services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
+builder.Services.AddScoped<RequiemNexus.Web.Services.IRequiemEmailService>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
 
 var app = builder.Build();
 

@@ -22,6 +22,12 @@ public class ApplicationUser : IdentityUser
     // Audit logs for security events
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = [];
 
+    // Display name shown in the UI instead of email
+    public string? DisplayName { get; set; }
+
+    // Avatar image URL
+    public string? AvatarUrl { get; set; }
+
     // Soft-delete: when set, the account is scheduled for permanent deletion after the grace period.
     public DateTimeOffset? DeletionScheduledAt { get; set; }
 }

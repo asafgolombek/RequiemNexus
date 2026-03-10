@@ -292,15 +292,15 @@ If a bug cannot be observed, it cannot be fixed.
   - View active sessions across devices
   - Remote logout of other active sessions
   - Automatic timeout for inactivity
-- [ ] **Data Privacy & Compliance**
+- [x] **Data Privacy & Compliance**
   - GDPR/CCPA compliant "Download My Data"
   - Account deletion with a soft-delete grace period
   - Audit logs for security events (login, password change, 2FA toggle)
-- [ ] **Data Sovereignty (Export / Import)**
+- [x] **Data Sovereignty (Export / Import)**
   - Export full character sheet to standardized JSON format
   - Export printable PDF character sheet
   - Import previously exported character into any Requiem Nexus instance
-- [ ] **Profile Management**
+- [x] **Profile Management**
   - Update display name, avatar, and email address
   - Email change flow with re-verification of the new address before it takes effect
 - [ ] **Password Reset via Email**

@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Mail;
-using Microsoft.AspNetCore.Identity;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Web.Services;
 
 #pragma warning disable SYSLIB0014 // Type or member is obsolete
 
-public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
+public partial class SmtpEmailSender : IRequiemEmailService
 {
     private readonly ILogger<SmtpEmailSender> _logger;
     private readonly IConfiguration _configuration;
@@ -32,6 +31,9 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
     {
         await SendEmailAsync(email, "Reset your password", $"Please reset your password by <a href='{resetLink}'>clicking here</a>.");
     }
+
+    public Task SendEmailChangeLinkAsync(ApplicationUser user, string newEmail, string changeLink) =>
+        SendEmailAsync(newEmail, "Confirm your new email address", $"Please confirm your new email address by <a href='{changeLink}'>clicking here</a>. If you did not request this change, you can ignore this email.");
 
     private async Task SendEmailAsync(string to, string subject, string htmlMessage)
     {

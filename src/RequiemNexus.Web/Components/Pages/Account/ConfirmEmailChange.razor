@@ -1,0 +1,87 @@
+@page "/Account/ConfirmEmailChange"
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IAuditLogService AuditLogService
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Confirm Email Change - Requiem Nexus</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Confirm Email Change</h2>
+            <p>@statusMessage</p>
+        </div>
+        <div class="login-footer mt-4">
+            <p><a href="/Account/Manage">Return to Profile</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? statusMessage;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public string? UserId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "email")]
+    public string? Email { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(UserId) || string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Code))
+        {
+            statusMessage = "Error: Invalid email change link. One or more parameters are missing.";
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            statusMessage = "Error: Unable to load user.";
+            return;
+        }
+
+        try
+        {
+            var decodedEmailBytes = WebEncoders.Base64UrlDecode(Email);
+            var newEmail = Encoding.UTF8.GetString(decodedEmailBytes);
+
+            var decodedCodeBytes = WebEncoders.Base64UrlDecode(Code);
+            var decodedCode = Encoding.UTF8.GetString(decodedCodeBytes);
+
+            var result = await UserManager.ChangeEmailAsync(user, newEmail, decodedCode);
+            if (!result.Succeeded)
+            {
+                statusMessage = "Error: Could not confirm your email change. The link may have expired.";
+                return;
+            }
+
+            // Keep username in sync with email
+            await UserManager.SetUserNameAsync(user, newEmail);
+
+            var ip = HttpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            await AuditLogService.LogAsync(user.Id, AuditEventType.EmailChanged, ip, $"Email changed to {newEmail}");
+
+            await SignInManager.RefreshSignInAsync(user);
+
+            statusMessage = "Your email address has been changed successfully.";
+        }
+        catch (FormatException)
+        {
+            statusMessage = "Error: The confirmation link is malformed.";
+        }
+    }
+}

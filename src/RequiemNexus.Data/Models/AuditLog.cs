@@ -14,6 +14,9 @@ public enum AuditEventType
     PersonalDataDownloaded = 7,
     SecurityKeyAdded = 8,
     SecurityKeyRemoved = 9,
+    DisplayNameChanged = 10,
+    EmailChangeRequested = 11,
+    EmailChanged = 12,
 }
 
 public class AuditLog
