@@ -5,49 +5,64 @@
 @inject NavigationManager NavigationManager
 @inject SignInManager<ApplicationUser> SignInManager
 
-<header class="main-header">
-    <div class="header-content">
-        <div class="brand">
-            <a href="/home" class="brand-link">
-                <h1>REQUIEM NEXUS</h1>
-            </a>
-        </div>
-        
-        @if (ShowSearch)
-        {
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" placeholder="Search Everything" />
+<header class="sticky-top" style="background:var(--deep-black);border-bottom:1px solid var(--muted-gray); z-index: 1030;">
+    <div class="container-xl px-3 py-3">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <a href="/home" class="d-flex align-items-center justify-content-center text-decoration-none" style="width: 40px; height: 40px;">
+                    <svg viewBox="0 0 40 40" class="w-100 h-100">
+                        <circle cx="20" cy="20" r="18" fill="none" stroke="#8B0000" stroke-width="1.5"/>
+                        <circle cx="20" cy="20" r="14" fill="none" stroke="#C41E3A" stroke-width="0.5"/>
+                        <path d="M20 6 L20 34 M6 20 L34 20" stroke="#F5F0E8" stroke-width="1" opacity="0.6"/>
+                        <circle cx="20" cy="20" r="4" fill="#8B0000"/>
+                        <circle cx="20" cy="20" r="2" fill="#C41E3A"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="font-heading tracking-widest mb-0" style="color:var(--bone-white); line-height: 1; font-size: 1.25rem;">REQUIEM NEXUS</h1>
+                    <p class="font-body text-secondary uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 0.1em;">Digital Grimoire</p>
+                </div>
             </div>
-        }
+            
+            <div class="d-flex align-items-center gap-4">
+                @if (ShowSearch)
+                {
+                    <div class="d-none d-md-flex align-items-center" style="background:var(--charcoal); border:1px solid var(--muted-gray); border-radius:4px; padding: 4px 8px;">
+                        <span style="color:var(--muted-gray); font-size: 12px; margin-right: 6px;">🔍</span>
+                        <input type="text" class="bg-transparent border-0 font-body text-bone-white focus-ring-0" placeholder="Search..." style="color:var(--bone-white); outline:none; font-size: 0.75rem;" />
+                    </div>
+                }
 
-        <div class="header-actions">
-            @if (!string.IsNullOrEmpty(_userName))
-            {
-                <span class="welcome-text">Welcome back, @_userName</span>
-            }
-            <a href="/Account/Manage" class="btn-ghost header-btn">Settings</a>
-            <form method="post" action="/logout" class="logout-form">
-                <input type="hidden" name="__RequestVerificationToken" value="" />
-                <a href="/" class="btn-primary-rn header-btn" @onclick="HandleLogout">Log Out</a>
-            </form>
+                <nav class="d-none d-md-flex align-items-center gap-4">
+                    @if (!string.IsNullOrEmpty(_userName))
+                    {
+                        <span class="font-body text-secondary" style="font-size: 0.75rem;">@_userName</span>
+                    }
+                    <a href="/Account/Manage" class="btn-ghost text-decoration-none px-3 py-2" style="font-size: 0.75rem;">SETTINGS</a>
+                    
+                    <form method="post" action="/logout" class="m-0">
+                        <input type="hidden" name="__RequestVerificationToken" value="" />
+                        <button type="submit" class="btn-primary-rn text-decoration-none px-3 py-2 border-0" style="font-size: 0.75rem;" @onclick="HandleLogout">LOG OUT</button>
+                    </form>
+                </nav>
+            </div>
         </div>
     </div>
 </header>
 
 @if (ShowSubNav)
 {
-    <nav class="sub-nav">
-        <div class="sub-nav-content">
-            <a href="/characters" class="sub-nav-link @(IsActivePath("/characters") ? "active" : "")">
+    <nav style="background:linear-gradient(180deg, var(--deep-black) 0%, var(--charcoal) 100%); border-bottom:1px solid var(--muted-gray);">
+        <div class="container-xl px-3 d-flex gap-4 overflow-auto">
+            <a href="/characters" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none @(IsActivePath("/characters") ? "active" : "")" style="font-size: 0.875rem; color: @(IsActivePath("/characters") ? "var(--bone-white)" : "var(--text-secondary)");">
                 My Characters
             </a>
-            <a href="/campaigns" class="sub-nav-link @(IsActivePath("/campaigns") ? "active" : "")">
+            <a href="/campaigns" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none @(IsActivePath("/campaigns") ? "active" : "")" style="font-size: 0.875rem; color: @(IsActivePath("/campaigns") ? "var(--bone-white)" : "var(--text-secondary)");">
                 My Campaigns
             </a>
-            <a href="/under-construction" class="sub-nav-link @(IsActivePath("/under-construction") ? "active" : "")">Library</a>
-            <a href="/under-construction" class="sub-nav-link @(IsActivePath("/under-construction") ? "active" : "")">Rules</a>
-            <a href="/under-construction" class="sub-nav-link @(IsActivePath("/under-construction") ? "active" : "")">Tools</a>
+            <a href="/under-construction" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none" style="font-size: 0.875rem; color: var(--text-secondary);">Library</a>
+            <a href="/under-construction" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none" style="font-size: 0.875rem; color: var(--text-secondary);">Rules</a>
+            <a href="/under-construction" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none" style="font-size: 0.875rem; color: var(--text-secondary);">Tools</a>
         </div>
     </nav>
 }
