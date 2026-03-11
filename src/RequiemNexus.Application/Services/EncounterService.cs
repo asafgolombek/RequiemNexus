@@ -14,15 +14,17 @@ namespace RequiemNexus.Application.Services;
 /// </summary>
 public class EncounterService(
     ApplicationDbContext dbContext,
-    ILogger<EncounterService> logger) : IEncounterService
+    ILogger<EncounterService> logger,
+    IAuthorizationHelper authHelper) : IEncounterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ILogger<EncounterService> _logger = logger;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
 
     /// <inheritdoc />
     public async Task<CombatEncounter> CreateEncounterAsync(int campaignId, string name, string storyTellerUserId)
     {
-        await RequireStorytellerAsync(campaignId, storyTellerUserId);
+        await _authHelper.RequireStorytellerAsync(campaignId, storyTellerUserId, "manage encounters");
 
         CombatEncounter encounter = new()
         {
@@ -54,7 +56,7 @@ public class EncounterService(
         string storyTellerUserId)
     {
         CombatEncounter encounter = await LoadActiveEncounterAsync(encounterId);
-        await RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         InitiativeEntry entry = new()
         {
@@ -89,7 +91,7 @@ public class EncounterService(
         string storyTellerUserId)
     {
         CombatEncounter encounter = await LoadActiveEncounterAsync(encounterId);
-        await RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         InitiativeEntry entry = new()
         {
@@ -119,7 +121,7 @@ public class EncounterService(
     public async Task AdvanceTurnAsync(int encounterId, string storyTellerUserId)
     {
         CombatEncounter encounter = await LoadActiveEncounterAsync(encounterId);
-        await RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         List<InitiativeEntry> entries = await _dbContext.InitiativeEntries
             .Where(i => i.EncounterId == encounterId)
@@ -164,7 +166,7 @@ public class EncounterService(
     public async Task ResolveEncounterAsync(int encounterId, string storyTellerUserId)
     {
         CombatEncounter encounter = await LoadActiveEncounterAsync(encounterId);
-        await RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         encounter.IsActive = false;
         encounter.ResolvedAt = DateTime.UtcNow;
@@ -205,7 +207,7 @@ public class EncounterService(
             ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
 
         CombatEncounter encounter = await LoadActiveEncounterAsync(entry.EncounterId);
-        await RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         _dbContext.InitiativeEntries.Remove(entry);
         await _dbContext.SaveChangesAsync();
@@ -220,27 +222,6 @@ public class EncounterService(
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Throws <see cref="UnauthorizedAccessException"/> unless <paramref name="userId"/>
-    /// is the Storyteller of <paramref name="campaignId"/>.
-    /// </summary>
-    private async Task RequireStorytellerAsync(int campaignId, string userId)
-    {
-        bool isSt = await _dbContext.Campaigns
-            .AnyAsync(c => c.Id == campaignId && c.StoryTellerId == userId);
-
-        if (!isSt)
-        {
-            _logger.LogWarning(
-                "Unauthorized encounter mutation attempt on campaign {CampaignId} by user {UserId}",
-                campaignId,
-                userId);
-
-            throw new UnauthorizedAccessException(
-                "Only the campaign Storyteller may manage encounters.");
-        }
-    }
 
     /// <summary>Loads an active encounter or throws <see cref="InvalidOperationException"/>.</summary>
     private async Task<CombatEncounter> LoadActiveEncounterAsync(int encounterId)

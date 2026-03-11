@@ -22,7 +22,7 @@ public class CampaignServiceTests
     }
 
     private static CampaignService CreateService(ApplicationDbContext ctx)
-        => new(ctx, NullLogger<CampaignService>.Instance);
+        => new(ctx, NullLogger<CampaignService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
 
     // -----------------------------------------------------------------------
     // IsStoryteller

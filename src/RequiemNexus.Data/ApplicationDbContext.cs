@@ -85,12 +85,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(c => c.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<Character>()
+            .HasIndex(c => c.ApplicationUserId);
+
         // Character >- Clan configuration
         builder.Entity<Character>()
             .HasOne(c => c.Clan)
             .WithMany()
             .HasForeignKey(c => c.ClanId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Character>()
+            .HasIndex(c => c.ClanId);
 
         // Campaign >- StoryTeller configuration
         builder.Entity<Campaign>()
@@ -99,12 +105,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(c => c.StoryTellerId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Entity<Campaign>()
+            .HasIndex(c => c.StoryTellerId);
+
         // Character >- Campaign configuration
         builder.Entity<Character>()
             .HasOne(c => c.Campaign)
             .WithMany(c => c.Characters)
             .HasForeignKey(c => c.CampaignId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Character>()
+            .HasIndex(c => c.CampaignId);
 
         // Character >- CharacterMerit configuration
         builder.Entity<CharacterMerit>()
@@ -113,12 +125,21 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(m => m.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<CharacterMerit>()
+            .HasIndex(m => m.CharacterId);
+
         // Character >- CharacterDiscipline configuration
         builder.Entity<CharacterDiscipline>()
             .HasOne(d => d.Character)
             .WithMany(c => c.Disciplines)
             .HasForeignKey(d => d.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterDiscipline>()
+            .HasIndex(d => d.CharacterId);
+
+        builder.Entity<CharacterDiscipline>()
+            .HasIndex(d => d.DisciplineId);
 
         // Clan >- ClanDiscipline configuration
         builder.Entity<ClanDiscipline>()
@@ -133,12 +154,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(cd => cd.DisciplineId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<ClanDiscipline>()
+            .HasIndex(cd => cd.DisciplineId);
+
         // Character >- CharacterEquipment configuration
         builder.Entity<CharacterEquipment>()
             .HasOne(ce => ce.Character)
             .WithMany(c => c.CharacterEquipments)
             .HasForeignKey(ce => ce.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterEquipment>()
+            .HasIndex(ce => ce.CharacterId);
 
         // Character >- CharacterAspiration
         builder.Entity<CharacterAspiration>()
@@ -147,6 +174,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(a => a.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<CharacterAspiration>()
+            .HasIndex(a => a.CharacterId);
+
         // Character >- CharacterBane
         builder.Entity<CharacterBane>()
             .HasOne(b => b.Character)
@@ -154,12 +184,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(b => b.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<CharacterBane>()
+            .HasIndex(b => b.CharacterId);
+
         // UserSession >- ApplicationUser configuration
         builder.Entity<UserSession>()
             .HasOne(s => s.User)
             .WithMany()
             .HasForeignKey(s => s.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<UserSession>()
+            .HasIndex(s => s.ApplicationUserId);
 
         // AuditLog >- ApplicationUser configuration
         builder.Entity<AuditLog>()
@@ -279,6 +315,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(i => i.CharacterId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.Entity<InitiativeEntry>()
+            .HasIndex(i => i.CharacterId);
+
         // CityFaction >- Campaign
         builder.Entity<CityFaction>()
             .HasOne(f => f.Campaign)
@@ -313,6 +352,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<ChronicleNpc>()
             .HasIndex(n => n.CampaignId);
 
+        builder.Entity<ChronicleNpc>()
+            .HasIndex(n => n.PrimaryFactionId);
+
         // FeedingTerritory >- Campaign
         builder.Entity<FeedingTerritory>()
             .HasOne(t => t.Campaign)
@@ -329,6 +371,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<FeedingTerritory>()
             .HasIndex(t => t.CampaignId);
+
+        builder.Entity<FeedingTerritory>()
+            .HasIndex(t => t.ControlledByFactionId);
 
         // FactionRelationship >- Campaign
         builder.Entity<FactionRelationship>()

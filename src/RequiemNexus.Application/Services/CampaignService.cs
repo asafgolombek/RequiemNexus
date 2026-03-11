@@ -10,10 +10,11 @@ namespace RequiemNexus.Application.Services;
 /// Application service for campaign management. Owns all data access for the Campaign aggregate.
 /// Every mutating operation verifies authorisation before persisting.
 /// </summary>
-public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignService> logger) : ICampaignService
+public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignService> logger, IAuthorizationHelper authHelper) : ICampaignService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ILogger<CampaignService> _logger = logger;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
 
     /// <inheritdoc />
     public async Task<List<Campaign>> GetCampaignsByUserIdAsync(string userId)
@@ -267,7 +268,7 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
     /// <inheritdoc />
     public async Task<List<SessionPrepNote>> GetSessionPrepNotesAsync(int campaignId, string stUserId)
     {
-        await RequireStAsync(campaignId, stUserId);
+        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage session prep notes");
         return await _dbContext.SessionPrepNotes
             .Where(n => n.CampaignId == campaignId)
             .OrderByDescending(n => n.UpdatedAt)
@@ -278,7 +279,7 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
     /// <inheritdoc />
     public async Task<SessionPrepNote> CreateSessionPrepNoteAsync(int campaignId, string title, string body, string stUserId)
     {
-        await RequireStAsync(campaignId, stUserId);
+        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage session prep notes");
 
         SessionPrepNote note = new()
         {
@@ -305,7 +306,7 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
         SessionPrepNote note = await _dbContext.SessionPrepNotes.FindAsync(noteId)
             ?? throw new InvalidOperationException($"Session prep note {noteId} not found.");
 
-        await RequireStAsync(note.CampaignId, stUserId);
+        await _authHelper.RequireStorytellerAsync(note.CampaignId, stUserId, "manage session prep notes");
 
         note.Title = title;
         note.Body = body;
@@ -319,7 +320,7 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
         SessionPrepNote note = await _dbContext.SessionPrepNotes.FindAsync(noteId)
             ?? throw new InvalidOperationException($"Session prep note {noteId} not found.");
 
-        await RequireStAsync(note.CampaignId, stUserId);
+        await _authHelper.RequireStorytellerAsync(note.CampaignId, stUserId, "manage session prep notes");
 
         _dbContext.SessionPrepNotes.Remove(note);
         await _dbContext.SaveChangesAsync();
@@ -333,19 +334,4 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
     public bool IsCampaignMember(Campaign campaign, string userId)
         => campaign.StoryTellerId == userId
         || campaign.Characters.Any(ch => ch.ApplicationUserId == userId);
-
-    private async Task RequireStAsync(int campaignId, string stUserId)
-    {
-        Campaign? campaign = await _dbContext.Campaigns.FindAsync(campaignId)
-            ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
-
-        if (campaign.StoryTellerId != stUserId)
-        {
-            _logger.LogWarning(
-                "Unauthorized campaign notes mutation on {CampaignId} by {UserId}",
-                campaignId,
-                stUserId);
-            throw new UnauthorizedAccessException("Only the Storyteller may manage session prep notes.");
-        }
-    }
 }

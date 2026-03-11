@@ -17,12 +17,16 @@ public class ConditionService(
     ApplicationDbContext dbContext,
     IConditionRules conditionRules,
     IBeatLedgerService beatLedger,
-    ILogger<ConditionService> logger) : IConditionService
+    ILogger<ConditionService> logger,
+    IAuthorizationHelper authHelper,
+    ICharacterCreationRules creationRules) : IConditionService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IConditionRules _conditionRules = conditionRules;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly ILogger<ConditionService> _logger = logger;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
+    private readonly ICharacterCreationRules _creationRules = creationRules;
 
     /// <inheritdoc />
     public async Task<CharacterCondition> ApplyConditionAsync(
@@ -32,7 +36,7 @@ public class ConditionService(
         string? descriptionOverride,
         string userId)
     {
-        await RequireAccessAsync(characterId, userId);
+        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "apply or resolve conditions and tilts");
 
         CharacterCondition condition = new()
         {
@@ -70,7 +74,7 @@ public class ConditionService(
             throw new InvalidOperationException($"Condition {conditionId} is already resolved.");
         }
 
-        await RequireAccessAsync(condition.CharacterId, userId);
+        await _authHelper.RequireCharacterAccessAsync(condition.CharacterId, userId, "apply or resolve conditions and tilts");
 
         condition.IsResolved = true;
         condition.ResolvedAt = DateTime.UtcNow;
@@ -90,19 +94,18 @@ public class ConditionService(
 
             character.Beats++;
 
-            // Beat conversion: 5 Beats → 1 XP (mirrors CharacterManagementService logic)
-            if (character.Beats >= 5)
+            if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
             {
-                character.Beats -= 5;
-                character.ExperiencePoints++;
-                character.TotalExperiencePoints++;
+                character.Beats = newBeats;
+                character.ExperiencePoints += xpGained;
+                character.TotalExperiencePoints += xpGained;
 
                 await _beatLedger.RecordXpCreditAsync(
                     character.Id,
                     character.CampaignId,
-                    1,
+                    xpGained,
                     XpSource.BeatConversion,
-                    "Converted 5 Beats to 1 XP",
+                    $"Converted 5 Beats to {xpGained} XP",
                     null);
             }
         }
@@ -136,7 +139,7 @@ public class ConditionService(
         int? encounterId,
         string userId)
     {
-        await RequireAccessAsync(characterId, userId);
+        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "apply or resolve conditions and tilts");
 
         CharacterTilt tilt = new()
         {
@@ -173,7 +176,7 @@ public class ConditionService(
             throw new InvalidOperationException($"Tilt {tiltId} is already inactive.");
         }
 
-        await RequireAccessAsync(tilt.CharacterId, userId);
+        await _authHelper.RequireCharacterAccessAsync(tilt.CharacterId, userId, "apply or resolve conditions and tilts");
 
         tilt.IsActive = false;
         tilt.RemovedAt = DateTime.UtcNow;
@@ -195,35 +198,5 @@ public class ConditionService(
             .OrderBy(t => t.AppliedAt)
             .AsNoTracking()
             .ToListAsync();
-    }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Throws <see cref="UnauthorizedAccessException"/> unless <paramref name="userId"/>
-    /// is the character's owner or the Storyteller of the character's campaign.
-    /// </summary>
-    private async Task RequireAccessAsync(int characterId, string userId)
-    {
-        Character character = await _dbContext.Characters
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        bool isOwner = character.ApplicationUserId == userId;
-        bool isStoryteller = character.CampaignId.HasValue
-            && await _dbContext.Campaigns.AnyAsync(
-                c => c.Id == character.CampaignId && c.StoryTellerId == userId);
-
-        if (!isOwner && !isStoryteller)
-        {
-            _logger.LogWarning(
-                "Unauthorized condition/tilt mutation attempt on character {CharacterId} by user {UserId}",
-                characterId,
-                userId);
-
-            throw new UnauthorizedAccessException(
-                "Only the character's owner or the campaign Storyteller may apply or resolve conditions and tilts.");
-        }
     }
 }

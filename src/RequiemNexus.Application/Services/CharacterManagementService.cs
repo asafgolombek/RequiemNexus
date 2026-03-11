@@ -38,6 +38,8 @@ public class CharacterManagementService(
 
     public async Task<Character?> GetCharacterByIdAsync(int id, string userId)
     {
+        // Intentionally NOT AsNoTracking: this method is the edit path — the returned entity
+        // is tracked by EF so that subsequent mutations (AddBeatAsync, SaveAsync, etc.) persist.
         return await _dbContext.Characters
             .Include(c => c.Clan)
             .Include(c => c.Campaign)
@@ -168,93 +170,6 @@ public class CharacterManagementService(
         }
     }
 
-    public async Task<List<Equipment>> GetAvailableEquipmentAsync()
-    {
-        return await _dbContext.Equipment.OrderBy(e => e.Name).ToListAsync();
-    }
-
-    public async Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity)
-    {
-        var ce = new CharacterEquipment
-        {
-            CharacterId = characterId,
-            EquipmentId = equipmentId,
-            Quantity = quantity,
-        };
-        _dbContext.CharacterEquipments.Add(ce);
-        await _dbContext.SaveChangesAsync();
-        return ce;
-    }
-
-    public async Task RemoveEquipmentAsync(int characterEquipmentId)
-    {
-        var ce = await _dbContext.CharacterEquipments.FindAsync(characterEquipmentId);
-        if (ce != null)
-        {
-            _dbContext.CharacterEquipments.Remove(ce);
-            await _dbContext.SaveChangesAsync();
-        }
-    }
-
-    public async Task<List<Merit>> GetAvailableMeritsAsync()
-    {
-        return await _dbContext.Merits.OrderBy(m => m.Name).ToListAsync();
-    }
-
-    public async Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost)
-    {
-        character.ExperiencePoints -= xpCost;
-
-        CharacterMerit cm = new()
-        {
-            CharacterId = character.Id,
-            MeritId = meritId,
-            Specification = specification,
-        };
-        typeof(CharacterMerit).GetProperty("Rating")?.SetValue(cm, rating);
-        _dbContext.CharacterMerits.Add(cm);
-
-        await _beatLedger.RecordXpSpendAsync(
-            character.Id,
-            character.CampaignId,
-            xpCost,
-            XpExpense.Merit,
-            $"Purchased Merit (Id={meritId}, rating={rating})",
-            null);
-
-        await _dbContext.SaveChangesAsync();
-        return cm;
-    }
-
-    public async Task<List<Discipline>> GetAvailableDisciplinesAsync()
-    {
-        return await _dbContext.Disciplines.OrderBy(d => d.Name).ToListAsync();
-    }
-
-    public async Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, int xpCost)
-    {
-        character.ExperiencePoints -= xpCost;
-
-        CharacterDiscipline cd = new()
-        {
-            CharacterId = character.Id,
-            DisciplineId = disciplineId,
-        };
-        typeof(CharacterDiscipline).GetProperty("Rating")?.SetValue(cd, rating);
-        _dbContext.CharacterDisciplines.Add(cd);
-
-        await _beatLedger.RecordXpSpendAsync(
-            character.Id,
-            character.CampaignId,
-            xpCost,
-            XpExpense.Discipline,
-            $"Purchased Discipline (Id={disciplineId}, rating={rating})",
-            null);
-
-        await _dbContext.SaveChangesAsync();
-        return cd;
-    }
-
     /// <inheritdoc />
     public async Task<(Character Character, bool IsOwner)?> GetCharacterWithAccessCheckAsync(int characterId, string requestingUserId)
     {
@@ -371,57 +286,6 @@ public class CharacterManagementService(
 
         character.IsArchived = false;
         character.ArchivedAt = null;
-        await _dbContext.SaveChangesAsync();
-    }
-
-    /// <inheritdoc />
-    public async Task<List<DiceMacro>> GetDiceMacrosAsync(int characterId)
-    {
-        return await _dbContext.DiceMacros
-            .Where(m => m.CharacterId == characterId)
-            .OrderBy(m => m.Name)
-            .AsNoTracking()
-            .ToListAsync();
-    }
-
-    /// <inheritdoc />
-    public async Task<DiceMacro> CreateDiceMacroAsync(int characterId, string name, int dicePool, string description, string userId)
-    {
-        Character character = await _dbContext.Characters.FindAsync(characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        if (character.ApplicationUserId != userId)
-        {
-            throw new UnauthorizedAccessException("Only the character owner may create dice macros.");
-        }
-
-        DiceMacro macro = new()
-        {
-            CharacterId = characterId,
-            Name = name,
-            DicePool = dicePool,
-            Description = description,
-        };
-
-        _dbContext.DiceMacros.Add(macro);
-        await _dbContext.SaveChangesAsync();
-        return macro;
-    }
-
-    /// <inheritdoc />
-    public async Task DeleteDiceMacroAsync(int macroId, string userId)
-    {
-        DiceMacro macro = await _dbContext.DiceMacros
-            .Include(m => m.Character)
-            .FirstOrDefaultAsync(m => m.Id == macroId)
-            ?? throw new InvalidOperationException($"Macro {macroId} not found.");
-
-        if (macro.Character?.ApplicationUserId != userId)
-        {
-            throw new UnauthorizedAccessException("Only the character owner may delete dice macros.");
-        }
-
-        _dbContext.DiceMacros.Remove(macro);
         await _dbContext.SaveChangesAsync();
     }
 }

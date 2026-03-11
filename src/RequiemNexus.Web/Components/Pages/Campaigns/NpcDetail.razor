@@ -5,7 +5,8 @@
 @using System.Security.Claims
 @using System.Text.Json
 @using Microsoft.AspNetCore.Components.Authorization
-@inject IDanseMacabreService DanseMacabreService
+@inject IChronicleNpcService NpcService
+@inject ICityFactionService FactionService
 @inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -260,7 +261,7 @@
 
     private async Task LoadData()
     {
-        _npc = await DanseMacabreService.GetNpcAsync(NpcId);
+        _npc = await NpcService.GetNpcAsync(NpcId);
         if (_npc == null)
         {
             return;
@@ -278,7 +279,7 @@
         _editAttributes = DeserializeStats(_npc.AttributesJson, AttributeCategories);
         _editSkills = DeserializeStats(_npc.SkillsJson, SkillCategories);
 
-        _allFactions = await DanseMacabreService.GetFactionsAsync(CampaignId);
+        _allFactions = await FactionService.GetFactionsAsync(CampaignId);
     }
 
     /// <summary>Parses a JSON stats blob; missing keys default to 2.</summary>
@@ -314,7 +315,7 @@
         _feedbackMessage = null;
         try
         {
-            await DanseMacabreService.UpdateNpcAsync(
+            await NpcService.UpdateNpcAsync(
                 NpcId,
                 _editName,
                 string.IsNullOrWhiteSpace(_editTitle) ? null : _editTitle,
@@ -347,7 +348,7 @@
         _feedbackMessage = null;
         try
         {
-            await DanseMacabreService.UpdateNpcAsync(
+            await NpcService.UpdateNpcAsync(
                 NpcId,
                 _npc.Name,
                 _npc.Title,
@@ -380,7 +381,7 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.SetNpcAliveAsync(NpcId, isAlive, _currentUserId);
+            await NpcService.SetNpcAliveAsync(NpcId, isAlive, _currentUserId);
             await LoadData();
             _feedbackMessage = isAlive ? "NPC marked alive." : "NPC marked deceased.";
         }
@@ -400,7 +401,7 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.DeleteNpcAsync(NpcId, _currentUserId);
+            await NpcService.DeleteNpcAsync(NpcId, _currentUserId);
             NavigationManager.NavigateTo($"/campaigns/{CampaignId}/danse-macabre");
         }
         catch

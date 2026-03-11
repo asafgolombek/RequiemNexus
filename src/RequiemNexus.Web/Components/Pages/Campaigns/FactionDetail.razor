@@ -5,7 +5,9 @@
 @using RequiemNexus.Domain.Enums
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject IDanseMacabreService DanseMacabreService
+@inject ICityFactionService FactionService
+@inject IChronicleNpcService NpcService
+@inject IFactionRelationshipService RelationshipService
 @inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -257,7 +259,7 @@
 
     private async Task LoadData()
     {
-        _faction = await DanseMacabreService.GetFactionAsync(FactionId);
+        _faction = await FactionService.GetFactionAsync(FactionId);
         if (_faction == null)
         {
             return;
@@ -271,11 +273,11 @@
         _editStNotes = _faction.StorytellerNotes;
         _editLeaderNpcId = _faction.LeaderNpcId ?? 0;
 
-        _allNpcs = await DanseMacabreService.GetNpcsAsync(CampaignId, true);
-        List<FactionRelationship> all = await DanseMacabreService.GetRelationshipsAsync(CampaignId);
+        _allNpcs = await NpcService.GetNpcsAsync(CampaignId, true);
+        List<FactionRelationship> all = await RelationshipService.GetRelationshipsAsync(CampaignId);
         _relationships = all.Where(r => r.FactionAId == FactionId || r.FactionBId == FactionId).ToList();
 
-        List<CityFaction> allFactions = await DanseMacabreService.GetFactionsAsync(CampaignId);
+        List<CityFaction> allFactions = await FactionService.GetFactionsAsync(CampaignId);
         _otherFactions = allFactions.Where(f => f.Id != FactionId).ToList();
     }
 
@@ -290,7 +292,7 @@
         _feedbackMessage = null;
         try
         {
-            await DanseMacabreService.UpdateFactionAsync(
+            await FactionService.UpdateFactionAsync(
                 FactionId,
                 _editName,
                 _editType,
@@ -319,7 +321,7 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.SetRelationshipAsync(CampaignId, FactionId, _relOtherFactionId, _relStance, _relNotes, _currentUserId);
+            await RelationshipService.SetRelationshipAsync(CampaignId, FactionId, _relOtherFactionId, _relStance, _relNotes, _currentUserId);
             _relOtherFactionId = 0;
             _relNotes = string.Empty;
             await LoadData();
@@ -341,7 +343,7 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.DeleteFactionAsync(FactionId, _currentUserId);
+            await FactionService.DeleteFactionAsync(FactionId, _currentUserId);
             NavigationManager.NavigateTo($"/campaigns/{CampaignId}/danse-macabre");
         }
         catch

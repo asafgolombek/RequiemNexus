@@ -27,22 +27,6 @@ public interface ICharacterService
 
     Task RemoveXPAsync(Character character);
 
-    // Equipment
-    Task<List<Equipment>> GetAvailableEquipmentAsync();
-
-    Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity);
-
-    Task RemoveEquipmentAsync(int characterEquipmentId);
-
-    // Merits & Disciplines
-    Task<List<Merit>> GetAvailableMeritsAsync();
-
-    Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost);
-
-    Task<List<Discipline>> GetAvailableDisciplinesAsync();
-
-    Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, int xpCost);
-
     // Retirement (campaign-scoped)
 
     /// <summary>Retires the character from campaign play. Owner or campaign ST may call this.</summary>
@@ -58,17 +42,6 @@ public interface ICharacterService
 
     /// <summary>Un-archives the character, restoring it to the active list. Owner only.</summary>
     Task UnarchiveCharacterAsync(int characterId, string userId);
-
-    // Dice Macros
-
-    /// <summary>Returns all dice macros saved for the given character.</summary>
-    Task<List<DiceMacro>> GetDiceMacrosAsync(int characterId);
-
-    /// <summary>Creates a new dice macro for the character. Owner only.</summary>
-    Task<DiceMacro> CreateDiceMacroAsync(int characterId, string name, int dicePool, string description, string userId);
-
-    /// <summary>Deletes a dice macro. Owner only.</summary>
-    Task DeleteDiceMacroAsync(int macroId, string userId);
 
     /// <summary>
     /// Returns the fully-loaded character together with an access-level flag.

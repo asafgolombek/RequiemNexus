@@ -41,6 +41,7 @@ public class StorytellerGlimpseService(
             .Where(cc => characterIds.Contains(cc.CharacterId) && !cc.IsResolved)
             .GroupBy(cc => cc.CharacterId)
             .Select(g => new { CharacterId = g.Key, Count = g.Count() })
+            .AsNoTracking()
             .ToDictionaryAsync(x => x.CharacterId, x => x.Count);
 
         List<CharacterVitalsDto> vitals = [];

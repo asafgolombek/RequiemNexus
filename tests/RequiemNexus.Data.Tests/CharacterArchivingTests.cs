@@ -25,6 +25,8 @@ public class CharacterArchivingTests
         return new CharacterManagementService(ctx, new RequiemNexus.Domain.CharacterCreationRules(), beatLedger);
     }
 
+    private static DiceMacroService CreateDiceMacroService(ApplicationDbContext ctx) => new(ctx);
+
     private static async Task<(Campaign Campaign, Character Character)> SeedAsync(ApplicationDbContext ctx, string userId = "user-1", string stId = "st-1")
     {
         Campaign campaign = new() { Name = "Saga", StoryTellerId = stId };
@@ -166,7 +168,7 @@ public class CharacterArchivingTests
     public async Task CreateDiceMacro_ByOwner_Persists()
     {
         ApplicationDbContext ctx = CreateContext(nameof(CreateDiceMacro_ByOwner_Persists));
-        CharacterManagementService service = CreateService(ctx);
+        DiceMacroService service = CreateDiceMacroService(ctx);
         (_, Character character) = await SeedAsync(ctx);
 
         DiceMacro macro = await service.CreateDiceMacroAsync(character.Id, "Dex+Stealth", 5, "Sneak check", "user-1");
@@ -181,7 +183,7 @@ public class CharacterArchivingTests
     public async Task CreateDiceMacro_NonOwner_ThrowsUnauthorized()
     {
         ApplicationDbContext ctx = CreateContext(nameof(CreateDiceMacro_NonOwner_ThrowsUnauthorized));
-        CharacterManagementService service = CreateService(ctx);
+        DiceMacroService service = CreateDiceMacroService(ctx);
         (_, Character character) = await SeedAsync(ctx);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
@@ -192,7 +194,7 @@ public class CharacterArchivingTests
     public async Task DeleteDiceMacro_ByOwner_Removes()
     {
         ApplicationDbContext ctx = CreateContext(nameof(DeleteDiceMacro_ByOwner_Removes));
-        CharacterManagementService service = CreateService(ctx);
+        DiceMacroService service = CreateDiceMacroService(ctx);
         (_, Character character) = await SeedAsync(ctx);
 
         DiceMacro macro = await service.CreateDiceMacroAsync(character.Id, "Test", 3, string.Empty, "user-1");

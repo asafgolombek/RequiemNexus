@@ -5,7 +5,9 @@
 @using RequiemNexus.Domain.Enums
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject IDanseMacabreService DanseMacabreService
+@inject ICityFactionService FactionService
+@inject IChronicleNpcService NpcService
+@inject IFeedingTerritoryService TerritoryService
 @inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -276,14 +278,14 @@
 
     private async Task LoadAll()
     {
-        _territories = await DanseMacabreService.GetTerritoriesAsync(CampaignId);
-        _factions = await DanseMacabreService.GetFactionsAsync(CampaignId);
+        _territories = await TerritoryService.GetTerritoriesAsync(CampaignId);
+        _factions = await FactionService.GetFactionsAsync(CampaignId);
         await LoadNpcs();
     }
 
     private async Task LoadNpcs()
     {
-        _npcs = await DanseMacabreService.GetNpcsAsync(CampaignId, _showDeceased);
+        _npcs = await NpcService.GetNpcsAsync(CampaignId, _showDeceased);
     }
 
     private string TabClass(int tab) => _activeTab == tab ? "btn-primary-rn" : "btn-ghost";
@@ -298,11 +300,11 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.CreateTerritoryAsync(CampaignId, _newTerritoryName, _newTerritoryDesc, _newTerritoryRating, null, _currentUserId);
+            await TerritoryService.CreateTerritoryAsync(CampaignId, _newTerritoryName, _newTerritoryDesc, _newTerritoryRating, null, _currentUserId);
             _newTerritoryName = string.Empty;
             _newTerritoryDesc = string.Empty;
             _newTerritoryRating = 3;
-            _territories = await DanseMacabreService.GetTerritoriesAsync(CampaignId);
+            _territories = await TerritoryService.GetTerritoriesAsync(CampaignId);
             SetFeedback("Territory added.");
         }
         finally
@@ -321,8 +323,8 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.DeleteTerritoryAsync(id, _currentUserId);
-            _territories = await DanseMacabreService.GetTerritoriesAsync(CampaignId);
+            await TerritoryService.DeleteTerritoryAsync(id, _currentUserId);
+            _territories = await TerritoryService.GetTerritoriesAsync(CampaignId);
             SetFeedback("Territory deleted.");
         }
         finally
@@ -341,10 +343,10 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.CreateFactionAsync(CampaignId, _newFactionName, _newFactionType, _newFactionInfluence, string.Empty, _currentUserId);
+            await FactionService.CreateFactionAsync(CampaignId, _newFactionName, _newFactionType, _newFactionInfluence, string.Empty, _currentUserId);
             _newFactionName = string.Empty;
             _newFactionInfluence = 1;
-            _factions = await DanseMacabreService.GetFactionsAsync(CampaignId);
+            _factions = await FactionService.GetFactionsAsync(CampaignId);
             SetFeedback("Faction added.");
         }
         finally
@@ -363,7 +365,7 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.DeleteNpcAsync(id, _currentUserId);
+            await NpcService.DeleteNpcAsync(id, _currentUserId);
             await LoadNpcs();
             SetFeedback("NPC deleted.");
         }
@@ -383,7 +385,7 @@
         _busy = true;
         try
         {
-            await DanseMacabreService.CreateNpcAsync(CampaignId, _newNpcName, string.IsNullOrWhiteSpace(_newNpcTitle) ? null : _newNpcTitle, null, null, string.Empty, _currentUserId);
+            await NpcService.CreateNpcAsync(CampaignId, _newNpcName, string.IsNullOrWhiteSpace(_newNpcTitle) ? null : _newNpcTitle, null, null, string.Empty, _currentUserId);
             _newNpcName = string.Empty;
             _newNpcTitle = string.Empty;
             await LoadNpcs();
