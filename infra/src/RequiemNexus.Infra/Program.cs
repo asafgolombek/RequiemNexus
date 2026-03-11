@@ -9,6 +9,11 @@ public sealed class Program
     {
         var app = new App();
 
+        var identityStack = new IdentityStack(app, "RequiemNexus-Identity-Stack", new StackProps
+        {
+            Description = "Requiem Nexus Identity Stack (OIDC, IAM Roles)"
+        });
+
         var networkConfig = new NetworkStack(app, "RequiemNexus-Network-Stack", new StackProps
         {
             Description = "Requiem Nexus Network Stack (VPC, Subnets)",
