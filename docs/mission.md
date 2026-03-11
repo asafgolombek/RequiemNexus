@@ -17,17 +17,17 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 1 | The Neonate (Player Focus) | ✅ Complete |
 | 2 | Validation & Automation (The Ascendant) | ✅ Complete |
 | 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
-| 4 | The Storyteller & The Danse Macabre | 🔄 Active |
-| 5 | Automated Deployments & Observability | ⬜ Planned |
-| 6 | CI/CD Hardening & Supply Chain | ⬜ Planned |
+| 4 | The Storyteller & The Danse Macabre | ✅ Complete |
+| 5 | Automated Deployments & Observability | ✅ Complete |
+| 6 | CI/CD Hardening & Supply Chain | 🔄 Active |
 | 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
 | 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
 | 9 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 10 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 4](#-phase-4-the-storyteller--the-danse-macabre)**
+> **Currently Active → [Phase 6](#-phase-6-cicd-hardening--supply-chain)**
 
-> ⚠️ **Phases 6–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 4 unless explicitly instructed.**
+> ⚠️ **Phases 7–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 6 unless explicitly instructed.**
 
 ---
 
@@ -532,7 +532,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 ## 🧠 Antigravity Rules of Thumb
 
-See the full list with explanations in [architecture.md](./architecture.md#-antigravity-rules-of-thumb).
+See the full list with explanations in [Architecture.md](./Architecture.md#-antigravity-rules-of-thumb).
 
 ---
 

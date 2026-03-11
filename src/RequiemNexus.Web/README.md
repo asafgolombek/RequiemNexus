@@ -4,7 +4,7 @@
 
 The **RequiemNexus.Web** project represents the Presentation layer. This project holds UI components, Blazor Server routing, Controller endpoints, and wiring for dependency injection.
 
-This layer **contains no business rules** and **no direct database access**. It relies entirely on Application/Domain Application Services to orchestrate workflows. It renders state and forwards user intents to the backend.
+This layer **contains no business rules** and **no direct database access**. It relies entirely on Application/Domain Application Services to orchestrate workflows. It renders state and forwards user intents to the backend. From Phase 5 onwards, this layer is also the primary consumer of OpenTelemetry metrics and structured logging for comprehensive observability.
 
 ## 📖 Learning Artifacts
 

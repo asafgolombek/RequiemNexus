@@ -118,9 +118,9 @@ RequiemNexus/
 | 1 | **The Neonate** — Character system & dice rolling | ✅ Complete |
 | 2 | **The Ascendant** — Validation, CI/CD, testing | ✅ Complete |
 | 3 | **The Masquerade Veil** — Account management & security | ✅ Complete |
-| 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | 🔄 In Progress |
-| 5 | **Automated Deployments & Observability** | ⬚ Planned |
-| 6 | **CI/CD Hardening & Supply Chain** | ⬚ Planned |
+| 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | ✅ Complete |
+| 5 | **Automated Deployments & Observability** | ✅ Complete |
+| 6 | **CI/CD Hardening & Supply Chain** | 🔄 In Progress |
 | 7 | **The Blood Communion** — Realtime play | ⬚ Planned |
 | 8 | **The Hidden Refuge** — PWA & offline capabilities | ⬚ Planned |
 | 9 | **E2E Testing & Accessibility** | ⬚ Planned |
@@ -146,6 +146,12 @@ All contributions must uphold the **Antigravity Pledge**:
 Found a vulnerability? Please report it responsibly. See our [Security Policy](./SECURITY.md).
 
 **Do not** open a public issue for security vulnerabilities.
+
+---
+
+## 🤝 Code of Conduct
+
+Help us keep Requiem Nexus a welcoming environment. Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before interacting with the community.
 
 ---
 
