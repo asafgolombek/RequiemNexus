@@ -27,7 +27,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 
 > **Currently Active → [Phase 4](#-phase-4-the-storyteller--the-danse-macabre)**
 
-> ⚠️ **Phases 5–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 4 unless explicitly instructed.**
+> ⚠️ **Phases 6–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 4 unless explicitly instructed.**
 
 ---
 

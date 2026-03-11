@@ -2,6 +2,8 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Web.Components;
@@ -9,12 +11,31 @@ using Serilog;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
+bool isMigrateOnly = args.Contains("--migrate-only");
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration)
                  .WriteTo.Console()
                  .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day));
+
+// Add OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation();
+    });
+
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -24,7 +45,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data")));
+{
+    if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
+    {
+        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
+    }
+    else
+    {
+        options.UseSqlite(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
+    }
+});
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -174,16 +204,24 @@ builder.Services.AddRateLimiter(options =>
 
 WebApplication app = builder.Build();
 
+bool runMigrations = builder.Environment.IsDevelopment() || isMigrateOnly;
+
 using (IServiceScope scope = app.Services.CreateScope())
 {
     ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await DbInitializer.InitializeAsync(context, roleManager);
+    await DbInitializer.InitializeAsync(context, roleManager, runMigrations);
 
     if (app.Environment.IsDevelopment())
     {
         await TestDbInitializer.InitializeAsync(context);
     }
+}
+
+if (isMigrateOnly)
+{
+    Log.Information("Migration complete. Exiting due to --migrate-only flag.");
+    return;
 }
 
 // Configure the HTTP request pipeline.
@@ -204,6 +242,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.UseAntiforgery();
+
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
 
 app.MapStaticAssets();
 app.MapPost("/Account/Logout", async (
