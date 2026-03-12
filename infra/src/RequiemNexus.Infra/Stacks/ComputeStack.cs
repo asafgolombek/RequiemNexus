@@ -43,11 +43,20 @@ public class ComputeStack : Stack
                     Exclude = new[] { "**/bin", "**/obj", "**/node_modules", ".git", "infra/cdk.out" }
                 }),
                 ContainerPort = 8080,
+                // Plain (non-sensitive) configuration — embedded in CloudFormation as-is.
                 Environment = new Dictionary<string, string>
                 {
                     { "ASPNETCORE_ENVIRONMENT", "Production" },
-                    { "ConnectionStrings__DefaultConnection", $"Host={props.PostgresDatabase.DbInstanceEndpointAddress};Database=requiemnexus;Username=postgres;Password={props.PostgresDatabase.Secret!.SecretValueFromJson("password")};SSL Mode=Require;" },
+                    { "ConnectionStrings__DefaultConnection", $"Host={props.PostgresDatabase.DbInstanceEndpointAddress};Database=requiemnexus;Username=postgres;SSL Mode=Require;" },
                     { "Redis__Configuration", $"{props.RedisCluster.AttrPrimaryEndPointAddress}:{props.RedisCluster.AttrPrimaryEndPointPort}" }
+                },
+
+                // Secrets — ECS fetches these from Secrets Manager at container startup.
+                // The value is injected as an environment variable and never stored in the CloudFormation template.
+                // The CDK automatically grants the task execution role the required secretsmanager:GetSecretValue permission.
+                Secrets = new Dictionary<string, Secret>
+                {
+                    { "DB__Password", Secret.FromSecretsManager(props.PostgresDatabase.Secret!, "password") }
                 }
             },
             PublicLoadBalancer = true,

@@ -57,6 +57,15 @@ builder.Services.AddRazorComponents()
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+// In production, the DB password is injected as DB__Password by ECS from Secrets Manager
+// (see ComputeStack.cs) to avoid embedding it in the CloudFormation template. Merge it here.
+var dbPassword = builder.Configuration["DB:Password"];
+if (!string.IsNullOrEmpty(dbPassword))
+{
+    var csb = new Npgsql.NpgsqlConnectionStringBuilder(connectionString) { Password = dbPassword };
+    connectionString = csb.ConnectionString;
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
