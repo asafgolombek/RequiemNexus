@@ -46,7 +46,7 @@ public class ComputeStack : Stack
                 Environment = new Dictionary<string, string>
                 {
                     { "ASPNETCORE_ENVIRONMENT", "Production" },
-                    { "ConnectionStrings__DefaultConnection", $"Host={props.PostgresDatabase.DbInstanceEndpointAddress};Database=requiemnexus;Username=postgres;Password=password123;SSL Mode=Require;" }, // Placeholder till Secret integration is fully verified
+                    { "ConnectionStrings__DefaultConnection", $"Host={props.PostgresDatabase.DbInstanceEndpointAddress};Database=requiemnexus;Username=postgres;Password={props.PostgresDatabase.Secret!.SecretValueFromJson("password")};SSL Mode=Require;" },
                     { "Redis__Configuration", $"{props.RedisCluster.AttrPrimaryEndPointAddress}:{props.RedisCluster.AttrPrimaryEndPointPort}" }
                 }
             },
