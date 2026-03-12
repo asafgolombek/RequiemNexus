@@ -38,7 +38,8 @@ public class ComputeStack : Stack
             {
                 Image = ContainerImage.FromAsset("..", new AssetImageProps
                 {
-                    File = "src/RequiemNexus.Web/Dockerfile"
+                    File = "src/RequiemNexus.Web/Dockerfile",
+                    Exclude = new[] { "**/bin", "**/obj", "**/node_modules", ".git", "infra/cdk.out" }
                 }),
                 ContainerPort = 8080,
                 Environment = new Dictionary<string, string>
