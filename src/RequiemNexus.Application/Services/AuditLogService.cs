@@ -24,11 +24,15 @@ public class AuditLogService(ApplicationDbContext dbContext) : IAuditLogService
 
     public async Task<List<AuditLog>> GetRecentEventsAsync(string userId, int limit = 50)
     {
+        // AuditLog.OccurredAt is DateTimeOffset, stored as TEXT by SQLite.
+        // EF Core cannot reliably translate OrderByDescending on DateTimeOffset to SQLite SQL,
+        // so we sort in memory after loading. Take(limit) must come AFTER sorting to avoid
+        // silently returning the N most-recently-inserted rows instead of the N most-recent by date.
         var auditLogs = await dbContext.AuditLogs
             .Where(l => l.UserId == userId)
-            .Take(limit)
             .AsNoTracking()
             .ToListAsync();
-        return auditLogs.OrderByDescending(l => l.OccurredAt).ToList();
+
+        return [.. auditLogs.OrderByDescending(l => l.OccurredAt).Take(limit)];
     }
 }

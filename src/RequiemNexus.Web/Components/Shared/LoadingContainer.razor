@@ -1,0 +1,22 @@
+@if (Loading)
+{
+    <p><em>@LoadingMessage</em></p>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    /// <summary>Gets or sets a value indicating whether content is loading.</summary>
+    [Parameter]
+    public bool Loading { get; set; }
+
+    /// <summary>Gets or sets the message shown while loading.</summary>
+    [Parameter]
+    public string LoadingMessage { get; set; } = "Loading...";
+
+    /// <summary>Gets or sets the content to render when not loading.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

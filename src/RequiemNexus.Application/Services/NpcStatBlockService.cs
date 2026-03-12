@@ -12,10 +12,12 @@ namespace RequiemNexus.Application.Services;
 /// </summary>
 public class NpcStatBlockService(
     ApplicationDbContext dbContext,
-    ILogger<NpcStatBlockService> logger) : INpcStatBlockService
+    ILogger<NpcStatBlockService> logger,
+    IAuthorizationHelper authHelper) : INpcStatBlockService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ILogger<NpcStatBlockService> _logger = logger;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
 
     /// <inheritdoc />
     public async Task<List<NpcStatBlock>> GetPrebuiltBlocksAsync()
@@ -70,7 +72,7 @@ public class NpcStatBlockService(
         string notes,
         string stUserId)
     {
-        await RequireStAsync(campaignId, stUserId);
+        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage stat blocks");
 
         NpcStatBlock block = new()
         {
@@ -126,7 +128,7 @@ public class NpcStatBlockService(
             throw new UnauthorizedAccessException("Pre-built stat blocks cannot be modified.");
         }
 
-        await RequireStAsync(block.CampaignId!.Value, stUserId);
+        await _authHelper.RequireStorytellerAsync(block.CampaignId!.Value, stUserId, "manage stat blocks");
 
         block.Name = name;
         block.Concept = concept;
@@ -159,7 +161,7 @@ public class NpcStatBlockService(
             throw new UnauthorizedAccessException("Pre-built stat blocks cannot be deleted.");
         }
 
-        await RequireStAsync(block.CampaignId!.Value, stUserId);
+        await _authHelper.RequireStorytellerAsync(block.CampaignId!.Value, stUserId, "manage stat blocks");
 
         _dbContext.NpcStatBlocks.Remove(block);
         await _dbContext.SaveChangesAsync();
@@ -168,20 +170,5 @@ public class NpcStatBlockService(
             "Stat block {BlockId} deleted by ST {UserId}",
             statBlockId,
             stUserId);
-    }
-
-    private async Task RequireStAsync(int campaignId, string stUserId)
-    {
-        Campaign? campaign = await _dbContext.Campaigns.FindAsync(campaignId)
-            ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
-
-        if (campaign.StoryTellerId != stUserId)
-        {
-            _logger.LogWarning(
-                "Unauthorized stat block mutation on campaign {CampaignId} by user {UserId}",
-                campaignId,
-                stUserId);
-            throw new UnauthorizedAccessException("Only the Storyteller may manage stat blocks.");
-        }
     }
 }

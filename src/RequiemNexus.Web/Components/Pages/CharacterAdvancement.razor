@@ -12,6 +12,8 @@
 @inject IClanService ClanService
 @inject IMeritService MeritService
 @inject IDisciplineService DisciplineService
+@inject ICharacterMeritService CharacterMeritService
+@inject ICharacterDisciplineService CharacterDisciplineService
 @inject RequiemNexus.Domain.Contracts.IExperienceCostRules ExperienceCostRules
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -184,8 +186,8 @@ else
         if (!string.IsNullOrEmpty(_userId))
         {
             _character = await CharacterService.GetCharacterByIdAsync(Id, _userId);
-            _availableMerits = await CharacterService.GetAvailableMeritsAsync();
-            _availableDisciplines = await CharacterService.GetAvailableDisciplinesAsync();
+            _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync();
+            _availableDisciplines = await CharacterDisciplineService.GetAvailableDisciplinesAsync();
         }
     }
 
@@ -270,7 +272,7 @@ else
         if (_character.ExperiencePoints >= xpCost)
         {
             var merit = _availableMerits.First(m => m.Id == _selectedMeritId);
-            var cm = await CharacterService.AddMeritAsync(_character, _selectedMeritId, SelectedMeritRequiresSpec ? _newMeritSpecification : null, _newMeritRating, xpCost);
+            var cm = await CharacterMeritService.AddMeritAsync(_character, _selectedMeritId, SelectedMeritRequiresSpec ? _newMeritSpecification : null, _newMeritRating, xpCost);
             cm.Merit = merit;
             _character.Merits.Add(cm);
 
@@ -295,7 +297,7 @@ else
         if (_character.ExperiencePoints >= xpCost)
         {
             var disc = _availableDisciplines.First(d => d.Id == _selectedDisciplineId);
-            var cd = await CharacterService.AddDisciplineAsync(_character, _selectedDisciplineId, _newDisciplineRating, xpCost);
+            var cd = await CharacterDisciplineService.AddDisciplineAsync(_character, _selectedDisciplineId, _newDisciplineRating, xpCost);
             cd.Discipline = disc;
             _character.Disciplines.Add(cd);
 

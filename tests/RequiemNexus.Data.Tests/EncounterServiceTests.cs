@@ -21,7 +21,7 @@ public class EncounterServiceTests
     }
 
     private static EncounterService CreateService(ApplicationDbContext ctx) =>
-        new(ctx, NullLogger<EncounterService>.Instance);
+        new(ctx, NullLogger<EncounterService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
 
     private static async Task<Campaign> SeedCampaignAsync(
         ApplicationDbContext ctx,

@@ -29,10 +29,32 @@ public static class Program
             Simulation.Inject(rate: 10, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(30))
         );
 
-        NBomberRunner
+        var stats = NBomberRunner
             .RegisterScenarios(scenario)
             .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
             .Run();
+
+        // Performance Budget Enforcement
+        var homePageStats = stats.ScenarioStats.First(s => s.ScenarioName == "home_page_scenario");
+        var p95 = homePageStats.Ok.Latency.Percent95;
+        var failCount = homePageStats.Fail.Request.Count;
+        var totalCount = homePageStats.Ok.Request.Count + failCount;
+        var failRate = totalCount > 0 ? (double)failCount / totalCount : 0;
+
+        const int maxP95Ms = 200;
+        const double maxFailRate = 0.01;
+
+        Console.WriteLine($"--- Performance Results ---");
+        Console.WriteLine($"P95 Latency: {p95}ms (Threshold: {maxP95Ms}ms)");
+        Console.WriteLine($"Failure Rate: {failRate:P2} (Threshold: {maxFailRate:P2})");
+
+        if (p95 > maxP95Ms || failRate > maxFailRate)
+        {
+            Console.WriteLine("❌ Performance budget exceeded! Failing build.");
+            Environment.Exit(1);
+        }
+
+        Console.WriteLine("✅ Performance budget met.");
     }
 }
 

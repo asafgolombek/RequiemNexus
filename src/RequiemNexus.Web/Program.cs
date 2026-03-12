@@ -2,6 +2,8 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Web.Components;
@@ -9,12 +11,44 @@ using Serilog;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
+bool isMigrateOnly = args.Contains("--migrate-only");
+
 var builder = WebApplication.CreateBuilder(args);
+
+var sentryDsn = builder.Configuration["Sentry:Dsn"];
+if (!string.IsNullOrEmpty(sentryDsn))
+{
+    builder.WebHost.UseSentry(o =>
+    {
+        o.Dsn = sentryDsn;
+        o.Debug = builder.Environment.IsDevelopment();
+        o.TracesSampleRate = 1.0;
+    });
+}
 
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration)
                  .WriteTo.Console()
                  .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day));
+
+// Add OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter();
+    });
+
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -24,7 +58,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data")));
+{
+    if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
+    {
+        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
+    }
+    else
+    {
+        options.UseSqlite(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
+    }
+});
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -37,6 +80,7 @@ builder.Services.AddFido2(options =>
 });
 
 // Application Services
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBeatLedgerService, RequiemNexus.Application.Services.BeatLedgerService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IConditionService, RequiemNexus.Application.Services.ConditionService>();
@@ -55,10 +99,20 @@ builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, Req
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
-builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDanseMacabreService, RequiemNexus.Application.Services.DanseMacabreService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICityFactionService, RequiemNexus.Application.Services.CityFactionService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IChronicleNpcService, RequiemNexus.Application.Services.ChronicleNpcService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IFeedingTerritoryService, RequiemNexus.Application.Services.FeedingTerritoryService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IFactionRelationshipService, RequiemNexus.Application.Services.FactionRelationshipService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcStatBlockService, RequiemNexus.Application.Services.NpcStatBlockService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterNoteService, RequiemNexus.Application.Services.CharacterNoteService>();
-builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewService, RequiemNexus.Application.Services.HomebrewService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterEquipmentService, RequiemNexus.Application.Services.CharacterEquipmentService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDiceMacroService, RequiemNexus.Application.Services.DiceMacroService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewDisciplineService, RequiemNexus.Application.Services.HomebrewDisciplineService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewMeritService, RequiemNexus.Application.Services.HomebrewMeritService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewClanService, RequiemNexus.Application.Services.HomebrewClanService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewPackService, RequiemNexus.Application.Services.HomebrewPackService>();
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 
@@ -174,16 +228,24 @@ builder.Services.AddRateLimiter(options =>
 
 WebApplication app = builder.Build();
 
+bool runMigrations = builder.Environment.IsDevelopment() || isMigrateOnly;
+
 using (IServiceScope scope = app.Services.CreateScope())
 {
     ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await DbInitializer.InitializeAsync(context, roleManager);
+    await DbInitializer.InitializeAsync(context, roleManager, runMigrations);
 
     if (app.Environment.IsDevelopment())
     {
         await TestDbInitializer.InitializeAsync(context);
     }
+}
+
+if (isMigrateOnly)
+{
+    Log.Information("Migration complete. Exiting due to --migrate-only flag.");
+    return;
 }
 
 // Configure the HTTP request pipeline.
@@ -204,6 +266,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.UseAntiforgery();
+
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
 
 app.MapStaticAssets();
 app.MapPost("/Account/Logout", async (

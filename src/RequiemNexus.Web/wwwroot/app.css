@@ -28,6 +28,11 @@
   /* Preserved Blazor Variables */
   --bs-secondary-color: #6c757d;
   
+  /* Semantic aliases */
+  --gothic-muted: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
+  --color-surface-2: var(--ash-gray);
+
   /* Additional values matching gothic theme */
   --bg-color: var(--deep-black);
   --text-color: var(--bone-white);
@@ -137,7 +142,9 @@ h1:focus {
 }
 
 /* ---------- Shared Button Styles ---------- */
-.btn-primary {
+/* .btn-primary-rn is an alias for .btn-primary — both produce identical results */
+.btn-primary,
+.btn-primary-rn {
   background: linear-gradient(135deg, var(--crimson) 0%, #6B0000 100%);
   border: 1px solid var(--crimson-glow);
   color: var(--bone-white);
@@ -151,18 +158,22 @@ h1:focus {
   align-items: center;
   justify-content: center;
 }
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary-rn:hover {
   background: linear-gradient(135deg, var(--crimson-glow) 0%, var(--crimson) 100%);
   box-shadow: 0 0 40px rgba(196,30,58,.6), 0 0 80px rgba(139,0,0,.3), inset 0 0 15px rgba(245,240,232,.1);
   transform: translateY(-2px);
   color: var(--bone-white);
 }
-.btn-primary:active {
+.btn-primary:active,
+.btn-primary-rn:active {
   transform: translateY(0);
   box-shadow: 0 0 20px rgba(196,30,58,.4), inset 0 0 10px rgba(196,30,58,.3);
 }
 
-.btn-secondary {
+/* .btn-secondary-rn is an alias for .btn-secondary — both produce identical results */
+.btn-secondary,
+.btn-secondary-rn {
   background: transparent;
   border: 1px solid var(--muted-gray);
   color: var(--bone-white);
@@ -176,7 +187,8 @@ h1:focus {
   align-items: center;
   justify-content: center;
 }
-.btn-secondary:hover {
+.btn-secondary:hover,
+.btn-secondary-rn:hover {
   border-color: var(--bone-white);
   background: rgba(245,240,232,.05);
   color: var(--bone-white);
@@ -199,52 +211,6 @@ h1:focus {
 .btn-ghost:hover {
   background: rgba(245,240,232,.08);
   border-color: rgba(245,240,232,.1);
-  color: var(--bone-white);
-}
-
-/* For backwards compatibility */
-.btn-primary-rn {
-  background: linear-gradient(135deg, var(--crimson) 0%, #6B0000 100%);
-  border: 1px solid var(--crimson-glow);
-  color: var(--bone-white);
-  transition: all .3s cubic-bezier(.4,0,.2,1);
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-family: var(--font-heading);
-  letter-spacing: 0.05em;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.btn-primary-rn:hover {
-  background: linear-gradient(135deg, var(--crimson-glow) 0%, var(--crimson) 100%);
-  box-shadow: 0 0 40px rgba(196,30,58,.6), 0 0 80px rgba(139,0,0,.3), inset 0 0 15px rgba(245,240,232,.1);
-  transform: translateY(-2px);
-  color: var(--bone-white);
-}
-.btn-primary-rn:active {
-  transform: translateY(0);
-  box-shadow: 0 0 20px rgba(196,30,58,.4), inset 0 0 10px rgba(196,30,58,.3);
-}
-
-.btn-secondary-rn {
-  background: transparent;
-  border: 1px solid var(--muted-gray);
-  color: var(--bone-white);
-  transition: all .3s ease;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-family: var(--font-heading);
-  letter-spacing: 0.05em;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.btn-secondary-rn:hover {
-  border-color: var(--bone-white);
-  background: rgba(245,240,232,.05);
   color: var(--bone-white);
 }
 
@@ -451,17 +417,6 @@ h1:focus {
     0 0 0 0.25rem var(--accent-color);
 }
 
-.btn-primary {
-  color: #fff;
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-}
-
-.btn-primary:hover {
-  background-color: var(--accent-hover);
-  border-color: var(--accent-hover);
-}
-
 /* ---------- Character Sheet Shared Sections ---------- */
 .cs-section {
     background-color: var(--bg-panel);
@@ -480,3 +435,19 @@ h1:focus {
     margin-bottom: 1.5rem;
     letter-spacing: 2px;
 }
+
+/* ---------- Layout Utility Classes ---------- */
+/* Use these in markup instead of inline style="display:flex;..." */
+.flex-row  { display: flex; flex-direction: row; }
+.flex-col  { display: flex; flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.gap-sm    { gap: 0.5rem; }
+.gap-md    { gap: 0.75rem; }
+.gap-lg    { gap: 1.5rem; }
+.mb-sm     { margin-bottom: 0.5rem; }
+.mb-md     { margin-bottom: 1rem; }
+.mb-lg     { margin-bottom: 1.5rem; }
+.text-muted { color: var(--gothic-muted); }
+.font-sm   { font-size: 0.85em; }
+.font-xs   { font-size: 0.75em; }

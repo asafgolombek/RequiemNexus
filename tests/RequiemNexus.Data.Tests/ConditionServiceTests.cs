@@ -22,7 +22,7 @@ public class ConditionServiceTests
     }
 
     private static ConditionService CreateService(ApplicationDbContext ctx)
-        => new(ctx, new ConditionRules(), new BeatLedgerService(ctx), NullLogger<ConditionService>.Instance);
+        => new(ctx, new ConditionRules(), new BeatLedgerService(ctx), NullLogger<ConditionService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance), new CharacterCreationRules());
 
     // ── ApplyConditionAsync ──────────────────────────────────────────────────
 

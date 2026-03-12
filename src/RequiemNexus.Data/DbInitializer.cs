@@ -15,9 +15,12 @@ public static class DbInitializer
     private const string _costOneVitae = "1 Vitae";
     private const string _costOneWillpower = "1 Willpower";
 
-    public static async Task InitializeAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager)
+    public static async Task InitializeAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager, bool runMigrations = false)
     {
-        await context.Database.MigrateAsync();
+        if (runMigrations)
+        {
+            await context.Database.MigrateAsync();
+        }
 
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);

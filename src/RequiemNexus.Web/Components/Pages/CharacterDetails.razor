@@ -8,6 +8,7 @@
 @using RequiemNexus.Application.Contracts
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
+@inject ICharacterEquipmentService EquipmentService
 @inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
 @inject IJSRuntime JS
@@ -387,7 +388,7 @@ else
         if (!string.IsNullOrEmpty(_currentUserId))
         {
             _character = await CharacterService.GetCharacterByIdAsync(Id, _currentUserId);
-            _availableEquipment = await CharacterService.GetAvailableEquipmentAsync();
+            _availableEquipment = await EquipmentService.GetAvailableEquipmentAsync();
         }
     }
 
@@ -442,7 +443,7 @@ else
     {
         if (_character != null && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
         {
-            var ce = await CharacterService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity);
+            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity);
             ce.Equipment = _availableEquipment.FirstOrDefault(e => e.Id == _selectedEquipmentId);
             _character.CharacterEquipments.Add(ce);
 
@@ -455,7 +456,7 @@ else
     {
         if (_character != null)
         {
-            await CharacterService.RemoveEquipmentAsync(ceId);
+            await EquipmentService.RemoveEquipmentAsync(ceId);
             var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
             if (ce != null) _character.CharacterEquipments.Remove(ce);
         }

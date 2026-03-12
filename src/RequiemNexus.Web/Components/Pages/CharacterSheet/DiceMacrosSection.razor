@@ -1,6 +1,6 @@
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
-@inject ICharacterService CharacterService
+@inject IDiceMacroService DiceMacroService
 
 <div class="card-rn" style="margin-bottom:1.5rem;">
     <h3 style="margin-bottom:0.75rem;">Dice Macros</h3>
@@ -78,7 +78,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _macros = await CharacterService.GetDiceMacrosAsync(CharacterId);
+        _macros = await DiceMacroService.GetDiceMacrosAsync(CharacterId);
     }
 
     private async Task AddMacro()
@@ -88,16 +88,16 @@
             return;
         }
 
-        await CharacterService.CreateDiceMacroAsync(CharacterId, _newName.Trim(), _newPool, _newDesc.Trim(), UserId);
+        await DiceMacroService.CreateDiceMacroAsync(CharacterId, _newName.Trim(), _newPool, _newDesc.Trim(), UserId);
         _newName = string.Empty;
         _newPool = 1;
         _newDesc = string.Empty;
-        _macros = await CharacterService.GetDiceMacrosAsync(CharacterId);
+        _macros = await DiceMacroService.GetDiceMacrosAsync(CharacterId);
     }
 
     private async Task DeleteMacro(int macroId)
     {
-        await CharacterService.DeleteDiceMacroAsync(macroId, UserId);
-        _macros = await CharacterService.GetDiceMacrosAsync(CharacterId);
+        await DiceMacroService.DeleteDiceMacroAsync(macroId, UserId);
+        _macros = await DiceMacroService.GetDiceMacrosAsync(CharacterId);
     }
 }

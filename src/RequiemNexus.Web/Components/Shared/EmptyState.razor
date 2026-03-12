@@ -1,0 +1,35 @@
+@if (IsEmpty)
+{
+    <div class="empty-state-rn">
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <p>@Message</p>
+        }
+    </div>
+}
+else
+{
+    @NotEmptyContent
+}
+
+@code {
+    /// <summary>Gets or sets a value indicating whether the collection is empty.</summary>
+    [Parameter]
+    public bool IsEmpty { get; set; }
+
+    /// <summary>Gets or sets the fallback message when no <see cref="ChildContent"/> is provided.</summary>
+    [Parameter]
+    public string Message { get; set; } = "Nothing here yet.";
+
+    /// <summary>Gets or sets custom content for the empty state.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets the content to render when the collection is not empty.</summary>
+    [Parameter]
+    public RenderFragment? NotEmptyContent { get; set; }
+}

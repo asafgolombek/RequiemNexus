@@ -23,6 +23,12 @@ If your change makes the system harder to reason about, it will be rejected—ev
 
 ---
 
+## 🤝 Code of Conduct
+
+We are committed to providing a welcoming and inspiring community for all. Please review our [Code of Conduct](./CODE_OF_CONDUCT.md) before contributing.
+
+---
+
 ## 🧠 Contribution Principles
 
 1. **Explicit over implicit**  

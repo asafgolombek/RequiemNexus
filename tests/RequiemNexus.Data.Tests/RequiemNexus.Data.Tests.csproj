@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\RequiemNexus.Application\RequiemNexus.Application.csproj" />
     <ProjectReference Include="..\..\src\RequiemNexus.Data\RequiemNexus.Data.csproj" />
     <ProjectReference Include="..\..\src\RequiemNexus.Domain\RequiemNexus.Domain.csproj" />
     <ProjectReference Include="..\..\src\RequiemNexus.Web\RequiemNexus.Web.csproj" />

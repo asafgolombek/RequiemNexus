@@ -21,7 +21,7 @@ public class NpcStatBlockServiceTests
     }
 
     private static NpcStatBlockService CreateService(ApplicationDbContext ctx) =>
-        new(ctx, NullLogger<NpcStatBlockService>.Instance);
+        new(ctx, NullLogger<NpcStatBlockService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
 
     private static async Task<Campaign> SeedCampaignAsync(ApplicationDbContext ctx, string stId = "st-1")
     {

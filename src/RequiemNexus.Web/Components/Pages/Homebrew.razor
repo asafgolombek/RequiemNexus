@@ -1,11 +1,12 @@
 @page "/homebrew"
 @rendermode InteractiveServer
+@inherits RequiemNexusComponentBase
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Components.Authorization
-@inject IHomebrewService HomebrewService
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHomebrewDisciplineService DisciplineService
+@inject IHomebrewMeritService MeritService
+@inject IHomebrewClanService ClanService
+@inject IHomebrewPackService PackService
 
 <PageTitle>Homebrew Content - Requiem Nexus</PageTitle>
 
@@ -15,12 +16,8 @@
         <p style="color:var(--gothic-muted);font-size:0.9em;">Custom Disciplines, Merits, and Bloodlines scoped to your account.</p>
     </div>
 
-    @if (_loading)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else
-    {
+    <LoadingContainer Loading="Loading">
+    <ChildContent>
         @* ── Export / Import ───────────────────────────────────────────────── *@
         <div class="card-rn" style="margin-bottom:1.5rem;">
             <h3>Pack Export / Import</h3>
@@ -134,12 +131,11 @@
                 </div>
             </details>
         </div>
-    }
+    </ChildContent>
+    </LoadingContainer>
 </div>
 
 @code {
-    private bool _loading = true;
-    private string? _currentUserId;
     private List<Discipline> _disciplines = [];
     private List<Merit> _merits = [];
     private List<Clan> _clans = [];
@@ -154,24 +150,16 @@
     private string _importJson = string.Empty;
     private string _importMessage = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task LoadAsync()
     {
-        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!string.IsNullOrEmpty(_currentUserId))
-        {
-            await Reload();
-        }
-
-        _loading = false;
+        await Reload();
     }
 
     private async Task Reload()
     {
-        _disciplines = await HomebrewService.GetHomebrewDisciplinesAsync(_currentUserId!);
-        _merits = await HomebrewService.GetHomebrewMeritsAsync(_currentUserId!);
-        _clans = await HomebrewService.GetHomebrewClansAsync(_currentUserId!);
+        _disciplines = await DisciplineService.GetHomebrewDisciplinesAsync(CurrentUserId!);
+        _merits = await MeritService.GetHomebrewMeritsAsync(CurrentUserId!);
+        _clans = await ClanService.GetHomebrewClansAsync(CurrentUserId!);
     }
 
     private async Task CreateDiscipline()
@@ -181,16 +169,16 @@
             return;
         }
 
-        await HomebrewService.CreateHomebrewDisciplineAsync(_newDisciplineName.Trim(), _newDisciplineDesc.Trim(), _currentUserId!);
+        await DisciplineService.CreateHomebrewDisciplineAsync(_newDisciplineName.Trim(), _newDisciplineDesc.Trim(), CurrentUserId!);
         _newDisciplineName = string.Empty;
         _newDisciplineDesc = string.Empty;
-        _disciplines = await HomebrewService.GetHomebrewDisciplinesAsync(_currentUserId!);
+        _disciplines = await DisciplineService.GetHomebrewDisciplinesAsync(CurrentUserId!);
     }
 
     private async Task DeleteDiscipline(int id)
     {
-        await HomebrewService.DeleteHomebrewDisciplineAsync(id, _currentUserId!);
-        _disciplines = await HomebrewService.GetHomebrewDisciplinesAsync(_currentUserId!);
+        await DisciplineService.DeleteHomebrewDisciplineAsync(id, CurrentUserId!);
+        _disciplines = await DisciplineService.GetHomebrewDisciplinesAsync(CurrentUserId!);
     }
 
     private async Task CreateMerit()
@@ -200,17 +188,17 @@
             return;
         }
 
-        await HomebrewService.CreateHomebrewMeritAsync(_newMeritName.Trim(), _newMeritDesc.Trim(), _newMeritRatings.Trim(), false, _currentUserId!);
+        await MeritService.CreateHomebrewMeritAsync(_newMeritName.Trim(), _newMeritDesc.Trim(), _newMeritRatings.Trim(), false, CurrentUserId!);
         _newMeritName = string.Empty;
         _newMeritDesc = string.Empty;
         _newMeritRatings = "1,2,3";
-        _merits = await HomebrewService.GetHomebrewMeritsAsync(_currentUserId!);
+        _merits = await MeritService.GetHomebrewMeritsAsync(CurrentUserId!);
     }
 
     private async Task DeleteMerit(int id)
     {
-        await HomebrewService.DeleteHomebrewMeritAsync(id, _currentUserId!);
-        _merits = await HomebrewService.GetHomebrewMeritsAsync(_currentUserId!);
+        await MeritService.DeleteHomebrewMeritAsync(id, CurrentUserId!);
+        _merits = await MeritService.GetHomebrewMeritsAsync(CurrentUserId!);
     }
 
     private async Task CreateClan()
@@ -220,21 +208,21 @@
             return;
         }
 
-        await HomebrewService.CreateHomebrewClanAsync(_newClanName.Trim(), _newClanDesc.Trim(), _currentUserId!);
+        await ClanService.CreateHomebrewClanAsync(_newClanName.Trim(), _newClanDesc.Trim(), CurrentUserId!);
         _newClanName = string.Empty;
         _newClanDesc = string.Empty;
-        _clans = await HomebrewService.GetHomebrewClansAsync(_currentUserId!);
+        _clans = await ClanService.GetHomebrewClansAsync(CurrentUserId!);
     }
 
     private async Task DeleteClan(int id)
     {
-        await HomebrewService.DeleteHomebrewClanAsync(id, _currentUserId!);
-        _clans = await HomebrewService.GetHomebrewClansAsync(_currentUserId!);
+        await ClanService.DeleteHomebrewClanAsync(id, CurrentUserId!);
+        _clans = await ClanService.GetHomebrewClansAsync(CurrentUserId!);
     }
 
     private async Task ExportPack()
     {
-        _exportJson = await HomebrewService.ExportHomebrewPackAsync(_currentUserId!);
+        _exportJson = await PackService.ExportHomebrewPackAsync(CurrentUserId!);
     }
 
     private async Task ImportPack()
@@ -244,7 +232,7 @@
             return;
         }
 
-        int count = await HomebrewService.ImportHomebrewPackAsync(_importJson.Trim(), _currentUserId!);
+        int count = await PackService.ImportHomebrewPackAsync(_importJson.Trim(), CurrentUserId!);
         _importMessage = $"Imported {count} item(s) successfully.";
         _importJson = string.Empty;
         await Reload();

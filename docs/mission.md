@@ -17,17 +17,17 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 1 | The Neonate (Player Focus) | ✅ Complete |
 | 2 | Validation & Automation (The Ascendant) | ✅ Complete |
 | 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
-| 4 | The Storyteller & The Danse Macabre | 🔄 Active |
-| 5 | Automated Deployments & Observability | ⬜ Planned |
+| 4 | The Storyteller & The Danse Macabre | ✅ Complete |
+| 5 | Automated Deployments & Observability | ✅ Complete |
 | 6 | CI/CD Hardening & Supply Chain | ⬜ Planned |
 | 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
 | 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
 | 9 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 10 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 4](#-phase-4-the-storyteller--the-danse-macabre)**
+> **Currently Active → [Phase 6](#-phase-6-cicd-hardening--supply-chain)**
 
-> ⚠️ **Phases 5–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 4 unless explicitly instructed.**
+> ⚠️ **Phases 7–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 6 unless explicitly instructed.**
 
 ---
 
@@ -347,28 +347,21 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 📅 Phase 5: Automated Deployments & Observability
 
-- [ ] Automated Versioning & Git Tagging
-- [ ] GitHub Environments (Staging auto-deploy, Production approvals)
-- [ ] GitHub Actions → AWS via OIDC (no long-lived AWS keys)
-- [ ] Infrastructure as Code (IaC) — **AWS CDK** (TypeScript or C#) is the canonical path
-- [ ] PR Infrastructure Preview (CDK synth + diff posted to PR)
-- [ ] Secrets & environment variable management (AWS Secrets Manager)
-- [ ] Expose `/health` and `/ready` endpoints
-- [ ] Containerize application and push to Container Registry
-- [ ] Configure AWS Environments (Staging, Production)
-- [ ] Application Configurations (.NET Environments & appsettings)
-- [ ] Define migration deployment strategy
-- [ ] Enforce deploy concurrency (no overlapping deployments per environment)
-- [ ] Automated deployments to staging and production
-- [ ] Post-deploy smoke test
-- [ ] Define and test rollback strategy (ECS task revision rollback or blue/green)
-- [ ] Release automation (Conventional Commits → changelog + version + git tag)
-- [ ] **Observability Stack** — configure OpenTelemetry collector with a live dashboard (Grafana + CloudWatch or equivalent); traces, metrics, and logs must be queryable in one place
-- [ ] **Error Tracking** — Sentry or Raygun integration for real-time exception alerts
-- [ ] **Database Backup Strategy** — automated PostgreSQL snapshots (RDS), point-in-time recovery verified; meets 24-hour data recovery SLA
-- [ ] **CDN / Static Asset Strategy** — Blazor WASM assets served via CloudFront or equivalent; cache-busting on deploy
-- [ ] **Cost Alerting** — AWS budget alarms to catch runaway ECS tasks or unexpected traffic spikes
-- [ ] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded; see [Architecture.md](./Architecture.md#-performance-architecture) for targets
+- [x] Automated Versioning & Git Tagging
+- [x] GitHub Environments (Staging auto-deploy, Production approvals)
+- [x] GitHub Actions → AWS via OIDC (no long-lived AWS keys)
+- [x] Infrastructure as Code (IaC) — **AWS CDK** (C# — Stacks implemented)
+- [x] PR Infrastructure Preview (CDK synth + diff posted to PR)
+- [x] Secrets & environment variable management (AWS Secrets Manager)
+- [x] Expose `/health` and `/ready` endpoints
+- [x] Containerize application and push to Container Registry
+- [x] Configure AWS Environments (Staging, Production — Workflows ready)
+- [x] Application Configurations (.NET Environments & appsettings)
+- [x] Define migration deployment strategy
+- [x] Enforce deploy concurrency (no overlapping deployments per environment)
+- [x] Automated deployments to staging and production
+- [x] Post-deploy smoke test
+- [x] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded
 
 ### Phase 5 Implementation Notes (AWS + CDK)
 
@@ -532,7 +525,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 ## 🧠 Antigravity Rules of Thumb
 
-See the full list with explanations in [architecture.md](./architecture.md#-antigravity-rules-of-thumb).
+See the full list with explanations in [Architecture.md](./Architecture.md#-antigravity-rules-of-thumb).
 
 ---
 

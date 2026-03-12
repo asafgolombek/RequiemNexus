@@ -68,8 +68,8 @@ public class AdvancementService(IBeatLedgerService ledger) : IAdvancementService
         CharacterAttribute? trait = character.Attributes.FirstOrDefault(a => a.Name == traitName);
         if (trait != null)
         {
-            // Internal bypass for creation/editing where XP isn't involved
-            typeof(CharacterAttribute).GetProperty("Rating")?.SetValue(trait, newRating);
+            // Set directly — Upgrade() is not used here because creation/editing bypasses XP cost.
+            trait.Rating = newRating;
         }
     }
 
@@ -79,7 +79,8 @@ public class AdvancementService(IBeatLedgerService ledger) : IAdvancementService
         CharacterSkill? trait = character.Skills.FirstOrDefault(s => s.Name == traitName);
         if (trait != null)
         {
-            typeof(CharacterSkill).GetProperty("Rating")?.SetValue(trait, newRating);
+            // Set directly — Upgrade() is not used here because creation/editing bypasses XP cost.
+            trait.Rating = newRating;
         }
     }
 
