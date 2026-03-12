@@ -13,6 +13,7 @@ public class ComputeStackProps : StackProps
 {
     public required IVpc Vpc { get; init; }
     public required IDatabaseInstance PostgresDatabase { get; init; }
+    public required ISecurityGroup DbSecurityGroup { get; init; }
     public required CfnReplicationGroup RedisCluster { get; init; }
     public required ISecurityGroup RedisSecurityGroup { get; init; }
 }
@@ -53,11 +54,34 @@ public class ComputeStack : Stack
             AssignPublicIp = false // Running in private subnets with NAT Gateway
         });
 
-        // Allow Fargate service to connect to RDS
-        props.PostgresDatabase.Connections.AllowDefaultPortFrom(FargateService.Service);
+        // Allow Fargate service to connect to RDS and Redis.
+        // CfnSecurityGroupIngress is used intentionally here: calling AllowDefaultPortFrom or AddIngressRule
+        // on security groups owned by DataStack would cause CDK to export the Fargate SG ID into DataStack,
+        // creating a circular cross-stack dependency (DataStack ↔ ComputeStack).
+        // By declaring CfnSecurityGroupIngress resources inside ComputeStack, the ingress rules reference
+        // DataStack's SG IDs (ComputeStack → DataStack, already valid) without DataStack ever referencing
+        // ComputeStack, breaking the cycle.
+        string fargateSecurityGroupId = FargateService.Service.Connections.SecurityGroups[0].SecurityGroupId;
 
-        // Allow Fargate service to connect to Redis
-        props.RedisSecurityGroup.AddIngressRule(FargateService.Service.Connections.SecurityGroups[0], Port.Tcp(6379), "Allow Redis access from Fargate");
+        _ = new Amazon.CDK.AWS.EC2.CfnSecurityGroupIngress(this, "DbIngressFromFargate", new Amazon.CDK.AWS.EC2.CfnSecurityGroupIngressProps
+        {
+            GroupId = props.DbSecurityGroup.SecurityGroupId,
+            IpProtocol = "tcp",
+            FromPort = 5432,
+            ToPort = 5432,
+            SourceSecurityGroupId = fargateSecurityGroupId,
+            Description = "Allow PostgreSQL access from Fargate"
+        });
+
+        _ = new Amazon.CDK.AWS.EC2.CfnSecurityGroupIngress(this, "RedisIngressFromFargate", new Amazon.CDK.AWS.EC2.CfnSecurityGroupIngressProps
+        {
+            GroupId = props.RedisSecurityGroup.SecurityGroupId,
+            IpProtocol = "tcp",
+            FromPort = 6379,
+            ToPort = 6379,
+            SourceSecurityGroupId = fargateSecurityGroupId,
+            Description = "Allow Redis access from Fargate"
+        });
 
         FargateService.TargetGroup.ConfigureHealthCheck(new Amazon.CDK.AWS.ElasticLoadBalancingV2.HealthCheck
         {

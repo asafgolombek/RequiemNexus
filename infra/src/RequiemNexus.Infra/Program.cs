@@ -35,6 +35,7 @@ public sealed class Program
             Description = "Requiem Nexus Compute Stack (ECS, ALB)",
             Vpc = networkConfig.Vpc,
             PostgresDatabase = dataConfig.PostgresDatabase,
+            DbSecurityGroup = dataConfig.DbSecurityGroup,
             RedisCluster = dataConfig.RedisCluster,
             RedisSecurityGroup = dataConfig.RedisSecurityGroup
         });
