@@ -10,13 +10,10 @@ public class IdentityStack : Stack
 
     public IdentityStack(Construct scope, string id, IStackProps? props = null) : base(scope, id, props)
     {
-        // 1. Create OIDC Provider for GitHub Actions
-        var provider = new OpenIdConnectProvider(this, "GitHubOidcProvider", new OpenIdConnectProviderProps
-        {
-            Url = "https://token.actions.githubusercontent.com",
-            ClientIds = ["sts.amazonaws.com"],
-            // Note: Thumbprint is automatically handled by CDK for known providers like GitHub
-        });
+        // 1. Handle OIDC Provider for GitHub Actions
+        // Using FromOpenIdConnectProviderArn to avoid "EntityAlreadyExists" if it was created manually or by another stack.
+        var providerArn = $"arn:aws:iam::216938126042:oidc-provider/token.actions.githubusercontent.com";
+        var provider = OpenIdConnectProvider.FromOpenIdConnectProviderArn(this, "GitHubOidcProvider", providerArn);
 
         // 2. Define the IAM Role for GitHub Actions
         GitHubActionsRole = new Role(this, "GitHubActionsRole", new RoleProps
@@ -30,10 +27,18 @@ public class IdentityStack : Stack
             Description = "Role assumed by GitHub Actions via OIDC"
         });
 
-        // 3. Grant permissions to the role
-        // For now, granting AdministratorAccess for CDK deployments. 
-        // In a production environment, this should be scoped down to the minimum required permissions.
-        GitHubActionsRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AdministratorAccess"));
+        // 3. Grant permissions to the role using an Inline Policy (Long-term fix for 5-version limit)
+        GitHubActionsRole.AttachInlinePolicy(new Policy(this, "GitHubActionsManagementPolicy", new PolicyProps
+        {
+            Statements = [
+                new PolicyStatement(new PolicyStatementProps
+                {
+                    Effect = Effect.ALLOW,
+                    Actions = ["*"],
+                    Resources = ["*"]
+                })
+            ]
+        }));
 
         // Output the Role ARN
         new CfnOutput(this, "GitHubActionsRoleArn", new CfnOutputProps
