@@ -1,9 +1,9 @@
+using System.Collections.Generic;
 using Amazon.CDK;
 using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.ECS;
 using Amazon.CDK.AWS.ECS.Patterns;
 using Constructs;
-using System.Collections.Generic;
 
 namespace RequiemNexus.Infra.Stacks;
 
@@ -31,7 +31,7 @@ public class ComputeStack : Stack
             Cpu = 512,
             TaskImageOptions = new ApplicationLoadBalancedTaskImageOptions
             {
-                Image = ContainerImage.FromRegistry("mcr.microsoft.com/dotnet/aspnet:10.0"), 
+                Image = ContainerImage.FromRegistry("mcr.microsoft.com/dotnet/aspnet:10.0"),
                 ContainerPort = 8080,
                 Environment = new Dictionary<string, string>
                 {

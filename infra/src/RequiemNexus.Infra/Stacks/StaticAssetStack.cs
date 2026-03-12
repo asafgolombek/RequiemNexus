@@ -1,7 +1,7 @@
 using Amazon.CDK;
-using Amazon.CDK.AWS.S3;
 using Amazon.CDK.AWS.CloudFront;
 using Amazon.CDK.AWS.CloudFront.Origins;
+using Amazon.CDK.AWS.S3;
 using Constructs;
 
 namespace RequiemNexus.Infra.Stacks;

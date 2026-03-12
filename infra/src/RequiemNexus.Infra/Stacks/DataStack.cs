@@ -1,9 +1,9 @@
+using System.Linq;
 using Amazon.CDK;
 using Amazon.CDK.AWS.EC2;
-using Amazon.CDK.AWS.RDS;
 using Amazon.CDK.AWS.ElastiCache;
+using Amazon.CDK.AWS.RDS;
 using Constructs;
-using System.Linq;
 
 namespace RequiemNexus.Infra.Stacks;
 
@@ -34,7 +34,7 @@ public class DataStack : Stack
             VpcSubnets = new SubnetSelection { SubnetType = SubnetType.PRIVATE_ISOLATED },
             SecurityGroups = new[] { dbSecurityGroup },
             DatabaseName = "requiemnexus",
-            MultiAz = false, 
+            MultiAz = false,
             AllocatedStorage = 20,
             StorageType = StorageType.GP3,
             BackupRetention = Duration.Days(1), // 24-hr SLA
@@ -60,7 +60,9 @@ public class DataStack : Stack
             ReplicationGroupDescription = "Redis cluster for Requiem Nexus",
             Engine = "redis",
             CacheNodeType = "cache.t4g.micro",
-            NumCacheClusters = 1,
+            NumCacheClusters = 2,
+            AutomaticFailoverEnabled = true,
+            MultiAzEnabled = true,
             CacheSubnetGroupName = redisSubnetGroup.Ref,
             SecurityGroupIds = new[] { redisSecurityGroup.SecurityGroupId }
         });
