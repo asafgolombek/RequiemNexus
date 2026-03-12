@@ -9,9 +9,12 @@ public sealed class Program
     {
         var app = new App();
 
-        var identityStack = new IdentityStack(app, "RequiemNexus-Identity-Stack", new StackProps
+        var envName = app.Node.TryGetContext("env") as string ?? "dev";
+
+        var identityStack = new IdentityStack(app, $"RequiemNexus-Identity-{envName}", new StackProps
         {
-            Description = "Requiem Nexus Identity Stack (OIDC, IAM Roles)"
+            Description = $"Requiem Nexus Identity Stack ({envName}) (OIDC, IAM Roles)",
+            Env = new Amazon.CDK.Environment { Region = System.Environment.GetEnvironmentVariable("CDK_DEFAULT_REGION") ?? "us-east-1" }
         });
 
         var networkConfig = new NetworkStack(app, "RequiemNexus-Network-Stack", new StackProps
@@ -31,6 +34,18 @@ public sealed class Program
         {
             Description = "Requiem Nexus Compute Stack (ECS, ALB)",
             Vpc = networkConfig.Vpc
+        });
+
+        var staticAssetConfig = new StaticAssetStack(app, $"RequiemNexus-Static-{envName}", new StackProps
+        {
+            Description = $"Requiem Nexus Static Asset Stack ({envName}) (S3, CloudFront)",
+            Env = new Amazon.CDK.Environment { Region = System.Environment.GetEnvironmentVariable("CDK_DEFAULT_REGION") ?? "us-east-1" }
+        });
+
+        var billingStack = new BillingStack(app, $"RequiemNexus-Billing-{envName}", new StackProps
+        {
+            Description = $"Requiem Nexus Billing Stack ({envName})",
+            Env = new Amazon.CDK.Environment { Region = System.Environment.GetEnvironmentVariable("CDK_DEFAULT_REGION") ?? "us-east-1" }
         });
 
         app.Synth();

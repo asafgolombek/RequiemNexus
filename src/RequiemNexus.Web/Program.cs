@@ -15,6 +15,13 @@ bool isMigrateOnly = args.Contains("--migrate-only");
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseSentry(o =>
+{
+    o.Dsn = builder.Configuration["Sentry:Dsn"];
+    o.Debug = builder.Environment.IsDevelopment();
+    o.TracesSampleRate = 1.0;
+});
+
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration)
                  .WriteTo.Console()
@@ -25,12 +32,14 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation()
-               .AddHttpClientInstrumentation();
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter();
     })
     .WithTracing(tracing =>
     {
         tracing.AddAspNetCoreInstrumentation()
-               .AddHttpClientInstrumentation();
+               .AddHttpClientInstrumentation()
+               .AddOtlpExporter();
     });
 
 // Add Health Checks

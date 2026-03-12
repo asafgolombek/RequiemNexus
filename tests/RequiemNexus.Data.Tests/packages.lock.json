@@ -197,23 +197,36 @@
       },
       "OpenTelemetry": {
         "type": "Transitive",
-        "resolved": "1.11.2",
-        "contentHash": "FwonkaCVW8M9DLTHmAeJ+znsQCeOVvF4vSBworyq6f55RJB62LFmK7h7SG2aNERTknxP5RoGSwGOBPcVEgC07w==",
+        "resolved": "1.15.0",
+        "contentHash": "7mS/oZFF8S6xyqGQfMU1btp0nXJQUPWV535Vp/XMLYwRAUv36xQN+U4vufWBF1+z4HnRTOwuFHtUSGnHbyN6FQ==",
         "dependencies": {
-          "OpenTelemetry.Api.ProviderBuilderExtensions": "1.11.2"
+          "OpenTelemetry.Api.ProviderBuilderExtensions": "1.15.0"
         }
       },
       "OpenTelemetry.Api": {
         "type": "Transitive",
-        "resolved": "1.11.2",
-        "contentHash": "jgSd/FvtxPPc6nLaZnFj+bulHM2iQjy+NBCY5MbQjH6vkW/SfcXD9NMP3pKCmdF+SbZpgL+EoLQc+PmcnYYLlA=="
+        "resolved": "1.15.0",
+        "contentHash": "vk5OGdf6K9kQScCWo3bRjhDWCv6Pqw92IpX4dlARZ8B1WL7/2NGTDtCkkw42eQf7UdwyoHKzVvMH/PtL8d6z7w=="
       },
       "OpenTelemetry.Api.ProviderBuilderExtensions": {
         "type": "Transitive",
-        "resolved": "1.11.2",
-        "contentHash": "Y1aag4WT9f3rF8jQWwub5DsFVXpM/5NQsfYg6lmsNQrtJ6TcRqQu2PubcHXeIX2N6TA7XF3ffQAgeJklsSLeoQ==",
+        "resolved": "1.15.0",
+        "contentHash": "OnuSUlRpGvowkOzGFQfy+KZFu0cITfKfh2IYJJiZskxVJiOuexwOOuvfDAgpJdmTzVWAHjYdz2shcHZaJ06UjQ==",
         "dependencies": {
-          "OpenTelemetry.Api": "1.11.2"
+          "OpenTelemetry.Api": "1.15.0"
+        }
+      },
+      "Sentry": {
+        "type": "Transitive",
+        "resolved": "6.1.0",
+        "contentHash": "8d0ql+JAjVMo3WG+MHj62oh3jZVZrwWa/ExVcT0NIRcf6Qsig7wsagwaumWvlXj9F850V+YSyNHWyNNrAipFeA=="
+      },
+      "Sentry.Extensions.Logging": {
+        "type": "Transitive",
+        "resolved": "6.1.0",
+        "contentHash": "qo0uZbR8w8Xb6K2YN94ShYh4gTitdmg9o6QL0ZKKVGGrqZxAnDVGQw8d7JS51xLomBkp1HEIJUA3kBMWeQJ/zA==",
+        "dependencies": {
+          "Sentry": "6.1.0"
         }
       },
       "Serilog": {
@@ -362,12 +375,14 @@
           "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.4, )",
           "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": "[10.0.4, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.0, )",
+          "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.15.0, )",
           "OpenTelemetry.Extensions.Hosting": "[1.11.2, )",
           "OpenTelemetry.Instrumentation.AspNetCore": "[1.11.1, )",
           "OpenTelemetry.Instrumentation.Http": "[1.11.1, )",
           "RequiemNexus.Application": "[1.0.0, )",
           "RequiemNexus.Data": "[1.0.0, )",
           "RequiemNexus.Domain": "[1.0.0, )",
+          "Sentry.AspNetCore": "[6.1.0, )",
           "Serilog.AspNetCore": "[10.0.0, )",
           "Serilog.Sinks.Console": "[6.1.1, )",
           "Serilog.Sinks.File": "[7.0.0, )"
@@ -462,6 +477,15 @@
           "Npgsql": "10.0.0"
         }
       },
+      "OpenTelemetry.Exporter.OpenTelemetryProtocol": {
+        "type": "CentralTransitive",
+        "requested": "[1.15.0, )",
+        "resolved": "1.15.0",
+        "contentHash": "VH8ANc/js9IRvfYt0Q2UaAxNCOWm+IU+vWrtoH7pfx4oWPVdISUt+9uWfBCFMWZg5WzQip5dhslyDjeyZXXfSQ==",
+        "dependencies": {
+          "OpenTelemetry": "1.15.0"
+        }
+      },
       "OpenTelemetry.Extensions.Hosting": {
         "type": "CentralTransitive",
         "requested": "[1.11.2, )",
@@ -494,6 +518,15 @@
         "requested": "[2026.2.3, )",
         "resolved": "2026.2.3",
         "contentHash": "el20n2otRqY6AXsijlwPcTf12A54vm2KucQZ67k+9N5htrzfsXaBxh+/gU44HhTS4kmRFdYerY6WE47ybHhFYA=="
+      },
+      "Sentry.AspNetCore": {
+        "type": "CentralTransitive",
+        "requested": "[6.1.0, )",
+        "resolved": "6.1.0",
+        "contentHash": "s7xrGaZ2ZrDsi4miBHSWqa1CFIfWDn4+tzl0LGP/7g9mhAE+56iMCbz5+dmywDKEkdUnZrLl3MV290aQVfCU3g==",
+        "dependencies": {
+          "Sentry.Extensions.Logging": "6.1.0"
+        }
       },
       "Serilog.AspNetCore": {
         "type": "CentralTransitive",

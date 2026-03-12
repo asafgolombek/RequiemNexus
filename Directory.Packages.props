@@ -4,7 +4,6 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
-
   <ItemGroup Label="ASP.NET Core / EF Core">
     <PackageVersion Include="AspNet.Security.OAuth.Discord" Version="9.0.0" />
     <PackageVersion Include="Fido2" Version="4.0.0" />
@@ -19,8 +18,10 @@
     <PackageVersion Include="NBomber" Version="6.2.0" />
     <PackageVersion Include="NBomber.Http" Version="6.1.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
     <PackageVersion Include="QuestPDF" Version="2026.2.3" />
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.4" />
+    <PackageVersion Include="Sentry.AspNetCore" Version="6.1.0" />
   </ItemGroup>
   <ItemGroup Label="Serilog">
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />

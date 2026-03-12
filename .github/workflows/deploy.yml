@@ -11,6 +11,10 @@ permissions:
   id-token: write # Required for AWS OIDC via configure-aws-credentials
   contents: read
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy-staging:
     name: Deploy to Staging
