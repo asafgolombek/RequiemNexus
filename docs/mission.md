@@ -18,8 +18,8 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 2 | Validation & Automation (The Ascendant) | ✅ Complete |
 | 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
 | 4 | The Storyteller & The Danse Macabre | ✅ Complete |
-| 5 | Automated Deployments & Observability | ✅ Complete |
-| 6 | CI/CD Hardening & Supply Chain | 🔄 Active |
+| 5 | Automated Deployments & Observability | 🔄 Active |
+| 6 | CI/CD Hardening & Supply Chain | ⬜ Planned |
 | 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
 | 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
 | 9 | End-to-End Testing & Accessibility | ⬜ Planned |
@@ -348,27 +348,27 @@ If a bug cannot be observed, it cannot be fixed.
 ## 📅 Phase 5: Automated Deployments & Observability
 
 - [ ] Automated Versioning & Git Tagging
-- [ ] GitHub Environments (Staging auto-deploy, Production approvals)
-- [ ] GitHub Actions → AWS via OIDC (no long-lived AWS keys)
-- [ ] Infrastructure as Code (IaC) — **AWS CDK** (TypeScript or C#) is the canonical path
-- [ ] PR Infrastructure Preview (CDK synth + diff posted to PR)
-- [ ] Secrets & environment variable management (AWS Secrets Manager)
-- [ ] Expose `/health` and `/ready` endpoints
-- [ ] Containerize application and push to Container Registry
-- [ ] Configure AWS Environments (Staging, Production)
-- [ ] Application Configurations (.NET Environments & appsettings)
+- [x] GitHub Environments (Staging auto-deploy, Production approvals)
+- [x] GitHub Actions → AWS via OIDC (no long-lived AWS keys)
+- [/] Infrastructure as Code (IaC) — **AWS CDK** (C# — Stacks stubbed/initial)
+- [x] PR Infrastructure Preview (CDK synth + diff posted to PR)
+- [x] Secrets & environment variable management (AWS Secrets Manager)
+- [x] Expose `/health` and `/ready` endpoints
+- [x] Containerize application and push to Container Registry
+- [/] Configure AWS Environments (Staging, Production — Workflows ready)
+- [x] Application Configurations (.NET Environments & appsettings)
 - [ ] Define migration deployment strategy
 - [ ] Enforce deploy concurrency (no overlapping deployments per environment)
 - [ ] Automated deployments to staging and production
 - [ ] Post-deploy smoke test
 - [ ] Define and test rollback strategy (ECS task revision rollback or blue/green)
 - [ ] Release automation (Conventional Commits → changelog + version + git tag)
-- [ ] **Observability Stack** — configure OpenTelemetry collector with a live dashboard (Grafana + CloudWatch or equivalent); traces, metrics, and logs must be queryable in one place
+- [/] **Observability Stack** — OpenTelemetry instrumentation added; collector/dashboard TBD
 - [ ] **Error Tracking** — Sentry or Raygun integration for real-time exception alerts
-- [ ] **Database Backup Strategy** — automated PostgreSQL snapshots (RDS), point-in-time recovery verified; meets 24-hour data recovery SLA
-- [ ] **CDN / Static Asset Strategy** — Blazor WASM assets served via CloudFront or equivalent; cache-busting on deploy
-- [ ] **Cost Alerting** — AWS budget alarms to catch runaway ECS tasks or unexpected traffic spikes
-- [ ] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded; see [Architecture.md](./Architecture.md#-performance-architecture) for targets
+- [ ] **Database Backup Strategy** — automated PostgreSQL snapshots (RDS)
+- [ ] **CDN / Static Asset Strategy** — Blazor WASM assets served via CloudFront or equivalent
+- [ ] **Cost Alerting** — AWS budget alarms
+- [ ] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded
 
 ### Phase 5 Implementation Notes (AWS + CDK)
 
