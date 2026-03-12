@@ -21,12 +21,20 @@ public class NetworkStack : Stack
                 new SubnetConfiguration
                 {
                     Name = "Public",
-                    SubnetType = SubnetType.PUBLIC
+                    SubnetType = SubnetType.PUBLIC,
+                    CidrMask = 24
+                },
+                new SubnetConfiguration
+                {
+                    Name = "Private",
+                    SubnetType = SubnetType.PRIVATE_WITH_EGRESS, // Fargate tasks — routed through NAT Gateway
+                    CidrMask = 24
                 },
                 new SubnetConfiguration
                 {
                     Name = "Isolated",
-                    SubnetType = SubnetType.PRIVATE_ISOLATED
+                    SubnetType = SubnetType.PRIVATE_ISOLATED, // RDS and ElastiCache — no internet access
+                    CidrMask = 28
                 }
             }
         });
