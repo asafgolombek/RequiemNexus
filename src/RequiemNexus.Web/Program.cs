@@ -15,12 +15,16 @@ bool isMigrateOnly = args.Contains("--migrate-only");
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseSentry(o =>
+var sentryDsn = builder.Configuration["Sentry:Dsn"];
+if (!string.IsNullOrEmpty(sentryDsn))
 {
-    o.Dsn = builder.Configuration["Sentry:Dsn"];
-    o.Debug = builder.Environment.IsDevelopment();
-    o.TracesSampleRate = 1.0;
-});
+    builder.WebHost.UseSentry(o =>
+    {
+        o.Dsn = sentryDsn;
+        o.Debug = builder.Environment.IsDevelopment();
+        o.TracesSampleRate = 1.0;
+    });
+}
 
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration)
