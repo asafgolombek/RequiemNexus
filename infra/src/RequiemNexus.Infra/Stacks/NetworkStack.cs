@@ -14,6 +14,7 @@ public class NetworkStack : Stack
         // Explicitly set maxAZs to 2 for high availability without excessive cost
         Vpc = new Vpc(this, "RequiemNexusVpc", new VpcProps
         {
+            IpAddresses = IpAddresses.Cidr("10.1.0.0/16"),
             MaxAzs = 2,
             NatGateways = 1, // Enable 1 NAT Gateway for private subnet internet access (image pulls, etc.)
             SubnetConfiguration = new[]
