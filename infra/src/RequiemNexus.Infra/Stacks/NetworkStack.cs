@@ -8,7 +8,7 @@ public class NetworkStack : Stack
 {
     public IVpc Vpc { get; }
 
-    public NetworkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
+    public NetworkStack(Construct scope, string id, IStackProps? props = null) : base(scope, id, props)
     {
         // 1. Create the VPC for the environment
         // Explicitly set maxAZs to 2 for high availability without excessive cost

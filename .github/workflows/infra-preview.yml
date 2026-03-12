@@ -43,7 +43,7 @@ jobs:
           cdk diff 2>&1 | tee cdk_diff.txt
           
       - name: Comment on PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
