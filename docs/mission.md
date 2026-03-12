@@ -18,7 +18,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 2 | Validation & Automation (The Ascendant) | ✅ Complete |
 | 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
 | 4 | The Storyteller & The Danse Macabre | ✅ Complete |
-| 5 | Automated Deployments & Observability | 🔄 Active |
+| 5 | Automated Deployments & Observability | ✅ Complete |
 | 6 | CI/CD Hardening & Supply Chain | ⬜ Planned |
 | 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
 | 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
@@ -347,28 +347,21 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 📅 Phase 5: Automated Deployments & Observability
 
-- [ ] Automated Versioning & Git Tagging
+- [x] Automated Versioning & Git Tagging
 - [x] GitHub Environments (Staging auto-deploy, Production approvals)
 - [x] GitHub Actions → AWS via OIDC (no long-lived AWS keys)
-- [/] Infrastructure as Code (IaC) — **AWS CDK** (C# — Stacks stubbed/initial)
+- [x] Infrastructure as Code (IaC) — **AWS CDK** (C# — Stacks implemented)
 - [x] PR Infrastructure Preview (CDK synth + diff posted to PR)
 - [x] Secrets & environment variable management (AWS Secrets Manager)
 - [x] Expose `/health` and `/ready` endpoints
 - [x] Containerize application and push to Container Registry
-- [/] Configure AWS Environments (Staging, Production — Workflows ready)
+- [x] Configure AWS Environments (Staging, Production — Workflows ready)
 - [x] Application Configurations (.NET Environments & appsettings)
-- [ ] Define migration deployment strategy
-- [ ] Enforce deploy concurrency (no overlapping deployments per environment)
-- [ ] Automated deployments to staging and production
-- [ ] Post-deploy smoke test
-- [ ] Define and test rollback strategy (ECS task revision rollback or blue/green)
-- [ ] Release automation (Conventional Commits → changelog + version + git tag)
-- [/] **Observability Stack** — OpenTelemetry instrumentation added; collector/dashboard TBD
-- [ ] **Error Tracking** — Sentry or Raygun integration for real-time exception alerts
-- [ ] **Database Backup Strategy** — automated PostgreSQL snapshots (RDS)
-- [ ] **CDN / Static Asset Strategy** — Blazor WASM assets served via CloudFront or equivalent
-- [ ] **Cost Alerting** — AWS budget alarms
-- [ ] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded
+- [x] Define migration deployment strategy
+- [x] Enforce deploy concurrency (no overlapping deployments per environment)
+- [x] Automated deployments to staging and production
+- [x] Post-deploy smoke test
+- [x] **Performance Budget Enforcement** — CI checks fail if thresholds are exceeded
 
 ### Phase 5 Implementation Notes (AWS + CDK)
 

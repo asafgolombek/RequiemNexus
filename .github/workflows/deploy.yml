@@ -44,8 +44,12 @@ jobs:
 
       - name: CDK Deploy (Staging)
         run: |
-          cd infra
-          cdk deploy --all --require-approval never
+            cd infra
+            cdk deploy --all --require-approval never
+
+      - name: Smoke Test (Staging)
+        shell: pwsh
+        run: ./scripts/smoke-test.ps1 -TargetUrl ${{ secrets.STAGING_URL }}
 
   deploy-production:
     name: Deploy to Production
