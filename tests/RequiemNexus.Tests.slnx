@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="../src/RequiemNexus.Application/RequiemNexus.Application.csproj" />
+  <Project Path="../src/RequiemNexus.Data/RequiemNexus.Data.csproj" />
+  <Project Path="../src/RequiemNexus.Domain/RequiemNexus.Domain.csproj" />
+  <Project Path="../src/RequiemNexus.Web/RequiemNexus.Web.csproj" />
+  <Project Path="RequiemNexus.Domain.Tests/RequiemNexus.Domain.Tests.csproj" />
+  <Project Path="RequiemNexus.Data.Tests/RequiemNexus.Data.Tests.csproj" />
+  <Project Path="RequiemNexus.PerformanceTests/RequiemNexus.PerformanceTests.csproj" />
+</Solution>

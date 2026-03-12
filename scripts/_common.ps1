@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 $RootDir     = Split-Path -Parent -Path $PSScriptRoot
-$SlnPath     = Join-Path $RootDir "src\RequiemNexus.slnx"
+$SlnPath     = Join-Path $RootDir "tests\RequiemNexus.Tests.slnx"
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'WebProjPath',
     Justification = 'Defined here for dot-sourcing scripts (e.g. build-debug.ps1) — cross-file usage is invisible to PSScriptAnalyzer.')]
 $WebProjPath = Join-Path $RootDir "src\RequiemNexus.Web\RequiemNexus.Web.csproj"

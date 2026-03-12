@@ -1,0 +1,32 @@
+# Build artifacts
+**/bin/
+**/obj/
+
+# EF Core migration SNAPSHOT files only — auto-generated, 72-76KB each, ~1.4MB total
+# The readable migration files (*.cs without .Designer) are kept for schema history
+src/RequiemNexus.Data/Migrations/*.Designer.cs
+
+# SQLite binary database files
+src/RequiemNexus.Web/app.db
+src/RequiemNexus.Web/app.db-shm
+src/RequiemNexus.Web/app.db-wal
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Application runtime logs
+src/RequiemNexus.Web/logs/
+
+# Vendor frontend assets — Bootstrap, minified JS/CSS
+src/RequiemNexus.Web/wwwroot/lib/
+
+# NuGet lock files
+**/packages.lock.json
+
+# CDK synthesized output — generated CloudFormation, not source
+infra/cdk.out/
+
+**/node_modules/
+.DS_Store
+Thumbs.db
+*.user

@@ -4,6 +4,7 @@ WORKDIR /src
 
 # Copy solution and project files to restore
 COPY ["Directory.Packages.props", "."]
+COPY [".editorconfig", "."]
 COPY ["src/RequiemNexus.slnx", "src/"]
 COPY ["src/RequiemNexus.Web/RequiemNexus.Web.csproj", "src/RequiemNexus.Web/"]
 COPY ["src/RequiemNexus.Application/RequiemNexus.Application.csproj", "src/RequiemNexus.Application/"]

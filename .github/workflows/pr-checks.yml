@@ -29,15 +29,15 @@ jobs:
 
       - name: Restore & Check Formatting
         run: |
-          dotnet restore src/RequiemNexus.slnx
-          dotnet format src/RequiemNexus.slnx --verify-no-changes
+          dotnet restore tests/RequiemNexus.Tests.slnx
+          dotnet format tests/RequiemNexus.Tests.slnx --verify-no-changes
 
       - name: Build (Debug)
-        run: dotnet build src/RequiemNexus.slnx --no-restore --configuration Debug
+        run: dotnet build tests/RequiemNexus.Tests.slnx --no-restore --configuration Debug
 
       - name: Run Tests with Coverage
         run: >
-          dotnet test src/RequiemNexus.slnx
+          dotnet test tests/RequiemNexus.Tests.slnx
           --no-build
           --configuration Debug
           --collect:"XPlat Code Coverage"
@@ -70,10 +70,10 @@ jobs:
         run: dotnet tool install --global dotnet-ef
 
       - name: Restore dependencies
-        run: dotnet restore src/RequiemNexus.slnx
+        run: dotnet restore tests/RequiemNexus.Tests.slnx
 
       - name: Build (Diagnostic)
-        run: dotnet build src/RequiemNexus.slnx --configuration Debug --verbosity diagnostic
+        run: dotnet build tests/RequiemNexus.Tests.slnx --configuration Debug --verbosity diagnostic
 
       - name: Migration Dry-Run
         run: |
@@ -96,12 +96,12 @@ jobs:
           cache-dependency-path: '**/packages.lock.json'
 
       - name: Restore dependencies
-        run: dotnet restore src/RequiemNexus.slnx
+        run: dotnet restore tests/RequiemNexus.Tests.slnx
 
       - name: NuGet Audit
 
         run: |
-          OUTPUT=$(dotnet list src/RequiemNexus.slnx package --vulnerable --include-transitive 2>&1)
+          OUTPUT=$(dotnet list tests/RequiemNexus.Tests.slnx package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
             echo "❌ Vulnerable packages detected."

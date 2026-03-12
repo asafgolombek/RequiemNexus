@@ -1,0 +1,200 @@
+# Requiem Nexus — Cursor AI Rules
+
+This is a .NET 10 / C# 14 / Blazor Server modular monolith for Vampire: The Requiem 2e character
+management. It is also an intentional learning artifact — the **Grimoire**. Every architectural
+decision is teachable. When suggesting code, explain *why* the pattern exists, not just *what* it does.
+
+## Primary Reference Files
+- `agents.md` — agent startup checklist, architectural laws, forbidden patterns, security rules
+- `docs/Architecture.md` — layer diagram, request flow, performance budgets
+- `docs/mission.md` — current phase (Phase 6 active), completed phases, non-goals
+
+## Stack
+.NET 10 · C# 14 · Blazor Server · EF Core (SQLite dev / PostgreSQL prod) · Redis · SignalR ·
+.NET Aspire · AWS CDK (.NET) · StyleCop.Analyzers · Serilog + OpenTelemetry
+
+---
+
+## Layer Dependency Law (Sacred — Never Violate)
+
+```
+Web → Application → Domain ← Data (Infrastructure)
+```
+
+- `Domain` has ZERO dependencies on `Data` or `Web`
+- `Data` serves Domain — never drives it
+- `Web` holds no business rules and makes no authorization decisions
+- Never inject `ApplicationDbContext` into a Web component or Razor page directly
+
+---
+
+## The Rule of One (Non-Negotiable)
+
+- One type per file — every class, interface, record, and enum has its own `.cs` file
+- File name must exactly match the type name
+- Never add a second type to an existing file — create a new file
+- Violations cause CI pipeline failure (`/warnaserror`)
+
+---
+
+## C# 14 Style (Use These Patterns)
+
+```csharp
+// PRIMARY CONSTRUCTORS — always prefer over field injection boilerplate
+public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignService> logger)
+    : ICampaignService
+{
+    private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly ILogger<CampaignService> _logger = logger;
+}
+
+// COLLECTION EXPRESSIONS — use [] syntax over new List<T>()
+List<int> ids = [1, 2, 3];
+string[] names = ["Alice", "Bob"];
+
+// PRIVATE FIELDS — underscore + camelCase (StyleCop enforced)
+private readonly ILogger<T> _logger;
+private int _count;
+
+// XML DOC COMMENTS — required on all public members in Domain and Application
+/// <summary>Returns the archived characters owned by the given user.</summary>
+public async Task<List<Character>> GetArchivedCharactersAsync(string userId)
+```
+
+---
+
+## Error Handling Law
+
+- Domain methods return `Result<T>` — NEVER throw for expected business failures
+- Application layer translates `Result.Failure` → HTTP status codes or UI messages
+- Infrastructure catches external failures, wraps them in domain-friendly types
+- Every `catch` must log or rethrow — silent swallowing is a defect
+
+---
+
+## The Masquerade — Security Protocol (All 4 Steps Required)
+
+Every data-mutating operation must follow this exact sequence:
+
+```csharp
+// Step 1 — Extract authenticated user ID from security context
+var userId = _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+// Step 2 — Load the target entity
+var entity = await _dbContext.Things.FindAsync(id)
+    ?? throw new InvalidOperationException($"Entity {id} not found.");
+
+// Step 3 — VERIFY OWNERSHIP (never skip — this is the security guarantee)
+if (entity.OwnerId != userId)
+    throw new UnauthorizedAccessException("Access denied.");
+
+// Step 4 — Proceed
+entity.DoMutation();
+await _dbContext.SaveChangesAsync();
+```
+
+Skipping Step 3 is a security defect. Use `AuthorizationHelper.RequireCharacterAccessAsync()` or
+`RequireStorytellerAsync()` for the standard patterns already in the codebase.
+(Canonical implementation: `src/RequiemNexus.Application/Services/AuthorizationHelper.cs`)
+
+---
+
+## Forbidden Patterns
+
+- No shared `Common` or `Utils` projects — shared logic belongs in Domain
+- No cross-domain object references — use explicit contracts
+- No `SELECT *` equivalents — always project only needed columns
+- No N+1 queries — use `.Include()` or explicit projections
+- No `#if DEBUG` — environment behavior is driven by configuration
+- No direct database access from Domain layer
+- No business logic in Web layer
+
+---
+
+## EF Core Patterns
+
+```csharp
+// Always use AsNoTracking() for read-only queries
+var result = await _dbContext.Characters
+    .Include(c => c.Clan)
+    .Where(c => c.ApplicationUserId == userId && !c.IsArchived)
+    .AsNoTracking()
+    .ToListAsync();
+
+// Project to DTOs — never return raw EF entities from Application layer
+// when only partial data is needed
+```
+
+---
+
+## Observability (Required for New Operations)
+
+Every significant operation must emit a structured Serilog log entry:
+
+```csharp
+// CORRECT — structured parameters
+_logger.LogInformation("Character {CharacterId} archived by user {UserId}", id, userId);
+
+// WRONG — string interpolation loses structure
+_logger.LogInformation($"Character {id} archived by {userId}");
+```
+
+---
+
+## Testing Requirements
+
+| New Code | Required Test |
+|----------|---------------|
+| Domain logic | Unit test in `RequiemNexus.Domain.Tests` |
+| Application service | Integration test in `RequiemNexus.Data.Tests` |
+| Authorization flow | Integration test in `RequiemNexus.Data.Tests` |
+
+---
+
+## StyleCop Compliance
+
+- `dotnet format --verify-no-changes` runs in CI — code must pass
+- XML doc comments required on all `public` members in Domain and Application
+- Run `dotnet format` before every commit
+- System usings sorted first, then alphabetical within groups
+
+---
+
+## Domain Glossary (Use These Terms)
+
+| Term | Meaning |
+|------|---------|
+| Chronicle | A campaign or ongoing story (`Campaign` entity) |
+| Clan | A vampire bloodline (`Clan` entity) |
+| Discipline | A supernatural power (`Discipline` / `DisciplinePower` entities) |
+| Merit | A character advantage (`Merit` entity) |
+| Beats | XP increments (`Beats` on `Character`) |
+| Covenant | Political faction — a character attribute, not an entity |
+| Touchstone | Mortal anchor to humanity — a character field |
+
+---
+
+## Grimoire Learning Mode
+
+When suggesting code or explaining a decision, connect it to the architectural principle it
+demonstrates. Examples:
+
+- "This uses a primary constructor (C# 14) rather than the old `[Inject]` pattern to make
+  dependencies explicit at construction time — that's the Antigravity principle 'Traceability
+  beats cleverness.'"
+- "We return `Result<T>` here instead of throwing because Domain methods must never throw for
+  expected failures — the Application layer decides what HTTP status code that maps to."
+- "This query uses `AsNoTracking()` because we're only reading for display — tracking adds
+  EF Core overhead with no benefit when we don't intend to update the entity."
+
+---
+
+## Current Phase & Scope
+
+**Phase 6 — CI/CD Hardening & Supply Chain** is active. See `docs/mission.md` for full status.
+
+Do NOT scaffold the following unless explicitly instructed:
+- SignalR real-time hubs (Phase 7)
+- PWA / offline features (Phase 8)
+- Internationalization / i18n (Phase 9)
+- E2E tests with Playwright (Phase 10)

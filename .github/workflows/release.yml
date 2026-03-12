@@ -30,12 +30,12 @@ jobs:
 
       - name: Restore & Build (Release)
         run: |
-          dotnet restore src/RequiemNexus.slnx
-          dotnet build src/RequiemNexus.slnx --configuration Release --no-restore
+          dotnet restore tests/RequiemNexus.Tests.slnx
+          dotnet build tests/RequiemNexus.Tests.slnx --configuration Release --no-restore
 
       # 🧪 Last Rite: Ensure tests pass before the version is immortalized
       - name: Run Critical Tests
-        run: dotnet test src/RequiemNexus.slnx --configuration Release --no-build
+        run: dotnet test tests/RequiemNexus.Tests.slnx --configuration Release --no-build
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2 # Updated to v2

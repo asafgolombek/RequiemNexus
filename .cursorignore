@@ -1,0 +1,35 @@
+# Build artifacts — largest context polluters (~400MB)
+**/bin/
+**/obj/
+
+# EF Core migrations — auto-generated, 67 files, ~1.8MB
+# Schema is fully readable via ApplicationDbContext.cs and Data/Models/
+src/RequiemNexus.Data/Migrations/
+
+# SQLite local database and WAL files — binary, not indexable
+src/RequiemNexus.Web/app.db
+src/RequiemNexus.Web/app.db-shm
+src/RequiemNexus.Web/app.db-wal
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Application runtime logs — rolling log files, no architectural signal
+src/RequiemNexus.Web/logs/
+
+# Vendor JS/CSS — Bootstrap, minified assets (~8.4MB)
+src/RequiemNexus.Web/wwwroot/lib/
+
+# NuGet lock files — reproducible-build tooling, never hand-edited
+**/packages.lock.json
+
+# AWS CDK synthesized output — generated CloudFormation JSON, not source
+infra/cdk.out/
+
+# Node modules — if ever introduced
+**/node_modules/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+*.user

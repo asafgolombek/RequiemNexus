@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
     Run all unit and integration tests locally with optional code coverage.
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 # --- Paths ---
 $ScriptRoot  = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $RootDir     = Split-Path -Parent -Path $ScriptRoot
-$SlnPath     = Join-Path $RootDir "src\RequiemNexus.slnx"
+$SlnPath     = Join-Path $RootDir "tests\RequiemNexus.Tests.slnx"
 $CoverageDir = Join-Path $RootDir "coverage"
 
 # --- Project Configuration ---
