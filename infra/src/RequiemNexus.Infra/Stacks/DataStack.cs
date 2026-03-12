@@ -14,7 +14,7 @@ public class DataStackProps : StackProps
 
 public class DataStack : Stack
 {
-    public IDatabaseInstance PostgresDatabase { get; }
+    public DatabaseInstance PostgresDatabase { get; }
     public CfnReplicationGroup RedisCluster { get; }
     public ISecurityGroup DbSecurityGroup { get; }
     public ISecurityGroup RedisSecurityGroup { get; }

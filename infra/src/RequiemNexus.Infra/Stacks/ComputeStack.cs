@@ -3,8 +3,8 @@ using Amazon.CDK;
 using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.ECS;
 using Amazon.CDK.AWS.ECS.Patterns;
-using Amazon.CDK.AWS.RDS;
 using Amazon.CDK.AWS.ElastiCache;
+using Amazon.CDK.AWS.RDS;
 using Constructs;
 
 namespace RequiemNexus.Infra.Stacks;
@@ -12,7 +12,7 @@ namespace RequiemNexus.Infra.Stacks;
 public class ComputeStackProps : StackProps
 {
     public required IVpc Vpc { get; init; }
-    public required IDatabaseInstance PostgresDatabase { get; init; }
+    public required DatabaseInstance PostgresDatabase { get; init; }
     public required ISecurityGroup DbSecurityGroup { get; init; }
     public required CfnReplicationGroup RedisCluster { get; init; }
     public required ISecurityGroup RedisSecurityGroup { get; init; }
