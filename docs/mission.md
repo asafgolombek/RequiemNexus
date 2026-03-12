@@ -365,6 +365,9 @@ If a bug cannot be observed, it cannot be fixed.
 
 ### Phase 5 Implementation Notes (AWS + CDK)
 
+> [!IMPORTANT]
+> **Bootstrapping**: Before the first deployment to any AWS account/region, the environment must be bootstrapped. Run `cdk bootstrap aws://<ACCOUNT_ID>/<REGION>` from a local terminal with appropriate AWS credentials. This creates the necessary staging resources (S3 bucket, IAM roles) used by the CDK deployment process.
+
 These notes are Phase 5 scope guidance only — do not scaffold infrastructure before Phase 5 begins.
 
 #### Database Choice
