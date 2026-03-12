@@ -341,7 +341,7 @@ If a bug cannot be observed, it cannot be fixed.
 - Conditions apply, track mechanically, and resolve for Beats without manual bookkeeping
 - The city's political structure and feeding territories are viewable and editable
 - A player can retire a character, save a dice macro, and write session notes without developer intervention
-- All features have full unit and integration test coverage
+- CI coverage gate passes for all new Phase 4 code (no raw "100% coverage" claim — gate enforced by threshold in GitHub Actions)
 
 ---
 
@@ -510,7 +510,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 ## 📅 Phase 10: The Global Embrace
 
 - [ ] **Localization & i18n** — full language support for UI strings; priority languages: French, German, Spanish (largest TTRPG markets after English)
-- [ ] **Game Term Localization Strategy** — define canonical policy: sacred terms (Discipline, Covenant, Touchstone, Coterie) are documented as translate-or-preserve per language; no silent drift
+- [ ] - **Game Term Localization Strategy** — define canonical policy before any i18n work begins. The following terms are **sacred** and must not be silently translated, anglicized, or altered without an      explicit, documented decision per language: `Discipline`, `Covenant`, `Touchstone`, `Coterie`, `Clan`, `Beat`, `Predator Type`, `Humanity`, `Vitae`, `Blood Potency`. Each language's treatment of these terms must be recorded in a localization policy document before strings are extracted. No silent drift.
 - [ ] **SEO & Rich Social Sharing** — Open Graph tags, structured data for chronicle/character sharing
 - [ ] **Discord & Webhook Integrations** — post roll results, Beat awards, and session summaries to Discord channels
 - [ ] **Public API** — versioned, documented REST API for community tool builders; includes API key registration, rate limiting, and quota enforcement

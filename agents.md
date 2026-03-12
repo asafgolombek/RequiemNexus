@@ -14,7 +14,7 @@ Complete these steps **in order** before touching any file:
 4. Run `dotnet build` — confirm the baseline is healthy.
 5. Run `dotnet format --verify-no-changes` — confirm formatting is clean.
 
-If you are blocked or requirements are ambiguous, **stop and surface the question explicitly. Do not guess.**
+If you are blocked or requirements are ambiguous, **stop and surface the question explicitly. Do not guess. Do not proceed with a workaround.**
 
 ---
 
@@ -57,7 +57,7 @@ A new developer or agent must be able to run the project in **under 10 minutes**
 
 ## Architectural Laws (Sacred Covenants)
 
-These are **non-negotiable**. Do not violate them.
+These are **non-negotiable**. If a task would require violating any of these laws, **STOP. Do not proceed with a workaround. Surface the conflict explicitly.**
 
 ### Layer Dependency Direction
 
@@ -86,7 +86,7 @@ Web (Presentation) → Application → Domain → Data (Infrastructure)
 
 ### Security — The Masquerade
 
-Every data-mutating operation must:
+Every data-mutating operation must follow this exact sequence:
 
 1. Extract the authenticated user's ID from the security context.
 2. Load the target entity.
@@ -102,6 +102,28 @@ Skipping step 3 is a **security defect**, not a shortcut.
 - Use **C# 14 features**: primary constructors, collection expressions, `var` where type is obvious.
 - **StyleCop is enforced in CI** — code must pass `dotnet format --verify-no-changes`.
 - **XML doc comments** on all `public` members in `Domain` and `Application` services.
+
+---
+
+## File & Type Rules (Rule of One)
+
+- **One type per file** — every `class`, `interface`, `record`, and `enum` lives in its own `.cs` file.
+- **File name must exactly match the type name.**
+- When creating a new type, **always create a new file**. Never add a type to an existing file.
+- There are no exceptions. Violations fail the CI pipeline (`/warnaserror`).
+
+---
+
+## Agent Scope Boundaries
+
+Agents must stay within the explicit scope of the task. Do not deviate without surfacing it first.
+
+- **Do not refactor working code** unless explicitly asked.
+- **Do not rename files or types** without explicit instruction — this affects the entire dependency graph.
+- **Do not add NuGet packages** without explicit approval — every dependency is a liability.
+- **Do not delete files** without explicit instruction.
+- **Do not modify migrations** that have already been applied — create a corrective migration instead.
+- **Do not open a PR** without running the full Inquisition (`.\scripts\test-local.ps1`) locally first.
 
 ---
 
@@ -158,12 +180,14 @@ Every new domain event or significant operation must:
 
 ## What Agents Must Always Do
 
-- Verify ownership before any data-mutating operation.
+- Verify ownership before any data-mutating operation (The Masquerade — all 4 steps).
 - Emit a structured Serilog log entry for new domain events or significant operations.
 - Add a unit test in `RequiemNexus.Domain.Tests` for any new domain logic.
 - Run `dotnet format` before committing.
 - Add XML doc comments to all `public` members in `Domain` and `Application`.
 - Confirm `dotnet build` is green before declaring a task done.
+- Create a new `.cs` file for every new type — never co-locate types.
+- Stop and surface any ambiguity or architectural conflict before proceeding.
 
 ---
 
@@ -179,6 +203,23 @@ Every new domain event or significant operation must:
 - Write a down-migration and rely on it for rollback.
 - Bypass StyleCop or `.editorconfig` rules.
 - Swallow exceptions silently.
+- Refactor, rename, or delete anything outside the explicit scope of the task.
+- Add a NuGet dependency without explicit approval.
+- Declare a task done without a green `dotnet build`.
+
+---
+
+## Stop Conditions
+
+Stop immediately and surface the issue if:
+
+- The task requires violating any Architectural Law.
+- Requirements are ambiguous and proceeding would require guessing.
+- The task scope is unclear (e.g., it is not obvious which layer owns the change).
+- A test is failing and the fix is non-obvious.
+- Adding the feature would require a new NuGet package.
+
+**Do not work around blockers silently. Surface them.**
 
 ---
 
@@ -216,6 +257,8 @@ When making any change, ask: *does this make the system easier or harder to unde
 | **Beats** | Experience point increments; maps to `Beats` on `Character` |
 | **The Masquerade** | (1) The vampire secret from mortals; (2) the security/auth phase of this project |
 | **Grimoire** | The project's role as a living learning artifact — every decision is teachable |
+| **The Haven** | The local development environment |
+| **The Inquisition** | The full local test suite (`.\scripts\test-local.ps1`) |
 
 ---
 

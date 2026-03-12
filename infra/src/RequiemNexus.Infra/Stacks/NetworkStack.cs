@@ -15,7 +15,7 @@ public class NetworkStack : Stack
         Vpc = new Vpc(this, "RequiemNexusVpc", new VpcProps
         {
             MaxAzs = 2,
-            NatGateways = 0, // Set to 1 later if private subnets need internet access.
+            NatGateways = 1, // Enable 1 NAT Gateway for private subnet internet access (image pulls, etc.)
             SubnetConfiguration = new[]
             {
                 new SubnetConfiguration

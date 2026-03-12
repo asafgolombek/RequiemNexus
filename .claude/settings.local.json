@@ -1,8 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet ef migrations add AddProfileFields --startup-project \"../RequiemNexus.Web/RequiemNexus.Web.csproj\")",
-      "Bash(dotnet ef migrations add AddNotificationPreferencesAndConsentLog --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web)"
+      "Bash(dotnet build**)",
+      "Bash(dotnet run**)",
+      "Bash(dotnet test**)",
+      "Bash(dotnet restore**)",
+      "Bash(dotnet ef**)",
+      "Bash(git status)",
+      "Bash(git diff**)",
+      "Bash(git log**)",
+      "Bash(git add**)",
+      "Bash(git commit**)"
+    ],
+    "deny": [
+      "Bash(git push**)",
+      "Bash(dotnet ef database drop**)",
+      "Bash(rm -rf**)"
     ]
   }
 }

@@ -33,7 +33,10 @@ public sealed class Program
         var computeConfig = new ComputeStack(app, "RequiemNexus-Compute-Stack", new ComputeStackProps
         {
             Description = "Requiem Nexus Compute Stack (ECS, ALB)",
-            Vpc = networkConfig.Vpc
+            Vpc = networkConfig.Vpc,
+            PostgresDatabase = dataConfig.PostgresDatabase,
+            RedisCluster = dataConfig.RedisCluster,
+            RedisSecurityGroup = dataConfig.RedisSecurityGroup
         });
 
         var staticAssetConfig = new StaticAssetStack(app, $"RequiemNexus-Static-{envName}", new StackProps

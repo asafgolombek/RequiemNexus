@@ -16,10 +16,12 @@ public class DataStack : Stack
 {
     public IDatabaseInstance PostgresDatabase { get; }
     public CfnReplicationGroup RedisCluster { get; }
+    public ISecurityGroup DbSecurityGroup { get; }
+    public ISecurityGroup RedisSecurityGroup { get; }
 
     public DataStack(Construct scope, string id, DataStackProps props) : base(scope, id, props)
     {
-        var dbSecurityGroup = new SecurityGroup(this, "DbSecurityGroup", new SecurityGroupProps
+        DbSecurityGroup = new SecurityGroup(this, "DbSecurityGroup", new SecurityGroupProps
         {
             Vpc = props.Vpc,
             Description = "Allow access to PostgreSQL",
@@ -32,7 +34,7 @@ public class DataStack : Stack
             InstanceType = Amazon.CDK.AWS.EC2.InstanceType.Of(InstanceClass.BURSTABLE4_GRAVITON, InstanceSize.MICRO),
             Vpc = props.Vpc,
             VpcSubnets = new SubnetSelection { SubnetType = SubnetType.PRIVATE_ISOLATED },
-            SecurityGroups = new[] { dbSecurityGroup },
+            SecurityGroups = new[] { DbSecurityGroup },
             DatabaseName = "requiemnexus",
             MultiAz = false,
             AllocatedStorage = 20,
@@ -42,7 +44,7 @@ public class DataStack : Stack
             DeleteAutomatedBackups = false
         });
 
-        var redisSecurityGroup = new SecurityGroup(this, "RedisSecurityGroup", new SecurityGroupProps
+        RedisSecurityGroup = new SecurityGroup(this, "RedisSecurityGroup", new SecurityGroupProps
         {
             Vpc = props.Vpc,
             Description = "Allow access to Redis",
@@ -64,7 +66,7 @@ public class DataStack : Stack
             AutomaticFailoverEnabled = true,
             MultiAzEnabled = true,
             CacheSubnetGroupName = redisSubnetGroup.Ref,
-            SecurityGroupIds = new[] { redisSecurityGroup.SecurityGroupId }
+            SecurityGroupIds = new[] { RedisSecurityGroup.SecurityGroupId }
         });
     }
 }
