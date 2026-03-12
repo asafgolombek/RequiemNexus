@@ -82,6 +82,12 @@ public class Character
 
     // --- Derived Stats ---
     [NotMapped]
+    public int CalculatedMaxHealth => Size + GetAttributeRating(AttributeId.Stamina);
+
+    [NotMapped]
+    public int CalculatedMaxWillpower => GetAttributeRating(AttributeId.Resolve) + GetAttributeRating(AttributeId.Composure);
+
+    [NotMapped]
     public int Speed => GetAttributeRating(AttributeId.Strength) + GetAttributeRating(AttributeId.Dexterity) + Size;
 
     [NotMapped]

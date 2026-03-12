@@ -29,8 +29,8 @@
 .tracker-box {
     width: 18px;
     height: 18px;
-    border: 1px solid var(--dot-border);
-    background: transparent;
+    border: 1px solid #555555; /* Darker border for visibility */
+    background: rgba(255, 255, 255, 0.05); /* Subtle background so they aren't invisible */
     transition: background-color var(--transition-fast);
     cursor: pointer;
 }

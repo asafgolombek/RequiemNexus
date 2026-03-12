@@ -6,7 +6,7 @@
         <div class="tracker-item">
             <span class="tracker-label">Health</span>
             <div class="tracker-boxes" style="cursor: pointer;">
-                @for(int i = 0; i < Character.MaxHealth; i++)
+                @for(int i = 0; i < Character.CalculatedMaxHealth; i++)
                 {
                     int captureIndex = i;
                     <div class="tracker-box health-box" @onclick="() => ToggleHealth(captureIndex)">
@@ -18,7 +18,7 @@
         <div class="tracker-item">
             <span class="tracker-label">Willpower</span>
             <div class="tracker-boxes" style="cursor: pointer;">
-                @for(int i = 0; i < Character.MaxWillpower; i++)
+                @for(int i = 0; i < Character.CalculatedMaxWillpower; i++)
                 {
                     int captureIndex = i;
                     <div class="tracker-box @(i < Character.CurrentWillpower ? "filled" : "")" @onclick="() => ToggleWillpower(captureIndex)"></div>
@@ -76,9 +76,9 @@
     {
         if (Character.HealthDamage == null) Character.HealthDamage = string.Empty;
         
-        if (Character.HealthDamage.Length < Character.MaxHealth)
+        if (Character.HealthDamage.Length < Character.CalculatedMaxHealth)
         {
-            Character.HealthDamage = Character.HealthDamage.PadRight(Character.MaxHealth, ' ');
+            Character.HealthDamage = Character.HealthDamage.PadRight(Character.CalculatedMaxHealth, ' ');
         }
 
         char currentDamage = Character.HealthDamage[index];
