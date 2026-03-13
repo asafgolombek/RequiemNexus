@@ -58,6 +58,22 @@ jobs:
     name: Validate DB Migrations
     needs: pr-checks
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: requiem_nexus_migration_test
+        ports:
+          - 5432:5432
+        options: >
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-dotnet@v5
@@ -72,16 +88,17 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore tests/RequiemNexus.Tests.slnx
 
-      - name: Build (Diagnostic)
-        run: dotnet build tests/RequiemNexus.Tests.slnx --configuration Debug --verbosity diagnostic
+      - name: Build (Debug)
+        run: dotnet build tests/RequiemNexus.Tests.slnx --no-restore --configuration Debug
 
       - name: Migration Dry-Run
         run: |
           dotnet ef database update \
           --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web \
-          --connection "Data Source=/tmp/migration-test.db" --verbose
+          --verbose
         env:
           ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=requiem_nexus_migration_test;Username=postgres;Password=postgres"
 
   security-scan:
     name: Vulnerability Scan
