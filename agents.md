@@ -159,6 +159,21 @@ Every new domain event or significant operation must:
 
 ---
 
+## GitHub Actions Workflow Rules (Phase 6)
+
+When authoring or modifying `.github/workflows/` files:
+
+- Every workflow must declare an explicit minimal `permissions:` block — never omit it or use `write-all`.
+- Trivy container scans must use `exit-code: '1'`, `severity: 'HIGH,CRITICAL'`, and `ignore-unfixed: true`.
+- Dependabot auto-merge must never approve `major` version bumps — `patch` and `minor` only.
+- SBOM generation uses the `dotnet CycloneDX` global tool targeting the `.slnx` solution file.
+- Image signing uses `cosign sign --yes` (keyless OIDC) — requires `id-token: write` permission.
+- Performance artifacts (`./NBomberData`) are uploaded with `retention-days: 90` for trend tracking.
+- All artifact upload steps use `if: always()` so results are preserved even on failure.
+- Changes to `.github/workflows/`, `infra/`, `src/RequiemNexus.Data/Migrations/`, and `src/RequiemNexus.Application/Services/AuthorizationHelper.cs` require owner review per `.github/CODEOWNERS`.
+
+---
+
 ## Git & Branch Conventions
 
 - **Branch naming:** `feature/{author}/{short-description}`

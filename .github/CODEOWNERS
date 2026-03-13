@@ -1,0 +1,22 @@
+# CODEOWNERS — Requiem Nexus
+#
+# These rules define required reviewers for security/infra-sensitive paths.
+# A PR touching any of these paths will require approval from the listed owner(s)
+# before it can be merged, even if all CI checks pass.
+#
+# Rule order matters: later rules take precedence over earlier ones.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# CI/CD — any change here affects the entire build and deployment pipeline
+/.github/workflows/   @asafgolombek
+/.github/dependabot.yml   @asafgolombek
+/.github/CODEOWNERS   @asafgolombek
+
+# Infrastructure as Code — changes affect live AWS environments
+/infra/   @asafgolombek
+
+# Security-sensitive application layer
+/src/RequiemNexus.Application/Services/AuthorizationHelper.cs   @asafgolombek
+
+# Database migrations — forward-only and irreversible in production
+/src/RequiemNexus.Data/Migrations/   @asafgolombek

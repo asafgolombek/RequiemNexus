@@ -423,16 +423,16 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 ## 📅 Phase 6: CI/CD Hardening & Supply Chain
 
-- [ ] CodeQL scanning (C#) enforced on PRs
-- [ ] Dependabot updates (NuGet + GitHub Actions), with safe auto-merge policy for patch releases
-- [ ] Secret scanning + push protection enabled
-- [ ] Container image vulnerability scanning in CI (fail on high/critical)
-- [ ] SBOM generation for release artifacts (CycloneDX or equivalent)
-- [ ] Image signing + provenance (keyless via GitHub OIDC where possible)
-- [ ] Coverage reporting + minimum thresholds enforced for changed code
-- [ ] Nightly performance regression workflow (budget enforcement trends over time)
-- [ ] Branch protection rules + `CODEOWNERS` for security/infra sensitive paths
-- [ ] Test results + logs uploaded as CI artifacts (TRX, coverage, etc.)
+- [x] CodeQL scanning (C#) enforced on PRs
+- [x] Dependabot updates (NuGet + GitHub Actions), with safe auto-merge policy for patch releases
+- [ ] Secret scanning + push protection enabled _(GitHub repo settings — cannot be automated via workflow)_
+- [x] Container image vulnerability scanning in CI (fail on high/critical)
+- [x] SBOM generation for release artifacts (CycloneDX or equivalent)
+- [x] Image signing + provenance (keyless via GitHub OIDC where possible)
+- [x] Coverage reporting + minimum thresholds enforced for changed code
+- [x] Nightly performance regression workflow (budget enforcement trends over time)
+- [x] Branch protection rules + `CODEOWNERS` for security/infra sensitive paths _(CODEOWNERS created; branch protection rules require GitHub repo settings)_
+- [x] Test results + logs uploaded as CI artifacts (TRX, coverage, etc.)
 
 ### Phase 6 Exit Criteria
 - Required security scans are enabled and required for merges

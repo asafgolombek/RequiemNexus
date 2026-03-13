@@ -1,0 +1,48 @@
+name: Nightly Performance Regression
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  workflow_dispatch:  # Allow manual trigger for validation
+
+concurrency:
+  group: perf-nightly
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  performance-regression:
+    name: Performance Budget Enforcement
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore
+        run: dotnet restore tests/RequiemNexus.PerformanceTests
+
+      - name: Build (Release)
+        run: dotnet build tests/RequiemNexus.PerformanceTests --no-restore --configuration Release
+
+      - name: Run Performance Tests
+        run: dotnet run --project tests/RequiemNexus.PerformanceTests --no-build --configuration Release
+        env:
+          TARGET_URL: ${{ secrets.STAGING_URL }}
+
+      - name: Upload Performance Report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: perf-report-${{ github.run_number }}
+          path: ./NBomberData
+          retention-days: 90

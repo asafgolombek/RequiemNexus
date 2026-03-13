@@ -25,3 +25,7 @@ See `docs/mission.md` for full phase status and scope boundaries.
 | Test patterns          | `tests/RequiemNexus.Domain.Tests/`                                  |
 | CI/CD                  | `.github/workflows/`                                                |
 | Infrastructure (CDK)   | `infra/src/RequiemNexus.Infra/Stacks/`                              |
+| Phase 6 workflows      | `.github/workflows/codeql.yml`, `container-scan.yml`, `dependabot-auto-merge.yml`, `performance-nightly.yml` |
+| Release pipeline       | `.github/workflows/release.yml` (SBOM, Cosign signing, SLSA provenance) |
+| Dependabot config      | `.github/dependabot.yml`                                            |
+| Code owners            | `.github/CODEOWNERS`                                                |
