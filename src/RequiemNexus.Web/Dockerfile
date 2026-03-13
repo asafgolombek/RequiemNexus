@@ -22,7 +22,7 @@ RUN dotnet build "RequiemNexus.Web.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "RequiemNexus.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 8080
 
