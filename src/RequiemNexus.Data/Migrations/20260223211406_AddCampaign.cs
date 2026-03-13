@@ -17,17 +17,16 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<int>(
                 name: ColumnCampaignId,
                 table: TableCharacters,
-                type: "INTEGER",
                 nullable: true);
 
             migrationBuilder.CreateTable(
                 name: TableCampaigns,
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    StoryTellerId = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    StoryTellerId = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

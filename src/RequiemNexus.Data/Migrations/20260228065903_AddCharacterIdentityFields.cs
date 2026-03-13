@@ -14,14 +14,12 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Backstory",
                 table: "Characters",
-                type: "TEXT",
                 nullable: false,
                 defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
                 name: "Concept",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 100,
                 nullable: false,
                 defaultValue: "");
@@ -29,7 +27,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "EyeColor",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 defaultValue: "");
@@ -37,7 +34,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "HairColor",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 defaultValue: "");
@@ -45,7 +41,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Height",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 defaultValue: "");
@@ -53,7 +48,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "TotalExperiencePoints",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
         }

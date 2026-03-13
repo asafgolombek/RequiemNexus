@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -13,13 +13,11 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "AvatarUrl",
                 table: "AspNetUsers",
-                type: "TEXT",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "DisplayName",
                 table: "AspNetUsers",
-                type: "TEXT",
                 nullable: true);
         }
 

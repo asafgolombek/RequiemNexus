@@ -14,7 +14,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Touchstone",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 100,
                 nullable: false,
                 defaultValue: "");

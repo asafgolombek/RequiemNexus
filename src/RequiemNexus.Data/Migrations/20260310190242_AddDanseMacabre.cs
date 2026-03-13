@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -14,17 +14,17 @@ namespace RequiemNexus.Data.Migrations
                 name: "ChronicleNpcs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    PrimaryFactionId = table.Column<int>(type: "INTEGER", nullable: true),
-                    RoleInFaction = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    PublicDescription = table.Column<string>(type: "TEXT", nullable: false),
-                    StorytellerNotes = table.Column<string>(type: "TEXT", nullable: false),
-                    IsAlive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LinkedStatBlockId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CampaignId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    Title = table.Column<string>(maxLength: 200, nullable: true),
+                    PrimaryFactionId = table.Column<int>(nullable: true),
+                    RoleInFaction = table.Column<string>(maxLength: 200, nullable: true),
+                    PublicDescription = table.Column<string>(nullable: false),
+                    StorytellerNotes = table.Column<string>(nullable: false),
+                    IsAlive = table.Column<bool>(nullable: false),
+                    LinkedStatBlockId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -41,16 +41,16 @@ namespace RequiemNexus.Data.Migrations
                 name: "CityFactions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    FactionType = table.Column<int>(type: "INTEGER", nullable: false),
-                    InfluenceRating = table.Column<int>(type: "INTEGER", nullable: false),
-                    PublicDescription = table.Column<string>(type: "TEXT", nullable: false),
-                    StorytellerNotes = table.Column<string>(type: "TEXT", nullable: false),
-                    Agenda = table.Column<string>(type: "TEXT", nullable: false),
-                    LeaderNpcId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CampaignId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    FactionType = table.Column<int>(nullable: false),
+                    InfluenceRating = table.Column<int>(nullable: false),
+                    PublicDescription = table.Column<string>(nullable: false),
+                    StorytellerNotes = table.Column<string>(nullable: false),
+                    Agenda = table.Column<string>(nullable: false),
+                    LeaderNpcId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -73,13 +73,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "FactionRelationships",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: false),
-                    FactionAId = table.Column<int>(type: "INTEGER", nullable: false),
-                    FactionBId = table.Column<int>(type: "INTEGER", nullable: false),
-                    StanceFromA = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: false)
+                    CampaignId = table.Column<int>(nullable: false),
+                    FactionAId = table.Column<int>(nullable: false),
+                    FactionBId = table.Column<int>(nullable: false),
+                    StanceFromA = table.Column<int>(nullable: false),
+                    Notes = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -108,13 +108,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "FeedingTerritories",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    Rating = table.Column<int>(type: "INTEGER", nullable: false),
-                    ControlledByFactionId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CampaignId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    Description = table.Column<string>(nullable: false),
+                    Rating = table.Column<int>(nullable: false),
+                    ControlledByFactionId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {

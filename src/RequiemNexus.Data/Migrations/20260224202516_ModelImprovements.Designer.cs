@@ -24,19 +24,19 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -51,17 +51,17 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -74,17 +74,17 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -96,17 +96,17 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -118,10 +118,10 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("UserId", "RoleId");
 
@@ -133,16 +133,16 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -152,57 +152,57 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<DateOnly?>("Birthday")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -220,26 +220,26 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ApplicationUserId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("StoryTellerId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -254,151 +254,151 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Academics")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("AnimalKen")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ApplicationUserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("Athletics")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("BloodPotency")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Brawl")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int?>("CampaignId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int?>("ClanId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Composure")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Computer")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Crafts")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("CurrentHealth")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("CurrentVitae")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("CurrentWillpower")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Dexterity")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Drive")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Empathy")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("ExperiencePoints")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Expression")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Firearms")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Humanity")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Intelligence")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Intimidation")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Investigation")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Larceny")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Manipulation")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("MaxHealth")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("MaxVitae")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("MaxWillpower")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Medicine")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("Occult")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Persuasion")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Politics")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Presence")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Resolve")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Science")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Size")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Socialize")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Stamina")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Stealth")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Streetwise")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Strength")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Subterfuge")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Survival")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Weaponry")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Wits")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.HasKey("Id");
 
@@ -415,16 +415,16 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("CharacterId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("DisciplineId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Rating")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.HasKey("Id");
 
@@ -439,20 +439,20 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("CharacterId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("MeritId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Rating")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Specification")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -467,17 +467,17 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -488,16 +488,16 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -508,32 +508,32 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Cost")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("DicePool")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("DisciplineId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("Level")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -546,27 +546,27 @@ namespace RequiemNexus.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<bool>("CanBePurchasedMultipleTimes")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("RequiresSpecification")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ValidRatings")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 

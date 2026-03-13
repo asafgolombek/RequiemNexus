@@ -15,14 +15,14 @@ namespace RequiemNexus.Data.Migrations
                 name: "FidoStoredCredentials",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    PublicKey = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    UserHandle = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    SignatureCounter = table.Column<uint>(type: "INTEGER", nullable: false),
-                    CredId = table.Column<string>(type: "TEXT", nullable: false),
-                    RegDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AaGuid = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CredType = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<string>(nullable: false),
+                    PublicKey = table.Column<byte[]>(nullable: false),
+                    UserHandle = table.Column<byte[]>(nullable: false),
+                    SignatureCounter = table.Column<long>(nullable: false),
+                    CredId = table.Column<string>(nullable: false),
+                    RegDate = table.Column<DateTime>(nullable: false),
+                    AaGuid = table.Column<Guid>(nullable: false),
+                    CredType = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

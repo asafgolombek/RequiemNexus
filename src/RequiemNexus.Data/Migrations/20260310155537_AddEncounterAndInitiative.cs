@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,13 +15,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "CombatEncounters",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ResolvedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                    CampaignId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    IsActive = table.Column<bool>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    ResolvedAt = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -38,16 +38,16 @@ namespace RequiemNexus.Data.Migrations
                 name: "InitiativeEntries",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    EncounterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: true),
-                    NpcName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    InitiativeMod = table.Column<int>(type: "INTEGER", nullable: false),
-                    RollResult = table.Column<int>(type: "INTEGER", nullable: false),
-                    Total = table.Column<int>(type: "INTEGER", nullable: false),
-                    HasActed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Order = table.Column<int>(type: "INTEGER", nullable: false)
+                    EncounterId = table.Column<int>(nullable: false),
+                    CharacterId = table.Column<int>(nullable: true),
+                    NpcName = table.Column<string>(maxLength: 200, nullable: true),
+                    InitiativeMod = table.Column<int>(nullable: false),
+                    RollResult = table.Column<int>(nullable: false),
+                    Total = table.Column<int>(nullable: false),
+                    HasActed = table.Column<bool>(nullable: false),
+                    Order = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

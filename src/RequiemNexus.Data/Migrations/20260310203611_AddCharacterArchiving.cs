@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -14,43 +14,39 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<DateTime>(
                 name: "ArchivedAt",
                 table: "Characters",
-                type: "TEXT",
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsArchived",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsRetired",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "RetiredAt",
                 table: "Characters",
-                type: "TEXT",
                 nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "CharacterNotes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: true),
-                    AuthorUserId = table.Column<string>(type: "TEXT", nullable: false),
-                    IsStorytellerPrivate = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
-                    Body = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    CharacterId = table.Column<int>(nullable: false),
+                    CampaignId = table.Column<int>(nullable: true),
+                    AuthorUserId = table.Column<string>(nullable: false),
+                    IsStorytellerPrivate = table.Column<bool>(nullable: false),
+                    Title = table.Column<string>(nullable: false),
+                    Body = table.Column<string>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    UpdatedAt = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -67,13 +63,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "DiceMacros",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    DicePool = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    CharacterId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    DicePool = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {

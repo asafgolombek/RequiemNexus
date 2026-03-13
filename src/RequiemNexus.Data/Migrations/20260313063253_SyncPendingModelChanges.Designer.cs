@@ -11,14 +11,14 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260310220908_AddNpcStatsAndType")]
-    partial class AddNpcStatsAndType
+    [Migration("20260313063253_SyncPendingModelChanges")]
+    partial class SyncPendingModelChanges
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.4");
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {

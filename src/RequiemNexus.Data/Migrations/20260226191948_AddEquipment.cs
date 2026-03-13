@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -15,16 +15,16 @@ namespace RequiemNexus.Data.Migrations
                 name: "Equipment",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Type = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Weight = table.Column<float>(type: "REAL", nullable: false),
-                    Cost = table.Column<int>(type: "INTEGER", nullable: false),
-                    Damage = table.Column<int>(type: "INTEGER", nullable: false),
-                    ArmorRating = table.Column<int>(type: "INTEGER", nullable: false),
-                    Penalty = table.Column<int>(type: "INTEGER", nullable: false)
+                    Name = table.Column<string>(maxLength: 100, nullable: false),
+                    Type = table.Column<string>(maxLength: 50, nullable: false),
+                    Description = table.Column<string>(maxLength: 500, nullable: true),
+                    Weight = table.Column<float>(nullable: false),
+                    Cost = table.Column<int>(nullable: false),
+                    Damage = table.Column<int>(nullable: false),
+                    ArmorRating = table.Column<int>(nullable: false),
+                    Penalty = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -35,12 +35,12 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterEquipments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    EquipmentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true)
+                    CharacterId = table.Column<int>(nullable: false),
+                    EquipmentId = table.Column<int>(nullable: false),
+                    Quantity = table.Column<int>(nullable: false),
+                    Notes = table.Column<string>(maxLength: 200, nullable: true)
                 },
                 constraints: table =>
                 {

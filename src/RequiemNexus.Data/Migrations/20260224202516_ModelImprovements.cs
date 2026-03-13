@@ -29,62 +29,53 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "CurrentHealth",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "CurrentVitae",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "CurrentWillpower",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "ExperiencePoints",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Humanity",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "MaxHealth",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<string>(
                 name: "ApplicationUserId",
                 table: "Campaigns",
-                type: "TEXT",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Description",
                 table: "Campaigns",
-                type: "TEXT",
                 nullable: false,
                 defaultValue: "");
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsActive",
                 table: "Campaigns",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 

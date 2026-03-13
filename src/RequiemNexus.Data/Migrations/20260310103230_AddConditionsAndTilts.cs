@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,17 +15,17 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterConditions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ConditionType = table.Column<int>(type: "INTEGER", nullable: false),
-                    CustomName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    AppliedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ResolvedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsResolved = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AwardsBeat = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AppliedByUserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    CharacterId = table.Column<int>(nullable: false),
+                    ConditionType = table.Column<int>(nullable: false),
+                    CustomName = table.Column<string>(maxLength: 100, nullable: true),
+                    Description = table.Column<string>(maxLength: 1000, nullable: true),
+                    AppliedAt = table.Column<DateTime>(nullable: false),
+                    ResolvedAt = table.Column<DateTime>(nullable: true),
+                    IsResolved = table.Column<bool>(nullable: false),
+                    AwardsBeat = table.Column<bool>(nullable: false),
+                    AppliedByUserId = table.Column<string>(maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -42,16 +42,16 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterTilts",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    EncounterId = table.Column<int>(type: "INTEGER", nullable: true),
-                    TiltType = table.Column<int>(type: "INTEGER", nullable: false),
-                    CustomName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    AppliedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    RemovedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AppliedByUserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    CharacterId = table.Column<int>(nullable: false),
+                    EncounterId = table.Column<int>(nullable: true),
+                    TiltType = table.Column<int>(nullable: false),
+                    CustomName = table.Column<string>(maxLength: 100, nullable: true),
+                    AppliedAt = table.Column<DateTime>(nullable: false),
+                    RemovedAt = table.Column<DateTime>(nullable: true),
+                    IsActive = table.Column<bool>(nullable: false),
+                    AppliedByUserId = table.Column<string>(maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {

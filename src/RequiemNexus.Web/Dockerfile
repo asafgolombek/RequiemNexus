@@ -36,4 +36,5 @@ RUN mkdir -p /app/logs /app/.data && chown -R 1000:1000 /app
 USER 1000
 COPY --from=publish /app/publish .
 
+LABEL org.opencontainers.image.source="https://github.com/asafg6/RequiemNexus"
 ENTRYPOINT ["dotnet", "RequiemNexus.Web.dll"]

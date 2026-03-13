@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -14,7 +14,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<DateOnly>(
                 name: "MemberSince",
                 table: "AspNetUsers",
-                type: "TEXT",
                 nullable: true);
         }
 

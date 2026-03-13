@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,14 +15,14 @@ namespace RequiemNexus.Data.Migrations
                 name: "UserSessions",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    ApplicationUserId = table.Column<string>(type: "TEXT", nullable: false),
-                    Value = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    LastActive = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    ExpiresAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    UserAgent = table.Column<string>(type: "TEXT", maxLength: 512, nullable: true),
-                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: true)
+                    Id = table.Column<string>(nullable: false),
+                    ApplicationUserId = table.Column<string>(nullable: false),
+                    Value = table.Column<byte[]>(nullable: false),
+                    LastActive = table.Column<DateTimeOffset>(nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(nullable: true),
+                    UserAgent = table.Column<string>(maxLength: 512, nullable: true),
+                    IpAddress = table.Column<string>(maxLength: 45, nullable: true)
                 },
                 constraints: table =>
                 {

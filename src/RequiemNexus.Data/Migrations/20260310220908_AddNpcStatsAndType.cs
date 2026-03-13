@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -13,21 +13,18 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "AttributesJson",
                 table: "ChronicleNpcs",
-                type: "TEXT",
                 nullable: false,
                 defaultValue: "");
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsVampire",
                 table: "ChronicleNpcs",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "SkillsJson",
                 table: "ChronicleNpcs",
-                type: "TEXT",
                 nullable: false,
                 defaultValue: "");
         }

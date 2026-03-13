@@ -14,7 +14,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Dirge",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 defaultValue: "");
@@ -22,7 +21,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Mask",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 defaultValue: "");
@@ -31,11 +29,11 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterAspirations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    IsLongTerm = table.Column<bool>(type: "INTEGER", nullable: false)
+                    CharacterId = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(maxLength: 255, nullable: false),
+                    IsLongTerm = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -52,10 +50,10 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterBanes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false)
+                    CharacterId = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(maxLength: 255, nullable: false)
                 },
                 constraints: table =>
                 {

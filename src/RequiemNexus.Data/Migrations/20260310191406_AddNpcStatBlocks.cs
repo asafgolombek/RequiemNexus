@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -14,21 +14,21 @@ namespace RequiemNexus.Data.Migrations
                 name: "NpcStatBlocks",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Concept = table.Column<string>(type: "TEXT", nullable: false),
-                    Size = table.Column<int>(type: "INTEGER", nullable: false),
-                    Health = table.Column<int>(type: "INTEGER", nullable: false),
-                    Willpower = table.Column<int>(type: "INTEGER", nullable: false),
-                    BludgeoningArmor = table.Column<int>(type: "INTEGER", nullable: false),
-                    LethalArmor = table.Column<int>(type: "INTEGER", nullable: false),
-                    AttributesJson = table.Column<string>(type: "TEXT", nullable: false),
-                    SkillsJson = table.Column<string>(type: "TEXT", nullable: false),
-                    DisciplinesJson = table.Column<string>(type: "TEXT", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: false),
-                    IsPrebuilt = table.Column<bool>(type: "INTEGER", nullable: false)
+                    CampaignId = table.Column<int>(nullable: true),
+                    Name = table.Column<string>(nullable: false),
+                    Concept = table.Column<string>(nullable: false),
+                    Size = table.Column<int>(nullable: false),
+                    Health = table.Column<int>(nullable: false),
+                    Willpower = table.Column<int>(nullable: false),
+                    BludgeoningArmor = table.Column<int>(nullable: false),
+                    LethalArmor = table.Column<int>(nullable: false),
+                    AttributesJson = table.Column<string>(nullable: false),
+                    SkillsJson = table.Column<string>(nullable: false),
+                    DisciplinesJson = table.Column<string>(nullable: false),
+                    Notes = table.Column<string>(nullable: false),
+                    IsPrebuilt = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

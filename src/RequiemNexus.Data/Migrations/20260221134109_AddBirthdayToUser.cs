@@ -15,7 +15,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<DateOnly>(
                 name: "Birthday",
                 table: "AspNetUsers",
-                type: "TEXT",
                 nullable: true);
         }
 

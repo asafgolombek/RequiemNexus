@@ -16,10 +16,10 @@ namespace RequiemNexus.Data.Migrations
                 name: TableClanDisciplines,
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    ClanId = table.Column<int>(type: "INTEGER", nullable: false),
-                    DisciplineId = table.Column<int>(type: "INTEGER", nullable: false)
+                    ClanId = table.Column<int>(nullable: false),
+                    DisciplineId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

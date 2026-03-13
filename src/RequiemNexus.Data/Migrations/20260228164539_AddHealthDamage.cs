@@ -14,7 +14,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "HealthDamage",
                 table: "Characters",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 defaultValue: "");

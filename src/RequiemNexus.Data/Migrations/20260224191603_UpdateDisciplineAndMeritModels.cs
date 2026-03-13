@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -22,21 +22,18 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "MeritId",
                 table: "CharacterMerits",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<string>(
                 name: "Specification",
                 table: "CharacterMerits",
-                type: "TEXT",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "DisciplineId",
                 table: "CharacterDisciplines",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
@@ -44,10 +41,10 @@ namespace RequiemNexus.Data.Migrations
                 name: "Disciplines",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(maxLength: 100, nullable: false),
+                    Description = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,13 +55,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "Merits",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    ValidRatings = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    RequiresSpecification = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CanBePurchasedMultipleTimes = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Name = table.Column<string>(maxLength: 100, nullable: false),
+                    Description = table.Column<string>(nullable: false),
+                    ValidRatings = table.Column<string>(maxLength: 50, nullable: false),
+                    RequiresSpecification = table.Column<bool>(nullable: false),
+                    CanBePurchasedMultipleTimes = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,14 +72,14 @@ namespace RequiemNexus.Data.Migrations
                 name: "DisciplinePowers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    DisciplineId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Level = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    DicePool = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Cost = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false)
+                    DisciplineId = table.Column<int>(nullable: false),
+                    Level = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 100, nullable: false),
+                    Description = table.Column<string>(nullable: false),
+                    DicePool = table.Column<string>(maxLength: 100, nullable: false),
+                    Cost = table.Column<string>(maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -170,7 +167,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Name",
                 table: "CharacterMerits",
-                type: "TEXT",
                 maxLength: 100,
                 nullable: false,
                 defaultValue: "");
@@ -178,7 +174,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Name",
                 table: "CharacterDisciplines",
-                type: "TEXT",
                 maxLength: 100,
                 nullable: false,
                 defaultValue: "");

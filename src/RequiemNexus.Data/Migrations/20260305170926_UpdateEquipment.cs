@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,14 +10,10 @@ namespace RequiemNexus.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "Type",
-                table: "Equipment",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 50);
+            // PostgreSQL cannot implicitly cast text → integer.
+            // Alter with an explicit USING clause first, then let EF Core update the column metadata.
+            migrationBuilder.Sql(
+                @"ALTER TABLE ""Equipment"" ALTER COLUMN ""Type"" TYPE integer USING ""Type""::integer;");
         }
 
         /// <inheritdoc />
@@ -26,7 +22,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Type",
                 table: "Equipment",
-                type: "TEXT",
                 maxLength: 50,
                 nullable: false,
                 oldClrType: typeof(int),

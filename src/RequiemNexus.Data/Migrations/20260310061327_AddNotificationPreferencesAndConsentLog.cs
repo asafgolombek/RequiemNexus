@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -14,21 +14,18 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "NotifyOnAccountChanges",
                 table: "AspNetUsers",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "NotifyOnNewsletter",
                 table: "AspNetUsers",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "NotifyOnSecurityEvents",
                 table: "AspNetUsers",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
 
@@ -36,13 +33,13 @@ namespace RequiemNexus.Data.Migrations
                 name: "ConsentLogs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    ConsentedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    DocumentVersion = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: true),
-                    ConsentType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                    UserId = table.Column<string>(nullable: false),
+                    ConsentedAt = table.Column<DateTimeOffset>(nullable: false),
+                    DocumentVersion = table.Column<string>(maxLength: 20, nullable: false),
+                    IpAddress = table.Column<string>(maxLength: 45, nullable: true),
+                    ConsentType = table.Column<string>(maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {

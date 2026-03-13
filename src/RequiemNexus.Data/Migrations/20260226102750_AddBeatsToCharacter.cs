@@ -14,7 +14,6 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "Beats",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
         }

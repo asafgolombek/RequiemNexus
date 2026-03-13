@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,14 +15,14 @@ namespace RequiemNexus.Data.Migrations
                 name: "BeatLedger",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Source = table.Column<int>(type: "INTEGER", nullable: false),
-                    Reason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AwardedByUserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    CharacterId = table.Column<int>(nullable: false),
+                    CampaignId = table.Column<int>(nullable: true),
+                    Source = table.Column<int>(nullable: false),
+                    Reason = table.Column<string>(maxLength: 500, nullable: false),
+                    OccurredAt = table.Column<DateTime>(nullable: false),
+                    AwardedByUserId = table.Column<string>(maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -44,16 +44,16 @@ namespace RequiemNexus.Data.Migrations
                 name: "XpLedger",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CampaignId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Delta = table.Column<int>(type: "INTEGER", nullable: false),
-                    Source = table.Column<int>(type: "INTEGER", nullable: true),
-                    Expense = table.Column<int>(type: "INTEGER", nullable: true),
-                    Reason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ActingUserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true)
+                    CharacterId = table.Column<int>(nullable: false),
+                    CampaignId = table.Column<int>(nullable: true),
+                    Delta = table.Column<int>(nullable: false),
+                    Source = table.Column<int>(nullable: true),
+                    Expense = table.Column<int>(nullable: true),
+                    Reason = table.Column<string>(maxLength: 500, nullable: false),
+                    OccurredAt = table.Column<DateTime>(nullable: false),
+                    ActingUserId = table.Column<string>(maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {

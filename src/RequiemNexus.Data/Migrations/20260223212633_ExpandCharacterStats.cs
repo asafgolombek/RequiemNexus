@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -14,231 +14,198 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "Academics",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "AnimalKen",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Athletics",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Brawl",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Composure",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Computer",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Crafts",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Dexterity",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Drive",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Empathy",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Expression",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Firearms",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Intelligence",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Intimidation",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Investigation",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Larceny",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Manipulation",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Medicine",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Occult",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Persuasion",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Politics",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Presence",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Resolve",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Science",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Socialize",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Stamina",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Stealth",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Streetwise",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Strength",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Subterfuge",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Survival",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Weaponry",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "Wits",
                 table: "Characters",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
@@ -246,11 +213,11 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterDisciplines",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Rating = table.Column<int>(type: "INTEGER", nullable: false)
+                    CharacterId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 100, nullable: false),
+                    Rating = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -267,11 +234,11 @@ namespace RequiemNexus.Data.Migrations
                 name: "CharacterMerits",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CharacterId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Rating = table.Column<int>(type: "INTEGER", nullable: false)
+                    CharacterId = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(maxLength: 100, nullable: false),
+                    Rating = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -14,20 +14,19 @@ namespace RequiemNexus.Data.Migrations
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "DeletionScheduledAt",
                 table: "AspNetUsers",
-                type: "TEXT",
                 nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "AuditLogs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    EventType = table.Column<int>(type: "INTEGER", nullable: false),
-                    OccurredAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: true),
-                    Details = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true)
+                    UserId = table.Column<string>(nullable: false),
+                    EventType = table.Column<int>(nullable: false),
+                    OccurredAt = table.Column<DateTimeOffset>(nullable: false),
+                    IpAddress = table.Column<string>(maxLength: 45, nullable: true),
+                    Details = table.Column<string>(maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
