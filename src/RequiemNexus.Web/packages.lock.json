@@ -74,18 +74,6 @@
           "Newtonsoft.Json": "13.0.3"
         }
       },
-      "Microsoft.EntityFrameworkCore.Sqlite": {
-        "type": "Direct",
-        "requested": "[10.0.4, )",
-        "resolved": "10.0.4",
-        "contentHash": "cbc/Ave31CbPQ9E29dfaA4QjcsBoc8KokNlLC6Noj0uToHDQ9PPllD+k6HluVbaFpflsU8XGwrQxOoyvXlU97g==",
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore.Sqlite.Core": "10.0.4",
-          "Microsoft.Extensions.DependencyModel": "10.0.4",
-          "SQLitePCLRaw.bundle_e_sqlite3": "2.1.11",
-          "SQLitePCLRaw.core": "2.1.11"
-        }
-      },
       "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": {
         "type": "Direct",
         "requested": "[10.0.4, )",
@@ -281,14 +269,6 @@
           "System.Composition": "9.0.0"
         }
       },
-      "Microsoft.Data.Sqlite.Core": {
-        "type": "Transitive",
-        "resolved": "10.0.4",
-        "contentHash": "UkmpN2pDkrtVLh+ypRDCbBij9mhPqOPzvHI625rf+VeT3FHnBwBjAY7XgjK8rGDI74fDx7C1SSIf2OAaAX4g2A==",
-        "dependencies": {
-          "SQLitePCLRaw.core": "2.1.11"
-        }
-      },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",
         "resolved": "10.0.4",
@@ -314,17 +294,6 @@
         "contentHash": "DOTjTHy93W3TwpMLM4SCm0n57Sc0Jj3+m2S6LSTstKyBB34eT1UouaMS19mpWwvtj42+sRiEjA3+rOTNoNzXFQ==",
         "dependencies": {
           "Microsoft.EntityFrameworkCore": "10.0.4"
-        }
-      },
-      "Microsoft.EntityFrameworkCore.Sqlite.Core": {
-        "type": "Transitive",
-        "resolved": "10.0.4",
-        "contentHash": "8D3Kk7assWpi93DuicgucDqGoOsgEgLlZy8io0FUlSGG2b4wkRWkjXn4xFBX+BzxExjfcYvHhtcBpqkXhe2p0A==",
-        "dependencies": {
-          "Microsoft.Data.Sqlite.Core": "10.0.4",
-          "Microsoft.EntityFrameworkCore.Relational": "10.0.4",
-          "Microsoft.Extensions.DependencyModel": "10.0.4",
-          "SQLitePCLRaw.core": "2.1.11"
         }
       },
       "Microsoft.Extensions.DependencyModel": {
@@ -385,11 +354,6 @@
         "type": "Transitive",
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
-      },
-      "Npgsql": {
-        "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "xZAYhPOU2rUIFpV48xsqhCx9vXs6Y+0jX2LCoSEfDFYMw9jtAOUk3iQsCnDLrFIv9NT3JGMihn7nnuZsPKqJmA=="
       },
       "NSec.Cryptography": {
         "type": "Transitive",
@@ -480,33 +444,6 @@
           "Serilog": "4.0.0"
         }
       },
-      "SQLitePCLRaw.bundle_e_sqlite3": {
-        "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "DC4nA7yWnf4UZdgJDF+9Mus4/cb0Y3Sfgi3gDnAoKNAIBwzkskNAbNbyu+u4atT0ruVlZNJfwZmwiEwE5oz9LQ==",
-        "dependencies": {
-          "SQLitePCLRaw.lib.e_sqlite3": "2.1.11",
-          "SQLitePCLRaw.provider.e_sqlite3": "2.1.11"
-        }
-      },
-      "SQLitePCLRaw.core": {
-        "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "PK0GLFkfhZzLQeR3PJf71FmhtHox+U3vcY6ZtswoMjrefkB9k6ErNJEnwXqc5KgXDSjige2XXrezqS39gkpQKA=="
-      },
-      "SQLitePCLRaw.lib.e_sqlite3": {
-        "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "Ev2ytaXiOlWZ4b3R67GZBsemTINslLD1DCJr2xiacpn4tbapu0Q4dHEzSvZSMnVWeE5nlObU3VZN2p81q3XOYQ=="
-      },
-      "SQLitePCLRaw.provider.e_sqlite3": {
-        "type": "Transitive",
-        "resolved": "2.1.11",
-        "contentHash": "Y/0ZkR+r0Cg3DQFuCl1RBnv/tmxpIZRU3HUvelPw6MVaKHwYYR8YNvgs0vuNuXCMvlyJ+Fh88U1D4tah1tt6qw==",
-        "dependencies": {
-          "SQLitePCLRaw.core": "2.1.11"
-        }
-      },
       "StyleCop.Analyzers.Unstable": {
         "type": "Transitive",
         "resolved": "1.2.0.556",
@@ -577,7 +514,6 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.4, )",
-          "Microsoft.EntityFrameworkCore.Sqlite": "[10.0.4, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.0, )",
           "RequiemNexus.Domain": "[1.0.0, )"
         }
@@ -601,6 +537,12 @@
         "requested": "[10.0.4, )",
         "resolved": "10.0.4",
         "contentHash": "ayoY21xuhuY6cYZkG92bdYsulmJlLS558b3Ez1rWFkBZ+QIUSeAlALzT1UK+ZZeEmhzFWjemG4bBcMRhdiHntA=="
+      },
+      "Npgsql": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.0, )",
+        "resolved": "10.0.0",
+        "contentHash": "xZAYhPOU2rUIFpV48xsqhCx9vXs6Y+0jX2LCoSEfDFYMw9jtAOUk3iQsCnDLrFIv9NT3JGMihn7nnuZsPKqJmA=="
       },
       "QuestPDF": {
         "type": "CentralTransitive",

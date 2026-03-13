@@ -35,7 +35,20 @@ public static class TestDbInitializer
             newUser.PasswordHash = hasher.HashPassword(newUser, TestUserPassword);
 
             await context.Users.AddAsync(newUser);
-            await context.SaveChangesAsync();
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DB SEED ERROR: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"INNER EXCEPTION: {ex.InnerException.Message}");
+                }
+
+                throw;
+            }
         }
     }
 }

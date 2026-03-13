@@ -1,3 +1,7 @@
+# run-local.ps1
+# Minimal fallback runner — launches the web project directly via 'dotnet run'.
+# NOTE: This bypasses .NET Aspire orchestration (no Docker, no Redis, no hot-reload).
+#       For normal local development, use:  .\scripts\build-debug.ps1
 param(
     [string]$Configuration = "Debug"
 )

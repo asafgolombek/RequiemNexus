@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,23 +5,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RequiemNexus.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserDates : Migration
+    public partial class AddUniqueIndexToMerits : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<DateOnly>(
-                name: "MemberSince",
-                table: "AspNetUsers",
-                nullable: true);
+            migrationBuilder.CreateIndex(
+                name: "IX_Merits_Name",
+                table: "Merits",
+                column: "Name",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "MemberSince",
-                table: "AspNetUsers");
+            migrationBuilder.DropIndex(
+                name: "IX_Merits_Name",
+                table: "Merits");
         }
     }
 }

@@ -69,14 +69,7 @@ if (!string.IsNullOrEmpty(dbPassword))
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    if (builder.Environment.IsProduction() || builder.Environment.IsStaging())
-    {
-        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
-    }
-    else
-    {
-        options.UseSqlite(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
-    }
+    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
 
     // All schema changes are captured in migrations. This warning fires when EF Core's
     // internal model metadata drifts from the snapshot (e.g. annotation changes with no

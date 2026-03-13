@@ -42,10 +42,15 @@ Built with the **Antigravity Philosophy** on **.NET 10**, it provides a fast, se
 
 ### Quick Start
 
+**Ensure Docker Desktop is running** before proceeding.
+
 ```powershell
 # Clone the repository
 git clone https://github.com/asafgolombek/RequiemNexus.git
 cd RequiemNexus
+
+# Start the local database (PostgreSQL)
+docker compose up -d
 
 # Boot The Haven (local dev with hot reload via .NET Aspire)
 .\scripts\build-debug.ps1
@@ -54,7 +59,7 @@ cd RequiemNexus
 .\scripts\test-local.ps1
 ```
 
-A new developer should be able to run the project locally in **under 10 minutes**.
+A new developer should be able to run the project locally in **under 10 minutes**. No manual database setup or configuration is required; `docker compose` will provision everything automatically.
 
 ---
 

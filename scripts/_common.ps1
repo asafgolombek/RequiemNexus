@@ -8,6 +8,7 @@ $SlnPath     = Join-Path $RootDir "tests\RequiemNexus.Tests.slnx"
 $WebProjPath = Join-Path $RootDir "src\RequiemNexus.Web\RequiemNexus.Web.csproj"
 $DomainTests = Join-Path $RootDir "tests\RequiemNexus.Domain.Tests\RequiemNexus.Domain.Tests.csproj"
 $DataTests   = Join-Path $RootDir "tests\RequiemNexus.Data.Tests\RequiemNexus.Data.Tests.csproj"
+$WebTests    = Join-Path $RootDir "tests\RequiemNexus.Web.Tests\RequiemNexus.Web.Tests.csproj"
 
 function Invoke-Restore {
     Write-Host "Restoring dependencies..." -ForegroundColor DarkGray
@@ -27,7 +28,13 @@ function Invoke-Tests {
 
     dotnet test $DataTests --no-build -c $Configuration
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "`n[ABORTED] Integration tests failed. Fix tests before proceeding. Use -SkipTests to bypass." -ForegroundColor Red
+        Write-Host "`n[ABORTED] Data integration tests failed. Fix tests before proceeding. Use -SkipTests to bypass." -ForegroundColor Red
+        exit 1
+    }
+
+    dotnet test $WebTests --no-build -c $Configuration
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "`n[ABORTED] Web integration tests failed. Fix tests before proceeding. Use -SkipTests to bypass." -ForegroundColor Red
         exit 1
     }
 

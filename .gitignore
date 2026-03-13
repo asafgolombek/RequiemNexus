@@ -386,7 +386,7 @@ FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
-!.vscode/settings.json
+!.vscode/settings.json.example
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -492,8 +492,8 @@ build_*.txt
 build.txt
 
 # SQLite Temp Files
+*.db
 *.db-shm
 *.db-wal
-. d a t a / 
- 
+.data/
  

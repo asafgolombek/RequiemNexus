@@ -1,0 +1,35 @@
+{
+    // ─────────────────────────────────────────────────────────────────────────
+    // Copy this file to settings.json and fill in the values marked <REPLACE>.
+    // settings.json is gitignored — do NOT commit it.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // DotRush: absolute path(s) to the solution(s) you want Roslyn to load.
+    // Use the tests solution so test projects get full IntelliSense too.
+    "dotrush.roslyn.projectOrSolutionFiles": [
+        "<REPLACE: absolute path to tests/RequiemNexus.Tests.slnx>"
+        // Example (Windows): "C:\\dev\\RequiemNexus\\tests\\RequiemNexus.Tests.slnx"
+        // Example (macOS/Linux): "/home/you/dev/RequiemNexus/tests/RequiemNexus.Tests.slnx"
+    ],
+
+    // Test for all framework dashboard
+    "tfa.dashboard.gaugeStyle": "classic-donut",
+    "tfa.dashboard.includeSecondaryModels": false,
+    "tfa.status.displayFormat": "percentage",
+    "tfa.cache.autoClean": true,
+
+    // SQLTools: local PostgreSQL connection.
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Requiem Nexus",
+            "username": "postgres",
+            "database": "requiem_nexus"
+            // "password": "<REPLACE: your local postgres password>"
+        }
+    ]
+}

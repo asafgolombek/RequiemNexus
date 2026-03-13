@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.SeedData;
 
 namespace RequiemNexus.Data;
 
@@ -24,7 +24,7 @@ public static class DbInitializer
 
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
-        await SeedMeritsFromJsonAsync(context);
+        await SeedMeritsAsync(context);
         await SeedPrebuiltStatBlocksAsync(context);
     }
 
@@ -167,65 +167,18 @@ public static class DbInitializer
         }
     }
 
-    private static async Task SeedMeritsFromJsonAsync(ApplicationDbContext context)
+    private static async Task SeedMeritsAsync(ApplicationDbContext context)
     {
-        // 4. Load Merits from JSON
-        var meritsJsonPath = Environment.GetEnvironmentVariable("MERITS_JSON_PATH") ?? "scraped_data.json";
-        if (!File.Exists(meritsJsonPath))
+        var existingNames = await context.Merits.Select(m => m.Name).ToListAsync();
+        var existingSet = new HashSet<string>(existingNames, StringComparer.Ordinal);
+
+        var toAdd = MeritSeedData.GetAllMerits()
+            .Where(m => !existingSet.Contains(m.Name))
+            .ToList();
+
+        if (toAdd.Count > 0)
         {
-            return;
-        }
-
-        try
-        {
-            var json = await File.ReadAllTextAsync(meritsJsonPath);
-            await AddMeritsFromJsonArrayAsync(context, json);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error seeding merits: {ex.Message}");
-        }
-    }
-
-    private static async Task AddMeritsFromJsonArrayAsync(ApplicationDbContext context, string json)
-    {
-        var doc = JsonDocument.Parse(json);
-        var meritsArray = doc.RootElement.GetProperty("merits");
-
-        var existingMerits = await context.Merits.Select(m => m.Name).ToListAsync();
-        var newMeritsCount = 0;
-
-        foreach (var meritNode in meritsArray.EnumerateArray())
-        {
-            var name = meritNode.TryGetProperty("name", out var node) ? node.GetString() : "Unknown Merit";
-            var rating = meritNode.TryGetProperty("rating", out var node2) ? node2.GetString() : "•";
-            var desc = meritNode.TryGetProperty("desc", out var node3) ? node3.GetString() : string.Empty;
-
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                continue;
-            }
-
-            var truncatedName = name.Length > 100 ? name.Substring(0, 100) : name;
-
-            if (!existingMerits.Contains(truncatedName))
-            {
-                var newMerit = new Merit
-                {
-                    Name = truncatedName,
-                    ValidRatings = rating ?? "•",
-                    Description = desc ?? string.Empty,
-                    RequiresSpecification = false,
-                    CanBePurchasedMultipleTimes = false,
-                };
-                await context.Merits.AddAsync(newMerit);
-                existingMerits.Add(truncatedName); // Add to local list to prevent duplicates from JSON
-                newMeritsCount++;
-            }
-        }
-
-        if (newMeritsCount > 0)
-        {
+            await context.Merits.AddRangeAsync(toAdd);
             await context.SaveChangesAsync();
         }
     }

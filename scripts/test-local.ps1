@@ -19,7 +19,8 @@ $CoverageDir = Join-Path $RootDir "coverage"
 # --- Project Configuration ---
 $TestProjects = @(
     @{ Name = "Domain Unit"; Path = "tests\RequiemNexus.Domain.Tests\RequiemNexus.Domain.Tests.csproj" },
-    @{ Name = "Data Integration"; Path = "tests\RequiemNexus.Data.Tests\RequiemNexus.Data.Tests.csproj" }
+    @{ Name = "Data Integration"; Path = "tests\RequiemNexus.Data.Tests\RequiemNexus.Data.Tests.csproj" },
+    @{ Name = "Web Integration"; Path = "tests\RequiemNexus.Web.Tests\RequiemNexus.Web.Tests.csproj" }
 )
 
 # --- UI Helpers ---

@@ -55,6 +55,13 @@ public partial class SmtpEmailSender : IRequiemEmailService
                 return;
             }
 
+            if (username == "SetInUserSecrets" || password == "SetInUserSecrets")
+            {
+                LogSmtpCredentialsMissing();
+                LogDevEmailSenderFallback(to, subject, htmlMessage);
+                return;
+            }
+
             using var client = new SmtpClient(host, port);
             client.EnableSsl = true;
             if (!string.IsNullOrEmpty(username))
@@ -77,6 +84,7 @@ public partial class SmtpEmailSender : IRequiemEmailService
         catch (Exception ex)
         {
             LogEmailSendError(ex, to);
+            LogDevEmailSenderFallback(to, subject, htmlMessage);
 
             // We don't throw here to avoid disrupting the user registration flow in case of SMTP misconfiguration
         }
@@ -84,6 +92,9 @@ public partial class SmtpEmailSender : IRequiemEmailService
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "SMTP configuration is missing or invalid. Falling back to log-only email sender.")]
     partial void LogSmtpConfigMissing();
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SMTP credentials are set to placeholder values ('SetInUserSecrets'). Falling back to log-only email sender.")]
+    partial void LogSmtpCredentialsMissing();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "--- DEV EMAIL SENDER ---\nTo: {Email}\nSubject: {Subject}\nBody: {Body}\n------------------------")]
     partial void LogDevEmailSenderFallback(string email, string subject, string body);

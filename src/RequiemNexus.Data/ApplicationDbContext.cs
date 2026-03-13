@@ -453,5 +453,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<SessionPrepNote>()
             .HasIndex(s => s.CampaignId);
+
+        // Merit configuration
+        builder.Entity<Merit>()
+            .HasIndex(m => m.Name)
+            .IsUnique();
     }
 }
