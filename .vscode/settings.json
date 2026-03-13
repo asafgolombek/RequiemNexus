@@ -1,7 +1,0 @@
-{
-    "tfa.dashboard.gaugeStyle": "classic-donut",
-    "tfa.dashboard.includeSecondaryModels": false,
-    "tfa.status.displayFormat": "percentage",
-    "tfa.cache.autoClean": true,
-    "dotrush.roslyn.projectOrSolutionFiles": []
-}
