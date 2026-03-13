@@ -19,7 +19,7 @@ jobs:
           docker build -t requiem-nexus:test -f src/RequiemNexus.Web/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0 # Use specific version for stability
+        uses: aquasecurity/trivy-action@0.30.0 # Pinned for stability — 0.28.0 was incompatible with Trivy v0.56.x
         with:
           image-ref: 'requiem-nexus:test'
           format: 'table'
