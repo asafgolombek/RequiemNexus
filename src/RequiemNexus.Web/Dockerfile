@@ -30,7 +30,6 @@ ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Create logging and data directories if needed
-RUN apt-get update && apt-get install -y --no-install-recommends libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /app/logs /app/.data && chown -R 1000:1000 /app
 
 USER 1000

@@ -10,6 +10,12 @@ namespace RequiemNexus.Infra.Stacks;
 public class DataStackProps : StackProps
 {
     public required IVpc Vpc { get; init; }
+
+    /// <summary>
+    /// When true, Redis is deployed with Multi-AZ replication (2 nodes, automatic failover).
+    /// When false (staging / local dev), a single node is used to minimise cost.
+    /// </summary>
+    public bool IsProductionGrade { get; init; }
 }
 
 public class DataStack : Stack
@@ -57,14 +63,17 @@ public class DataStack : Stack
             SubnetIds = props.Vpc.IsolatedSubnets.Select(s => s.SubnetId).ToArray()
         });
 
+        // Production: 2-node Multi-AZ replication group with automatic failover (~$25/month).
+        // Staging / dev: single node, no failover (~$13/month). AutomaticFailoverEnabled must be
+        // false when NumCacheClusters is 1 — ElastiCache rejects the combination otherwise.
         RedisCluster = new CfnReplicationGroup(this, "RedisCluster", new CfnReplicationGroupProps
         {
             ReplicationGroupDescription = "Redis cluster for Requiem Nexus",
             Engine = "redis",
             CacheNodeType = "cache.t4g.micro",
-            NumCacheClusters = 2,
-            AutomaticFailoverEnabled = true,
-            MultiAzEnabled = true,
+            NumCacheClusters = props.IsProductionGrade ? 2 : 1,
+            AutomaticFailoverEnabled = props.IsProductionGrade,
+            MultiAzEnabled = props.IsProductionGrade,
             CacheSubnetGroupName = redisSubnetGroup.Ref,
             SecurityGroupIds = new[] { RedisSecurityGroup.SecurityGroupId }
         });
