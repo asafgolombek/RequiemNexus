@@ -2,6 +2,11 @@ param(
     [string]$TargetUrl = "http://localhost:5154"
 )
 
+if ([string]::IsNullOrWhiteSpace($TargetUrl)) {
+    Write-Host "❌ [ERROR] TargetUrl is empty. Smoke test cannot proceed." -ForegroundColor Red
+    exit 1
+}
+
 $endpoints = @("/health", "/ready")
 $allPassed = $true
 

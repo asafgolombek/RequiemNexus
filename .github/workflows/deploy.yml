@@ -45,11 +45,20 @@ jobs:
       - name: CDK Deploy (Staging)
         run: |
             cd infra
-            cdk deploy --all --require-approval never
+            cdk deploy --all --require-approval never --outputs-file outputs.json
+
+      - name: Extract Load Balancer URL
+        id: extract_url
+        shell: pwsh
+        run: |
+          $outputs = Get-Content infra/outputs.json | ConvertFrom-Json
+          $url = $outputs.'RequiemNexus-Compute-Stack'.LoadBalancerUrl
+          Write-Host "Extracted URL: $url"
+          "url=$url" >> $env:GITHUB_OUTPUT
 
       - name: Smoke Test (Staging)
         shell: pwsh
-        run: ./scripts/smoke-test.ps1 -TargetUrl ${{ secrets.STAGING_URL }}
+        run: ./scripts/smoke-test.ps1 -TargetUrl "${{ steps.extract_url.outputs.url }}"
 
   deploy-production:
     name: Deploy to Production
@@ -81,4 +90,17 @@ jobs:
       - name: CDK Deploy (Production)
         run: |
           cd infra
-          cdk deploy --all --require-approval never
+          cdk deploy --all --require-approval never --outputs-file outputs.json
+
+      - name: Extract Load Balancer URL (Production)
+        id: extract_url_prod
+        shell: pwsh
+        run: |
+          $outputs = Get-Content infra/outputs.json | ConvertFrom-Json
+          $url = $outputs.'RequiemNexus-Compute-Stack'.LoadBalancerUrl
+          Write-Host "Extracted URL: $url"
+          "url=$url" >> $env:GITHUB_OUTPUT
+
+      - name: Smoke Test (Production)
+        shell: pwsh
+        run: ./scripts/smoke-test.ps1 -TargetUrl "${{ steps.extract_url_prod.outputs.url }}"

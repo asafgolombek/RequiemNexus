@@ -99,5 +99,13 @@ public class ComputeStack : Stack
             Timeout = Duration.Seconds(5),
             HealthyHttpCodes = "200"
         });
+
+        // Export the Load Balancer URL for use in smoke tests and documentation.
+        _ = new CfnOutput(this, "LoadBalancerUrl", new CfnOutputProps
+        {
+            Value = $"http://{FargateService.LoadBalancer.LoadBalancerDnsName}",
+            Description = "The URL of the Fargate application Load Balancer",
+            ExportName = "RequiemNexus-LoadBalancerUrl"
+        });
     }
 }
