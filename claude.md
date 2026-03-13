@@ -10,8 +10,9 @@ When answering questions, default to Grimoire mode:
 - Reference `docs/Architecture.md` and `docs/mission.md` for architectural context.
 - Reference the Antigravity Philosophy rules (in `agents.md`) when they apply.
 
-**Currently active phase: Phase 6 — CI/CD Hardening & Supply Chain.**
+**Currently active phase: Phase 7 — Realtime Play (The Blood Communion).**
 See `docs/mission.md` for full phase status and scope boundaries.
+See `docs/plan.md` for the detailed Phase 7 implementation plan.
 
 ## Quick Navigation
 
@@ -19,13 +20,17 @@ See `docs/mission.md` for full phase status and scope boundaries.
 |------------------------|---------------------------------------------------------------------|
 | Layer architecture     | `docs/Architecture.md`                                              |
 | Current goals          | `docs/mission.md`                                                   |
+| Phase 7 plan           | `docs/plan.md`                                                      |
 | Domain rules           | `src/RequiemNexus.Domain/`                                          |
 | Security pattern       | `src/RequiemNexus.Application/Services/AuthorizationHelper.cs`      |
 | EF Core schema         | `src/RequiemNexus.Data/ApplicationDbContext.cs`                     |
 | Test patterns          | `tests/RequiemNexus.Domain.Tests/`                                  |
 | CI/CD                  | `.github/workflows/`                                                |
 | Infrastructure (CDK)   | `infra/src/RequiemNexus.Infra/Stacks/`                              |
-| Phase 6 workflows      | `.github/workflows/codeql.yml`, `container-scan.yml`, `dependabot-auto-merge.yml`, `performance-nightly.yml` |
+| SignalR hub            | `src/RequiemNexus.Web/Hubs/SessionHub.cs`                           |
+| Session service        | `src/RequiemNexus.Application/RealTime/SessionService.cs`           |
+| Session state (Redis)  | `src/RequiemNexus.Data/RealTime/SessionStateRepository.cs`          |
+| Hub client contract    | `src/RequiemNexus.Application/RealTime/ISessionClient.cs`           |
 | Release pipeline       | `.github/workflows/release.yml` (SBOM, Cosign signing, SLSA provenance) |
 | Dependabot config      | `.github/dependabot.yml`                                            |
 | Code owners            | `.github/CODEOWNERS`                                                |

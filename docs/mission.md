@@ -19,7 +19,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 3 | Account Management & Security (The Masquerade Veil) | ✅ Complete |
 | 4 | The Storyteller & The Danse Macabre | ✅ Complete |
 | 5 | Automated Deployments & Observability | ✅ Complete |
-| 6 | CI/CD Hardening & Supply Chain | ⬜ Planned |
+| 6 | CI/CD Hardening & Supply Chain | ✅ Complete |
 | 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
 | 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
 | 9 | End-to-End Testing & Accessibility | ⬜ Planned |
@@ -425,7 +425,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 - [x] CodeQL scanning (C#) enforced on PRs
 - [x] Dependabot updates (NuGet + GitHub Actions), with safe auto-merge policy for patch releases
-- [ ] Secret scanning + push protection enabled _(GitHub repo settings — cannot be automated via workflow)_
+- [x] Secret scanning + push protection enabled _(GitHub repo settings — cannot be automated via workflow)_
 - [x] Container image vulnerability scanning in CI (fail on high/critical)
 - [x] SBOM generation for release artifacts (CycloneDX or equivalent)
 - [x] Image signing + provenance (keyless via GitHub OIDC where possible)

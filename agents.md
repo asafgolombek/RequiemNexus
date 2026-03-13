@@ -159,7 +159,7 @@ Every new domain event or significant operation must:
 
 ---
 
-## GitHub Actions Workflow Rules (Phase 6)
+## GitHub Actions Workflow Rules (Phase 6 — retained)
 
 When authoring or modifying `.github/workflows/` files:
 
@@ -171,6 +171,48 @@ When authoring or modifying `.github/workflows/` files:
 - Performance artifacts (`./NBomberData`) are uploaded with `retention-days: 90` for trend tracking.
 - All artifact upload steps use `if: always()` so results are preserved even on failure.
 - Changes to `.github/workflows/`, `infra/`, `src/RequiemNexus.Data/Migrations/`, and `src/RequiemNexus.Application/Services/AuthorizationHelper.cs` require owner review per `.github/CODEOWNERS`.
+
+---
+
+## SignalR Hub Rules (Phase 7)
+
+These rules govern all work in `src/RequiemNexus.Web/Hubs/` and `src/RequiemNexus.Application/RealTime/`.
+
+### The Hub is a Thin Relay
+
+`SessionHub` must not contain business logic, authorization decisions, or Redis access. Its only job is to delegate to `ISessionService` and call `ISessionClient` methods. Any logic found in the hub is a Sacred Covenant violation.
+
+### The Masquerade Applies to the Hub
+
+Every hub method that reads or mutates state must follow the four Masquerade steps:
+1. Extract the authenticated user's ID from `Context.UserIdentifier`.
+2. Load the target entity (or verify session membership from Redis).
+3. **Verify ownership / membership** — reject unauthorized callers with a `HubException`.
+4. Proceed only after authorization is confirmed.
+
+Unauthenticated connections must be rejected in `OnConnectedAsync`. There are no anonymous hub connections.
+
+### Server-Side Dice Rolling Only
+
+Dice are always rolled by `DiceService` on the server. The hub never accepts a client-supplied roll result. Client-reported rolls are a security defect.
+
+### Session State Lives in Redis — Nowhere Else
+
+Session data (active players, roll history, initiative, ST heartbeat) is stored only in Redis. It is never written to the PostgreSQL database. Session state is ephemeral by design.
+
+### Redis Key Naming Convention
+
+All session keys follow the pattern `session:{chronicleId}:{type}`:
+- `session:{chronicleId}:info` — session metadata, TTL 15 min
+- `session:{chronicleId}:players` — Redis SET of connected players
+- `session:{chronicleId}:rolls` — Redis LIST of roll results (capped at 100)
+- `session:{chronicleId}:initiative` — Redis ZSET scored by initiative value
+
+No other key shapes are permitted without updating this document.
+
+### Hub Dispatch Performance Budget
+
+The p95 server dispatch latency (hub method invocation → message delivered to group) must remain ≤ 200ms. This is enforced by a NBomber test in the nightly performance workflow. A regression in this metric fails CI.
 
 ---
 
@@ -279,7 +321,10 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-See [`docs/mission.md`](./docs/mission.md) — it is the single source of truth for active goals and completion status.
+**Phase 7 — Realtime Play (The Blood Communion).**
+
+See [`docs/mission.md`](./docs/mission.md) for the feature list and exit criteria.
+See [`docs/plan.md`](./docs/plan.md) for the detailed implementation plan, layer ownership map, and all locked architectural decisions.
 
 ---
 
