@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   scan:
     name: Scan RequiemNexus Image
@@ -18,13 +21,19 @@ jobs:
         run: |
           docker build -t requiem-nexus:test -f src/RequiemNexus.Web/Dockerfile .
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.30.0 # Pinned for stability — 0.28.0 was incompatible with Trivy v0.56.x
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.2
         with:
-          image-ref: 'requiem-nexus:test'
-          format: 'table'
-          # 🛡️ The 'Fail-Gate' Logic
-          exit-code: '1' # This 'Fails' the CI job if vulnerabilities are found
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'HIGH,CRITICAL' # 🩸 Only trigger failure on these levels
+          version: v0.60.0
+
+      - name: Run Trivy vulnerability scanner
+        # 🛡️ Fail-Gate: exit code 1 if HIGH/CRITICAL unfixed CVEs are found.
+        # Running trivy directly (not via trivy-action composite) for full log visibility.
+        run: |
+          trivy image \
+            --exit-code 1 \
+            --ignore-unfixed \
+            --vuln-type os,library \
+            --severity HIGH,CRITICAL \
+            --format table \
+            requiem-nexus:test
