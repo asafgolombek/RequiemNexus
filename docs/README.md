@@ -125,8 +125,8 @@ RequiemNexus/
 | 3 | **The Masquerade Veil** — Account management & security | ✅ Complete |
 | 4 | **The Storyteller & The Danse Macabre** — Chronicle & ST tools | ✅ Complete |
 | 5 | **Automated Deployments & Observability** | ✅ Complete |
-| 6 | **CI/CD Hardening & Supply Chain** | 🔄 In Progress |
-| 7 | **The Blood Communion** — Realtime play | ⬚ Planned |
+| 6 | **CI/CD Hardening & Supply Chain** | ✅ Complete |
+| 7 | **The Blood Communion** — Realtime play | 🔄 In Progress |
 | 8 | **The Hidden Refuge** — PWA & offline capabilities | ⬚ Planned |
 | 9 | **E2E Testing & Accessibility** | ⬚ Planned |
 | 10 | **The Global Embrace** — i18n, public API | ⬚ Planned |

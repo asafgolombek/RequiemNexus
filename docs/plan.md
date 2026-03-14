@@ -230,4 +230,41 @@ These must all be true before Phase 7 is declared complete:
 
 ---
 
+### Area 12 — Realtime UI Components
+
+These UI components are directly required by Phase 7 realtime features. They have no meaningful function without an active SignalR session. They are implemented in the Web layer and follow the same layer rules as all other Blazor components.
+
+> **Dependency note:** Area 12c (Realtime Roll Toast) depends on the `ToastService` from `docs/ui-improvements-plan.md` Wave 1a. That toast infrastructure must be in place before Area 12c is wired to SignalR events.
+
+- [ ] **12a — Session Presence Indicators** _(supports Area 4 — Session Presence)_
+  - New: `src/RequiemNexus.Web/Components/UI/SessionPresenceBar.razor` + `.razor.css`
+  - Displays avatar chips (player initials + online dot) for each entry in the Redis players SET
+  - Updated in real-time via `ISessionClient.ReceivePresenceUpdate(players[])`
+  - Embedded in the `CampaignDetails` page header when a session is active (conditional render)
+
+- [ ] **12b — Dice Roll History Feed** _(supports Area 4 — Dice Roll History Feed)_
+  - New: `src/RequiemNexus.Web/Components/UI/RollHistoryFeed.razor` + `.razor.css`
+  - Scrollable, bottom-anchored feed (newest entry at bottom, auto-scroll)
+  - Each entry: player name, pool description, success count, exceptional/dramatic badge, timestamp
+  - New entries slide in from below (300ms ease); capped at 100 entries (matches Redis `LTRIM`)
+  - Hydrated on join via `ISessionClient.ReceiveRollHistory`; updated live via `ISessionClient.ReceiveDiceRoll`
+
+- [ ] **12c — Realtime Roll Toast** _(supports Area 4 — Live Dice Rolls)_
+  - When a player rolls, all other clients in the session receive a toast: "🩸 [Name] rolled [N] success(es)"
+  - Triggered from the `ISessionClient.ReceiveDiceRoll` handler — the roller does not see their own toast
+  - Uses `ToastService` (see `docs/ui-improvements-plan.md`, Wave 1a) — that service must exist first
+
+- [ ] **12d — Live Character Vitals** _(supports Area 4 — Real-Time Character Updates)_
+  - `CharacterVitals.razor` subscribes to `ISessionClient.ReceiveCharacterUpdate(patch)` while a session is active
+  - Health, Willpower, and Vitae values update and animate in-place without a page reload
+  - Animation uses CSS transitions already defined in Wave 4 of `docs/ui-improvements-plan.md`
+  - No new component required — extend existing `CharacterVitals.razor`
+
+- [ ] **12e — Live Initiative Tracker** _(supports Area 4 — Shared Initiative Tracker)_
+  - `InitiativeTracker.razor` subscribes to `ISessionClient.ReceiveInitiativeUpdate(entries[])`
+  - On receipt, replaces the local C# initiative list and triggers Blazor re-render — no page reload
+  - The current-actor pulsing spotlight (see `docs/ui-improvements-plan.md`, Wave 6) fires automatically when the ST advances the turn and the update is broadcast to all clients
+
+---
+
 > *The coterie connects. The blood flows in real time.*

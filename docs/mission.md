@@ -20,14 +20,13 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 4 | The Storyteller & The Danse Macabre | ✅ Complete |
 | 5 | Automated Deployments & Observability | ✅ Complete |
 | 6 | CI/CD Hardening & Supply Chain | ✅ Complete |
-| 7 | Realtime Play (The Blood Communion) | ⬜ Planned |
-| 8 | PWA & Offline Capabilities (The Hidden Refuge) | ⬜ Planned |
-| 9 | End-to-End Testing & Accessibility | ⬜ Planned |
-| 10 | The Global Embrace | ⬜ Planned |
+| 7 | Realtime Play (The Blood Communion) | 🔄 In Progress |
+| 8 | End-to-End Testing & Accessibility | ⬜ Planned |
+| 9 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 6](#-phase-6-cicd-hardening--supply-chain)**
+> **Currently Active → [Phase 7](#-phase-7-realtime-play-the-blood-communion)**
 
-> ⚠️ **Phases 7–10 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 6 unless explicitly instructed.**
+> ⚠️ **Phases 8–9 are out of scope for current development. Do not scaffold, stub, or implement anything beyond Phase 7 unless explicitly instructed.**
 
 ---
 
@@ -295,8 +294,6 @@ If a bug cannot be observed, it cannot be fixed.
 
 ## 📅 Phase 4: The Storyteller & The Danse Macabre
 
-> 🔄 **Currently Active**
-
 ### Chronicle & Storyteller Tools
 - [x] **Initiative Tracker** — real-time initiative order using Initiative Mod mechanics
 - [x] **Encounter Manager** — create, manage, and resolve combat encounters
@@ -464,28 +461,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 ---
 
-## 📅 Phase 8: PWA & Offline Capabilities (The Hidden Refuge)
-
-- [ ] **Service Worker Registration** — cache core application shell for offline access
-- [ ] **Offline Character Sheet** — full read/write access to character data without network
-- [ ] **Offline Dice Rolling** — the Dice Nexus functions entirely offline
-- [ ] **Offline State Queue** — event-sourced state changes queued locally during offline play
-- [ ] **Reconnection Sync** — last-write-wins optimistic concurrency with conflict detection on reconnect
-- [ ] **Conflict Resolution UI** — present the player with a clear merge/override choice when sync conflicts occur
-- [ ] **Offline Dice Roll Reconciliation** — define canonical ordering strategy for dice rolled offline when they appear in the shared session roll history on sync
-- [ ] **Storage Quota Management** — monitor IndexedDB usage; warn player and gracefully degrade before quota is exceeded
-- [ ] **Install Prompt** — PWA install banner for mobile and desktop
-
-### Phase 8 Exit Criteria
-- A player can create a character, edit attributes, and roll dice with zero network connectivity
-- All offline changes sync correctly on reconnect without data loss
-- The app is installable as a PWA on iOS, Android, and desktop browsers
-- Conflict resolution is tested with deterministic scenarios
-- Storage quota limits are handled gracefully
-
----
-
-## 📅 Phase 9: End-to-End Testing & Accessibility
+## 📅 Phase 8: End-to-End Testing & Accessibility
 
 - [ ] E2E UI testing for critical player flows (character creation, dice rolling, XP spending)
 - [ ] E2E Storyteller flows (initiative, encounter management, Beat awarding)
@@ -498,7 +474,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 - [ ] **Cross-Browser Testing Matrix** — explicitly verify: Chrome, Firefox, Safari (iOS + macOS), Edge; document any known limitations
 - [ ] Add all E2E and a11y tests to the CI pipeline
 
-### Phase 9 Exit Criteria
+### Phase 8 Exit Criteria
 - Every critical user flow is covered by an E2E test
 - Zero WCAG 2.1 AA violations on any page
 - The app is fully operable via keyboard navigation
@@ -507,7 +483,7 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 ---
 
-## 📅 Phase 10: The Global Embrace
+## 📅 Phase 9: The Global Embrace
 
 - [ ] **Localization & i18n** — full language support for UI strings; priority languages: French, German, Spanish (largest TTRPG markets after English)
 - [ ] - **Game Term Localization Strategy** — define canonical policy before any i18n work begins. The following terms are **sacred** and must not be silently translated, anglicized, or altered without an      explicit, documented decision per language: `Discipline`, `Covenant`, `Touchstone`, `Coterie`, `Clan`, `Beat`, `Predator Type`, `Humanity`, `Vitae`, `Blood Potency`. Each language's treatment of these terms must be recorded in a localization policy document before strings are extracted. No silent drift.
@@ -517,12 +493,24 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 - [ ] **GDPR Per-Region Compliance Review** — multi-region deployments introduce new data residency obligations; audit and document per-region requirements before expanding infrastructure
 - [ ] **Community Content Marketplace** — browse and share homebrew content packs
 
-### Phase 10 Exit Criteria
+### Phase 9 Exit Criteria
 - The app is fully localized in at least two languages
 - Game term localization policy is documented and applied consistently
 - Shared chronicle links render rich previews on Discord and social platforms
 - The public API has versioned documentation, rate limiting, and a developer registration flow
 - Per-region GDPR obligations are documented for each active deployment region
+
+---
+
+## 🔭 Future Plans — Deferred Initiatives
+
+### PWA & Offline Capabilities (The Hidden Refuge)
+
+**What was planned:** A full offline-capable PWA experience — service worker caching of the application shell, full read/write access to character sheets without a network connection, offline dice rolling via the Dice Nexus, and an event-sourced local state queue that reconciles with the server on reconnect using last-write-wins optimistic concurrency with conflict detection and a player-facing merge UI.
+
+**Why it was deferred:** Offline-first architecture introduces significant implementation complexity — IndexedDB quota management, canonical ordering of offline dice rolls in the shared session history, and conflict resolution UX all require careful design to meet the Antigravity standard of zero magic and full traceability. Building this before real users exist would mean speculating about usage patterns that may never materialize.
+
+**How it will be decided:** The offline strategy will be revisited after the web application ships and real user feedback is collected. If players consistently report playing in connectivity-challenged environments (game tables, conventions, travel), a targeted offline feature set will be scoped and prioritized accordingly. No architecture will be pre-built in anticipation of this — the decision will be driven by evidence, not assumption.
 
 ---
 

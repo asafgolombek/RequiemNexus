@@ -1,0 +1,135 @@
+name: Checks (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      artifact-retention-days:
+        description: Days to retain coverage artifacts
+        type: number
+        default: 30
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build, Test & Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore & Check Formatting
+        run: |
+          dotnet restore tests/RequiemNexus.Tests.slnx
+          dotnet format tests/RequiemNexus.Tests.slnx --verify-no-changes
+
+      - name: Build (Release)
+        run: dotnet build tests/RequiemNexus.Tests.slnx --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: Run Tests with Coverage
+        run: >
+          dotnet test tests/RequiemNexus.Tests.slnx
+          --no-build
+          --configuration Release
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage
+          --
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: coverage-${{ github.run_number }}
+          path: ./coverage
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  validate-migrations:
+    name: Validate DB Migrations
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: requiem_nexus_migration_test
+        ports:
+          - 5432:5432
+        options: >
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore dotnet tools cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.dotnet/tools
+          key: ${{ runner.os }}-dotnet-tools-${{ hashFiles('**/Directory.Packages.props') }}
+
+      - name: Install EF Tools
+        run: dotnet tool install --global dotnet-ef 2>/dev/null || dotnet tool update --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore tests/RequiemNexus.Tests.slnx
+
+      - name: Build (Debug)
+        run: dotnet build tests/RequiemNexus.Tests.slnx --no-restore --configuration Debug
+
+      - name: Migration Dry-Run
+        run: |
+          dotnet ef database update \
+          --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web \
+          --verbose
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=requiem_nexus_migration_test;Username=postgres;Password=postgres"
+
+  security-scan:
+    name: Vulnerability Scan
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore dependencies
+        run: dotnet restore tests/RequiemNexus.Tests.slnx
+
+      - name: NuGet Audit
+        run: |
+          OUTPUT=$(dotnet list tests/RequiemNexus.Tests.slnx package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
+            echo "❌ Vulnerable packages detected."
+            exit 1
+          fi
+          echo "✅ No vulnerable packages found."
