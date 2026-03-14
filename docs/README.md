@@ -92,7 +92,7 @@ Presentation (Web) → Application Layer → Domain Layer → Infrastructure (Da
 
 Dependencies always point inward. Infrastructure is a plugin to the domain, never the reverse.
 
-→ Read the full [Architecture Guide](./docs/Architecture.md)
+→ Read the full [Architecture Guide](./Architecture.md)
 
 ---
 
@@ -131,13 +131,13 @@ RequiemNexus/
 | 9 | **E2E Testing & Accessibility** | ⬚ Planned |
 | 10 | **The Global Embrace** — i18n, public API | ⬚ Planned |
 
-→ See the full roadmap with details in the [Mission Document](./docs/mission.md)
+→ See the full roadmap with details in the [Mission Document](./mission.md)
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read the [Contributing Guide](./Contributing.md) before submitting a PR.
+We welcome contributions! Please read the [Contributing Guide](../Contributing.md) before submitting a PR.
 
 All contributions must uphold the **Antigravity Pledge**:
 - Reduce cognitive weight, not add to it.
@@ -162,7 +162,7 @@ Help us keep Requiem Nexus a welcoming environment. Please read our [Code of Con
 
 ## 📄 License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [MIT License](../LICENSE).
 
 ---
 
