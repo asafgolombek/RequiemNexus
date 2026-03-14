@@ -10,9 +10,14 @@
             "args": [],
             "cwd": "${workspaceFolder}/src/RequiemNexus.Web",
             "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
-            }
+            },
+            "console": "integratedTerminal"
         },
         {
             "name": "Run Database Update",
