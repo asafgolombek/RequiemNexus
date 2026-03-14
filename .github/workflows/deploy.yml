@@ -1,11 +1,7 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
+  workflow_dispatch:  # Disabled: re-enable push/tags when ready to deploy
 
 permissions:
   id-token: write # Required for AWS OIDC via configure-aws-credentials

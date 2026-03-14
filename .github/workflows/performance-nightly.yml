@@ -1,9 +1,7 @@
 name: Nightly Performance Regression
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # 2 AM UTC daily
-  workflow_dispatch:  # Allow manual trigger for validation
+  workflow_dispatch:  # Disabled: re-enable schedule when staging is back up
 
 concurrency:
   group: perf-nightly
