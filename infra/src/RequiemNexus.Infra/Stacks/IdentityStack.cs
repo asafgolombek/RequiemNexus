@@ -23,7 +23,7 @@ public class IdentityStack : Stack
                 { "StringLike", new System.Collections.Generic.Dictionary<string, string> { { "token.actions.githubusercontent.com:sub", "repo:asafgolombek/RequiemNexus:*" } } },
                 { "StringEquals", new System.Collections.Generic.Dictionary<string, string> { { "token.actions.githubusercontent.com:aud", "sts.amazonaws.com" } } }
             }),
-            RoleName = "GitHubActionsServiceRole",
+            RoleName = $"GitHubActionsServiceRole-{id}",
             Description = "Role assumed by GitHub Actions via OIDC"
         });
 
@@ -44,7 +44,7 @@ public class IdentityStack : Stack
         new CfnOutput(this, "GitHubActionsRoleArn", new CfnOutputProps
         {
             Value = GitHubActionsRole.RoleArn,
-            ExportName = "GitHubActionsRoleArn"
+            ExportName = $"{id}-GitHubActionsRoleArn"
         });
     }
 }
