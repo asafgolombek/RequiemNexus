@@ -32,7 +32,6 @@ jobs:
         continue-on-error: true  # Let the job continue so artifacts are always uploaded
         with:
           image-ref: 'requiem-nexus:test'
-          trivy-version: 'v0.58.1'   # Pinned — avoids flaky download of latest release
           format: 'table'
           output: 'trivy-results.txt'
           exit-code: '1'
