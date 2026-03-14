@@ -12,32 +12,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            trivy-db-${{ runner.os }}-
 
       - name: Build local image
         run: |
           docker build -t requiem-nexus:test -f src/RequiemNexus.Web/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.30.0 # Pinned for stability — 0.28.0 was incompatible with Trivy v0.56.x
+        id: trivy
+        uses: aquasecurity/trivy-action@0.30.0
+        continue-on-error: true  # Let the job continue so artifacts are always uploaded
         with:
           image-ref: 'requiem-nexus:test'
+          trivy-version: 'v0.58.1'   # Pinned — avoids flaky download of latest release
           format: 'table'
           output: 'trivy-results.txt'
-          # 🛡️ The 'Fail-Gate' Logic
-          exit-code: '1' # This 'Fails' the CI job if vulnerabilities are found
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'HIGH,CRITICAL' # 🩸 Only trigger failure on these levels
+          severity: 'HIGH,CRITICAL'
+          cache-dir: ~/.cache/trivy
 
       - name: Show Trivy results
         if: always()
         run: cat trivy-results.txt || echo "No results file found"
 
       - name: Upload Trivy results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: trivy-results
           path: trivy-results.txt
           retention-days: 90
+
+      - name: Fail job if vulnerabilities were found
+        if: steps.trivy.outcome == 'failure'
+        run: |
+          echo "🩸 HIGH/CRITICAL vulnerabilities detected. See trivy-results artifact for details."
+          exit 1
