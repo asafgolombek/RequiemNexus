@@ -77,7 +77,7 @@ jobs:
       id-token: write   # Required for keyless identity
       contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: ghcr.io/${{ github.repository }}
       digest: ${{ needs.validate-and-release.outputs.image_digest }}
