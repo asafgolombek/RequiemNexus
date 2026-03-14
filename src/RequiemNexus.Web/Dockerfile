@@ -29,6 +29,9 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
+# Upgrade Alpine packages to pull in security patches (e.g. CVE-2026-22184 zlib)
+RUN apk upgrade --no-cache
+
 # Create logging and data directories if needed
 RUN mkdir -p /app/logs /app/.data && chown -R 1000:1000 /app
 
