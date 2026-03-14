@@ -7,12 +7,13 @@ on:
 
 permissions:
   contents: write
-  packages: write # Necessary if pushing to GitHub Container Registry in Phase 5
-  pull-requests: write
+  packages: write
+  id-token: write      # 🔑 Required for Keyless Sign-in (OIDC)
+  security-events: write 
 
 jobs:
   validate-and-release:
-    name: Validate, Build & Release
+    name: Validate, Build, Sign & Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,24 +26,60 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           cache: true
-          cache-dependency-path: '**/packages.lock.json'
-
 
       - name: Restore & Build (Release)
         run: |
-          dotnet restore tests/RequiemNexus.Tests.slnx
-          dotnet build tests/RequiemNexus.Tests.slnx --configuration Release --no-restore
+          dotnet restore src/RequiemNexus.slnx
+          dotnet build src/RequiemNexus.slnx --configuration Release
 
-      # 🧪 Last Rite: Ensure tests pass before the version is immortalized
-      - name: Run Critical Tests
-        run: dotnet test tests/RequiemNexus.Tests.slnx --configuration Release --no-build
+      # 📜 The Scribe Ritual: Generate SBOM
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          dotnet tool install --global CycloneDX
+          dotnet CycloneDX src/RequiemNexus.slnx -o ./artifacts/sbom -f json -sv 1.5
 
+      # 🧪 The Inquisitor Ritual: Build & Scan Container
+      - name: Build Container
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -f src/RequiemNexus.Web/Dockerfile .
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'ghcr.io/${{ github.repository }}:${{ github.ref_name }}'
+          format: 'table'
+          exit-code: '1' # 🛡️ Fail if High/Critical vulnerabilities exist
+          severity: 'HIGH,CRITICAL'
+
+      # 🔐 The Keyless Rite: Sign with Cosign
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      - name: Sign the Container Image
+        run: |
+          cosign sign --yes "ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
+
+      # 💎 The Final Ascension: Create Release
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2 # Updated to v2
+        uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          # Artifacts can be added here once Phase 5 containerization is ready
-          # files: |
-          #   artifacts/*.zip
+          files: |
+            ./artifacts/sbom/bom.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # After your build job finishes successfully...
+  provenance:
+    needs: [validate-and-release]
+    permissions:
+      id-token: write   # Required for keyless identity
+      contents: read
+      actions: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: ghcr.io/${{ github.repository }}
+      digest: ${{ needs.validate-and-release.outputs.image_digest }}
+      registry-username: ${{ github.actor }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}

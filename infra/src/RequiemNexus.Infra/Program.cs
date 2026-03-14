@@ -27,8 +27,13 @@ public sealed class Program
         var dataConfig = new DataStack(app, "RequiemNexus-Data-Stack", new DataStackProps
         {
             Description = "Requiem Nexus Data Stack (RDS, ElastiCache)",
-            Vpc = networkConfig.Vpc
+            Vpc = networkConfig.Vpc,
+            IsProductionGrade = envName == "production"
         });
+
+        // imageUri is injected by CI via: cdk deploy --context imageUri=<ecr-uri>
+        // When absent (local dev), ComputeStack falls back to ContainerImage.FromAsset.
+        string? imageUri = app.Node.TryGetContext("imageUri") as string;
 
         var computeConfig = new ComputeStack(app, "RequiemNexus-Compute-Stack", new ComputeStackProps
         {
@@ -37,7 +42,8 @@ public sealed class Program
             PostgresDatabase = dataConfig.PostgresDatabase,
             DbSecurityGroup = dataConfig.DbSecurityGroup,
             RedisCluster = dataConfig.RedisCluster,
-            RedisSecurityGroup = dataConfig.RedisSecurityGroup
+            RedisSecurityGroup = dataConfig.RedisSecurityGroup,
+            ImageUri = imageUri
         });
 
         var staticAssetConfig = new StaticAssetStack(app, $"RequiemNexus-Static-{envName}", new StackProps

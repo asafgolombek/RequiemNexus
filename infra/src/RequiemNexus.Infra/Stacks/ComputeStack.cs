@@ -16,6 +16,12 @@ public class ComputeStackProps : StackProps
     public required ISecurityGroup DbSecurityGroup { get; init; }
     public required CfnReplicationGroup RedisCluster { get; init; }
     public required ISecurityGroup RedisSecurityGroup { get; init; }
+
+    /// <summary>
+    /// Pre-built container image URI (e.g. from ECR). When set, CDK skips the local Docker build.
+    /// Omit for local development — CDK will build from the Dockerfile via FromAsset.
+    /// </summary>
+    public string? ImageUri { get; init; }
 }
 
 public class ComputeStack : Stack
@@ -37,11 +43,15 @@ public class ComputeStack : Stack
             Cpu = 512,
             TaskImageOptions = new ApplicationLoadBalancedTaskImageOptions
             {
-                Image = ContainerImage.FromAsset("..", new AssetImageProps
-                {
-                    File = "src/RequiemNexus.Web/Dockerfile",
-                    Exclude = new[] { "**/bin", "**/obj", "**/node_modules", ".git", "infra/cdk.out" }
-                }),
+                // Use a pre-built ECR image when available (CI path — avoids rebuilding during cdk deploy).
+                // Fall back to FromAsset for local development where no pre-built image exists.
+                Image = string.IsNullOrEmpty(props.ImageUri)
+                    ? ContainerImage.FromAsset("..", new AssetImageProps
+                    {
+                        File = "src/RequiemNexus.Web/Dockerfile",
+                        Exclude = new[] { "**/bin", "**/obj", "**/node_modules", ".git", "infra/cdk.out" }
+                    })
+                    : ContainerImage.FromRegistry(props.ImageUri),
                 ContainerPort = 8080,
                 // Plain (non-sensitive) configuration — embedded in CloudFormation as-is.
                 Environment = new Dictionary<string, string>
@@ -92,12 +102,31 @@ public class ComputeStack : Stack
             Description = "Allow Redis access from Fargate"
         });
 
+        // Circuit breaker: if new tasks fail to start, ECS stops retrying and rolls back immediately
+        // instead of looping for up to 3 hours (CloudFormation's default stabilization timeout).
+        // Uses the L1 escape hatch because ApplicationLoadBalancedFargateService does not expose
+        // DeploymentCircuitBreaker directly in its props.
+        if (FargateService.Service.Node.DefaultChild is CfnService cfnService)
+        {
+            cfnService.DeploymentConfiguration = new CfnService.DeploymentConfigurationProperty
+            {
+                DeploymentCircuitBreaker = new CfnService.DeploymentCircuitBreakerProperty
+                {
+                    Enable = true,
+                    Rollback = true
+                }
+            };
+        }
+
+        // Faster health checks: 2 passes × 10s = 20s to declare healthy vs the ALB default of 5 × 30s = 150s.
+        // UnhealthyThresholdCount stays at 2 (default) — fail fast if the container is broken.
         FargateService.TargetGroup.ConfigureHealthCheck(new Amazon.CDK.AWS.ElasticLoadBalancingV2.HealthCheck
         {
             Path = "/health",
-            Interval = Duration.Seconds(30),
+            Interval = Duration.Seconds(10),
             Timeout = Duration.Seconds(5),
-            HealthyHttpCodes = "200"
+            HealthyHttpCodes = "200",
+            HealthyThresholdCount = 2
         });
 
         // Export the Load Balancer URL for use in smoke tests and documentation.

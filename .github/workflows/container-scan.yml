@@ -1,0 +1,59 @@
+name: Container Security Scan
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  scan:
+    name: Scan RequiemNexus Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build local image
+        run: |
+          docker build -t requiem-nexus:test -f src/RequiemNexus.Web/Dockerfile .
+
+      - name: Install Trivy via apt
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+          trivy --version
+
+      - name: Run Trivy vulnerability scanner
+        id: trivy
+        continue-on-error: true
+        run: |
+          trivy image \
+            --exit-code 1 \
+            --ignore-unfixed \
+            --vuln-type os,library \
+            --severity HIGH,CRITICAL \
+            --format table \
+            --output trivy-results.txt \
+            requiem-nexus:test
+
+      - name: Show Trivy results
+        if: always()
+        run: cat trivy-results.txt || echo "No results file found"
+
+      - name: Upload Trivy results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-results
+          path: trivy-results.txt
+          retention-days: 90
+
+      - name: Fail job if vulnerabilities were found
+        if: steps.trivy.outcome == 'failure'
+        run: |
+          echo "🩸 HIGH/CRITICAL vulnerabilities detected. See trivy-results artifact for details."
+          exit 1

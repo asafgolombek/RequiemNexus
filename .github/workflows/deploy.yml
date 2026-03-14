@@ -36,6 +36,34 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_STAGING }}
           aws-region: us-east-1
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Container Image
+        id: push
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          DOCKER_BUILDKIT: 1
+        run: |
+          aws ecr create-repository --repository-name requiem-nexus --region us-east-1 2>/dev/null || true
+          # Keep only the 10 most recent images — prevents unbounded ECR storage growth.
+          aws ecr put-lifecycle-policy \
+            --repository-name requiem-nexus \
+            --region us-east-1 \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"Keep last 10 images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}'
+          CACHE_URI="$REGISTRY/requiem-nexus:cache"
+          IMAGE_URI="$REGISTRY/requiem-nexus:$IMAGE_TAG"
+          docker build \
+            --cache-from "$CACHE_URI" \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t "$IMAGE_URI" -t "$CACHE_URI" \
+            -f src/RequiemNexus.Web/Dockerfile .
+          docker push "$IMAGE_URI"
+          docker push "$CACHE_URI"
+          echo "image-uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+
       - name: Install AWS CDK
         run: npm install -g aws-cdk
 
@@ -45,7 +73,9 @@ jobs:
       - name: CDK Deploy (Staging)
         run: |
             cd infra
-            cdk deploy --all --require-approval never --outputs-file outputs.json
+            cdk deploy --all --require-approval never --outputs-file outputs.json \
+              --context imageUri=${{ steps.push.outputs.image-uri }} \
+              --context env=staging
 
       - name: Extract Load Balancer URL
         id: extract_url
@@ -81,6 +111,33 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
           aws-region: us-east-1
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Container Image
+        id: push
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          DOCKER_BUILDKIT: 1
+        run: |
+          aws ecr create-repository --repository-name requiem-nexus --region us-east-1 2>/dev/null || true
+          aws ecr put-lifecycle-policy \
+            --repository-name requiem-nexus \
+            --region us-east-1 \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"Keep last 10 images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}'
+          CACHE_URI="$REGISTRY/requiem-nexus:cache"
+          IMAGE_URI="$REGISTRY/requiem-nexus:$IMAGE_TAG"
+          docker build \
+            --cache-from "$CACHE_URI" \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t "$IMAGE_URI" -t "$CACHE_URI" \
+            -f src/RequiemNexus.Web/Dockerfile .
+          docker push "$IMAGE_URI"
+          docker push "$CACHE_URI"
+          echo "image-uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+
       - name: Install AWS CDK
         run: npm install -g aws-cdk
 
@@ -90,7 +147,9 @@ jobs:
       - name: CDK Deploy (Production)
         run: |
           cd infra
-          cdk deploy --all --require-approval never --outputs-file outputs.json
+          cdk deploy --all --require-approval never --outputs-file outputs.json \
+            --context imageUri=${{ steps.push.outputs.image-uri }} \
+            --context env=production
 
       - name: Extract Load Balancer URL (Production)
         id: extract_url_prod

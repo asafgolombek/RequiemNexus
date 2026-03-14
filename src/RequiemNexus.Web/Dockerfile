@@ -22,15 +22,17 @@ RUN dotnet build "RequiemNexus.Web.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "RequiemNexus.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 8080
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
+# Upgrade Alpine packages to pull in security patches (e.g. CVE-2026-22184 zlib)
+RUN apk upgrade --no-cache
+
 # Create logging and data directories if needed
-RUN apt-get update && apt-get install -y --no-install-recommends libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /app/logs /app/.data && chown -R 1000:1000 /app
 
 USER 1000
