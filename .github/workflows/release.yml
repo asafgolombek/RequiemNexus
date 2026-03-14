@@ -16,6 +16,8 @@ jobs:
     name: Validate, Build, Sign & Release
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      image_digest: ${{ steps.push.outputs.image_digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -40,6 +42,9 @@ jobs:
           dotnet CycloneDX src/RequiemNexus.slnx -o ./artifacts/sbom -f json -sv 1.5
 
       # 🧪 The Inquisitor Ritual: Build & Scan Container
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
       - name: Build Container
         run: |
           docker build -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -f src/RequiemNexus.Web/Dockerfile .
@@ -51,6 +56,13 @@ jobs:
           format: 'table'
           exit-code: '1' # 🛡️ Fail if High/Critical vulnerabilities exist
           severity: 'HIGH,CRITICAL'
+
+      - name: Push Container Image
+        id: push
+        run: |
+          docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/${{ github.repository }}:${{ github.ref_name }} | cut -d@ -f2)
+          echo "image_digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       # 🔐 The Keyless Rite: Sign with Cosign
       - name: Install Cosign
