@@ -19,6 +19,7 @@
     letter-spacing: 1px;
     font-size: 0.85rem;
     text-transform: uppercase;
+    font-family: var(--font-heading);
 }
 
 .tracker-boxes {
@@ -26,49 +27,66 @@
     gap: 4px;
 }
 
-.tracker-box {
-    width: 18px;
-    height: 18px;
-    border: 1px solid #555555; /* Darker border for visibility */
-    background: rgba(255, 255, 255, 0.05); /* Subtle background so they aren't invisible */
-    transition: background-color var(--transition-fast);
+.health-box {
+    width: 28px; height: 28px;
+    border: 1px solid var(--muted-gray);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    transition: background-color 0.2s, transform 0.15s, border-color 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--bone-white);
     cursor: pointer;
 }
 
-.tracker-box:hover {
-    border-color: var(--text-muted);
-}
-
-.tracker-box.filled {
-    background-color: var(--text-bright);
-    border-color: var(--text-bright);
-}
-
-.tracker-box.filled.dark {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-}
-
-.health-box {
-    background-color: #ffffff;
-    border-color: #ffffff;
-    color: #ff0000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 14px;
-    line-height: 1;
-    user-select: none;
-}
-
 .health-box:hover {
-    border-color: #cccccc;
+    border-color: var(--crimson);
+    transform: scale(1.05);
+}
+
+.health-box.bashing  { background: rgba(184, 134, 11, 0.2); border-color: var(--warning-amber); color: var(--warning-amber); }
+.health-box.lethal   { background: rgba(139, 0, 0, 0.2);   border-color: var(--crimson);       color: var(--crimson); }
+.health-box.aggravated { background: rgba(139,0,0,0.4);    border-color: var(--crimson-glow);   color: var(--bone-white); }
+
+/* Willpower */
+.willpower-box {
+    width: 20px; height: 20px;
+    border: 1px solid var(--muted-gray);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.willpower-box.filled {
+    background: var(--bone-white);
+    border-color: var(--bone-white);
+    box-shadow: 0 0 8px rgba(245, 240, 232, 0.4);
+}
+
+/* Vitae Drop */
+.vitae-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vitae-drop {
+    width: 40px;
+    height: 52px;
+    filter: drop-shadow(0 0 8px rgba(139, 0, 0, 0.3));
+}
+
+.vitae-label {
+    font-size: 0.75rem;
+    font-family: var(--font-primary);
+    color: var(--text-secondary);
 }
 
 @media (max-width: 768px) {
-    .tracker-box {
-        width: 22px;
-        height: 22px;
+    .health-box {
+        width: 24px;
+        height: 24px;
     }
 }

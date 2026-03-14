@@ -10,16 +10,22 @@ namespace RequiemNexus.Application.Services;
 /// Application service for campaign management. Owns all data access for the Campaign aggregate.
 /// Every mutating operation verifies authorisation before persisting.
 /// </summary>
-public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignService> logger, IAuthorizationHelper authHelper) : ICampaignService
+public class CampaignService(
+    ApplicationDbContext dbContext,
+    IDbContextFactory<ApplicationDbContext> dbContextFactory,
+    ILogger<CampaignService> logger,
+    IAuthorizationHelper authHelper) : ICampaignService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly ILogger<CampaignService> _logger = logger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
 
     /// <inheritdoc />
     public async Task<List<Campaign>> GetCampaignsByUserIdAsync(string userId)
     {
-        return await _dbContext.Campaigns
+        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        return await ctx.Campaigns
             .Include(c => c.Characters)
             .Include(c => c.StoryTeller)
             .Where(c => c.StoryTellerId == userId
@@ -31,7 +37,8 @@ public class CampaignService(ApplicationDbContext dbContext, ILogger<CampaignSer
     /// <inheritdoc />
     public async Task<Campaign?> GetCampaignByIdAsync(int id, string userId)
     {
-        return await _dbContext.Campaigns
+        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        return await ctx.Campaigns
             .Include(c => c.StoryTeller)
             .Include(c => c.Characters).ThenInclude(ch => ch.User)
             .AsNoTracking()

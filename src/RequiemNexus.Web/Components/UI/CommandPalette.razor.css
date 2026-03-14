@@ -1,0 +1,58 @@
+.palette-overlay {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 15vh;
+    animation: fadeIn 0.15s ease;
+}
+
+.palette-card {
+    background: var(--ash-gray);
+    border: 1px solid var(--muted-gray);
+    border-radius: 14px;
+    width: 100%; max-width: 560px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.7), 0 0 40px rgba(139,0,0,0.15);
+    overflow: hidden;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.palette-input {
+    width: 100%; padding: 1.1rem 1.25rem;
+    background: transparent; border: none;
+    border-bottom: 1px solid var(--muted-gray);
+    color: var(--bone-white); font-size: 1.05rem;
+    font-family: var(--font-primary); outline: none;
+}
+
+.palette-results { max-height: 380px; overflow-y: auto; padding: 0.5rem 0; }
+
+.palette-section-label {
+    display: block; padding: 0.4rem 1rem;
+    font-family: var(--font-heading); font-size: 0.65rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--crimson);
+}
+
+.palette-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.6rem 1rem; cursor: pointer;
+    color: var(--text-secondary);
+    transition: background 0.1s, color 0.1s;
+}
+
+.palette-item:hover,
+.palette-item.active {
+    background: rgba(139,0,0,0.12); color: var(--bone-white);
+}
+
+.palette-no-results {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-hint);
+    font-style: italic;
+}

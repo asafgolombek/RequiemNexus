@@ -1,7 +1,17 @@
 ﻿@inherits LayoutComponentBase
 @using RequiemNexus.Web.Components.Layout
+@using RequiemNexus.Web.Services
+@inject CommandPaletteService PaletteService
+@inject IJSRuntime JS
 
 <div id="app" class="h-full overflow-auto grimoire-bg">
+
+    <div class="particles" aria-hidden="true">
+        @for (int i = 1; i <= 12; i++)
+        {
+            <span class="particle particle-@i"></span>
+        }
+    </div>
 
     <SharedHeader />
 
@@ -12,8 +22,24 @@
     </main>
 </div>
 
+<ToastContainer />
+<CommandPalette />
+
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("registerCommandPaletteShortcut", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void Toggle() => PaletteService.Toggle();
+}

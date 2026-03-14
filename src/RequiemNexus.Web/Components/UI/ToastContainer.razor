@@ -1,0 +1,33 @@
+@using RequiemNexus.Web.Services
+@implements IDisposable
+@inject ToastService ToastService
+
+<div class="toast-container" aria-live="polite">
+    @foreach (var toast in ToastService.Toasts.Reverse())
+    {
+        <div class="toast-item toast-@toast.Type.ToString().ToLower()" key="@toast.Id">
+            <div class="toast-content">
+                <span class="toast-title">@toast.Title</span>
+                <span class="toast-message">@toast.Message</span>
+            </div>
+            <div class="toast-progress" style="animation-duration: @(toast.DurationMs)ms"></div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ToastService.OnToastsChanged += HandleToastsChanged;
+    }
+
+    private void HandleToastsChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnToastsChanged -= HandleToastsChanged;
+    }
+}

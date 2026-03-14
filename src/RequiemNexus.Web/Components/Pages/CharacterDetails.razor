@@ -18,7 +18,7 @@
 
 @if (_character == null)
 {
-    <p><em>Loading your immortal legacy...</em></p>
+    <SkeletonLoader Variant="sheet" />
 }
 else
 {
@@ -106,7 +106,9 @@ else
 
                     <!-- ATTRIBUTES -->
                     <section class="cs-section cs-attributes">
-                        <h2>Attributes</h2>
+                        <div class="section-divider">
+                            <span class="section-divider-label">◆ Attributes ◆</span>
+                        </div>
                         <div class="grid-3-col">
                             @foreach (var (label, category) in new[] {
                                 ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
@@ -128,7 +130,9 @@ else
 
                     <!-- SKILLS -->
                     <section class="cs-section cs-skills">
-                        <h2>Skills</h2>
+                        <div class="section-divider">
+                            <span class="section-divider-label">◆ Skills ◆</span>
+                        </div>
                         <div class="grid-3-col">
                             @foreach (var (label, category) in new[] {
                                 ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),

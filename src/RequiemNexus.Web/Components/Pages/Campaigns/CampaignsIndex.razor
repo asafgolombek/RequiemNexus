@@ -17,7 +17,7 @@
 
     @if (_campaigns == null)
     {
-        <p><em>Loading...</em></p>
+        <SkeletonLoader Variant="card" Count="3" />
     }
     else if (!_campaigns.Any())
     {

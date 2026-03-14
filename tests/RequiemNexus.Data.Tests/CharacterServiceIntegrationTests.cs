@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
@@ -14,7 +15,17 @@ namespace RequiemNexus.Data.Tests;
 public class CharacterServiceIntegrationTests
 {
     private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
-        => new(ctx, new CharacterCreationRules(), new BeatLedgerService(ctx));
+    {
+        // These tests never call GetCharactersByUserIdAsync / GetArchivedCharactersAsync,
+        // so the factory is only needed to satisfy the constructor. It uses a throwaway
+        // database name that is never accessed.
+        ServiceCollection services = new();
+        services.AddDbContextFactory<ApplicationDbContext>(
+            o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
+            .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        return new(ctx, factory, new CharacterCreationRules(), new BeatLedgerService(ctx));
+    }
 
     private static ApplicationDbContext CreateContext(string dbName)
     {

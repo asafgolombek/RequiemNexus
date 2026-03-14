@@ -1,0 +1,144 @@
+@using RequiemNexus.Web.Services
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@implements IDisposable
+@inject CommandPaletteService PaletteService
+@inject ICharacterService CharacterService
+@inject ICampaignService CampaignService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (PaletteService.IsOpen)
+{
+    <div class="palette-overlay" @onclick="Close" role="dialog" aria-modal="true" aria-label="Command palette">
+        <div class="palette-card" @onclick:stopPropagation="true">
+            <input @ref="_inputRef" class="palette-input" placeholder="Search characters, campaigns, pages..."
+                   @bind-value="_query" @bind-value:event="oninput" @onkeydown="OnKeyDown" autofocus />
+            <div class="palette-results">
+                @foreach (var group in FilteredResults())
+                {
+                    <div class="palette-section">
+                        <span class="palette-section-label">@group.Label</span>
+                        @foreach (var item in group.Items)
+                        {
+                            <div class="palette-item @(item == _activeItem ? "active" : "")"
+                                 @onclick="() => Navigate(item.Href)">
+                                <span class="palette-item-icon">@item.Icon</span>
+                                <span class="palette-item-label">@item.Name</span>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (!FilteredResults().Any())
+                {
+                    <div class="palette-no-results">No results found for "@_query"</div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ElementReference _inputRef;
+    private string _query = string.Empty;
+    private List<PaletteItem> _characters = new();
+    private List<PaletteItem> _campaigns = new();
+    private List<PaletteItem> _staticPages = new()
+    {
+        new PaletteItem("Dashboard", "/home", "🏠"),
+        new PaletteItem("My Characters", "/characters", "🦇"),
+        new PaletteItem("My Campaigns", "/campaigns", "⚔️"),
+        new PaletteItem("Profile Settings", "/Account/Manage", "⚙️")
+    };
+
+    private PaletteItem? _activeItem;
+    private string? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PaletteService.OnStateChanged += HandleStateChanged;
+        
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(_userId))
+        {
+            var chars = await CharacterService.GetCharactersByUserIdAsync(_userId);
+            _characters = chars.Select(c => new PaletteItem(c.Name, $"/character/{c.Id}", "🩸")).ToList();
+
+            var camps = await CampaignService.GetCampaignsByUserIdAsync(_userId);
+            _campaigns = camps.Select(c => new PaletteItem(c.Name, $"/campaigns/{c.Id}", "📜")).ToList();
+        }
+    }
+
+    private void HandleStateChanged()
+    {
+        if (PaletteService.IsOpen)
+        {
+            _query = string.Empty;
+            _activeItem = FilteredResults().FirstOrDefault()?.Items.FirstOrDefault();
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private IEnumerable<PaletteSection> FilteredResults()
+    {
+        var results = new List<PaletteSection>();
+
+        var filteredPages = _staticPages.Where(i => i.Name.Contains(_query, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (filteredPages.Any()) results.Add(new PaletteSection("Pages", filteredPages));
+
+        var filteredChars = _characters.Where(i => i.Name.Contains(_query, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (filteredChars.Any()) results.Add(new PaletteSection("Characters", filteredChars));
+
+        var filteredCamps = _campaigns.Where(i => i.Name.Contains(_query, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (filteredCamps.Any()) results.Add(new PaletteSection("Campaigns", filteredCamps));
+
+        return results;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        var allItems = FilteredResults().SelectMany(s => s.Items).ToList();
+        if (!allItems.Any()) return;
+
+        int index = _activeItem == null ? -1 : allItems.IndexOf(_activeItem);
+
+        if (e.Key == "ArrowDown")
+        {
+            index = (index + 1) % allItems.Count;
+            _activeItem = allItems[index];
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            index = (index - 1 + allItems.Count) % allItems.Count;
+            _activeItem = allItems[index];
+        }
+        else if (e.Key == "Enter" && _activeItem != null)
+        {
+            Navigate(_activeItem.Href);
+        }
+        else if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+
+    private void Navigate(string href)
+    {
+        PaletteService.Close();
+        NavigationManager.NavigateTo(href);
+    }
+
+    private void Close() => PaletteService.Close();
+
+    public void Dispose()
+    {
+        PaletteService.OnStateChanged -= HandleStateChanged;
+    }
+
+    private record PaletteItem(string Name, string Href, string Icon);
+    private record PaletteSection(string Label, List<PaletteItem> Items);
+}

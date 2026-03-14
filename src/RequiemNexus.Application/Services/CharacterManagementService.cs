@@ -10,16 +10,22 @@ namespace RequiemNexus.Application.Services;
 
 public class CharacterManagementService(
     ApplicationDbContext dbContext,
+    IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ICharacterCreationRules creationRules,
     IBeatLedgerService beatLedger) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly ICharacterCreationRules _creationRules = creationRules;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
 
+    /// <inheritdoc />
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
     {
-        return await _dbContext.Characters
+        // Factory creates a fresh context per call so Blazor Server's concurrent prerender
+        // and interactive renders do not share a single DbContext instance.
+        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        return await ctx.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId && !c.IsArchived)
             .AsNoTracking()
@@ -29,7 +35,8 @@ public class CharacterManagementService(
     /// <summary>Returns the archived characters owned by the given user.</summary>
     public async Task<List<Character>> GetArchivedCharactersAsync(string userId)
     {
-        return await _dbContext.Characters
+        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        return await ctx.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId && c.IsArchived)
             .AsNoTracking()

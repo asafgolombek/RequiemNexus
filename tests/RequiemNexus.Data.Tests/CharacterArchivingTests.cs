@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using Xunit;
@@ -19,10 +20,17 @@ public class CharacterArchivingTests
         return new ApplicationDbContext(options);
     }
 
-    private static CharacterManagementService CreateService(ApplicationDbContext ctx)
+    private static CharacterManagementService CreateService(ApplicationDbContext ctx, string dbName)
     {
+        // The factory must target the same InMemory database as ctx so that
+        // GetCharactersByUserIdAsync / GetArchivedCharactersAsync see seeded data.
+        ServiceCollection services = new();
+        services.AddDbContextFactory<ApplicationDbContext>(
+            o => o.UseInMemoryDatabase(dbName));
+        IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
+            .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
         BeatLedgerService beatLedger = new(ctx);
-        return new CharacterManagementService(ctx, new RequiemNexus.Domain.CharacterCreationRules(), beatLedger);
+        return new CharacterManagementService(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), beatLedger);
     }
 
     private static DiceMacroService CreateDiceMacroService(ApplicationDbContext ctx) => new(ctx);
@@ -49,7 +57,7 @@ public class CharacterArchivingTests
     public async Task ArchiveCharacter_ByOwner_SetsIsArchivedTrue()
     {
         ApplicationDbContext ctx = CreateContext(nameof(ArchiveCharacter_ByOwner_SetsIsArchivedTrue));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(ArchiveCharacter_ByOwner_SetsIsArchivedTrue));
         (_, Character character) = await SeedAsync(ctx);
 
         await service.ArchiveCharacterAsync(character.Id, "user-1");
@@ -63,7 +71,7 @@ public class CharacterArchivingTests
     public async Task ArchiveCharacter_NonOwner_ThrowsUnauthorized()
     {
         ApplicationDbContext ctx = CreateContext(nameof(ArchiveCharacter_NonOwner_ThrowsUnauthorized));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(ArchiveCharacter_NonOwner_ThrowsUnauthorized));
         (_, Character character) = await SeedAsync(ctx);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
@@ -74,7 +82,7 @@ public class CharacterArchivingTests
     public async Task UnarchiveCharacter_ByOwner_SetsIsArchivedFalse()
     {
         ApplicationDbContext ctx = CreateContext(nameof(UnarchiveCharacter_ByOwner_SetsIsArchivedFalse));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(UnarchiveCharacter_ByOwner_SetsIsArchivedFalse));
         (_, Character character) = await SeedAsync(ctx);
 
         await service.ArchiveCharacterAsync(character.Id, "user-1");
@@ -89,7 +97,7 @@ public class CharacterArchivingTests
     public async Task GetCharactersByUserId_ExcludesArchived()
     {
         ApplicationDbContext ctx = CreateContext(nameof(GetCharactersByUserId_ExcludesArchived));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(GetCharactersByUserId_ExcludesArchived));
         (_, Character character) = await SeedAsync(ctx);
 
         await service.ArchiveCharacterAsync(character.Id, "user-1");
@@ -102,7 +110,7 @@ public class CharacterArchivingTests
     public async Task GetArchivedCharacters_ReturnsArchivedOnly()
     {
         ApplicationDbContext ctx = CreateContext(nameof(GetArchivedCharacters_ReturnsArchivedOnly));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(GetArchivedCharacters_ReturnsArchivedOnly));
         (_, Character character) = await SeedAsync(ctx);
 
         await service.ArchiveCharacterAsync(character.Id, "user-1");
@@ -118,7 +126,7 @@ public class CharacterArchivingTests
     public async Task RetireCharacter_ByOwner_SetsIsRetiredTrue()
     {
         ApplicationDbContext ctx = CreateContext(nameof(RetireCharacter_ByOwner_SetsIsRetiredTrue));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(RetireCharacter_ByOwner_SetsIsRetiredTrue));
         (Campaign campaign, Character character) = await SeedAsync(ctx);
         character.CampaignId = campaign.Id;
         await ctx.SaveChangesAsync();
@@ -134,7 +142,7 @@ public class CharacterArchivingTests
     public async Task RetireCharacter_BySt_Succeeds()
     {
         ApplicationDbContext ctx = CreateContext(nameof(RetireCharacter_BySt_Succeeds));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(RetireCharacter_BySt_Succeeds));
         (Campaign campaign, Character character) = await SeedAsync(ctx);
         character.CampaignId = campaign.Id;
         await ctx.SaveChangesAsync();
@@ -149,7 +157,7 @@ public class CharacterArchivingTests
     public async Task UnretireCharacter_ByOwner_SetsIsRetiredFalse()
     {
         ApplicationDbContext ctx = CreateContext(nameof(UnretireCharacter_ByOwner_SetsIsRetiredFalse));
-        CharacterManagementService service = CreateService(ctx);
+        CharacterManagementService service = CreateService(ctx, nameof(UnretireCharacter_ByOwner_SetsIsRetiredFalse));
         (Campaign campaign, Character character) = await SeedAsync(ctx);
         character.CampaignId = campaign.Id;
         await ctx.SaveChangesAsync();

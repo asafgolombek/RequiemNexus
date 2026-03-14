@@ -77,6 +77,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
 });
 
+// Blazor Server: concurrent renders on the same circuit share one Scoped DbContext, which
+// causes "A second operation was started" exceptions. IDbContextFactory lets services create
+// a short-lived context per operation for read-only queries, avoiding the concurrency issue.
+builder.Services.AddDbContextFactory<ApplicationDbContext>(
+    options =>
+    {
+        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RequiemNexus.Data"));
+        options.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+    },
+    ServiceLifetime.Scoped);
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddFido2(options =>
@@ -122,6 +133,8 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewMeritServ
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewClanService, RequiemNexus.Application.Services.HomebrewClanService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewPackService, RequiemNexus.Application.Services.HomebrewPackService>();
 
+builder.Services.AddSingleton<RequiemNexus.Web.Services.ToastService>();
+builder.Services.AddSingleton<RequiemNexus.Web.Services.CommandPaletteService>();
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 
 builder.Services.AddCascadingAuthenticationState();

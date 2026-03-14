@@ -11,7 +11,7 @@
         {
             var dotValue = i;
             <button type="button" 
-                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= _hoveredValue ? "hover-filled" : "")" 
+                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= _hoveredValue ? "hover-filled" : "") @(dotValue == _bleedingDot ? "bleeding" : "")" 
                     @onclick="() => SetValueAsync(dotValue)"
                     @onmouseover="() => { if (IsEditable) _hoveredValue = dotValue; }"
                     @onmouseout="() => { if (IsEditable) _hoveredValue = 0; }"
@@ -59,10 +59,13 @@
     public bool IsEditable { get; set; } = true;
 
     private int _hoveredValue = 0;
+    private int _bleedingDot = -1;
 
     private async Task SetValueAsync(int newValue)
     {
         if (!IsEditable) return;
+
+        bool isUpgrade = newValue > Value;
 
         // Allow unsetting the first dot if clicking the currently selected 1st dot
         if (newValue == 1 && Value == 1)
@@ -72,6 +75,17 @@
         else
         {
             Value = newValue;
+        }
+
+        if (isUpgrade)
+        {
+            _bleedingDot = newValue;
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(400);
+                _bleedingDot = -1;
+                await InvokeAsync(StateHasChanged);
+            });
         }
         
         await ValueChanged.InvokeAsync(Value);

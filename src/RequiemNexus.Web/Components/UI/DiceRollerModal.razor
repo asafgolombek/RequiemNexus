@@ -5,8 +5,18 @@
 
 @if (IsVisible)
 {
-    <div class="modal-backdrop" @onclick="Close">
+    <div class="modal-backdrop @(_isRolling ? "backdrop-surge" : "")" @onclick="Close">
         <div class="modal-panel" @onclick:stopPropagation>
+            @if (_showBurst)
+            {
+                <div class="particle-burst" aria-hidden="true">
+                    @for (int a = 0; a < 8; a++)
+                    {
+                        <span class="burst-particle" style="--angle: @(a * 45)deg"></span>
+                    }
+                </div>
+            }
+
             <div class="modal-header">
                 <h3>Roll: @TraitName</h3>
                 <button class="close-btn" @onclick="Close">&times;</button>
@@ -75,9 +85,9 @@
                 
                 @if (_lastResult != null)
                 {
-                    <div class="result-box @(_lastResult.IsExceptionalSuccess ? "exceptional" : "") @(_lastResult.IsDramaticFailure ? "dramatic-failure" : "")">
+                    <div class="result-box @(_lastResult.IsExceptionalSuccess ? "exceptional" : "") @(_lastResult.IsDramaticFailure ? "dramatic-failure" : "") @(_shakeClass)">
                         <h4 class="result-title">
-                            @_lastResult.Successes Success@(_lastResult.Successes != 1 ? "es" : "")
+                            <span id="@_successCountId">0</span> Success@(_lastResult.Successes != 1 ? "es" : "")
                         </h4>
                         @if (_lastResult.IsExceptionalSuccess)
                         {
@@ -89,9 +99,12 @@
                         }
                         
                         <div class="dice-results">
+                            @{ int dieIndex = 0; }
                             @foreach (var die in _lastResult.DiceRolled)
                             {
-                                <span class="die-result @(die >= 8 ? "success-die" : "fail-die")">@die</span>
+                                <span class="die-result @(die >= 8 ? "success-die" : "fail-die")"
+                                      style="--die-index: @dieIndex">@die</span>
+                                dieIndex++;
                             }
                         </div>
                     </div>
@@ -108,6 +121,8 @@
     [Parameter] public int BaseDice { get; set; } = 1;
     [Parameter] public RequiemNexus.Data.Models.Character? Character { get; set; }
 
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
     private string _associatedTraitName { get; set; } = string.Empty;
     private int _modifier { get; set; } = 0;
     private bool _tenAgain { get; set; } = true;
@@ -117,6 +132,11 @@
     private int? _seed { get; set; } = null;
     private RollResult? _lastResult;
     private bool _showTools = false;
+
+    private string _successCountId = $"success-count-{Guid.NewGuid():N}";
+    private string _shakeClass = string.Empty;
+    private bool _showBurst = false;
+    private bool _isRolling = false;
 
     private readonly string[] _attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
     private readonly string[] _skills = RequiemNexus.Domain.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
@@ -145,8 +165,42 @@
         await IsVisibleChanged.InvokeAsync(IsVisible);
     }
 
-    private void RollDice()
+    private async Task RollDice()
     {
+        _isRolling = true;
         _lastResult = DiceService.Roll(TotalPool, _tenAgain, _nineAgain, _eightAgain, _isRote, _seed);
+        
+        // Reset effects
+        _shakeClass = string.Empty;
+        _showBurst = false;
+
+        await InvokeAsync(StateHasChanged);
+
+        // Success counter odometer
+        await JS.InvokeVoidAsync("countUp", _successCountId, _lastResult.Successes, 600);
+
+        // Dramatic Failure Screen Shake
+        if (_lastResult.IsDramaticFailure)
+        {
+            _shakeClass = "shake";
+        }
+
+        // Exceptional Success Particle Burst
+        if (_lastResult.IsExceptionalSuccess)
+        {
+            _showBurst = true;
+        }
+
+        await Task.Delay(400); // Wait for surge animation to complete roughly
+        _isRolling = false;
+        
+        await InvokeAsync(StateHasChanged);
+        
+        if (_showBurst)
+        {
+            await Task.Delay(700);
+            _showBurst = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }

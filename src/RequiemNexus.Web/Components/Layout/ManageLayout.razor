@@ -1,32 +1,13 @@
 @inherits LayoutComponentBase
 @layout MainLayout
 
-<div class="manage-layout-wrapper mt-4">
-    <div class="container">
-        <h2 class="mb-4">Manage your account</h2>
-        
-        <div class="row">
-            <div class="col-md-3">
-                <RequiemNexus.Web.Components.Pages.Account.Manage.ManageNavMenu />
-            </div>
-            <div class="col-md-9">
-                <div class="manage-content-card">
-                    @Body
-                </div>
-            </div>
+<div class="manage-wrapper fade-in">
+    <aside class="manage-sidebar">
+        <RequiemNexus.Web.Components.Pages.Account.Manage.ManageNavMenu />
+    </aside>
+    <main class="manage-content">
+        <div class="manage-card">
+            @Body
         </div>
-    </div>
+    </main>
 </div>
-
-<style>
-    .manage-layout-wrapper {
-        color: var(--rn-text-light);
-    }
-    .manage-content-card {
-        background-color: var(--rn-bg-card);
-        border: 1px solid var(--rn-border-color);
-        border-radius: var(--rn-radius-md);
-        padding: 2rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    }
-</style>

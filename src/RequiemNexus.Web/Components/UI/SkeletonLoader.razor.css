@@ -1,0 +1,63 @@
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton-block {
+    background: linear-gradient(90deg, var(--charcoal) 25%, var(--ash-gray) 50%, var(--charcoal) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite linear;
+    border-radius: 4px;
+}
+
+.rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.rows .skeleton-block {
+    height: 1.25rem;
+}
+
+.rows .skeleton-block:last-child {
+    width: 70%;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--charcoal);
+    border: 1px solid var(--muted-gray);
+    border-radius: 4px;
+}
+
+.card .skeleton-block:first-child {
+    height: 2rem;
+    width: 40%;
+}
+
+.card .skeleton-block:nth-child(2) {
+    height: 1.25rem;
+    width: 90%;
+}
+
+.card .skeleton-block:last-child {
+    height: 1.25rem;
+    width: 60%;
+}
+
+.sheet {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.sheet .skeleton-block {
+    height: 10rem;
+    border-radius: 8px;
+}

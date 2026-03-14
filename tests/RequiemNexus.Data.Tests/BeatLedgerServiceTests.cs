@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
@@ -24,7 +25,16 @@ public class BeatLedgerServiceTests
     private static BeatLedgerService CreateLedger(ApplicationDbContext ctx) => new(ctx);
 
     private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
-        => new(ctx, new CharacterCreationRules(), CreateLedger(ctx));
+    {
+        // These tests never call GetCharactersByUserIdAsync / GetArchivedCharactersAsync,
+        // so the factory only needs to satisfy the constructor.
+        ServiceCollection services = new();
+        services.AddDbContextFactory<ApplicationDbContext>(
+            o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
+            .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        return new(ctx, factory, new CharacterCreationRules(), CreateLedger(ctx));
+    }
 
     // -----------------------------------------------------------------------
     // BeatLedgerService — direct API

@@ -1,0 +1,31 @@
+.manage-wrapper {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+.manage-sidebar {
+    background: var(--charcoal);
+    border: 1px solid var(--muted-gray);
+    border-radius: 12px;
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 5rem;
+}
+
+.manage-card {
+    background: var(--charcoal);
+    border: 1px solid var(--muted-gray);
+    border-top: 2px solid var(--crimson);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+@media (max-width: 768px) {
+    .manage-wrapper { grid-template-columns: 1fr; }
+    .manage-sidebar { position: static; }
+}

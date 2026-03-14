@@ -177,3 +177,33 @@
 .login-footer a:hover {
     color: var(--accent-hover);
 }
+
+.oauth-container {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.oauth-btn {
+    background: var(--ash-gray);
+    border: 1px solid var(--muted-gray);
+    color: var(--bone-white);
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    font-family: var(--font-primary);
+    font-weight: 500;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.oauth-btn:hover {
+    border-color: var(--crimson);
+    box-shadow: 0 0 12px rgba(139, 0, 0, 0.2);
+    background: var(--charcoal);
+}

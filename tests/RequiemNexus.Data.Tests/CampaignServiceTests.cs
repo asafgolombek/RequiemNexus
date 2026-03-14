@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
@@ -22,7 +23,26 @@ public class CampaignServiceTests
     }
 
     private static CampaignService CreateService(ApplicationDbContext ctx)
-        => new(ctx, NullLogger<CampaignService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
+    {
+        ServiceCollection services = new();
+        services.AddDbContextFactory<ApplicationDbContext>(
+            o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
+            .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        return new(ctx, factory, NullLogger<CampaignService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
+    }
+
+    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
+    {
+        // These tests never call GetCharactersByUserIdAsync / GetArchivedCharactersAsync,
+        // so the factory only needs to satisfy the constructor.
+        ServiceCollection services = new();
+        services.AddDbContextFactory<ApplicationDbContext>(
+            o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
+            .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        return new(ctx, factory, new CharacterCreationRules(), new BeatLedgerService(ctx));
+    }
 
     // -----------------------------------------------------------------------
     // IsStoryteller
@@ -175,7 +195,7 @@ public class CampaignServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        CharacterManagementService charService = new(ctx, new CharacterCreationRules(), new BeatLedgerService(ctx));
+        CharacterManagementService charService = CreateCharacterService(ctx);
 
         (Character Character, bool IsOwner)? result = await charService.GetCharacterWithAccessCheckAsync(character.Id, "player-1");
 
@@ -195,7 +215,7 @@ public class CampaignServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        CharacterManagementService charService = new(ctx, new CharacterCreationRules(), new BeatLedgerService(ctx));
+        CharacterManagementService charService = CreateCharacterService(ctx);
 
         (Character Character, bool IsOwner)? result = await charService.GetCharacterWithAccessCheckAsync(character.Id, "st-1");
 
@@ -216,7 +236,7 @@ public class CampaignServiceTests
         ctx.Characters.AddRange(character1, character2);
         await ctx.SaveChangesAsync();
 
-        CharacterManagementService charService = new(ctx, new CharacterCreationRules(), new BeatLedgerService(ctx));
+        CharacterManagementService charService = CreateCharacterService(ctx);
 
         // player-2 views player-1's sheet
         (Character Character, bool IsOwner)? result = await charService.GetCharacterWithAccessCheckAsync(character1.Id, "player-2");
@@ -237,7 +257,7 @@ public class CampaignServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        CharacterManagementService charService = new(ctx, new CharacterCreationRules(), new BeatLedgerService(ctx));
+        CharacterManagementService charService = CreateCharacterService(ctx);
 
         (Character Character, bool IsOwner)? result = await charService.GetCharacterWithAccessCheckAsync(character.Id, "outsider-99");
 

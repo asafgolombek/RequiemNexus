@@ -1,0 +1,12 @@
+<div class="skeleton-container @Variant @(Class)">
+    @for (int i = 0; i < Count; i++)
+    {
+        <div class="skeleton-block"></div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Variant { get; set; } = "rows";
+    [Parameter] public int Count { get; set; } = 3;
+    [Parameter] public string? Class { get; set; }
+}
