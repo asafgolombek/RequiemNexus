@@ -45,7 +45,7 @@ jobs:
           docker build -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -f src/RequiemNexus.Web/Dockerfile .
 
       - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: 'ghcr.io/${{ github.repository }}:${{ github.ref_name }}'
           format: 'table'
@@ -54,7 +54,7 @@ jobs:
 
       # 🔐 The Keyless Rite: Sign with Cosign
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.5.0
+        uses: sigstore/cosign-installer@v4.1.0
 
       - name: Sign the Container Image
         run: |
@@ -77,7 +77,7 @@ jobs:
       id-token: write   # Required for keyless identity
       contents: read
       actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: ghcr.io/${{ github.repository }}
       digest: ${{ needs.validate-and-release.outputs.image_digest }}
