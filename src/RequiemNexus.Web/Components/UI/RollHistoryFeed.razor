@@ -1,0 +1,77 @@
+@using RequiemNexus.Data.RealTime
+@using RequiemNexus.Web.Services
+@inject SessionClientService SessionService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="roll-history-feed" @ref="_feedElement">
+    @foreach (var roll in _rolls)
+    {
+        <div class="roll-entry @(roll.IsExceptionalSuccess ? "exceptional" : "") @(roll.IsDramaticFailure ? "dramatic" : "")">
+            <div class="roll-meta">
+                <span class="player-name">@roll.PlayerName</span>
+                <span class="roll-time">@roll.RolledAt.ToString("HH:mm")</span>
+            </div>
+            <div class="roll-body">
+                <span class="pool">@roll.PoolDescription:</span>
+                <span class="successes">@roll.Successes Successes</span>
+                @if (roll.IsExceptionalSuccess)
+                {
+                    <span class="badge exceptional">Exceptional!</span>
+                }
+                @if (roll.IsDramaticFailure)
+                {
+                    <span class="badge dramatic">Dramatic Failure!</span>
+                }
+            </div>
+            <div class="dice-details">
+                @string.Join(", ", roll.DiceRolled)
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<DiceRollResultDto> _rolls = new();
+    private ElementReference _feedElement;
+
+    protected override void OnInitialized()
+    {
+        SessionService.DiceRollReceived += HandleDiceRoll;
+        SessionService.RollHistoryReceived += HandleHistory;
+    }
+
+    private void HandleDiceRoll(DiceRollResultDto roll)
+    {
+        _rolls.Add(roll);
+        if (_rolls.Count > 100) _rolls.RemoveAt(0);
+        InvokeAsync(async () => {
+            StateHasChanged();
+            await ScrollToBottom();
+        });
+    }
+
+    private void HandleHistory(IEnumerable<DiceRollResultDto> history)
+    {
+        _rolls = history.Reverse().ToList(); // History comes in newest first from Redis
+        InvokeAsync(async () => {
+            StateHasChanged();
+            await ScrollToBottom();
+        });
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try 
+        {
+            await JS.InvokeVoidAsync("scrollToBottom", _feedElement);
+        }
+        catch { /* Ignore JS errors if element not rendered */ }
+    }
+
+    public void Dispose()
+    {
+        SessionService.DiceRollReceived -= HandleDiceRoll;
+        SessionService.RollHistoryReceived -= HandleHistory;
+    }
+}

@@ -1462,6 +1462,50 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("NpcStatBlocks");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.PublicRoll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CampaignId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PoolDescription")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ResultJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RolledByUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("RolledByUserId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("PublicRolls");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.SessionPrepNote", b =>
                 {
                     b.Property<int>("Id")
@@ -2022,6 +2066,23 @@ namespace RequiemNexus.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Campaign");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.PublicRoll", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId");
+
+                    b.HasOne("RequiemNexus.Data.Models.ApplicationUser", "RolledByUser")
+                        .WithMany()
+                        .HasForeignKey("RolledByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Campaign");
+
+                    b.Navigation("RolledByUser");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.SessionPrepNote", b =>

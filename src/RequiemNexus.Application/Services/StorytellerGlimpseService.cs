@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 
@@ -17,12 +19,13 @@ public class StorytellerGlimpseService(
     ApplicationDbContext dbContext,
     IBeatLedgerService beatLedger,
     ICharacterCreationRules creationRules,
-    ILogger<StorytellerGlimpseService> logger) : IStorytellerGlimpseService
+    ILogger<StorytellerGlimpseService> logger,
+    ISessionService sessionService) : IStorytellerGlimpseService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly ICharacterCreationRules _creationRules = creationRules;
-    private readonly ILogger<StorytellerGlimpseService> _logger = logger;
+    private readonly ILogger _logger = logger;
 
     /// <inheritdoc />
     public async Task<List<CharacterVitalsDto>> GetCampaignVitalsAsync(int campaignId, string storyTellerUserId)
@@ -38,33 +41,25 @@ public class StorytellerGlimpseService(
 
         // Count active conditions per character in a single query
         Dictionary<int, int> activeConditionCounts = await _dbContext.CharacterConditions
-            .Where(cc => characterIds.Contains(cc.CharacterId) && !cc.IsResolved)
-            .GroupBy(cc => cc.CharacterId)
+            .Where(c => characterIds.Contains(c.CharacterId) && !c.IsResolved)
+            .GroupBy(c => c.CharacterId)
             .Select(g => new { CharacterId = g.Key, Count = g.Count() })
-            .AsNoTracking()
             .ToDictionaryAsync(x => x.CharacterId, x => x.Count);
 
-        List<CharacterVitalsDto> vitals = [];
-        foreach (Character c in characters)
-        {
-            activeConditionCounts.TryGetValue(c.Id, out int conditionCount);
-            vitals.Add(new CharacterVitalsDto(
-                c.Id,
-                c.Name,
-                c.ApplicationUserId,
-                c.CurrentHealth,
-                c.MaxHealth,
-                c.CurrentWillpower,
-                c.MaxWillpower,
-                c.CurrentVitae,
-                c.MaxVitae,
-                c.Humanity,
-                c.Beats,
-                c.ExperiencePoints,
-                conditionCount));
-        }
-
-        return vitals;
+        return characters.Select(c => new CharacterVitalsDto(
+            c.Id,
+            c.Name,
+            c.ApplicationUserId,
+            c.CurrentHealth,
+            c.MaxHealth,
+            c.CurrentWillpower,
+            c.MaxWillpower,
+            c.CurrentVitae,
+            c.MaxVitae,
+            c.Humanity,
+            c.Beats,
+            c.ExperiencePoints,
+            activeConditionCounts.GetValueOrDefault(c.Id, 0))).ToList();
     }
 
     /// <inheritdoc />
@@ -80,6 +75,8 @@ public class StorytellerGlimpseService(
 
         await AwardBeatInternalAsync(character, campaignId, reason, storyTellerUserId);
         await _dbContext.SaveChangesAsync();
+
+        await sessionService.BroadcastCharacterUpdateAsync(characterId);
 
         _logger.LogInformation(
             "Storyteller {StoryTellerId} awarded Beat to character {CharacterId} in campaign {CampaignId}. Reason: {Reason}",
@@ -105,6 +102,11 @@ public class StorytellerGlimpseService(
 
         await _dbContext.SaveChangesAsync();
 
+        foreach (Character character in characters)
+        {
+            await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        }
+
         _logger.LogInformation(
             "Storyteller {StoryTellerId} awarded Beat to all {Count} characters in campaign {CampaignId}. Reason: {Reason}",
             storyTellerUserId,
@@ -121,11 +123,6 @@ public class StorytellerGlimpseService(
         string reason,
         string storyTellerUserId)
     {
-        if (amount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(amount), "XP amount must be positive.");
-        }
-
         await RequireStorytellerAsync(campaignId, storyTellerUserId);
 
         Character character = await RequireCharacterInCampaignAsync(characterId, campaignId);
@@ -134,7 +131,7 @@ public class StorytellerGlimpseService(
         character.TotalExperiencePoints += amount;
 
         await _beatLedger.RecordXpCreditAsync(
-            character.Id,
+            characterId,
             campaignId,
             amount,
             XpSource.StorytellerAward,
@@ -142,6 +139,8 @@ public class StorytellerGlimpseService(
             storyTellerUserId);
 
         await _dbContext.SaveChangesAsync();
+
+        await sessionService.BroadcastCharacterUpdateAsync(characterId);
 
         _logger.LogInformation(
             "Storyteller {StoryTellerId} awarded {Amount} XP to character {CharacterId} in campaign {CampaignId}. Reason: {Reason}",
@@ -189,10 +188,6 @@ public class StorytellerGlimpseService(
         }
     }
 
-    /// <summary>
-    /// Throws <see cref="UnauthorizedAccessException"/> when the caller is not the
-    /// Storyteller of <paramref name="campaignId"/>.
-    /// </summary>
     private async Task RequireStorytellerAsync(int campaignId, string storyTellerUserId)
     {
         bool isSt = await _dbContext.Campaigns
@@ -200,27 +195,14 @@ public class StorytellerGlimpseService(
 
         if (!isSt)
         {
-            _logger.LogWarning(
-                "Unauthorized Glimpse access attempt on campaign {CampaignId} by user {UserId}",
-                campaignId,
-                storyTellerUserId);
-
-            throw new UnauthorizedAccessException(
-                "Only the campaign Storyteller may access the Glimpse dashboard.");
+            throw new UnauthorizedAccessException("Only the Storyteller of this campaign may perform this action.");
         }
     }
 
-    /// <summary>
-    /// Returns the character, verifying it belongs to <paramref name="campaignId"/>.
-    /// Throws <see cref="InvalidOperationException"/> if not found in that campaign.
-    /// </summary>
     private async Task<Character> RequireCharacterInCampaignAsync(int characterId, int campaignId)
     {
-        Character character = await _dbContext.Characters
+        return await _dbContext.Characters
             .FirstOrDefaultAsync(c => c.Id == characterId && c.CampaignId == campaignId)
-            ?? throw new InvalidOperationException(
-                $"Character {characterId} is not enrolled in campaign {campaignId}.");
-
-        return character;
+            ?? throw new InvalidOperationException($"Character {characterId} not found in campaign {campaignId}.");
     }
 }

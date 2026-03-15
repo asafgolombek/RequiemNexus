@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 
 namespace RequiemNexus.Application.Services;
 
@@ -14,7 +16,8 @@ public class CampaignService(
     ApplicationDbContext dbContext,
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ILogger<CampaignService> logger,
-    IAuthorizationHelper authHelper) : ICampaignService
+    IAuthorizationHelper authHelper,
+    ISessionService sessionService) : ICampaignService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
@@ -225,6 +228,8 @@ public class CampaignService(
 
         _dbContext.CampaignLore.Add(lore);
         await _dbContext.SaveChangesAsync();
+
+        await sessionService.BroadcastChronicleUpdateAsync(new ChronicleUpdateDto(campaignId, BeatAwardedMessage: $"New Lore Entry: {title}"));
 
         _logger.LogInformation(
             "Lore entry '{Title}' created in campaign {CampaignId} by {UserId}",

@@ -1,0 +1,47 @@
+@using RequiemNexus.Data.RealTime
+@using RequiemNexus.Web.Services
+@inject SessionClientService SessionService
+@implements IDisposable
+
+@if (_players.Any())
+{
+    <div class="presence-bar">
+        @foreach (var player in _players)
+        {
+            <div class="player-chip" title="@player.UserName @(player.IsOnline ? "(Online)" : "(Offline)")">
+                <div class="avatar @(player.IsOnline ? "online" : "offline")">
+                    @GetInitials(player.UserName)
+                </div>
+                <span class="player-name">@player.UserName</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<PlayerPresenceDto> _players = new();
+
+    protected override void OnInitialized()
+    {
+        SessionService.PresenceUpdated += HandlePresenceUpdated;
+    }
+
+    private void HandlePresenceUpdated(IEnumerable<PlayerPresenceDto> players)
+    {
+        _players = players.OrderBy(p => p.UserName).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "??";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpper();
+        return (parts[0][0].ToString() + parts[^1][0].ToString()).ToUpper();
+    }
+
+    public void Dispose()
+    {
+        SessionService.PresenceUpdated -= HandlePresenceUpdated;
+    }
+}

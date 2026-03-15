@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 
@@ -19,7 +22,8 @@ public class ConditionService(
     IBeatLedgerService beatLedger,
     ILogger<ConditionService> logger,
     IAuthorizationHelper authHelper,
-    ICharacterCreationRules creationRules) : IConditionService
+    ICharacterCreationRules creationRules,
+    ISessionService sessionService) : IConditionService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IConditionRules _conditionRules = conditionRules;
@@ -51,6 +55,8 @@ public class ConditionService(
 
         _dbContext.CharacterConditions.Add(condition);
         await _dbContext.SaveChangesAsync();
+
+        await sessionService.BroadcastCharacterUpdateAsync(characterId);
 
         _logger.LogInformation(
             "Condition {ConditionType} applied to character {CharacterId} by user {UserId}",
@@ -112,6 +118,8 @@ public class ConditionService(
 
         await _dbContext.SaveChangesAsync();
 
+        await sessionService.BroadcastCharacterUpdateAsync(condition.CharacterId);
+
         _logger.LogInformation(
             "Condition {ConditionId} ({ConditionType}) resolved for character {CharacterId} by user {UserId}. BeatAwarded={AwardsBeat}",
             conditionId,
@@ -155,6 +163,8 @@ public class ConditionService(
         _dbContext.CharacterTilts.Add(tilt);
         await _dbContext.SaveChangesAsync();
 
+        await sessionService.BroadcastCharacterUpdateAsync(characterId);
+
         _logger.LogInformation(
             "Tilt {TiltType} applied to character {CharacterId} by user {UserId}",
             type,
@@ -181,6 +191,8 @@ public class ConditionService(
         tilt.IsActive = false;
         tilt.RemovedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+
+        await sessionService.BroadcastCharacterUpdateAsync(tilt.CharacterId);
 
         _logger.LogInformation(
             "Tilt {TiltId} ({TiltType}) removed from character {CharacterId} by user {UserId}",

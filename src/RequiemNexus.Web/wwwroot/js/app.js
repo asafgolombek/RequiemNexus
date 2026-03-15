@@ -101,3 +101,5 @@ document.addEventListener('touchstart', (e) => {
     // Re-trigger the logic (simplified for this context)
     // Note: In a real app, you'd factor out the logic into a shared function
 });
+
+window.scrollToBottom = (element) => { if (element) { element.scrollTop = element.scrollHeight; } };
