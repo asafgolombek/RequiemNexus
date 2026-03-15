@@ -10,17 +10,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# --- Paths ---
-$ScriptRoot  = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-$RootDir     = Split-Path -Parent -Path $ScriptRoot
-$SlnPath     = Join-Path $RootDir "tests\RequiemNexus.Tests.slnx"
+. "$PSScriptRoot\_common.ps1"
+
 $CoverageDir = Join-Path $RootDir "coverage"
 
 # --- Project Configuration ---
 $TestProjects = @(
-    @{ Name = "Domain Unit"; Path = "tests\RequiemNexus.Domain.Tests\RequiemNexus.Domain.Tests.csproj" },
-    @{ Name = "Data Integration"; Path = "tests\RequiemNexus.Data.Tests\RequiemNexus.Data.Tests.csproj" },
-    @{ Name = "Web Integration"; Path = "tests\RequiemNexus.Web.Tests\RequiemNexus.Web.Tests.csproj" }
+    @{ Name = "Domain Unit"; Path = $DomainTests },
+    @{ Name = "Data Integration"; Path = $DataTests },
+    @{ Name = "Web Integration"; Path = $WebTests }
 )
 
 # --- UI Helpers ---

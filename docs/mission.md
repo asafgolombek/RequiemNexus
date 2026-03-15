@@ -227,7 +227,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Vitae (Blood Pool) tracking — current/max Vitae with spend and replenish actions
 - [x] Blood Potency — core vampire stat affecting feeding and power level
 - [x] My Characters dashboard — character roster view with create, select, and manage actions
-- [ ] ~~Predator Type~~ — deferred to Phase 4 (requires Feeding Territory and Coterie context to be meaningful)
+- [x] **Predator Type** — (Implemented in Phase 4: grants bonuses, feeding restrictions, and starting Merits/Specialties)
 
 ### Phase 1 Exit Criteria
 - A Neonate character can be created, advanced, and rolled entirely on mobile

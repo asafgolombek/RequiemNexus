@@ -1,36 +1,26 @@
-@agents.md
+# 🩸 Requiem Nexus — Claude Code Rules
 
-## Session Orientation
+You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-This repository is both a working product and a learning artifact — the **Grimoire**.
+## 🧭 Active Phase: Phase 7 — The Blood Communion (Realtime)
+- **SignalR Hubs:** MUST be thin relays in `src/RequiemNexus.Web/Hubs/`.
+- **Session State:** MUST live in Redis, never PostgreSQL.
+- **Latency Budget:** Hub dispatch < 200ms.
 
-When answering questions, default to Grimoire mode:
-- Explain *why* architectural decisions were made, not just *what* they are.
-- Connect C# 14 features (primary constructors, collection expressions) to the specific problems they solve.
-- Reference `docs/Architecture.md` and `docs/mission.md` for architectural context.
-- Reference the Antigravity Philosophy rules (in `agents.md`) when they apply.
+## 📜 Architectural DNA
+- **Layering:** `Web → Application → Domain ← Data`.
+- **Security (The Masquerade):** ALWAYS follow the 4-step `AuthorizationHelper` sequence for mutations.
+- **File Rule:** One type per file. No exceptions.
 
-**Currently active phase: Phase 7 — Realtime Play (The Blood Communion).**
-See `docs/mission.md` for full phase status and scope boundaries.
-See `docs/plan.md` for the detailed Phase 7 implementation plan.
+## 📖 Reference Docs
+- `agents.md` — The Prime Directive and full Forbidden list.
+- `docs/Architecture.md` — The Sacred Covenants of the layers.
+- `docs/mission.md` — Roadmap and non-goals.
+- `docs/plan.md` — Detailed Phase 7 SignalR implementation.
 
-## Quick Navigation
+## ⚡ Workflow
+1. Read `agents.md` first.
+2. Verify ownership (Masquerade) for every mutation.
+3. Run `dotnet format` and `.\scripts\test-local.ps1` before completion.
 
-| Want to understand...  | Start here                                                          |
-|------------------------|---------------------------------------------------------------------|
-| Layer architecture     | `docs/Architecture.md`                                              |
-| Current goals          | `docs/mission.md`                                                   |
-| Phase 7 plan           | `docs/plan.md`                                                      |
-| Domain rules           | `src/RequiemNexus.Domain/`                                          |
-| Security pattern       | `src/RequiemNexus.Application/Services/AuthorizationHelper.cs`      |
-| EF Core schema         | `src/RequiemNexus.Data/ApplicationDbContext.cs`                     |
-| Test patterns          | `tests/RequiemNexus.Domain.Tests/`                                  |
-| CI/CD                  | `.github/workflows/`                                                |
-| Infrastructure (CDK)   | `infra/src/RequiemNexus.Infra/Stacks/`                              |
-| SignalR hub            | `src/RequiemNexus.Web/Hubs/SessionHub.cs`                           |
-| Session service        | `src/RequiemNexus.Application/RealTime/SessionService.cs`           |
-| Session state (Redis)  | `src/RequiemNexus.Data/RealTime/SessionStateRepository.cs`          |
-| Hub client contract    | `src/RequiemNexus.Application/RealTime/ISessionClient.cs`           |
-| Release pipeline       | `.github/workflows/release.yml` (SBOM, Cosign signing, SLSA provenance) |
-| Dependabot config      | `.github/dependabot.yml`                                            |
-| Code owners            | `.github/CODEOWNERS`                                                |
+> "The blood is the life… but clarity is the power."
