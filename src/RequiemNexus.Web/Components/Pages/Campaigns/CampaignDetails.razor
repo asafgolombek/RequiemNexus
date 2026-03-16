@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.RealTime
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
 @using System.Security.Claims
@@ -11,6 +12,9 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject SessionClientService SessionClient
+@inject ISessionService SessionService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject PersistentComponentState ApplicationState
 @implements IDisposable
 
 <PageTitle>Campaign Details - Requiem Nexus</PageTitle>
@@ -44,7 +48,21 @@
                     }
                     else if (_sessionActive)
                     {
-                        <span class="badge-live">🩸 LIVE SESSION ACTIVE</span>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge-live">🩸 LIVE SESSION ACTIVE</span>
+                            @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                            {
+                                @if (!SessionClient.IsConnected)
+                                {
+                                    <button class="btn-primary-rn" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;" @onclick="JoinSession">Join Session</button>
+                                }
+                                else
+                                {
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 0.25rem 0.75rem; border-radius: 4px;">Status: Presence Active</span>
+                                    <button class="btn-ghost" style="font-size: 0.8rem; padding: 0.25rem 0.75rem; border: 1px solid var(--brand-crimson); margin-left: 0.5rem;" @onclick="LeaveSession">Leave Session</button>
+                                }
+                            }
+                        </div>
                     }
                 </div>
             </div>
@@ -108,8 +126,9 @@
                             @foreach (var character in _campaign.Characters)
                             {
                                 bool isOwn = character.ApplicationUserId == _currentUserId;
-                                <div class="character-card card-rn">
-                                    <h4>@character.Name</h4>
+                                <div class="character-card card-rn clickable-card" @onclick="() => NavigateToCharacter(character.Id)">
+                                    <h4 class="char-name">@character.Name</h4>
+                                    <div class="char-clan">🩸 Clan: @(character.Clan?.Name ?? "Unknown")</div>
                                     <div class="player-info">
                                         <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
                                     </div>
@@ -122,22 +141,17 @@
                                     <div class="card-actions" style="margin-top:10px;">
                                         @if (isOwn)
                                         {
-                                            <a href="/character/@character.Id" class="btn-ghost" style="font-size:0.8em;">Edit Sheet</a>
                                             @if (_confirmRemoveCharacterId == character.Id)
                                             {
-                                                <span style="font-size:0.8em;">Remove from campaign?
+                                                <span style="font-size:0.8em;" @onclick:stopPropagation="true">Remove from campaign?
                                                     <button class="btn-primary-rn" style="font-size:0.8em;" @onclick="() => ConfirmRemoveCharacter(character.Id)">Yes</button>
                                                     <button class="btn-ghost" style="font-size:0.8em;" @onclick="CancelConfirm">No</button>
                                                 </span>
                                             }
                                             else
                                             {
-                                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => AskRemoveCharacter(character.Id)">Remove from Campaign</button>
+                                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => AskRemoveCharacter(character.Id)" @onclick:stopPropagation="true">Remove from Campaign</button>
                                             }
-                                        }
-                                        else
-                                        {
-                                            <a href="/campaigns/@_campaign.Id/characters/@character.Id" class="btn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
                                         }
                                     </div>
                                 </div>
@@ -281,11 +295,20 @@
     private string _newPrepTitle = string.Empty;
     private string _newPrepBody = string.Empty;
     private bool _sessionActive = false;
+    private string? _cookieHeader;
+    private PersistingComponentStateSubscription _persistingSubscription;
 
     private readonly AddCharacterModel _addModel = new();
 
     protected override async Task OnInitializedAsync()
     {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistCookieHeader);
+
+        if (!ApplicationState.TryTakeFromJson<string>("rnCookieHeader", out _cookieHeader))
+        {
+            _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        }
+
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -294,12 +317,44 @@
             SessionClient.SessionStarted += HandleSessionStarted;
             SessionClient.SessionEnded += HandleSessionEnded;
             
-            // Try to connect to real-time session
-            // We don't specify characterId here as we might have multiple or none
-            await SessionClient.StartAsync(Id, null, _currentUserId);
+            // Check if session is already active (uses cache if available)
+            _sessionActive = await SessionClient.GetSessionActiveAsync(Id, SessionService);
         }
 
         await LoadData();
+    }
+
+    private Task PersistCookieHeader()
+    {
+        ApplicationState.PersistAsJson("rnCookieHeader", _cookieHeader);
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            // Auto-join if session is active
+            if (_sessionActive && _campaign != null && !CampaignService.IsStoryteller(_campaign, _currentUserId))
+            {
+                await JoinSession();
+            }
+            else
+            {
+                // We don't specify characterId here as we might have multiple or none
+                await SessionClient.StartAsync(Id, null, _currentUserId, _cookieHeader);
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // Optional: surface an error without crashing the page.
+            // _errorMessage = "Unable to connect to the realtime session.";
+        }
     }
 
     private void HandleSessionStarted()
@@ -322,6 +377,23 @@
     private async Task EndSession()
     {
         await SessionClient.EndSessionAsync();
+    }
+
+    private async Task JoinSession()
+    {
+        // Try to find the player's character in this campaign to join with it
+        var characterId = _campaign?.Characters.FirstOrDefault(c => c.ApplicationUserId == _currentUserId)?.Id;
+        await SessionClient.StartAsync(Id, characterId, _currentUserId!, _cookieHeader);
+    }
+
+    private async Task LeaveSession()
+    {
+        await SessionClient.StopAsync();
+    }
+
+    private void NavigateToCharacter(int characterId)
+    {
+        NavigationManager.NavigateTo($"/character/{characterId}");
     }
 
     private async Task LoadData()
@@ -498,6 +570,7 @@
 
     public void Dispose()
     {
+        _persistingSubscription.Dispose();
         SessionClient.SessionStarted -= HandleSessionStarted;
         SessionClient.SessionEnded -= HandleSessionEnded;
     }

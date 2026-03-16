@@ -90,7 +90,7 @@ public class CharacterServiceIntegrationTests
         await ctx.SaveChangesAsync();
 
         // Act
-        await service.DeleteCharacterAsync(character.Id);
+        await service.DeleteCharacterAsync(character.Id, character.ApplicationUserId);
 
         // Assert
         Assert.Null(await ctx.Characters.FindAsync(character.Id));

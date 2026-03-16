@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -59,6 +60,8 @@ public class RealTimeTests : IClassFixture<WebApplicationFactory<RequiemNexus.We
                 mockDb.Setup(d => d.CreateBatch(It.IsAny<object>())).Returns(mockBatch.Object);
 
                 services.AddSingleton(mockRedis.Object);
+                services.AddSingleton<ISessionStateRepository, SessionStateRepository>();
+                services.AddSingleton(new Mock<IAuditLogService>().Object);
 
                 // Replace DB with In-Memory
                 var descriptors = services.Where(d =>

@@ -44,6 +44,8 @@ public class CampaignService(
         return await ctx.Campaigns
             .Include(c => c.StoryTeller)
             .Include(c => c.Characters).ThenInclude(ch => ch.User)
+            .Include(c => c.Characters).ThenInclude(ch => ch.Clan)
+            .AsSplitQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }

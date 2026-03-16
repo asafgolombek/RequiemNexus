@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
+using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
 
 namespace RequiemNexus.Web.Hubs;
@@ -10,9 +12,14 @@ namespace RequiemNexus.Web.Hubs;
 /// All logic and authorization decisions are delegated to ISessionService and ISessionAuthorizationService.
 /// </summary>
 [Authorize]
-public class SessionHub(ISessionService sessionService, ISessionAuthorizationService authService) : Hub<ISessionClient>
+public class SessionHub(
+    ISessionService sessionService,
+    ISessionAuthorizationService authService,
+    IAuditLogService auditLog) : Hub<ISessionClient>
 {
     private string UserId => Context.UserIdentifier ?? throw new HubException("Unauthenticated");
+
+    private string? IpAddress => Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString();
 
     /// <summary>
     /// Removes the player from any active sessions on disconnect.
@@ -30,9 +37,11 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
     {
         if (!await authService.IsStorytellerAsync(UserId, chronicleId))
         {
+            await LogFailure(nameof(StartSession), chronicleId);
             throw new HubException("Forbidden: Only the Storyteller can start a session");
         }
 
+        await Groups.AddToGroupAsync(Context.ConnectionId, chronicleId.ToString());
         await sessionService.StartSessionAsync(UserId, chronicleId);
     }
 
@@ -43,9 +52,11 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
     {
         if (!await authService.IsStorytellerAsync(UserId, chronicleId))
         {
+            await LogFailure(nameof(EndSession), chronicleId);
             throw new HubException("Forbidden: Only the Storyteller can end a session");
         }
 
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, chronicleId.ToString());
         await sessionService.EndSessionAsync(UserId, chronicleId);
     }
 
@@ -56,12 +67,24 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
     {
         if (!await authService.IsMemberAsync(UserId, chronicleId))
         {
+            await LogFailure(nameof(JoinSession), chronicleId, "Not a member");
             throw new HubException("Forbidden: Not a member of this chronicle");
         }
 
-        if (characterId.HasValue && !await authService.IsCharacterOwnerAsync(UserId, characterId.Value))
+        if (characterId.HasValue)
         {
-            throw new HubException("Forbidden: You do not own this character");
+            if (!await authService.IsCharacterOwnerAsync(UserId, characterId.Value))
+            {
+                await LogFailure(nameof(JoinSession), chronicleId, $"Not owner of character {characterId.Value}");
+                throw new HubException("Forbidden: You do not own this character");
+            }
+
+            // SECURITY: Verify character actually belongs to this chronicle
+            if (!await authService.IsCharacterInChronicleAsync(characterId.Value, chronicleId))
+            {
+                await LogFailure(nameof(JoinSession), chronicleId, $"Character {characterId.Value} not in chronicle");
+                throw new HubException("Forbidden: Character does not belong to this chronicle");
+            }
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, chronicleId.ToString());
@@ -71,7 +94,7 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
     /// <summary>
     /// Broadcasts a server-side dice roll to the chronicle group.
     /// </summary>
-    public async Task RollDice(int chronicleId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
+    public async Task RollDice(int chronicleId, int? characterId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
     {
         if (chronicleId <= 0)
         {
@@ -95,11 +118,27 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
 
         if (!await authService.IsMemberAsync(UserId, chronicleId))
         {
+            await LogFailure(nameof(RollDice), chronicleId, "Not a member");
             throw new HubException("Forbidden: Not a member of this chronicle");
         }
 
+        if (characterId.HasValue)
+        {
+            if (!await authService.IsCharacterOwnerAsync(UserId, characterId.Value))
+            {
+                await LogFailure(nameof(RollDice), chronicleId, $"Not owner of character {characterId.Value}");
+                throw new HubException("Forbidden: You do not own this character");
+            }
+
+            if (!await authService.IsCharacterInChronicleAsync(characterId.Value, chronicleId))
+            {
+                await LogFailure(nameof(RollDice), chronicleId, $"Character {characterId.Value} not in chronicle");
+                throw new HubException("Forbidden: Character does not belong to this chronicle");
+            }
+        }
+
         // Note: The service validates that the pool is non-negative and performs the actual roll.
-        await sessionService.RollDiceAsync(UserId, chronicleId, pool, description, tenAgain, nineAgain, eightAgain, isRote);
+        await sessionService.RollDiceAsync(UserId, chronicleId, characterId, pool, description, tenAgain, nineAgain, eightAgain, isRote);
     }
 
     /// <summary>
@@ -125,6 +164,7 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
 
         if (!await authService.IsStorytellerAsync(UserId, chronicleId))
         {
+            await LogFailure(nameof(UpdateInitiative), chronicleId);
             throw new HubException("Forbidden: Only the Storyteller can update initiative");
         }
 
@@ -138,9 +178,19 @@ public class SessionHub(ISessionService sessionService, ISessionAuthorizationSer
     {
         if (!await authService.IsStorytellerAsync(UserId, chronicleId))
         {
+            await LogFailure(nameof(Heartbeat), chronicleId);
             throw new HubException("Forbidden: Only the Storyteller can send heartbeats");
         }
 
         await sessionService.HeartbeatAsync(UserId, chronicleId);
+    }
+
+    private async Task LogFailure(string operation, int chronicleId, string? reason = null)
+    {
+        await auditLog.LogAsync(
+            UserId,
+            AuditEventType.HubAuthorizationFailed,
+            IpAddress,
+            $"Op: {operation}, Chronicle: {chronicleId}{(reason != null ? $", Reason: {reason}" : string.Empty)}");
     }
 }

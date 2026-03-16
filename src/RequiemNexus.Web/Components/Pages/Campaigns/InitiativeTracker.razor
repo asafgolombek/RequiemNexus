@@ -1,6 +1,7 @@
 @page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
 @rendermode InteractiveServer
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.RealTime
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Domain.Enums
@@ -13,7 +14,9 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject SessionClientService SessionClient
-@implements IDisposable
+@inject ISessionService SessionService
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <PageTitle>Initiative Tracker - Requiem Nexus</PageTitle>
 
@@ -268,6 +271,10 @@
         SessionClient.InitiativeUpdated += HandleInitiativeUpdated;
         SessionClient.CharacterUpdated += HandleCharacterUpdated;
         
+        // Use cache to check if session is active
+        await SessionClient.GetSessionActiveAsync(CampaignId, SessionService);
+        
+        // Connect to hub
         await SessionClient.StartAsync(CampaignId, null, _currentUserId);
 
         await LoadEncounter();
@@ -504,9 +511,10 @@
         };
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        await SessionClient.StopAsync();
     }
 }

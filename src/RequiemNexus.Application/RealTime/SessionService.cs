@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
+using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 
@@ -14,7 +16,8 @@ public class SessionService(
     ISessionPublisher publisher,
     IDiceService diceService,
     RealTimeMetrics metrics,
-    ApplicationDbContext db) : ISessionService
+    ApplicationDbContext db,
+    IAuditLogService auditLog) : ISessionService
 {
     private static readonly TimeSpan _sessionTtl = TimeSpan.FromMinutes(15);
 
@@ -23,6 +26,7 @@ public class SessionService(
     private readonly IDiceService _diceService = diceService;
     private readonly RealTimeMetrics _metrics = metrics;
     private readonly ApplicationDbContext _db = db;
+    private readonly IAuditLogService _auditLog = auditLog;
 
     /// <inheritdoc />
     public async Task StartSessionAsync(string userId, int chronicleId)
@@ -39,6 +43,7 @@ public class SessionService(
         await _repository.CreateSessionAsync(chronicleId, userId, _sessionTtl);
         _metrics.SessionStarted();
         await _publisher.Group(chronicleId).SessionStarted();
+        await _auditLog.LogAsync(userId, AuditEventType.SessionStarted, details: $"Chronicle: {chronicleId}");
     }
 
     /// <inheritdoc />
@@ -47,6 +52,7 @@ public class SessionService(
         await _repository.DeleteSessionAsync(chronicleId);
         _metrics.SessionEnded();
         await _publisher.Group(chronicleId).SessionEnded("Storyteller closed the session.");
+        await _auditLog.LogAsync(userId, AuditEventType.SessionEnded, details: $"Chronicle: {chronicleId}");
     }
 
     /// <inheritdoc />
@@ -99,7 +105,7 @@ public class SessionService(
     }
 
     /// <inheritdoc />
-    public async Task RollDiceAsync(string userId, int chronicleId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
+    public async Task RollDiceAsync(string userId, int chronicleId, int? characterId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote)
     {
         // 1. Identify: User rolling
         // 2. Load: Get user name
@@ -115,6 +121,7 @@ public class SessionService(
         var rollDto = new DiceRollResultDto(
             userName,
             userId,
+            characterId,
             description,
             result.Successes,
             result.IsExceptionalSuccess,

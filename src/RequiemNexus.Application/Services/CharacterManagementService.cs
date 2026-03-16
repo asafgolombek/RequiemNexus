@@ -62,11 +62,16 @@ public class CharacterManagementService(
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
 
-    public async Task DeleteCharacterAsync(int id)
+    public async Task DeleteCharacterAsync(int id, string userId)
     {
         Character? entity = await _dbContext.Characters.FindAsync(id);
         if (entity != null)
         {
+            if (entity.ApplicationUserId != userId)
+            {
+                throw new UnauthorizedAccessException("Only the character owner may delete this character.");
+            }
+
             // Null out CampaignId first so the campaign roster stays consistent.
             entity.CampaignId = null;
             _dbContext.Characters.Remove(entity);

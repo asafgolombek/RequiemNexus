@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using Amazon.CDK;
+using Amazon.CDK.AWS.CertificateManager;
 using Amazon.CDK.AWS.EC2;
 using Amazon.CDK.AWS.ECS;
 using Amazon.CDK.AWS.ECS.Patterns;
 using Amazon.CDK.AWS.ElastiCache;
+using Amazon.CDK.AWS.ElasticLoadBalancingV2;
 using Amazon.CDK.AWS.RDS;
 using Constructs;
 
@@ -22,6 +24,14 @@ public class ComputeStackProps : StackProps
     /// Omit for local development — CDK will build from the Dockerfile via FromAsset.
     /// </summary>
     public string? ImageUri { get; init; }
+
+    /// <summary>
+    /// ACM certificate ARN for the ALB HTTPS listener.
+    /// When set, the ALB serves HTTPS on port 443 and redirects HTTP (port 80) to HTTPS.
+    /// When omitted, the ALB serves HTTP only (useful during initial setup before a domain is configured).
+    /// Pass via CDK context: cdk deploy --context certificateArn=arn:aws:acm:...
+    /// </summary>
+    public string? CertificateArn { get; init; }
 }
 
 public class ComputeStack : Stack
@@ -36,11 +46,18 @@ public class ComputeStack : Stack
             ClusterName = "RequiemNexusCluster"
         });
 
+        ICertificate? certificate = string.IsNullOrEmpty(props.CertificateArn)
+            ? null
+            : Certificate.FromCertificateArn(this, "SiteCertificate", props.CertificateArn);
+
         FargateService = new ApplicationLoadBalancedFargateService(this, "RequiemNexusFargateService", new ApplicationLoadBalancedFargateServiceProps
         {
             Cluster = cluster,
             MemoryLimitMiB = 1024,
             Cpu = 512,
+            Certificate = certificate,
+            Protocol = certificate != null ? ApplicationProtocol.HTTPS : ApplicationProtocol.HTTP,
+            RedirectHTTP = certificate != null,
             TaskImageOptions = new ApplicationLoadBalancedTaskImageOptions
             {
                 // Use a pre-built ECR image when available (CI path — avoids rebuilding during cdk deploy).
@@ -130,9 +147,10 @@ public class ComputeStack : Stack
         });
 
         // Export the Load Balancer URL for use in smoke tests and documentation.
+        var scheme = certificate != null ? "https" : "http";
         _ = new CfnOutput(this, "LoadBalancerUrl", new CfnOutputProps
         {
-            Value = $"http://{FargateService.LoadBalancer.LoadBalancerDnsName}",
+            Value = $"{scheme}://{FargateService.LoadBalancer.LoadBalancerDnsName}",
             Description = "The URL of the Fargate application Load Balancer",
             ExportName = "RequiemNexus-LoadBalancerUrl"
         });

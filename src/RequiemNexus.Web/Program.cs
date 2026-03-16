@@ -106,6 +106,13 @@ builder.Services.AddFido2(options =>
 
 // Real-Time Services
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+
+// Allow startup when Redis is temporarily unavailable; multiplexer will retry in the background.
+if (!redisConnectionString.Contains("abortConnect", StringComparison.OrdinalIgnoreCase))
+{
+    redisConnectionString += ",abortConnect=false";
+}
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnectionString));
 builder.Services.AddSingleton<RealTimeMetrics>();
 builder.Services.AddSingleton<ISessionStateRepository, SessionStateRepository>();
@@ -192,6 +199,8 @@ builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAu
         options.SessionStore = store;
         options.ExpireTimeSpan = TimeSpan.FromDays(14); // Remember Me duration
         options.SlidingExpiration = true;
+        options.LoginPath = "/";
+        options.ReturnUrlParameter = "returnUrl";
     });
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>

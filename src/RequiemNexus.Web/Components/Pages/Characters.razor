@@ -130,9 +130,9 @@
     private async Task DeleteCharacter(Character character)
     {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {character.Name}?");
-        if (confirmed)
+        if (confirmed && !string.IsNullOrEmpty(_currentUserId))
         {
-            await CharacterService.DeleteCharacterAsync(character.Id);
+            await CharacterService.DeleteCharacterAsync(character.Id, _currentUserId);
             _characters?.Remove(character);
         }
     }

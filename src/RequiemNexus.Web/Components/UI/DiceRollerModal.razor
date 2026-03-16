@@ -1,7 +1,11 @@
 @using RequiemNexus.Domain.Services
 @using RequiemNexus.Domain.Contracts
 @using RequiemNexus.Domain.Models
+@using RequiemNexus.Data.RealTime
+@using RequiemNexus.Web.Services
 @inject IDiceService DiceService
+@inject SessionClientService SessionClient
+@implements IDisposable
 
 @if (IsVisible)
 {
@@ -85,25 +89,28 @@
                 
                 @if (_lastResult != null)
                 {
-                    <div class="result-box @(_lastResult.IsExceptionalSuccess ? "exceptional" : "") @(_lastResult.IsDramaticFailure ? "dramatic-failure" : "") @(_shakeClass)">
+                    <div class="result-box @(_lastResult.IsExceptionalSuccess ? "exceptional" : "") @(_lastResult.IsDramaticFailure ? "dramatic-failure" : "") @(_shakeClass) @(_isRolling ? "results-rolling" : "")">
                         <h4 class="result-title">
-                            <span id="@_successCountId">0</span> Success@(_lastResult.Successes != 1 ? "es" : "")
+                            <span id="@_successCountId">@(_isRolling ? "?" : _lastResult.Successes.ToString())</span> Success@(_lastResult.Successes != 1 ? "es" : "")
                         </h4>
-                        @if (_lastResult.IsExceptionalSuccess)
+                        @if (!_isRolling)
                         {
-                            <span class="result-badge exceptional-badge">✨ Exceptional Success!</span>
-                        }
-                        @if (_lastResult.IsDramaticFailure)
-                        {
-                            <span class="result-badge failure-badge">💀 Dramatic Failure!</span>
+                            @if (_lastResult.IsExceptionalSuccess)
+                            {
+                                <span class="result-badge exceptional-badge">✨ Exceptional Success!</span>
+                            }
+                            @if (_lastResult.IsDramaticFailure)
+                            {
+                                <span class="result-badge failure-badge">💀 Dramatic Failure!</span>
+                            }
                         }
                         
                         <div class="dice-results">
                             @{ int dieIndex = 0; }
                             @foreach (var die in _lastResult.DiceRolled)
                             {
-                                <span class="die-result @(die >= 8 ? "success-die" : "fail-die")"
-                                      style="--die-index: @dieIndex">@die</span>
+                                <span class="die-result @(_isRolling ? "rolling-die" : (die >= 8 ? "success-die" : "fail-die"))"
+                                      style="--die-index: @dieIndex">@(_isRolling ? "" : die.ToString())</span>
                                 dieIndex++;
                             }
                         </div>
@@ -141,6 +148,11 @@
     private readonly string[] _attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
     private readonly string[] _skills = RequiemNexus.Domain.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
 
+    protected override void OnInitialized()
+    {
+        SessionClient.DiceRollReceived += HandleDiceRollReceived;
+    }
+
     private int AssociatedTraitDice
     {
         get
@@ -168,16 +180,68 @@
     private async Task RollDice()
     {
         _isRolling = true;
-        _lastResult = DiceService.Roll(TotalPool, _tenAgain, _nineAgain, _eightAgain, _isRote, _seed);
-        
-        // Reset effects
-        _shakeClass = string.Empty;
         _showBurst = false;
+        _shakeClass = string.Empty;
 
-        await InvokeAsync(StateHasChanged);
+        var description = string.IsNullOrEmpty(_associatedTraitName)
+            ? TraitName
+            : $"{TraitName} + {_associatedTraitName}";
 
-        // Success counter odometer
-        await JS.InvokeVoidAsync("countUp", _successCountId, _lastResult.Successes, 600);
+        if (_modifier != 0)
+        {
+            description += $" ({(_modifier > 0 ? "+" : "")}{_modifier})";
+        }
+
+        if (SessionClient.IsConnected && Character?.CampaignId != null)
+        {
+            // Server-Side Roll (The Masquerade Audit - Step 4)
+            await SessionClient.RollDiceAsync(
+                Character.CampaignId.Value,
+                Character.Id,
+                TotalPool,
+                description,
+                _tenAgain,
+                _nineAgain,
+                _eightAgain,
+                _isRote);
+                
+            // The result will come back via HandleDiceRollReceived
+        }
+        else
+        {
+            // Fallback: Local Client-Side Roll (Solo/Offline)
+            var result = DiceService.Roll(TotalPool, _tenAgain, _nineAgain, _eightAgain, _isRote, _seed);
+            await ProcessRollResult(result);
+        }
+    }
+
+    private void HandleDiceRollReceived(DiceRollResultDto roll)
+    {
+        // Only react to our own roll to avoid modal popping for others (though only the roller has the modal open)
+        // If the modal is open, we assume we might be waiting for this result.
+        if (!IsVisible) return;
+
+        // Verify it was us (the character ID should match if provided)
+        if (Character != null && roll.CharacterId.HasValue && roll.CharacterId != Character.Id) return;
+
+        var result = new RollResult
+        {
+            Successes = roll.Successes,
+            DiceRolled = roll.DiceRolled.ToList(),
+            IsDramaticFailure = roll.IsDramaticFailure
+        };
+
+        _ = InvokeAsync(() => ProcessRollResult(result));
+    }
+
+    private async Task ProcessRollResult(RollResult result)
+    {
+        _lastResult = result;
+        
+        // Simulate "rolling" time for suspense and animation
+        await Task.Delay(800); 
+        
+        _isRolling = false;
 
         // Dramatic Failure Screen Shake
         if (_lastResult.IsDramaticFailure)
@@ -190,17 +254,19 @@
         {
             _showBurst = true;
         }
-
-        await Task.Delay(400); // Wait for surge animation to complete roughly
-        _isRolling = false;
         
-        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
         
         if (_showBurst)
         {
-            await Task.Delay(700);
+            await Task.Delay(1500);
             _showBurst = false;
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
         }
+    }
+
+    public void Dispose()
+    {
+        SessionClient.DiceRollReceived -= HandleDiceRollReceived;
     }
 }

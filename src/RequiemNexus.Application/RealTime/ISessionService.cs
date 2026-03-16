@@ -43,13 +43,14 @@ public interface ISessionService
     /// </summary>
     /// <param name="userId">AspNetUsers Id of the player rolling.</param>
     /// <param name="chronicleId">Primary key of the chronicle.</param>
+    /// <param name="characterId">Primary key of the character who rolled (optional).</param>
     /// <param name="pool">Number of dice to roll.</param>
     /// <param name="description">Description of the pool (e.g., "Strength + Brawl").</param>
     /// <param name="tenAgain">True for 10-again rules.</param>
     /// <param name="nineAgain">True for 9-again rules.</param>
     /// <param name="eightAgain">True for 8-again rules.</param>
     /// <param name="isRote">True for rote actions.</param>
-    Task RollDiceAsync(string userId, int chronicleId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote);
+    Task RollDiceAsync(string userId, int chronicleId, int? characterId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote);
 
     /// <summary>
     /// Updates the shared initiative tracker. Validates Storyteller role.

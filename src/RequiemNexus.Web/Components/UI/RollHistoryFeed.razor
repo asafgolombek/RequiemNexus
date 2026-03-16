@@ -44,18 +44,28 @@
     private void HandleDiceRoll(DiceRollResultDto roll)
     {
         _rolls.Add(roll);
-        if (_rolls.Count > 100) _rolls.RemoveAt(0);
+        if (_rolls.Count > 100)
+        {
+            _rolls.RemoveAt(0);
+        }
+        
         InvokeAsync(async () => {
             StateHasChanged();
+            // Wait a tiny bit for the DOM to update before scrolling
+            await Task.Yield();
             await ScrollToBottom();
         });
     }
 
     private void HandleHistory(IEnumerable<DiceRollResultDto> history)
     {
-        _rolls = history.Reverse().ToList(); // History comes in newest first from Redis
+        // history is often returned newest-first from the repository, 
+        // but we want to display it top-to-bottom (chronological).
+        _rolls = history.OrderBy(r => r.RolledAt).TakeLast(100).ToList();
+        
         InvokeAsync(async () => {
             StateHasChanged();
+            await Task.Yield();
             await ScrollToBottom();
         });
     }

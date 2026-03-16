@@ -5,6 +5,7 @@ namespace RequiemNexus.Data.RealTime;
 /// </summary>
 /// <param name="PlayerName">Display name of the player who rolled.</param>
 /// <param name="RolledByUserId">AspNetUsers Id of the player who rolled.</param>
+/// <param name="CharacterId">Primary key of the character who rolled (optional).</param>
 /// <param name="PoolDescription">Description of the dice pool (e.g., "Strength + Brawl").</param>
 /// <param name="Successes">Total number of successes rolled.</param>
 /// <param name="IsExceptionalSuccess">True if 5 or more successes were rolled.</param>
@@ -14,6 +15,7 @@ namespace RequiemNexus.Data.RealTime;
 public record DiceRollResultDto(
     string PlayerName,
     string RolledByUserId,
+    int? CharacterId,
     string PoolDescription,
     int Successes,
     bool IsExceptionalSuccess,

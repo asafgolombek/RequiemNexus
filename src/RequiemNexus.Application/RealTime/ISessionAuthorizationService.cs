@@ -25,4 +25,9 @@ public interface ISessionAuthorizationService
     /// Verifies that the user owns the specified character and it belongs to the chronicle.
     /// </summary>
     Task<bool> IsCharacterOwnerInChronicleAsync(string userId, int characterId, int chronicleId);
+
+    /// <summary>
+    /// Verifies that the character belongs to the specified chronicle.
+    /// </summary>
+    Task<bool> IsCharacterInChronicleAsync(int characterId, int chronicleId);
 }

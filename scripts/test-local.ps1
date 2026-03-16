@@ -71,13 +71,8 @@ if ($LASTEXITCODE -ne 0) {
 foreach ($Project in $TestProjects) {
     Write-Step "Running $($Project.Name) tests"
     
-
-
-    $ProjectPath = Join-Path $RootDir $Project.Path
-    dotnet test $ProjectPath @TestArgs
+    dotnet test $Project.Path @TestArgs
     $Results[$Project.Name] = $LASTEXITCODE
-    
-
 }
 
 # --- 4. Generate Coverage Report ---

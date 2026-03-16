@@ -40,4 +40,11 @@ public class SessionAuthorizationService(ApplicationDbContext db) : ISessionAuth
         return await db.Characters
             .AnyAsync(c => c.Id == characterId && c.ApplicationUserId == userId && c.CampaignId == chronicleId);
     }
+
+    /// <inheritdoc />
+    public async Task<bool> IsCharacterInChronicleAsync(int characterId, int chronicleId)
+    {
+        return await db.Characters
+            .AnyAsync(c => c.Id == characterId && c.CampaignId == chronicleId);
+    }
 }
