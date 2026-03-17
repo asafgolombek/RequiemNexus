@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate SBOM (CycloneDX)
         run: |
-          dotnet cyclonedx src/RequiemNexus.slnx -o ./artifacts/sbom -f json -sv 1.5
+          dotnet cyclonedx src/RequiemNexus.slnx --output ./artifacts/sbom --output-format json --spec-version 1.5
 
       # 🧪 The Inquisitor Ritual: Build & Scan Container
       - name: Login to GitHub Container Registry
