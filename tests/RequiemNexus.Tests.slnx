@@ -9,4 +9,3 @@
   <Project Path="RequiemNexus.Web.Tests/RequiemNexus.Web.Tests.csproj" />
   <Project Path="RequiemNexus.PerformanceTests/RequiemNexus.PerformanceTests.csproj" />
 </Solution>
-RateLimitingFilter.cs
