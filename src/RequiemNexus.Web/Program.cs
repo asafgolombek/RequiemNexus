@@ -121,7 +121,10 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddSingleton<ISessionPublisher, SessionPublisher>();
 builder.Services.AddScoped<RequiemNexus.Web.Services.SessionClientService>();
 
-var signalrBuilder = builder.Services.AddSignalR();
+var signalrBuilder = builder.Services.AddSignalR(options =>
+{
+    options.AddFilter(new RequiemNexus.Web.Hubs.Filters.RateLimitingFilter(30));
+});
 
 if (!builder.Environment.IsEnvironment("Testing"))
 {

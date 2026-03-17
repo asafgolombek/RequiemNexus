@@ -56,8 +56,8 @@ public class SessionHub(
             throw new HubException("Forbidden: Only the Storyteller can end a session");
         }
 
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, chronicleId.ToString());
         await sessionService.EndSessionAsync(UserId, chronicleId);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, chronicleId.ToString());
     }
 
     /// <summary>
@@ -70,6 +70,8 @@ public class SessionHub(
             await LogFailure(nameof(JoinSession), chronicleId, "Not a member");
             throw new HubException("Forbidden: Not a member of this chronicle");
         }
+
+        var userName = Context.User?.Identity?.Name ?? "Unknown Player";
 
         if (characterId.HasValue)
         {
@@ -88,7 +90,7 @@ public class SessionHub(
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, chronicleId.ToString());
-        await sessionService.JoinSessionAsync(UserId, chronicleId, characterId, Context.ConnectionId);
+        await sessionService.JoinSessionAsync(UserId, userName, chronicleId, characterId, Context.ConnectionId);
     }
 
     /// <summary>

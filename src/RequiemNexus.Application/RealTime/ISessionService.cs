@@ -26,10 +26,11 @@ public interface ISessionService
     /// Adds a player to an active session. Validates chronicle membership.
     /// </summary>
     /// <param name="userId">AspNetUsers Id of the player.</param>
+    /// <param name="userName">Display name of the player.</param>
     /// <param name="chronicleId">Primary key of the chronicle.</param>
     /// <param name="characterId">ID of the character the player is using (optional).</param>
     /// <param name="connectionId">The SignalR connection ID.</param>
-    Task JoinSessionAsync(string userId, int chronicleId, int? characterId, string connectionId);
+    Task JoinSessionAsync(string userId, string userName, int chronicleId, int? characterId, string connectionId);
 
     /// <summary>
     /// Removes a player from a session (usually on disconnect).

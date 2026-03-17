@@ -5,16 +5,19 @@
 
 @if (_players.Any())
 {
-    <div class="presence-bar">
-        @foreach (var player in _players)
-        {
-            <div class="player-chip" title="@player.UserName @(player.IsOnline ? "(Online)" : "(Offline)")">
-                <div class="avatar @(player.IsOnline ? "online" : "offline")">
-                    @GetInitials(player.UserName)
+    <div class="presence-bar-container">
+        <div class="presence-header">🩸 Players Online</div>
+        <div class="presence-bar">
+            @foreach (var player in _players)
+            {
+                <div class="player-chip" title="@player.UserName @(player.IsOnline ? "(Online)" : "(Offline)")">
+                    <div class="avatar @(player.IsOnline ? "online" : "offline")">
+                        @GetInitials(player.UserName)
+                    </div>
+                    <span class="player-name">@player.UserName</span>
                 </div>
-                <span class="player-name">@player.UserName</span>
-            </div>
-        }
+            }
+        </div>
     </div>
 }
 

@@ -36,10 +36,12 @@ jobs:
           dotnet build src/RequiemNexus.slnx --configuration Release
 
       # 📜 The Scribe Ritual: Generate SBOM
+      - name: Restore tools
+        run: dotnet tool restore
+
       - name: Generate SBOM (CycloneDX)
         run: |
-          dotnet tool install --global CycloneDX
-          dotnet CycloneDX src/RequiemNexus.slnx -o ./artifacts/sbom -f json -sv 1.5
+          dotnet cyclonedx src/RequiemNexus.slnx -o ./artifacts/sbom -f json -sv 1.5
 
       # 🧪 The Inquisitor Ritual: Build & Scan Container
       - name: Login to GitHub Container Registry

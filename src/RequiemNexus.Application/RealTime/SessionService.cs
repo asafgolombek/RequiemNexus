@@ -52,19 +52,15 @@ public class SessionService(
         await _repository.DeleteSessionAsync(chronicleId);
         _metrics.SessionEnded();
         await _publisher.Group(chronicleId).SessionEnded("Storyteller closed the session.");
+        await _publisher.Group(chronicleId).ReceivePresenceUpdate(new List<PlayerPresenceDto>());
         await _auditLog.LogAsync(userId, AuditEventType.SessionEnded, details: $"Chronicle: {chronicleId}");
     }
 
     /// <inheritdoc />
-    public async Task JoinSessionAsync(string userId, int chronicleId, int? characterId, string connectionId)
+    public async Task JoinSessionAsync(string userId, string userName, int chronicleId, int? characterId, string connectionId)
     {
         // 1. Identify: User joining
-        // 2. Load: Get user and character names for presence
-        var userName = await _db.Users
-            .Where(u => u.Id == userId)
-            .Select(u => u.UserName)
-            .FirstOrDefaultAsync() ?? "Unknown Player";
-
+        // 2. Load: Use provided userName (Performance: avoid DB query)
         var presence = new PlayerPresenceDto(userId, userName, characterId, true);
 
         // 3. Verify: Join authorized by SessionHub
