@@ -18,10 +18,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: '10.0.x'
           cache: true
@@ -39,7 +39,7 @@ jobs:
           TARGET_URL: ${{ secrets.STAGING_URL }}
 
       - name: Upload Performance Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v6.0.0
         if: always()
         with:
           name: perf-report-${{ github.run_number }}

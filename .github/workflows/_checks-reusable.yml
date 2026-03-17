@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: '10.0.x'
           cache: true
@@ -47,7 +47,7 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
 
       - name: Upload Coverage Artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v6.0.0
         if: always()
         with:
           name: coverage-${{ github.run_number }}
@@ -76,8 +76,8 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: '10.0.x'
           cache: true
@@ -108,8 +108,8 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: '10.0.x'
           cache: true

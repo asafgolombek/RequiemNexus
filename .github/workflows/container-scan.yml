@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
 
       - name: Build local image
         run: |
           docker build -t requiem-nexus:test -f src/RequiemNexus.Web/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@0.36
         with:
           image-ref: 'requiem-nexus:test'
           format: 'table'
@@ -32,7 +32,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v6.0.0
         if: always()
         with:
           name: trivy-results
