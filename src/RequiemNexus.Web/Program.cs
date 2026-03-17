@@ -1,6 +1,7 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using OpenTelemetry.Metrics;
@@ -121,10 +122,8 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddSingleton<ISessionPublisher, SessionPublisher>();
 builder.Services.AddScoped<RequiemNexus.Web.Services.SessionClientService>();
 
-var signalrBuilder = builder.Services.AddSignalR(options =>
-{
-    options.AddFilter(new RequiemNexus.Web.Hubs.Filters.RateLimitingFilter(30));
-});
+builder.Services.AddSingleton<IHubFilter>(new RequiemNexus.Web.Hubs.Filters.RateLimitingFilter(30));
+var signalrBuilder = builder.Services.AddSignalR();
 
 if (!builder.Environment.IsEnvironment("Testing"))
 {

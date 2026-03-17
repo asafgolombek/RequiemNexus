@@ -52,7 +52,7 @@ public class SessionStateRepository(IConnectionMultiplexer redis) : ISessionStat
     public async Task AddPlayerAsync(int chronicleId, PlayerPresenceDto player)
     {
         await _db.HashSetAsync(PlayersKey(chronicleId), player.UserId, JsonSerializer.Serialize(player));
-        
+
         // Ensure the players list has a TTL even if a session isn't active (Lobby presence)
         // We use a 30-minute window for the lobby.
         await _db.KeyExpireAsync(PlayersKey(chronicleId), TimeSpan.FromMinutes(30));

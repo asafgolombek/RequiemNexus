@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.SignalR;
 
 namespace RequiemNexus.Web.Hubs.Filters;
 
@@ -52,6 +52,7 @@ public class RateLimitingFilter(int maxMessagesPerMinute) : IHubFilter
     private class ConnectionStats
     {
         public DateTime WindowStart { get; set; }
+
         public int MessageCount { get; set; }
     }
 }
