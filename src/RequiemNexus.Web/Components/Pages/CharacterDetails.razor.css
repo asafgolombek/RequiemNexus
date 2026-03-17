@@ -284,6 +284,41 @@
     letter-spacing: 2px;
 }
 
+/* --- Expandable Merits --- */
+.merit-item {
+    cursor: pointer;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+}
+
+.merit-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.merit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.merit-chevron {
+    font-size: 0.75em;
+    color: var(--text-muted);
+}
+
+.merit-description {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    line-height: 1.4;
+}
+
 /* --- Equipment --- */
 .cs-equipment {
     grid-column: 1 / -1;

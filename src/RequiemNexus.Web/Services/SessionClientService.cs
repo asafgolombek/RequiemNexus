@@ -26,6 +26,8 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
     public event Action<CharacterUpdateDto>? CharacterUpdated;
 
+    public event Action<int, string>? BloodlineApproved;
+
     public event Action<IEnumerable<InitiativeEntryDto>>? InitiativeUpdated;
 
     public event Action<ChronicleUpdateDto>? ChronicleUpdated;
@@ -101,6 +103,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
         _hubConnection.On<IEnumerable<DiceRollResultDto>>("ReceiveRollHistory", history => RollHistoryReceived?.Invoke(history));
         _hubConnection.On<CharacterUpdateDto>("ReceiveCharacterUpdate", patch => CharacterUpdated?.Invoke(patch));
+        _hubConnection.On<int, string>("ReceiveBloodlineApproved", (characterId, bloodlineName) => BloodlineApproved?.Invoke(characterId, bloodlineName));
         _hubConnection.On<IEnumerable<InitiativeEntryDto>>("ReceiveInitiativeUpdate", entries => InitiativeUpdated?.Invoke(entries));
         _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
 

@@ -6,7 +6,9 @@
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
 @using RequiemNexus.Application.RealTime
+@using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
@@ -20,6 +22,7 @@
 @inject ISessionService SessionService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ToastService ToastService
+@inject IBloodlineService BloodlineService
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -170,11 +173,21 @@ else
                             <ul class="trait-list">
                                 @foreach (var merit in _character.Merits)
                                 {
-                                    <li class="trait-item">
-                                        <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" :
-                                $"({merit.Specification})")</span>
-                                        <span class="trait-dots">@(new string('•',
-                                merit.Rating))</span>
+                                    <li class="trait-item merit-item @(_expandedMeritIds.Contains(merit.Id) ? "expanded" : "")"
+                                        @onclick="() => ToggleMeritExpanded(merit.Id)"
+                                        role="button"
+                                        tabindex="0"
+                                        @onkeydown="(e) => HandleMeritKeydown(e, merit.Id)">
+                                        <div class="merit-header">
+                                            <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" :
+                                                $"({merit.Specification})")</span>
+                                            <span class="trait-dots">@(new string('•', merit.Rating))</span>
+                                            <span class="merit-chevron">@(_expandedMeritIds.Contains(merit.Id) ? "▼" : "▶")</span>
+                                        </div>
+                                        @if (_expandedMeritIds.Contains(merit.Id) && merit.Merit != null && !string.IsNullOrEmpty(merit.Merit.Description))
+                                        {
+                                            <div class="merit-description">@merit.Merit.Description</div>
+                                        }
                                     </li>
                                 }
                             </ul>
@@ -230,6 +243,7 @@ else
                             <h2>Bloodline</h2>
                             @{
                                 var activeBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Active);
+                                var pendingBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Pending);
                             }
                             @if (activeBloodline?.BloodlineDefinition != null)
                             {
@@ -248,7 +262,26 @@ else
                                     <div style="margin-top: 6px;">
                                         <span class="trait-subheading">Bloodline Bane:</span> @activeBloodline.BloodlineDefinition.BaneOverride
                                     </div>
+                                    @if (_isFreeEditMode)
+                                    {
+                                        <button class="btn-ghost" style="font-size: 0.85em; margin-top: 8px;" @onclick="() => RemoveBloodline(activeBloodline.Id)" disabled="@_removingBloodline">
+                                            @(_removingBloodline ? "Removing…" : "Remove Bloodline")
+                                        </button>
+                                    }
                                 </div>
+                            }
+                            else if (pendingBloodline?.BloodlineDefinition != null)
+                            {
+                                <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingBloodline.BloodlineDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                                @if (_character.CampaignId.HasValue)
+                                {
+                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">View in Glimpse</a>
+                                }
+                            }
+                            else if (_character.BloodPotency >= 2 && _character.ClanId.HasValue && _character.CampaignId.HasValue)
+                            {
+                                <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">None. Apply when Blood Potency 2+.</p>
+                                <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
                             }
                             else
                             {
@@ -359,6 +392,10 @@ else
     </div>
 
     <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" />
+    <ApplyBloodlineModal IsOpen="_isApplyBloodlineModalOpen"
+                         IsOpenChanged="HandleApplyBloodlineModalClosed"
+                         EligibleBloodlines="_eligibleBloodlines"
+                         OnApplyRequested="HandleApplyBloodlineRequested" />
 }
 
 @implements IAsyncDisposable
@@ -379,6 +416,10 @@ else
     private bool _isRollerOpen = false;
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
+    private bool _isApplyBloodlineModalOpen = false;
+    private bool _removingBloodline = false;
+    private List<BloodlineSummaryDto> _eligibleBloodlines = [];
+    private HashSet<int> _expandedMeritIds = [];
 
     private bool isAdvancementMode = false;
     private bool _isFreeEditMode = false;
@@ -521,17 +562,45 @@ else
         {
             // Auto-join if session is active (uses cache)
             bool isActive = await SessionClient.GetSessionActiveAsync(_character.CampaignId.Value, SessionService);
-            
+
             // Connect to hub for character updates regardless of live session state
             await SessionClient.StartAsync(_character.CampaignId.Value, _character.Id, _currentUserId, _cookieHeader);
-            
+
+            SessionClient.CharacterUpdated += HandleCharacterUpdated;
+            SessionClient.BloodlineApproved += HandleBloodlineApproved;
+
             StateHasChanged();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
+        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        SessionClient.BloodlineApproved -= HandleBloodlineApproved;
         await SessionClient.StopAsync();
+    }
+
+    private async void HandleCharacterUpdated(CharacterUpdateDto patch)
+    {
+        if (patch.CharacterId != Id || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void HandleBloodlineApproved(int characterId, string bloodlineName)
+    {
+        if (characterId != Id || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
+        _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+        await InvokeAsync(StateHasChanged);
     }
 
     private static void OpenReference(string traitName)
@@ -621,6 +690,98 @@ else
             await EquipmentService.RemoveEquipmentAsync(ceId, _currentUserId);
             var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
             if (ce != null) _character.CharacterEquipments.Remove(ce);
+        }
+    }
+
+    private void ToggleMeritExpanded(int characterMeritId)
+    {
+        if (_expandedMeritIds.Contains(characterMeritId))
+        {
+            _ = _expandedMeritIds.Remove(characterMeritId);
+        }
+        else
+        {
+            _expandedMeritIds.Add(characterMeritId);
+        }
+    }
+
+    private void HandleMeritKeydown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, int characterMeritId)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            ToggleMeritExpanded(characterMeritId);
+        }
+    }
+
+    private void HandleApplyBloodlineModalClosed(bool isOpen)
+    {
+        _isApplyBloodlineModalOpen = isOpen;
+    }
+
+    private async Task OpenApplyBloodlineModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            _eligibleBloodlines = await BloodlineService.GetEligibleBloodlinesAsync(_character.Id, _currentUserId);
+            if (_eligibleBloodlines.Count == 0)
+            {
+                ToastService.Show("No eligible bloodlines", "No eligible bloodlines for your clan.", ToastType.Info);
+                return;
+            }
+
+            _isApplyBloodlineModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task HandleApplyBloodlineRequested(int bloodlineDefinitionId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await BloodlineService.ApplyForBloodlineAsync(_character.Id, bloodlineDefinitionId, _currentUserId);
+            ToastService.Show("Application submitted", "Bloodline application submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task RemoveBloodline(int characterBloodlineId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId) || _removingBloodline)
+        {
+            return;
+        }
+
+        _removingBloodline = true;
+        try
+        {
+            await BloodlineService.RemoveBloodlineAsync(characterBloodlineId, _currentUserId);
+            ToastService.Show("Bloodline removed", "The bloodline has been removed from your character.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _removingBloodline = false;
         }
     }
 }

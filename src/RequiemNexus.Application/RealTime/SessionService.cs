@@ -180,6 +180,19 @@ public class SessionService(
     }
 
     /// <inheritdoc />
+    public async Task BroadcastBloodlineApprovedAsync(int characterId, string bloodlineName)
+    {
+        var character = await _db.Characters
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == characterId);
+
+        if (character?.CampaignId.HasValue == true)
+        {
+            await _publisher.Group(character.CampaignId.Value).ReceiveBloodlineApproved(characterId, bloodlineName);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task BroadcastChronicleUpdateAsync(ChronicleUpdateDto patch)
     {
         await _publisher.Group(patch.ChronicleId).ReceiveChronicleUpdate(patch);

@@ -50,6 +50,13 @@ public interface ISessionClient
     Task ReceiveCharacterUpdate(CharacterUpdateDto patch);
 
     /// <summary>
+    /// Broadcasts that a character's bloodline application was approved. Sent to chronicle group.
+    /// </summary>
+    /// <param name="characterId">The character whose bloodline was approved.</param>
+    /// <param name="bloodlineName">Name of the approved bloodline.</param>
+    Task ReceiveBloodlineApproved(int characterId, string bloodlineName);
+
+    /// <summary>
     /// Broadcasts the current initiative tracker state.
     /// </summary>
     /// <param name="entries">The full ordered list of initiative participants.</param>

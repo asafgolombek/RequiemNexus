@@ -126,7 +126,7 @@
                             @foreach (var character in _campaign.Characters)
                             {
                                 bool isOwn = character.ApplicationUserId == _currentUserId;
-                                <div class="character-card card-rn clickable-card" @onclick="() => NavigateToCharacter(character.Id)">
+                                <div class="character-card card-rn clickable-card" @onclick="() => NavigateToCharacter(character.Id, isOwn)">
                                     <h4 class="char-name">@character.Name</h4>
                                     <div class="char-clan">🩸 Clan: @(character.Clan?.Name ?? "Unknown")</div>
                                     <div class="player-info">
@@ -391,9 +391,16 @@
         await SessionClient.StopAsync();
     }
 
-    private void NavigateToCharacter(int characterId)
+    private void NavigateToCharacter(int characterId, bool isOwner)
     {
-        NavigationManager.NavigateTo($"/character/{characterId}");
+        if (isOwner)
+        {
+            NavigationManager.NavigateTo($"/character/{characterId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/campaigns/{Id}/characters/{characterId}");
+        }
     }
 
     private async Task LoadData()

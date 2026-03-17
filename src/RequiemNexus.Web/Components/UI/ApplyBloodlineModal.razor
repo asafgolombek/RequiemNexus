@@ -1,0 +1,100 @@
+@using RequiemNexus.Application.DTOs
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="Close" role="dialog" aria-modal="true" aria-labelledby="apply-bloodline-title">
+        <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3 id="apply-bloodline-title">Apply for Bloodline</h3>
+                <button type="button" class="close-btn" @onclick="Close" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="apply-bloodline-hint">Select a bloodline to apply for. Your clan and Blood Potency determine eligibility.</p>
+                @if (EligibleBloodlines.Count == 0)
+                {
+                    <p class="apply-bloodline-empty">No eligible bloodlines for your clan.</p>
+                }
+                else
+                {
+                    <div class="bloodline-list">
+                        @foreach (var bloodline in EligibleBloodlines)
+                        {
+                            <div class="bloodline-option @(SelectedBloodlineId == bloodline.Id ? "selected" : "")"
+                                 @onclick="() => SelectBloodline(bloodline.Id)"
+                                 role="button"
+                                 tabindex="0"
+                                 @onkeydown="(e) => HandleKeydown(e, bloodline.Id)">
+                                <div class="bloodline-name">@bloodline.Name</div>
+                                <div class="bloodline-desc">@bloodline.Description</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-ghost" @onclick="Close">Cancel</button>
+                <button type="button"
+                        class="btn-primary-rn"
+                        disabled="@(SelectedBloodlineId == null || _applying)"
+                        @onclick="Apply">
+                    @(_applying ? "Applying…" : "Apply")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public List<BloodlineSummaryDto> EligibleBloodlines { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<int> OnApplyRequested { get; set; }
+
+    private int? SelectedBloodlineId { get; set; }
+    private bool _applying;
+
+    private void SelectBloodline(int id)
+    {
+        SelectedBloodlineId = id;
+    }
+
+    private void HandleKeydown(KeyboardEventArgs e, int id)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            SelectBloodline(id);
+        }
+    }
+
+    private async Task Close()
+    {
+        SelectedBloodlineId = null;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task Apply()
+    {
+        if (SelectedBloodlineId == null || _applying)
+        {
+            return;
+        }
+
+        _applying = true;
+        try
+        {
+            await OnApplyRequested.InvokeAsync(SelectedBloodlineId.Value);
+            await Close();
+        }
+        finally
+        {
+            _applying = false;
+        }
+    }
+}
