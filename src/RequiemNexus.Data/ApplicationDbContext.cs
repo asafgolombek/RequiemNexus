@@ -74,6 +74,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<SessionPrepNote> SessionPrepNotes { get; set; } = default!;
 
+    public DbSet<PublicRoll> PublicRolls { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -453,6 +455,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<SessionPrepNote>()
             .HasIndex(s => s.CampaignId);
+
+        // PublicRoll configuration
+        builder.Entity<PublicRoll>()
+            .HasIndex(r => r.Slug)
+            .IsUnique();
+
+        builder.Entity<PublicRoll>()
+            .HasOne(r => r.RolledByUser)
+            .WithMany()
+            .HasForeignKey(r => r.RolledByUserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Merit configuration
         builder.Entity<Merit>()

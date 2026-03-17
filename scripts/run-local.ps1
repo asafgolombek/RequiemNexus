@@ -16,6 +16,6 @@ Write-Host "`nApplying database migrations..." -ForegroundColor DarkGray
 dotnet ef database update --project (Join-Path $RootDir "src\RequiemNexus.Data") --startup-project $WebProjPath
 
 Write-Host "`nBooting application..." -ForegroundColor Green
-dotnet run --project $WebProjPath -c $Configuration
+dotnet run --project $WebProjPath -c $Configuration --launch-profile https
 
 Write-Host "`nApplication exited!" -ForegroundColor Green

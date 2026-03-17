@@ -1,8 +1,11 @@
 @page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
 @rendermode InteractiveServer
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.RealTime
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Data.RealTime
 @using RequiemNexus.Domain.Enums
+@using RequiemNexus.Web.Services
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IEncounterService EncounterService
@@ -10,6 +13,10 @@
 @inject IConditionService ConditionService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject SessionClientService SessionClient
+@inject ISessionService SessionService
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
 
 <PageTitle>Initiative Tracker - Requiem Nexus</PageTitle>
 
@@ -261,7 +268,27 @@
             return;
         }
 
+        SessionClient.InitiativeUpdated += HandleInitiativeUpdated;
+        SessionClient.CharacterUpdated += HandleCharacterUpdated;
+        
+        // Use cache to check if session is active
+        await SessionClient.GetSessionActiveAsync(CampaignId, SessionService);
+        
+        // Connect to hub
+        await SessionClient.StartAsync(CampaignId, null, _currentUserId);
+
         await LoadEncounter();
+    }
+
+    private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)
+    {
+        InvokeAsync(LoadEncounter);
+    }
+
+    private void HandleCharacterUpdated(CharacterUpdateDto patch)
+    {
+        // Vitals might have changed, reload to see mini-health-track updates
+        InvokeAsync(LoadEncounter);
     }
 
     private async Task LoadEncounter()
@@ -282,6 +309,7 @@
             }
 
             await LoadActiveTiltsAsync();
+            StateHasChanged();
         }
         finally
         {
@@ -330,6 +358,8 @@
             _addNpcName = string.Empty;
             _addInitMod = 0;
             _addRoll = 1;
+            
+            await BroadcastInitiativeUpdate();
             await LoadEncounter();
         }
         catch (Exception ex)
@@ -351,6 +381,7 @@
         try
         {
             await EncounterService.AdvanceTurnAsync(EncounterId, _currentUserId!);
+            await BroadcastInitiativeUpdate();
             await LoadEncounter();
 
             if (SortedEntries.All(i => !i.HasActed))
@@ -372,6 +403,7 @@
         try
         {
             await EncounterService.ResolveEncounterAsync(EncounterId, _currentUserId!);
+            await BroadcastInitiativeUpdate();
             await LoadEncounter();
         }
         finally
@@ -388,6 +420,7 @@
         try
         {
             await EncounterService.RemoveEntryAsync(entryId, _currentUserId!);
+            await BroadcastInitiativeUpdate();
             await LoadEncounter();
         }
         finally
@@ -428,6 +461,19 @@
         }
     }
 
+    private async Task BroadcastInitiativeUpdate()
+    {
+        var entries = SortedEntries.Select(i => new InitiativeEntryDto(
+            i.CharacterId,
+            i.Character?.Name ?? i.NpcName ?? "Unknown",
+            i.Total,
+            CurrentActor?.Id == i.Id,
+            i.CharacterId == null
+        )).ToList();
+
+        await SessionClient.UpdateInitiativeAsync(entries);
+    }
+
     private void OnDragStart(InitiativeEntry item) => _draggedItem = item;
 
     private async Task OnDrop(InitiativeEntry target)
@@ -447,6 +493,7 @@
         }
 
         _draggedItem = null;
+        await BroadcastInitiativeUpdate();
         StateHasChanged();
     }
 
@@ -462,5 +509,12 @@
             '*' => "aggravated",
             _ => string.Empty
         };
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
+        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        await SessionClient.StopAsync();
     }
 }

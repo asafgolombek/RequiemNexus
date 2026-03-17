@@ -1,4 +1,8 @@
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Data.RealTime
+@using RequiemNexus.Web.Services
+@inject SessionClientService SessionClient
+@implements IDisposable
 
 <section class="cs-section cs-vitals">
     <div class="vitals-trackers">
@@ -75,6 +79,27 @@
     private string _clipId = Guid.NewGuid().ToString("N");
 
     private double VitaeFillY => 52.0 - (Character.MaxVitae > 0 ? (double)Character.CurrentVitae / Character.MaxVitae * 52.0 : 0);
+
+    protected override void OnInitialized()
+    {
+        SessionClient.CharacterUpdated += HandleCharacterUpdated;
+    }
+
+    private void HandleCharacterUpdated(CharacterUpdateDto patch)
+    {
+        if (patch.CharacterId == Character.Id)
+        {
+            if (patch.CurrentHealth.HasValue) Character.CurrentHealth = patch.CurrentHealth.Value;
+            if (patch.MaxHealth.HasValue) Character.MaxHealth = patch.MaxHealth.Value;
+            if (patch.CurrentWillpower.HasValue) Character.CurrentWillpower = patch.CurrentWillpower.Value;
+            if (patch.MaxWillpower.HasValue) Character.MaxWillpower = patch.MaxWillpower.Value;
+            if (patch.CurrentVitae.HasValue) Character.CurrentVitae = patch.CurrentVitae.Value;
+            if (patch.MaxVitae.HasValue) Character.MaxVitae = patch.MaxVitae.Value;
+            if (patch.Humanity.HasValue) Character.Humanity = patch.Humanity.Value;
+            
+            InvokeAsync(StateHasChanged);
+        }
+    }
 
     private string GetHealthDamageClass(int index)
     {
@@ -154,5 +179,10 @@
         {
             await OnChanged.InvokeAsync();
         }
+    }
+
+    public void Dispose()
+    {
+        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
     }
 }

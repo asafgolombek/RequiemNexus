@@ -175,39 +175,40 @@ Real-time communication enables live play sessions.
 
 - A single **SignalR Hub** handles all real-time communication.
 - Clients join **chronicle-scoped groups** — messages are broadcast only to players in the active session.
-- The Hub is a **thin relay** — it invokes Application Layer services and pushes results. It holds **no authoritative state**.
-- **Redis Backplane**: Redis is configured as the SignalR backplane to distribute messages across horizontally scaled nodes. Without it, messages sent to a hub on one ECS task would not reach clients connected to another.
+- The Hub is a **thin relay** — it performs authentication/authorization via `ISessionAuthorizationService` and delegates all logic to the Application Layer. It holds **no authoritative state**.
+- **Redis Backplane**: Redis is configured as the SignalR backplane to distribute messages across horizontally scaled nodes.
+- **Ephemeral State (Redis)**: Session state (active players, initiative order, recent rolls) is stored in Redis with a 15-minute sliding TTL. No database entities are created for play sessions.
+- **Server-Side Authority**: All dice rolls are performed on the server via `DiceService`. Clients request a roll; the server broadcasts the result.
+- **Latency SLA**: Server dispatch time (hub method start to group broadcast) must be ≤ 200ms p95.
 
 ### Data Flow Rules
 
 | Channel | Use Case |
 |---------|----------|
 | **SignalR (Push)** | Dice roll results, Condition changes, Beat awards, initiative updates, presence indicators |
-| **REST (Pull)** | Character CRUD, Chronicle management, XP spending, full state hydration on connect/reconnect |
+| **REST (Pull)** | Character CRUD, Chronicle management, XP spending, full state snapshot hydration |
 
 ### Reconnection Strategy
 
 - On disconnect, the client enters a **reconnection loop** with exponential backoff.
-- On reconnect, the client requests a **full state snapshot** via REST to ensure consistency.
+- On reconnect, the client requests a **full state snapshot** via REST (`/api/sessions/{id}/state`) to ensure consistency.
 - Missed SignalR messages during disconnection are **not replayed** — the state snapshot is the source of truth.
+
+#### Phase 8 (PWA/Offline) Deferral
+Phase 8 has been deferred indefinitely. The architectural assumption is "WiFi at the table" or stable university/home connectivity. Offline capabilities were deemed lower priority than real-time synchronization.
 
 ---
 
-## 📴 Offline & PWA Sync Architecture (The Hidden Refuge)
+## 🏗️ Layer Ownership Map
 
-Offline play is an architectural constraint, not an afterthought.
+The system is organized into a modular monolith with strict dependency rules.
 
-### Offline Strategy
-
-- The **Service Worker** caches the application shell and critical assets for offline access.
-- Character data is stored locally in **IndexedDB** for offline read/write.
-- The **Dice Nexus** runs entirely client-side when offline — no server dependency.
-
-### Sync & Conflict Resolution
-
-- Offline mutations are recorded as an **event queue** (event-sourced).
-- On reconnect, queued events are replayed against the server.
-- **Conflict policy**: Last-write-wins with conflict detection. If the server state has diverged, the player is presented with a **merge/override UI** — no silent overwrites.
+| Layer | Responsibility | Allowed Dependencies |
+|-------|----------------|----------------------|
+| **Web** | UI, SignalR Hubs, Components | Application, Data, Domain |
+| **Application** | Use Case Orchestration, Authorization | Data, Domain |
+| **Domain** | Rules, Invariants, Pure Logic | None |
+| **Data** | Persistence, EF Core, Repositories | Domain |
 
 ---
 

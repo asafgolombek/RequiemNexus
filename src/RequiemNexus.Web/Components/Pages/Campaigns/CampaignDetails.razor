@@ -2,12 +2,20 @@
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.RealTime
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Services
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ICampaignService CampaignService
 @inject ICharacterService CharacterService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject SessionClientService SessionClient
+@inject ISessionService SessionService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject PersistentComponentState ApplicationState
+@implements IDisposable
 
 <PageTitle>Campaign Details - Requiem Nexus</PageTitle>
 
@@ -19,130 +27,175 @@
     else
     {
         <div class="campaign-header">
-            <h2>@_campaign.Name</h2>
-            <div class="storyteller-badge">
-                <span>👑 Story Teller:</span> @(_campaign.StoryTeller?.UserName ?? _campaign.StoryTeller?.Email ?? "Unknown")
-            </div>
-            @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
-            {
-                <a href="/campaigns/@_campaign.Id/glimpse" class="btn-primary-rn" style="margin-top:0.5rem;">🔮 Glimpse Dashboard</a>
-                <a href="/campaigns/@_campaign.Id/encounters" class="btn-ghost" style="margin-top:0.5rem;">⚔️ Encounters</a>
-                <a href="/campaigns/@_campaign.Id/danse-macabre" class="btn-ghost" style="margin-top:0.5rem;">🌹 Danse Macabre</a>
-            }
-        </div>
-
-        <div class="characters-section">
-            <div class="section-header">
-                <h3>Players in this Campaign</h3>
-                @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
-                {
-                    <button class="btn-primary-rn" @onclick="ToggleAddCharacter">Add Character</button>
-                }
-            </div>
-
-            @if (_showAddCharacter && !CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
-            {
-                <div class="add-character-panel">
-                    <h4>Add Character to Campaign</h4>
-                    <EditForm Model="_addModel" OnValidSubmit="AddCharacterSubmit">
-                        <div class="add-character-row">
-                            <div class="add-character-select">
-                                <InputSelect @bind-Value="_addModel.CharacterId" class="form-control">
-                                    <option value="0">-- Select an available character --</option>
-                                    @foreach (var c in _availableCharacters)
-                                    {
-                                        <option value="@c.Id">@c.Name (@c.User?.Email)</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="add-character-actions">
-                                <button type="submit" class="btn-primary-rn" disabled="@(_addModel.CharacterId == 0)">Add</button>
-                                <button type="button" class="btn-ghost" @onclick="ToggleAddCharacter">Cancel</button>
-                            </div>
-                        </div>
-                    </EditForm>
+            <div style="display:flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h2>@_campaign.Name</h2>
+                    <div class="storyteller-badge">
+                        <span>👑 Story Teller:</span> @(_campaign.StoryTeller?.UserName ?? _campaign.StoryTeller?.Email ?? "Unknown")
+                    </div>
                 </div>
-            }
-
-            @if (!_campaign.Characters.Any())
-            {
-                <div class="empty-state-rn">
-                    <p>No characters have joined this saga yet.</p>
-                </div>
-            }
-            else
-            {
-                <div class="character-grid">
-                    @foreach (var character in _campaign.Characters)
+                <div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
+                    @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
                     {
-                        bool isOwn = character.ApplicationUserId == _currentUserId;
-                        <div class="character-card card-rn">
-                            <h4>@character.Name</h4>
-                            <div class="player-info">
-                                <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
-                            </div>
-                            <div class="stats">
-                                <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
-                                <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
-                                <span>🩸 BP: @character.BloodPotency</span>
-                                <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
-                            </div>
-                            <div class="card-actions" style="margin-top:10px;">
-                                @if (isOwn)
+                        @if (!_sessionActive)
+                        {
+                            <button class="btn-primary-rn" @onclick="StartSession">🩸 Start Live Session</button>
+                        }
+                        else
+                        {
+                            <button class="btn-danger-rn" @onclick="EndSession">🛑 End Session</button>
+                        }
+                    }
+                    else if (_sessionActive)
+                    {
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge-live">🩸 LIVE SESSION ACTIVE</span>
+                            @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                            {
+                                @if (!SessionClient.IsConnected)
                                 {
-                                    <a href="/character/@character.Id" class="btn-ghost" style="font-size:0.8em;">Edit Sheet</a>
-                                    @if (_confirmRemoveCharacterId == character.Id)
-                                    {
-                                        <span style="font-size:0.8em;">Remove from campaign?
-                                            <button class="btn-primary-rn" style="font-size:0.8em;" @onclick="() => ConfirmRemoveCharacter(character.Id)">Yes</button>
-                                            <button class="btn-ghost" style="font-size:0.8em;" @onclick="CancelConfirm">No</button>
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => AskRemoveCharacter(character.Id)">Remove from Campaign</button>
-                                    }
+                                    <button class="btn-primary-rn" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;" @onclick="JoinSession">Join Session</button>
                                 }
                                 else
                                 {
-                                    <a href="/campaigns/@_campaign.Id/characters/@character.Id" class="btn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 0.25rem 0.75rem; border-radius: 4px;">Status: Presence Active</span>
+                                    <button class="btn-ghost" style="font-size: 0.8rem; padding: 0.25rem 0.75rem; border: 1px solid var(--brand-crimson); margin-left: 0.5rem;" @onclick="LeaveSession">Leave Session</button>
                                 }
-                            </div>
+                            }
                         </div>
                     }
                 </div>
-            }
+            </div>
+            
+            <SessionPresenceBar />
+
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                {
+                    <a href="/campaigns/@_campaign.Id/glimpse" class="btn-primary-rn">🔮 Glimpse Dashboard</a>
+                    <a href="/campaigns/@_campaign.Id/encounters" class="btn-ghost">⚔️ Encounters</a>
+                    <a href="/campaigns/@_campaign.Id/danse-macabre" class="btn-ghost">🌹 Danse Macabre</a>
+                }
+            </div>
         </div>
 
-        @* ── Campaign Lore (all members) ──────────────────────────────────── *@
-        <div class="card-rn" style="margin-top:2rem;">
-            <h3 style="margin-bottom:0.75rem;">Campaign Lore</h3>
-            @if (_loreEntries.Count == 0)
-            {
-                <p style="color:var(--gothic-muted);font-size:0.9em;">No lore entries yet.</p>
-            }
-            else
-            {
-                @foreach (CampaignLore lore in _loreEntries)
-                {
-                    <div class="card-rn" style="margin-bottom:0.75rem;">
-                        <strong>@lore.Title</strong>
-                        <p style="margin:0.25rem 0 0;font-size:0.9em;white-space:pre-wrap;">@lore.Body</p>
-                        @if (lore.AuthorUserId == _currentUserId || CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem;">
+            <div class="main-content-area">
+                <div class="characters-section">
+                    <div class="section-header">
+                        <h3>Players in this Campaign</h3>
+                        @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
                         {
-                            <button class="btn-danger-rn" style="font-size:0.75em;margin-top:0.35rem;" @onclick="() => DeleteLore(lore.Id)">Remove</button>
+                            <button class="btn-primary-rn" @onclick="ToggleAddCharacter">Add Character</button>
                         }
                     </div>
-                }
-            }
-            <details style="margin-top:0.5rem;">
-                <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Lore Entry</summary>
-                <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
-                    <input class="form-control" placeholder="Title" @bind="_newLoreTitle" />
-                    <textarea class="form-control" rows="3" placeholder="Body" @bind="_newLoreBody" />
-                    <button class="btn-primary-rn" style="font-size:0.85em;align-self:flex-start;" disabled="@(string.IsNullOrWhiteSpace(_newLoreTitle))" @onclick="CreateLore">Save</button>
+
+                    @if (_showAddCharacter && !CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                    {
+                        <div class="add-character-panel">
+                            <h4>Add Character to Campaign</h4>
+                            <EditForm Model="_addModel" OnValidSubmit="AddCharacterSubmit">
+                                <div class="add-character-row">
+                                    <div class="add-character-select">
+                                        <InputSelect @bind-Value="_addModel.CharacterId" class="form-control">
+                                            <option value="0">-- Select an available character --</option>
+                                            @foreach (var c in _availableCharacters)
+                                            {
+                                                <option value="@c.Id">@c.Name (@c.User?.Email)</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="add-character-actions">
+                                        <button type="submit" class="btn-primary-rn" disabled="@(_addModel.CharacterId == 0)">Add</button>
+                                        <button type="button" class="btn-ghost" @onclick="ToggleAddCharacter">Cancel</button>
+                                    </div>
+                                </div>
+                            </EditForm>
+                        </div>
+                    }
+
+                    @if (!_campaign.Characters.Any())
+                    {
+                        <div class="empty-state-rn">
+                            <p>No characters have joined this saga yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="character-grid">
+                            @foreach (var character in _campaign.Characters)
+                            {
+                                bool isOwn = character.ApplicationUserId == _currentUserId;
+                                <div class="character-card card-rn clickable-card" @onclick="() => NavigateToCharacter(character.Id)">
+                                    <h4 class="char-name">@character.Name</h4>
+                                    <div class="char-clan">🩸 Clan: @(character.Clan?.Name ?? "Unknown")</div>
+                                    <div class="player-info">
+                                        <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
+                                    </div>
+                                    <div class="stats">
+                                        <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
+                                        <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
+                                        <span>🩸 BP: @character.BloodPotency</span>
+                                        <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
+                                    </div>
+                                    <div class="card-actions" style="margin-top:10px;">
+                                        @if (isOwn)
+                                        {
+                                            @if (_confirmRemoveCharacterId == character.Id)
+                                            {
+                                                <span style="font-size:0.8em;" @onclick:stopPropagation="true">Remove from campaign?
+                                                    <button class="btn-primary-rn" style="font-size:0.8em;" @onclick="() => ConfirmRemoveCharacter(character.Id)">Yes</button>
+                                                    <button class="btn-ghost" style="font-size:0.8em;" @onclick="CancelConfirm">No</button>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => AskRemoveCharacter(character.Id)" @onclick:stopPropagation="true">Remove from Campaign</button>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
-            </details>
+
+                @* ── Campaign Lore (all members) ──────────────────────────────────── *@
+                <div class="card-rn" style="margin-top:2rem;">
+                    <h3 style="margin-bottom:0.75rem;">Campaign Lore</h3>
+                    @if (_loreEntries.Count == 0)
+                    {
+                        <p style="color:var(--gothic-muted);font-size:0.9em;">No lore entries yet.</p>
+                    }
+                    else
+                    {
+                        @foreach (CampaignLore lore in _loreEntries)
+                        {
+                            <div class="card-rn" style="margin-bottom:0.75rem;">
+                                <strong>@lore.Title</strong>
+                                <p style="margin:0.25rem 0 0;font-size:0.9em;white-space:pre-wrap;">@lore.Body</p>
+                                @if (lore.AuthorUserId == _currentUserId || CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                                {
+                                    <button class="btn-danger-rn" style="font-size:0.75em;margin-top:0.35rem;" @onclick="() => DeleteLore(lore.Id)">Remove</button>
+                                }
+                            </div>
+                        }
+                    }
+                    <details style="margin-top:0.5rem;">
+                        <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">+ Add Lore Entry</summary>
+                        <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
+                            <input class="form-control" placeholder="Title" @bind="_newLoreTitle" />
+                            <textarea class="form-control" rows="3" placeholder="Body" @bind="_newLoreBody" />
+                            <button class="btn-primary-rn" style="font-size:0.85em;align-self:flex-start;" disabled="@(string.IsNullOrWhiteSpace(_newLoreTitle))" @onclick="CreateLore">Save</button>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="realtime-sidebar">
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--brand-crimson);">🩸 Blood Logs</h3>
+                <RollHistoryFeed />
+            </div>
         </div>
 
         @* ── Session Prep Notes (ST only) ──────────────────────────────────── *@
@@ -176,11 +229,11 @@
             </div>
         }
 
-        @* ── Leave Campaign (non-ST members with an enrolled character) ──── *@
-        @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty)
-             && _campaign.Characters.Any(c => c.ApplicationUserId == _currentUserId))
-        {
-            <div class="danger-zone" style="margin-top:2rem;">
+        @* ── Danger Zone ────────────────────────────────────────────────── *@
+        <div class="danger-zone" style="margin-top:2rem;">
+            @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty)
+                 && _campaign.Characters.Any(c => c.ApplicationUserId == _currentUserId))
+            {
                 @if (_showConfirmLeave)
                 {
                     <div class="confirm-card card-rn">
@@ -197,13 +250,10 @@
                 {
                     <button class="btn-ghost" @onclick="() => _showConfirmLeave = true">Leave Campaign</button>
                 }
-            </div>
-        }
+            }
 
-        @* ── Delete Campaign (ST only) ────────────────────────────────────── *@
-        @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
-        {
-            <div class="danger-zone" style="margin-top:2rem;">
+            @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+            {
                 @if (_showConfirmDelete)
                 {
                     <div class="confirm-card card-rn">
@@ -218,10 +268,10 @@
                 }
                 else
                 {
-                    <button class="btn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete Campaign</button>
+                    <button class="btn-ghost" style="margin-top: 1rem;" @onclick="() => _showConfirmDelete = true">🗑 Delete Campaign</button>
                 }
-            </div>
-        }
+            }
+        </div>
     }
 </div>
 
@@ -244,15 +294,106 @@
     private string _newLoreBody = string.Empty;
     private string _newPrepTitle = string.Empty;
     private string _newPrepBody = string.Empty;
+    private bool _sessionActive = false;
+    private string? _cookieHeader;
+    private PersistingComponentStateSubscription _persistingSubscription;
 
     private readonly AddCharacterModel _addModel = new();
 
     protected override async Task OnInitializedAsync()
     {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistCookieHeader);
+
+        if (!ApplicationState.TryTakeFromJson<string>("rnCookieHeader", out _cookieHeader))
+        {
+            _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        }
+
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        if (!string.IsNullOrEmpty(_currentUserId))
+        {
+            SessionClient.SessionStarted += HandleSessionStarted;
+            SessionClient.SessionEnded += HandleSessionEnded;
+            
+            // Check if session is already active (uses cache if available)
+            _sessionActive = await SessionClient.GetSessionActiveAsync(Id, SessionService);
+        }
+
         await LoadData();
+    }
+
+    private Task PersistCookieHeader()
+    {
+        ApplicationState.PersistAsJson("rnCookieHeader", _cookieHeader);
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            // Auto-join if session is active
+            if (_sessionActive && _campaign != null && !CampaignService.IsStoryteller(_campaign, _currentUserId))
+            {
+                await JoinSession();
+            }
+            else
+            {
+                // We don't specify characterId here as we might have multiple or none
+                await SessionClient.StartAsync(Id, null, _currentUserId, _cookieHeader);
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // Optional: surface an error without crashing the page.
+            // _errorMessage = "Unable to connect to the realtime session.";
+        }
+    }
+
+    private void HandleSessionStarted()
+    {
+        _sessionActive = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleSessionEnded(string reason)
+    {
+        _sessionActive = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task StartSession()
+    {
+        await SessionClient.StartSessionAsync();
+    }
+
+    private async Task EndSession()
+    {
+        await SessionClient.EndSessionAsync();
+    }
+
+    private async Task JoinSession()
+    {
+        // Try to find the player's character in this campaign to join with it
+        var characterId = _campaign?.Characters.FirstOrDefault(c => c.ApplicationUserId == _currentUserId)?.Id;
+        await SessionClient.StartAsync(Id, characterId, _currentUserId!, _cookieHeader);
+    }
+
+    private async Task LeaveSession()
+    {
+        await SessionClient.StopAsync();
+    }
+
+    private void NavigateToCharacter(int characterId)
+    {
+        NavigationManager.NavigateTo($"/character/{characterId}");
     }
 
     private async Task LoadData()
@@ -427,26 +568,11 @@
         }
     }
 
-    private async Task RetireCharacter(int characterId)
+    public void Dispose()
     {
-        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        await CharacterService.RetireCharacterAsync(characterId, _currentUserId);
-        await LoadData();
-    }
-
-    private async Task UnretireCharacter(int characterId)
-    {
-        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        await CharacterService.UnretireCharacterAsync(characterId, _currentUserId);
-        await LoadData();
+        _persistingSubscription.Dispose();
+        SessionClient.SessionStarted -= HandleSessionStarted;
+        SessionClient.SessionEnded -= HandleSessionEnded;
     }
 
     public class AddCharacterModel

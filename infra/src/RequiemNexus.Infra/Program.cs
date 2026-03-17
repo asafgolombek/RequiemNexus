@@ -35,6 +35,10 @@ public sealed class Program
         // When absent (local dev), ComputeStack falls back to ContainerImage.FromAsset.
         string? imageUri = app.Node.TryGetContext("imageUri") as string;
 
+        // certificateArn enables HTTPS on the ALB. Obtain from ACM (must be in the same region as the ALB).
+        // Example: cdk deploy --context certificateArn=arn:aws:acm:us-east-1:123456789:certificate/abc-123
+        string? certificateArn = app.Node.TryGetContext("certificateArn") as string;
+
         var computeConfig = new ComputeStack(app, "RequiemNexus-Compute-Stack", new ComputeStackProps
         {
             Description = "Requiem Nexus Compute Stack (ECS, ALB)",
@@ -43,7 +47,8 @@ public sealed class Program
             DbSecurityGroup = dataConfig.DbSecurityGroup,
             RedisCluster = dataConfig.RedisCluster,
             RedisSecurityGroup = dataConfig.RedisSecurityGroup,
-            ImageUri = imageUri
+            ImageUri = imageUri,
+            CertificateArn = certificateArn
         });
 
         var staticAssetConfig = new StaticAssetStack(app, $"RequiemNexus-Static-{envName}", new StackProps

@@ -1,14 +1,20 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Web.Components;
+using RequiemNexus.Web.Hubs;
 using Serilog;
+using StackExchange.Redis;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -38,6 +44,7 @@ builder.Services.AddOpenTelemetry()
     {
         metrics.AddAspNetCoreInstrumentation()
                .AddHttpClientInstrumentation()
+               .AddMeter("RequiemNexus.RealTime")
                .AddOtlpExporter();
     })
     .WithTracing(tracing =>
@@ -98,6 +105,34 @@ builder.Services.AddFido2(options =>
     options.TimestampDriftTolerance = 300000;
 });
 
+// Real-Time Services
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+
+// Allow startup when Redis is temporarily unavailable; multiplexer will retry in the background.
+if (!redisConnectionString.Contains("abortConnect", StringComparison.OrdinalIgnoreCase))
+{
+    redisConnectionString += ",abortConnect=false";
+}
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnectionString));
+builder.Services.AddSingleton<RealTimeMetrics>();
+builder.Services.AddSingleton<ISessionStateRepository, SessionStateRepository>();
+builder.Services.AddScoped<ISessionAuthorizationService, SessionAuthorizationService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddSingleton<ISessionPublisher, SessionPublisher>();
+builder.Services.AddScoped<RequiemNexus.Web.Services.SessionClientService>();
+
+builder.Services.AddSingleton<IHubFilter>(new RequiemNexus.Web.Hubs.Filters.RateLimitingFilter(30));
+var signalrBuilder = builder.Services.AddSignalR();
+
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    signalrBuilder.AddStackExchangeRedis(redisConnectionString, options =>
+    {
+        options.Configuration.ChannelPrefix = RedisChannel.Literal("RequiemNexus");
+    });
+}
+
 // Application Services
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
@@ -112,6 +147,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IAdvancementServic
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IAuditLogService, RequiemNexus.Application.Services.AuditLogService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IUserDataExportService, RequiemNexus.Application.Services.UserDataExportService>();
 builder.Services.AddHostedService<RequiemNexus.Web.Services.AccountDeletionCleanupService>();
+builder.Services.AddHostedService<RequiemNexus.Web.BackgroundServices.SessionTerminationService>();
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.ConditionRules>();
@@ -128,6 +164,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterEquipmen
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDiceMacroService, RequiemNexus.Application.Services.DiceMacroService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPublicRollService, RequiemNexus.Application.Services.PublicRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewDisciplineService, RequiemNexus.Application.Services.HomebrewDisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewMeritService, RequiemNexus.Application.Services.HomebrewMeritService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewClanService, RequiemNexus.Application.Services.HomebrewClanService>();
@@ -164,6 +201,8 @@ builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAu
         options.SessionStore = store;
         options.ExpireTimeSpan = TimeSpan.FromDays(14); // Remember Me duration
         options.SlidingExpiration = true;
+        options.LoginPath = "/";
+        options.ReturnUrlParameter = "returnUrl";
     });
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -245,6 +284,24 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         opt.QueueLimit = 0;
     });
+
+    // SignalR Hub: 30 messages per minute per connection
+    options.AddFixedWindowLimiter("signalr", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 30;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+
+    // Public Rolls: 10 requests per minute
+    options.AddFixedWindowLimiter("public-rolls", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 10;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
 });
 
 WebApplication app = builder.Build();
@@ -290,6 +347,26 @@ app.UseAntiforgery();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/ready");
+
+app.MapGet("/api/sessions/{chronicleId:int}/state", async (int chronicleId, ISessionService sessionService, ISessionAuthorizationService authService, System.Security.Claims.ClaimsPrincipal user) =>
+{
+    var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userId) || !await authService.IsMemberAsync(userId, chronicleId))
+    {
+        return Results.Forbid();
+    }
+
+    var state = await sessionService.GetSessionStateAsync(chronicleId);
+    return state != null ? Results.Ok(state) : Results.NotFound();
+}).RequireAuthorization();
+
+app.MapGet("/rolls/{slug}", async (string slug, IPublicRollService rollService) =>
+{
+    var roll = await rollService.GetRollBySlugAsync(slug);
+    return roll != null ? Results.Ok(roll) : Results.NotFound();
+}).AllowAnonymous().RequireRateLimiting("public-rolls");
+
+app.MapHub<SessionHub>("/hubs/session").RequireRateLimiting("signalr");
 
 app.MapStaticAssets();
 app.MapPost("/Account/Logout", async (

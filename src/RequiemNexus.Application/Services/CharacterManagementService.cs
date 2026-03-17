@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -12,7 +15,8 @@ public class CharacterManagementService(
     ApplicationDbContext dbContext,
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ICharacterCreationRules creationRules,
-    IBeatLedgerService beatLedger) : ICharacterService
+    IBeatLedgerService beatLedger,
+    ISessionService sessionService) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
@@ -58,11 +62,16 @@ public class CharacterManagementService(
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
 
-    public async Task DeleteCharacterAsync(int id)
+    public async Task DeleteCharacterAsync(int id, string userId)
     {
         Character? entity = await _dbContext.Characters.FindAsync(id);
         if (entity != null)
         {
+            if (entity.ApplicationUserId != userId)
+            {
+                throw new UnauthorizedAccessException("Only the character owner may delete this character.");
+            }
+
             // Null out CampaignId first so the campaign roster stays consistent.
             entity.CampaignId = null;
             _dbContext.Characters.Remove(entity);
@@ -99,6 +108,7 @@ public class CharacterManagementService(
     public async Task SaveAsync(Character character)
     {
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     public async Task AddBeatAsync(Character character)
@@ -128,6 +138,7 @@ public class CharacterManagementService(
         }
 
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     public async Task RemoveBeatAsync(Character character)
@@ -136,6 +147,7 @@ public class CharacterManagementService(
         {
             character.Beats--;
             await _dbContext.SaveChangesAsync();
+            await sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
     }
 
@@ -153,6 +165,7 @@ public class CharacterManagementService(
             null);
 
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     public async Task RemoveXPAsync(Character character)
@@ -174,6 +187,7 @@ public class CharacterManagementService(
                 null);
 
             await _dbContext.SaveChangesAsync();
+            await sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
     }
 
@@ -241,6 +255,7 @@ public class CharacterManagementService(
         character.IsRetired = true;
         character.RetiredAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     /// <inheritdoc />
@@ -262,6 +277,7 @@ public class CharacterManagementService(
         character.IsRetired = false;
         character.RetiredAt = null;
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     /// <inheritdoc />
@@ -278,6 +294,7 @@ public class CharacterManagementService(
         character.IsArchived = true;
         character.ArchivedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     /// <inheritdoc />
@@ -294,5 +311,6 @@ public class CharacterManagementService(
         character.IsArchived = false;
         character.ArchivedAt = null;
         await _dbContext.SaveChangesAsync();
+        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 }

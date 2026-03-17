@@ -4,10 +4,50 @@
 
 .character-sheet {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0;
     padding: 2rem 1rem;
     font-family: var(--font-primary);
     color: var(--text-color);
+}
+
+.character-sheet-layout {
+    display: flex;
+    width: 100%;
+    min-height: calc(100vh - 60px);
+}
+
+.character-sheet-layout.with-sidebar .character-sheet {
+    flex: 1;
+}
+
+.character-sidebar {
+    width: 320px;
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 60px);
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(139, 0, 0, 0.05);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--brand-crimson);
+    font-family: var(--font-heading);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
 }
 
 /* --- Header --- */

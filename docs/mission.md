@@ -20,7 +20,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 4 | The Storyteller & The Danse Macabre | ✅ Complete |
 | 5 | Automated Deployments & Observability | ✅ Complete |
 | 6 | CI/CD Hardening & Supply Chain | ✅ Complete |
-| 7 | Realtime Play (The Blood Communion) | 🔄 In Progress |
+| 7 | Realtime Play (The Blood Communion) | ✅ Complete |
 | 8 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 9 | The Global Embrace | ⬜ Planned |
 
@@ -227,7 +227,7 @@ If a bug cannot be observed, it cannot be fixed.
 - [x] Vitae (Blood Pool) tracking — current/max Vitae with spend and replenish actions
 - [x] Blood Potency — core vampire stat affecting feeding and power level
 - [x] My Characters dashboard — character roster view with create, select, and manage actions
-- [ ] ~~Predator Type~~ — deferred to Phase 4 (requires Feeding Territory and Coterie context to be meaningful)
+- [x] **Predator Type** — (Implemented in Phase 4: grants bonuses, feeding restrictions, and starting Merits/Specialties)
 
 ### Phase 1 Exit Criteria
 - A Neonate character can be created, advanced, and rolled entirely on mobile
@@ -441,16 +441,16 @@ These notes are Phase 5 scope guidance only — do not scaffold infrastructure b
 
 ## 📅 Phase 7: Realtime Play (The Blood Communion)
 
-- [ ] **Live Dice Rolls** — dice results broadcast to the coterie in real-time via SignalR
-- [ ] **SignalR Backplane** — configure Redis as the SignalR backplane to support horizontal scaling
-- [ ] **Shared Initiative Tracker** — live initiative order visible to all session participants
-- [ ] **Real-Time Character Updates** — Health, Willpower, and Condition changes sync instantly across clients
-- [ ] **Session Presence** — indicators showing which players are online and active
-- [ ] **Synchronized Chronicle State** — Storyteller actions push live to all connected players
-- [ ] **Dice Roll History Feed** — shared, scrollable feed of all rolls made during a session
-- [ ] **Reconnection Resilience** — define and implement behavior for in-flight dice rolls and state if SignalR drops mid-broadcast; clients must rejoin and receive full current session state
-- [ ] **Rate Limiting on SignalR Hubs** — throttle message frequency per connection to prevent hub abuse
-- [ ] **Async / Play-by-Post Dice Sharing** — shareable permanent link to a roll result for async groups
+- [x] **Live Dice Rolls** — dice results broadcast to the coterie in real-time via SignalR
+- [x] **SignalR Backplane** — configure Redis as the SignalR backplane to support horizontal scaling
+- [x] **Shared Initiative Tracker** — live initiative order visible to all session participants
+- [x] **Real-Time Character Updates** — Health, Willpower, and Condition changes sync instantly across clients
+- [x] **Session Presence** — indicators showing which players are online and active
+- [x] **Synchronized Chronicle State** — Storyteller actions push live to all connected players
+- [x] **Dice Roll History Feed** — shared, scrollable feed of all rolls made during a session
+- [x] **Reconnection Resilience** — define and implement behavior for in-flight dice rolls and state if SignalR drops mid-broadcast; clients must rejoin and receive full current session state
+- [x] **Rate Limiting on SignalR Hubs** — throttle message frequency per connection to prevent hub abuse
+- [x] **Async / Play-by-Post Dice Sharing** — shareable permanent link to a roll result for async groups
 
 ### Phase 7 Exit Criteria
 - A full coterie can connect, roll dice, and see each other's results in real-time

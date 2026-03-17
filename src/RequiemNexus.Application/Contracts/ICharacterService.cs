@@ -11,7 +11,7 @@ public interface ICharacterService
 
     Task<Character?> GetCharacterByIdAsync(int id, string userId);
 
-    Task DeleteCharacterAsync(int id);
+    Task DeleteCharacterAsync(int id, string userId);
 
     Task<Character> EmbraceCharacterAsync(Character newCharacter);
 

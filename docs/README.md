@@ -49,8 +49,11 @@ Built with the **Antigravity Philosophy** on **.NET 10**, it provides a fast, se
 git clone https://github.com/asafgolombek/RequiemNexus.git
 cd RequiemNexus
 
-# Start the local database (PostgreSQL)
+# Start local infrastructure (PostgreSQL & Redis via Docker)
 docker compose up -d
+
+# Initialize/Update local database schema
+dotnet ef database update --project src/RequiemNexus.Data --startup-project src/RequiemNexus.Web
 
 # Boot The Haven (local dev with hot reload via .NET Aspire)
 .\scripts\build-debug.ps1

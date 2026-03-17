@@ -20,6 +20,9 @@ public enum AuditEventType
     AccountRecovery2faDisabled = 13,
     ExternalLoginLinked = 14,
     ExternalLoginUnlinked = 15,
+    SessionStarted = 16,
+    SessionEnded = 17,
+    HubAuthorizationFailed = 18,
 }
 
 public class AuditLog

@@ -74,7 +74,7 @@ public class AccountDeletionCleanupService(
                 List<Character> characters = await characterService.GetCharactersByUserIdAsync(user.Id);
                 foreach (Character character in characters)
                 {
-                    await characterService.DeleteCharacterAsync(character.Id);
+                    await characterService.DeleteCharacterAsync(character.Id, user.Id);
                 }
 
                 // Step 3: Delete the identity record.

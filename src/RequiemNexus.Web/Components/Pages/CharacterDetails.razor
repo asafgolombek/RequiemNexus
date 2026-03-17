@@ -6,6 +6,8 @@
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.RealTime
+@using RequiemNexus.Web.Services
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject ICharacterEquipmentService EquipmentService
@@ -13,6 +15,9 @@
 @inject ICharacterExportService ExportService
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SessionClientService SessionClient
+@inject ISessionService SessionService
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -22,8 +27,9 @@
 }
 else
 {
-    <div class="character-sheet fade-in">
-        <!-- HEADER -->
+    <div class="character-sheet-layout @(SessionClient.IsConnected ? "with-sidebar" : "")">
+        <div class="character-sheet fade-in">
+            <!-- HEADER -->
         <header class="cs-header">
             <div class="char-avatar"></div>
             <div class="char-info">
@@ -279,11 +285,26 @@ else
             {
         <BeatLedgerSection CharacterId="_character.Id" />
             }
-    </CascadingValue>
+        </CascadingValue>
+        </div>
+
+        @if (SessionClient.IsConnected)
+        {
+            <div class="character-sidebar">
+                <div class="sidebar-header">
+                    <h3>🩸 Blood Logs</h3>
+                </div>
+                <div class="sidebar-content">
+                    <RollHistoryFeed />
+                </div>
+            </div>
+        }
     </div>
 
     <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" />
 }
+
+@implements IAsyncDisposable
 
 @code {
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
@@ -293,6 +314,7 @@ else
 
     private Character? _character;
     private string? _currentUserId;
+    private string? _cookieHeader;
     private List<Equipment> _availableEquipment = new List<Equipment>();
     private int _selectedEquipmentId = 0;
     private int _selectedEquipmentQuantity = 1;
@@ -386,6 +408,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -394,6 +417,25 @@ else
             _character = await CharacterService.GetCharacterByIdAsync(Id, _currentUserId);
             _availableEquipment = await EquipmentService.GetAvailableEquipmentAsync();
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _character?.CampaignId != null && !string.IsNullOrEmpty(_currentUserId))
+        {
+            // Auto-join if session is active (uses cache)
+            bool isActive = await SessionClient.GetSessionActiveAsync(_character.CampaignId.Value, SessionService);
+            
+            // Connect to hub for character updates regardless of live session state
+            await SessionClient.StartAsync(_character.CampaignId.Value, _character.Id, _currentUserId, _cookieHeader);
+            
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await SessionClient.StopAsync();
     }
 
     private static void OpenReference(string traitName)
@@ -466,3 +508,4 @@ else
         }
     }
 }
+

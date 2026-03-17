@@ -3,10 +3,9 @@ param(
     [string]$Action = "deploy",
 
     [string]$AwsRegion    = $env:CDK_DEFAULT_REGION,
+    [string]$AwsAccountId = "216938126042",
     [string]$Stack        = "RequiemNexus-Compute-Stack"
 )
-
-$AwsAccountId = "216938126042"
 
 $ErrorActionPreference = "Stop"
 

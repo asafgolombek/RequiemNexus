@@ -41,6 +41,18 @@ window.countUp = function (elementId, target, duration) {
     requestAnimationFrame(step);
 };
 
+window.scrollToBottom = function (element) {
+    if (!element) return;
+    
+    // Smart scroll: only snap to bottom if the user is already near the bottom
+    const threshold = 50; // px
+    const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight <= threshold;
+    
+    if (isAtBottom) {
+        element.scrollTop = element.scrollHeight;
+    }
+};
+
 document.addEventListener('mousedown', (e) => {
     // 1. Button Ripple
     const btn = e.target.closest('.btn-primary, .btn-login, .btn-secondary, .btn-primary-rn, .btn-secondary-rn');

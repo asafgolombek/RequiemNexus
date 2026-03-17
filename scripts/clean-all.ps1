@@ -11,10 +11,11 @@ Write-Host "========================================" -ForegroundColor Yellow
 Write-Host "Running dotnet clean..." -ForegroundColor Cyan
 dotnet clean $SlnPath
 
-Write-Host "`nRemoving all bin and obj folders..." -ForegroundColor Cyan
+Write-Host "`nRemoving build and coverage artifacts..." -ForegroundColor Cyan
 
-# Find and remove all bin and obj directories recursively
-$directoriesToRemove = Get-ChildItem -Path $RootDir -Directory -Recurse -Include "bin", "obj"
+# Directories to remove
+$dirsToClean = @("bin", "obj", "coverage", "cdk.out")
+$directoriesToRemove = Get-ChildItem -Path $RootDir -Directory -Recurse -Include $dirsToClean
 
 foreach ($dir in $directoriesToRemove) {
     Write-Host "Removing: $($dir.FullName)" -ForegroundColor DarkGray
