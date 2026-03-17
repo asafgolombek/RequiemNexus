@@ -2,10 +2,11 @@
 
 You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-## 🧭 Active Phase: Phase 7 — The Blood Communion (Realtime)
-- **SignalR Hubs:** MUST be thin relays in `src/RequiemNexus.Web/Hubs/`.
-- **Session State:** MUST live in Redis, never PostgreSQL.
-- **Latency Budget:** Hub dispatch < 200ms.
+## 🧭 Active Phase: Phase 8 — The Hidden Blood (Bloodlines & Devotions)
+- **Content vs. Behavior:** Bloodlines and Devotions are seed data interpreted by a stable engine.
+- **Unified Pool Resolver:** Must treat Attributes, Skills, and Disciplines as first-class inputs.
+- **Storyteller Approval:** Lightweight pending state for Bloodline joining.
+- **Clan Constraint:** Characters can only join bloodlines related to their parent clan. Support shared bloodlines.
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.

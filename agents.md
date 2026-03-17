@@ -321,10 +321,10 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 7 — Realtime Play (The Blood Communion).**
+**Phase 8 — The Hidden Blood (Bloodlines & Devotions).**
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list and exit criteria.
-See [`docs/plan.md`](./docs/plan.md) for the detailed implementation plan, layer ownership map, and all locked architectural decisions.
+See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the detailed implementation plan.
 
 ---
 

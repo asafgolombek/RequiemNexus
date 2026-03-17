@@ -115,6 +115,14 @@ Cross-domain interaction is only allowed via **explicit contracts**.
 - No UI component performs probability logic directly.
 - Roll results are immutable records — once emitted, they cannot be altered.
 
+### Unified Pool Resolver (Phase 8+)
+
+The Dice Nexus resolves pools from a single, unified source regardless of the component types involved. Prior to Phase 8, pools were composed from Attributes and Skills only. From Phase 8 onward, Devotions and exotic Bloodline powers introduce pools that combine Attributes, Skills, *and* Discipline ratings.
+
+**The resolver must treat all three as first-class inputs.** A pool definition is a declarative list of typed references — `{ type: Attribute, name: "Wits" }`, `{ type: Skill, name: "Subterfuge" }`, `{ type: Discipline, name: "Obfuscate", minimumRating: 2 }` — and the resolver hydrates each from its respective domain, sums them, and emits a `DicePool` value object to `DiceService`. No caller constructs a raw integer pool directly.
+
+This design ensures that Devotions (Phase 8), Blood Sorcery (Phase 9), and Equipment modifiers (Phase 11) all feed into the same resolution path without ad-hoc additions to `DiceService`.
+
 ---
 
 ## ⚠️ Error Handling & Resilience
@@ -194,8 +202,8 @@ Real-time communication enables live play sessions.
 - On reconnect, the client requests a **full state snapshot** via REST (`/api/sessions/{id}/state`) to ensure consistency.
 - Missed SignalR messages during disconnection are **not replayed** — the state snapshot is the source of truth.
 
-#### Phase 8 (PWA/Offline) Deferral
-Phase 8 has been deferred indefinitely. The architectural assumption is "WiFi at the table" or stable university/home connectivity. Offline capabilities were deemed lower priority than real-time synchronization.
+#### PWA/Offline Deferral
+PWA and offline capabilities have been deferred indefinitely. The architectural assumption is stable connectivity at the table. Real-time synchronization takes priority.
 
 ---
 
@@ -209,6 +217,8 @@ The system is organized into a modular monolith with strict dependency rules.
 | **Application** | Use Case Orchestration, Authorization | Data, Domain |
 | **Domain** | Rules, Invariants, Pure Logic | None |
 | **Data** | Persistence, EF Core, Repositories | Domain |
+
+> **Note on `Web → Data`:** The direct dependency from the Presentation layer to the Infrastructure layer is a deliberate, documented exception to strict inward-only dependency flow. It exists to support Blazor's component model and EF Core `DbContext` injection patterns in server-side rendering scenarios. No business logic or authorization decisions are permitted in this path — it is a data-access convenience only. Any use of this path must be reviewed during inquisition if the pattern migrates toward encoding rules.
 
 ---
 
@@ -273,7 +283,10 @@ Lighthouse runs as a GitHub Actions step on every PR targeting `main`. It audits
 | Session tokens | Sliding, per cookie config | Explicit on logout / revocation |
 | Character derived stats | 60s | Any attribute mutation |
 | Game reference data (Clans, Covenants, Disciplines) | 24h | Seed data update |
+| `BloodlineDefinition` / `DevotionDefinition` | 24h | Seed data update |
 | SignalR backplane messages | Transient | Delivered and discarded |
+
+> **Note:** `BloodlineDefinition` and `DevotionDefinition` are reference data in the same category as Clans and Disciplines — they are defined in seed, change only on deploy, and are read-heavy. They must be cached at the same TTL and share the same invalidation trigger. Do not treat them as mutable character data.
 
 ### Query Rules
 
@@ -316,9 +329,9 @@ The database schema is a covenant — changes must be deliberate and forward-onl
 - **All schema changes** require an EF Core migration. Manual SQL against production is forbidden.
 - **Migrations are forward-only** — down migrations are not relied upon for rollback. A new corrective migration is created instead.
 - **Breaking changes** (column renames, type changes) require a multi-step migration: add new → migrate data → remove old.
-- **Seed data** (`DbInitializer`) evolves alongside migrations. New reference data (Clans, Disciplines, Conditions) is added via the initializer and tested in CI.
-- **Reference (rules) data** (Clans, Merits, Disciplines, etc.) is versioned with the codebase and applied idempotently via `DbInitializer`. Corrections for existing rows ship as forward-only migrations.
-- **Deploy-time migrations**: database migrations run **once per deploy** via a dedicated migration step (not “every web node on startup”) to avoid race conditions in ECS.
+- **Seed data** (`DbInitializer`) evolves alongside migrations. New reference data (Clans, Disciplines, Conditions, Bloodlines, Devotions) is added via the initializer and tested in CI.
+- **Reference (rules) data** (Clans, Merits, Disciplines, Bloodlines, Devotions, etc.) is versioned with the codebase and applied idempotently via `DbInitializer`. Corrections for existing rows ship as forward-only migrations.
+- **Deploy-time migrations**: database migrations run **once per deploy** via a dedicated migration step (not "every web node on startup") to avoid race conditions in ECS.
 - **CI validation**: Every PR runs migrations against an empty database to verify they apply cleanly.
 
 ---
@@ -359,6 +372,25 @@ Phase 5 infrastructure is expected to include:
 
 ---
 
+## 🩸 Content vs. Behavior (Phase 8+)
+
+From Phase 8 onward, the domain introduces a structural distinction that must be upheld across all future phases:
+
+> **Content is data. Behavior is code. They must never be conflated.**
+
+| Concern | Where it lives | Example |
+|---------|---------------|---------|
+| What a Bloodline *is* | Seed data (`BloodlineDefinition`) | Prerequisites, Discipline substitutions, Bane descriptor |
+| What a Bloodline *does* | Domain engine (stateless service) | Applies substitutions, validates character, stacks Banes |
+| What a Devotion *is* | Seed data (`DevotionDefinition`) | Pool composition, XP cost, prerequisite Disciplines |
+| What a Devotion *does* | Unified Pool Resolver + `DiceService` | Hydrates pool, activates roll, registers passive modifier |
+
+A new Bloodline or Devotion from a sourcebook is a **migration + seed entry**, not a code change. An engine that handles a new *category* of mechanic is a code change requiring full review and testing.
+
+This separation is the canonical pattern for all content-heavy phases (9 — Covenants, 11 — Equipment). Any deviation requires a documented inquisition.
+
+---
+
 ## 📁 Repository Structure
 
 The repository follows a strict, navigable layout. Every directory has a clear owner. If a file doesn't have an obvious home, the structure is wrong.
@@ -368,7 +400,7 @@ RequiemNexus/
 ├── .github/                          # GitHub Actions workflows, PR templates
 │   └── lighthouse/                   # Lighthouse CI configuration
 │       └── config.json
-├── docs/                             # Architecture.md, mission.md
+├── docs/                             # Architecture.md, mission.md, rules-interpretations.md
 ├── scripts/                          # PowerShell automation (build, test, deploy)
 ├── src/
 │   ├── RequiemNexus.Application/     # Application Layer — use cases, orchestration, contracts

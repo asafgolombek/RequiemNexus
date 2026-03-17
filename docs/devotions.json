@@ -1,0 +1,569 @@
+[
+    {
+      "name": "Aerial Cocoon",
+      "prerequisites": "Protean •",
+      "xp": "1",
+      "cost": "—",
+      "dice_pool": "None",
+      "description": "Use Unmarked Grave between walls of concrete or metal, turning it into a protective cocoon.",
+      "source": "GttN 133"
+    },
+    {
+      "name": "Annals of Death",
+      "prerequisites": "Auspex ••••",
+      "xp": "1",
+      "cost": "—",
+      "dice_pool": "Intelligence + Occult + Auspex",
+      "description": "Answer questions about death in a location. Can foresee deaths.",
+      "source": "TY 72"
+    },
+    {
+      "name": "Bend Space",
+      "prerequisites": "Auspex ••, Celerity ••••",
+      "xp": "4",
+      "cost": "●●(○)",
+      "dice_pool": "None",
+      "description": "Teleport anywhere you can see directly. With willpower, anywhere you have visited or seen before.",
+      "source": "GTTN 134"
+    },
+    {
+      "name": "Best Served Cold",
+      "prerequisites": "Vigor •••",
+      "xp": "1",
+      "cost": "●●",
+      "dice_pool": "Stamina + Athletics + Vigor",
+      "description": "Until the end of the chapter or the person who harmed you is defeated, +3 to attack them. Can only have one target at a time.",
+      "source": "GTTN 135"
+    },
+    {
+      "name": "Between the Walls",
+      "prerequisites": "Protean •••, Resilience •",
+      "xp": "2",
+      "cost": "—",
+      "dice_pool": "None",
+      "description": "Fit into spaces down to size 2, moving at your normal speed. Add Protean to ambush rolls.",
+      "source": "GTTN 134"
+    },
+    {
+      "name": "Blood Scenting",
+      "prerequisites": "Auspex •••",
+      "xp": "1",
+      "cost": "●",
+      "dice_pool": "Wits + Composure + Auspex",
+      "description": "Identify the target's clan, blood potency and disciplines.",
+      "source": "GTTN 136"
+    },
+    {
+      "name": "Blood Scenting (Crown Games)",
+      "prerequisites": "Auspex ••",
+      "xp": "1",
+      "cost": "●",
+      "dice_pool": "Wits + Composure + Auspex",
+      "description": "Identify if the target's blood is divine.",
+      "source": "GTTN 133"
+    },
+    {
+      "name": "Body of Will",
+      "prerequisites": "Resilience •••, Vigor •",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "Stamina + Survival + Resilience",
+      "description": "Ignore wound penalties, free Vigor effects.",
+      "source": "VTR 2e 142"
+    },
+    {
+      "name": "Bones of the Mountain",
+      "prerequisites": "Protean ••••, Resilience •••, Vigor •••",
+      "xp": "5",
+      "cost": "●●●",
+      "dice_pool": "Stamina + Survival + Protean",
+      "description": "Become living stone for a turn, adding Protean to Resilience, dealing lethal unarmed, and activating Resilience and Vigor for free.",
+      "source": "TY 73"
+    },
+    {
+      "name": "Celebrity",
+      "prerequisites": "Majesty ••",
+      "xp": "2",
+      "cost": "●●●",
+      "dice_pool": "Presence + Empathy + Majesty vs Resolve + Tolerance",
+      "description": "Have a fan talk about you, giving you a temporary dot of Allies, Fame, Herd, Retainer, Staff or Status.",
+      "source": "TY 73"
+    },
+    {
+      "name": "Chain of Command",
+      "prerequisites": "Dominate •••, Vigor •",
+      "xp": "2",
+      "cost": "●●",
+      "dice_pool": "Intelligence + Persuasion + Dominate vs Resolve + Tolerance",
+      "description": "Dominate effects activate later.",
+      "source": "VTR 2e 142"
+    },
+    {
+      "name": "Cloak the Gathering",
+      "prerequisites": "Obfuscate •••••",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "None",
+      "description": "Make a group disappear.",
+      "source": "VTR 2e 142"
+    },
+    {
+      "name": "Conditioning",
+      "prerequisites": "Dominate ••••",
+      "xp": "2",
+      "cost": "—",
+      "dice_pool": "Wits + Subterfuge + Dominate vs Resolve + Tolerance",
+      "description": "Suppress the target's will, commanding them even without Dominate active.",
+      "source": "VTR 2e 143"
+    },
+    {
+      "name": "Consumption",
+      "prerequisites": "Dominate •••••",
+      "xp": "4",
+      "cost": "●○",
+      "dice_pool": "Intelligence + Intimidation + Dominate vs Resolve",
+      "description": "Possess victim over any distance with just your voice.",
+      "source": "TY 74"
+    },
+    {
+      "name": "Cross-Contamination",
+      "prerequisites": "Majesty •, Nightmare •",
+      "xp": "1",
+      "cost": "—",
+      "dice_pool": "Presence + Empathy + lower Discipline",
+      "description": "Spread an unsettling fascination that commands attention and lowers social defenses.",
+      "source": "VTR 2e 143"
+    },
+    {
+      "name": "Crush of Years",
+      "prerequisites": "Nightmare ••••, Majesty •••",
+      "xp": "3",
+      "cost": "●●●●○",
+      "dice_pool": "Presence + Expression + Nightmare vs Composure + Tolerance",
+      "description": "Press the weight of existing for centuries upon the target.",
+      "source": "TY 74"
+    },
+    {
+      "name": "Cult of Personality",
+      "prerequisites": "Majesty ••••, Vigor •••",
+      "xp": "4",
+      "cost": "●●●●● ●●●●●",
+      "dice_pool": "Presence + Socialize + Majesty",
+      "description": "Enthrall a crowd in a mass display of Majesty.",
+      "source": "VTR 2e 143"
+    },
+    {
+      "name": "Cybernetic Mimic",
+      "prerequisites": "Protean ••, Vigor •• (Ascendancy)",
+      "xp": "2",
+      "cost": "● to ●●●",
+      "dice_pool": "None",
+      "description": "Spend a scene studying a cybernetic individual. Afterwards copy its abilities by paying Vitae based on the level of enhancements.",
+      "source": "GTTN 134"
+    },
+    {
+      "name": "Dead Man's Reprieve",
+      "prerequisites": "Obfuscate •",
+      "xp": "1",
+      "cost": "●",
+      "dice_pool": "Manipulation + Occult + Obfuscate",
+      "description": "Brews a precious reagent into a ritual bath which cloaks the presence of bathers.",
+      "source": "TY 128"
+    },
+    {
+      "name": "Distant Control",
+      "prerequisites": "Dominate ••••, Vigor ••",
+      "xp": "3",
+      "cost": "●●",
+      "dice_pool": "None",
+      "description": "As long as you know of the target's location, you can issue commands or make social rolls by speaking into their mind for a scene.",
+      "source": "GTTN 135"
+    },
+    {
+      "name": "Enchantment",
+      "prerequisites": "Majesty ••••, Obfuscate ••",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "Manipulation + Empathy + Majesty vs Composure + Tolerance",
+      "description": "Enthrall the target with another subject instead of yourself.",
+      "source": "VTR 2e 143"
+    },
+    {
+      "name": "Enfeebling Aura",
+      "prerequisites": "Majesty •, Resilience •",
+      "xp": "3",
+      "cost": "●",
+      "dice_pool": "Presence + Intimidation + Majesty vs Composure + Tolerance",
+      "description": "Temporarily sacrifice Majesty dots to suppress a target's dots of Celerity, Resilience or Vigor.",
+      "source": "VTR 2e 143"
+    },
+    {
+      "name": "Flesh Form",
+      "prerequisites": "Protean ••, Resilience •",
+      "xp": "1",
+      "cost": "●●●/day",
+      "dice_pool": "None",
+      "description": "Consume the body of a human to imitate their look and voice, aging at a rate of a decade a week.",
+      "source": "NH:SB 97"
+    },
+    {
+      "name": "Flush Out",
+      "prerequisites": "Dominate •, Nightmare •••",
+      "xp": "2",
+      "cost": "●●",
+      "dice_pool": "Presence + Subterfuge + Nightmare vs highest Composure + Tolerance",
+      "description": "Target gains Frightened and flees their hiding space to a location you want.",
+      "source": "GTTN 136"
+    },
+    {
+      "name": "Foul Grave",
+      "prerequisites": "Protean •, Nightmare •",
+      "xp": "1",
+      "cost": "●",
+      "dice_pool": "None",
+      "description": "Exert the Predatory Aura while in your Unmarked Grave.",
+      "source": "VTR 2e 144"
+    },
+    {
+      "name": "Force of Nature",
+      "prerequisites": "Protean ••••, Resilience ••••, Vigor ••",
+      "xp": "5",
+      "cost": "●●●●● ●●●",
+      "dice_pool": "None",
+      "description": "Make use of Beast's Skin and Protean Aspects freely. Shift Physical Attributes.",
+      "source": "VTR 2e 144"
+    },
+    {
+      "name": "Gargoyle's Vigilance (A)",
+      "prerequisites": "Resilience ••, Auspex •",
+      "xp": "1",
+      "cost": "●(○)",
+      "dice_pool": "None",
+      "description": "Remain static within your Haven to monitor it with Auspex, taking bonuses to defend from intruders. With Willpower, monitor while asleep.",
+      "source": "VTR 2e 144"
+    },
+    {
+      "name": "Gargoyle's Vigilance (B)",
+      "prerequisites": "Protean •••••, Resilience ••, Auspex •",
+      "xp": "4",
+      "cost": "●(○)",
+      "dice_pool": "None",
+      "description": "As above, but you may become a stone statue, immune to fire and sunlight.",
+      "source": "VTR 2e 144"
+    },
+    {
+      "name": "Ghost Skin",
+      "prerequisites": "Auspex •••••",
+      "xp": "2",
+      "cost": "○",
+      "dice_pool": "None",
+      "description": "Perceive and interact with ghosts while using Twilight Projection",
+      "source": "NH-SB 85"
+    },
+    {
+      "name": "Hint of Fear",
+      "prerequisites": "Celerity ••, Nightmare ••",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "None",
+      "description": "Use Face of the Beast reflexively.",
+      "source": "VTR 2e 145"
+    },
+    {
+      "name": "Juggernaut's Gait",
+      "prerequisites": "Resilience •••••, Vigor ••",
+      "xp": "4",
+      "cost": "●●●●●",
+      "dice_pool": "None",
+      "description": "Negate all damage for a turn.",
+      "source": "VTR 2e 145"
+    },
+    {
+      "name": "Kin Maker",
+      "prerequisites": "Dominate •••••, Protean •••",
+      "xp": "4",
+      "cost": "●●●●● ●●●●● ○",
+      "dice_pool": "None",
+      "description": "Used by the Pijavica to infect vampires with a gestating childe.",
+      "source": "TY 120"
+    },
+    {
+      "name": "Legion",
+      "prerequisites": "Animalism •••••, Auspex •••",
+      "xp": "4",
+      "cost": "●(●)",
+      "dice_pool": "Composure + Animal Ken + Animalism",
+      "description": "Use the senses of all animals of a certain type within (Blood Potency) miles, can spend extra vitae to focus on the senses of individual animals of this.",
+      "source": "TY 74"
+    },
+    {
+      "name": "Malignant Smog",
+      "prerequisites": "Protean •••••",
+      "xp": "3",
+      "cost": "●●",
+      "dice_pool": "None",
+      "description": "Enhance the effect of Primeval Miasma, transforming the vampire from a cloud of hungry smoke to a cloud of toxic gas that inflicts tilts.",
+      "source": "TY 75"
+    },
+    {
+      "name": "Memetic menace",
+      "prerequisites": "Majesty ••, Nightmare ••",
+      "xp": "2",
+      "cost": "●●",
+      "dice_pool": "Presense + Expression + Nightmare or Majesty vs. Resolve + Blood Potency",
+      "description": "When caught on camera, shift the image of you to cause the Swooning or Frightening condition.",
+      "source": "GTTN 134"
+    },
+    {
+      "name": "Nightmare Journey",
+      "prerequisites": "Auspex •••••",
+      "xp": "3",
+      "cost": "●○",
+      "dice_pool": "None",
+      "description": "Astrally project into the Primordial Dream, and feed from dream forms there.",
+      "source": "DE2 143"
+    },
+    {
+      "name": "Not So Special",
+      "prerequisites": "Obfuscate ••, Vigor •••",
+      "xp": "2",
+      "cost": "●+",
+      "dice_pool": "Resolve + Occult + Vigor vs. Blood Potency + Stamina",
+      "description": "Suppress another vampires Clan-specific Disciplines.",
+      "source": "NH-SB 105"
+    },
+    {
+      "name": "Null Space",
+      "prerequisites": "Animalism ••••• or Obfuscate •••••, Vitiate •••",
+      "xp": "4",
+      "cost": "See Description",
+      "dice_pool": "None",
+      "description": "Pay half again the Vitae(rounded up) spent on Lord Of The Land or Oubliette, gain the ability to use Vitiate without touch.",
+      "source": "NH-SB 89"
+    },
+    {
+      "name": "Pass Into Yesteryear",
+      "prerequisites": "Obfuscate •••, Nightmare •",
+      "xp": "2",
+      "cost": "●●○",
+      "dice_pool": "None",
+      "description": "Cause those under Vinculum towards you to be forgotten by others.",
+      "source": "TY 76"
+    },
+    {
+      "name": "Pierce The Veil",
+      "prerequisites": "Auspex •",
+      "xp": "1",
+      "cost": "- to ○",
+      "dice_pool": "None",
+      "description": "Use Auspex to perceive ghosts, and with Willpower affect them with other Disciplines.",
+      "source": "NH-SB 85"
+    },
+    {
+      "name": "Preternatural Instinct",
+      "prerequisites": "Auspex ••••, Celerity •",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "None",
+      "description": "Be alerted to danger before it happens and pick up traces of intent from your opponents mind.",
+      "source": "TY 76"
+    },
+    {
+      "name": "Quicken Sight",
+      "prerequisites": "Auspex •, Celerity •",
+      "xp": "1",
+      "cost": "●",
+      "dice_pool": "None",
+      "description": "See the world in bullet time.",
+      "source": "VTR 2e 145"
+    },
+    {
+      "name": "Reason's Salon",
+      "prerequisites": "Animalism ••••, Resilience ••",
+      "xp": "3",
+      "cost": "●●●●●",
+      "dice_pool": "None",
+      "description": "Dampen the Predatory Aura and frenzy rolls in an area.",
+      "source": "VTR 2e 146"
+    },
+    {
+      "name": "Riot",
+      "prerequisites": "Majesty •••••, Animalism ••••",
+      "xp": "5",
+      "cost": "●●●●● ●●●●●",
+      "dice_pool": "Presence + Animal Ken + Majesty",
+      "description": "Spread the aspects of the Beast everywhere for half a mile.",
+      "source": "VTR 2e 146"
+    },
+    {
+      "name": "Seance",
+      "prerequisites": "Auspex •••, Vigor ••",
+      "xp": "2",
+      "cost": "○",
+      "dice_pool": "Resolve + Occult + Auspex vs. Resistance + Rank",
+      "description": "Force a ghost to Materialize by there Anchor.",
+      "source": "NH-SB 85"
+    },
+    {
+      "name": "Shared Sight",
+      "prerequisites": "Auspex ••••, Dominate •",
+      "xp": "2",
+      "cost": "●●",
+      "dice_pool": "Intelligence + Empathy + Auspex",
+      "description": "Lend your Auspex to another.",
+      "source": "VTR 2e 146"
+    },
+    {
+      "name": "Shatter the Shroud",
+      "prerequisites": "Auspex ••, Vigor •",
+      "xp": "2",
+      "cost": "●●",
+      "dice_pool": "None",
+      "description": "Shut down Obfuscate with a Clash of Wills.",
+      "source": "VTR 2e 146"
+    },
+    {
+      "name": "Spontaneous Ignition",
+      "prerequisites": "Celerity •••••, Resilience •",
+      "xp": "4",
+      "cost": "●●●●● ●",
+      "dice_pool": "Dexterity + Athletics + Celerity - Stamina",
+      "description": "Set fire to a touched target",
+      "source": "TY 76"
+    },
+    {
+      "name": "Stalwart Servant",
+      "prerequisites": "Dominate •••, Resilience •",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "None",
+      "description": "Lend your Resilience through your Vitae.",
+      "source": "VTR 2e 146"
+    },
+    {
+      "name": "Subsume the Lesser Beast",
+      "prerequisites": "Animalism ••••, Dominate ••",
+      "xp": "3",
+      "cost": "●",
+      "dice_pool": "Manipulation + Animal Ken + Animalism - Resolve",
+      "description": "Take control of an animal's body",
+      "source": "VTR 2e 147"
+    },
+    {
+      "name": "Summoning",
+      "prerequisites": "Dominate or Majesty ••••",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "Manipulation + Persuasion + Discipline vs Composure + Tolerance",
+      "description": "Force subject to come to you.",
+      "source": "VTR 2e 147"
+    },
+    {
+      "name": "Sun's Brutal Dreamscape",
+      "prerequisites": "Nightmare •••••, Resilience ••",
+      "xp": "4",
+      "cost": "●",
+      "dice_pool": "Manipulation + Empathy + Nightmare vs Composure + Tolerance",
+      "description": "Victim takes sunlight damage for you.",
+      "source": "VTR 2e 148"
+    },
+    {
+      "name": "Touch of Deprivation",
+      "prerequisites": "Obfuscate ••••, Dominate ••",
+      "xp": "3",
+      "cost": "●",
+      "dice_pool": "Intelligence + Medicine + Auspex vs Resolve + Tolerance",
+      "description": "Removes a sense with a touch",
+      "source": "VTR 2e 148"
+    },
+    {
+      "name": "Unbridled Force",
+      "prerequisites": "Vigor •••••, Dominate ••",
+      "xp": "4",
+      "cost": "●●●●●",
+      "dice_pool": "None",
+      "description": "Perform feats of raw strength at a distance.",
+      "source": "TY 76"
+    },
+    {
+      "name": "Undying Familiar",
+      "prerequisites": "Animalism ••, Resilience ••",
+      "xp": "1",
+      "cost": "●●",
+      "dice_pool": "None",
+      "description": "Animal ghoul rises from death as an undead familiar.",
+      "source": "VTR 2e 148"
+    },
+    {
+      "name": "Vermin Flood",
+      "prerequisites": "Animalism •••, Celerity ••, Vigor ••",
+      "xp": "4",
+      "cost": "●●●●● ●●●●●",
+      "dice_pool": "Presence + Animal Ken + Animalism",
+      "description": "Massive swarms of vermin deal lethal damage en masse.",
+      "source": "VTR 2e 149"
+    },
+    {
+      "name": "Vile Blood",
+      "prerequisites": "Protean •••, Resilience ••",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "Stamina + Medicine + Protean",
+      "description": "Damages the vampire feeding on you by 1L instead of Vitae they would gain. Attacks inflict the Poisoned tilt during combat after taking any damage.",
+      "source": "GTTN 136"
+    },
+    {
+      "name": "Water Hibernation",
+      "prerequisites": "Protean •",
+      "xp": "1",
+      "cost": "-",
+      "dice_pool": "None",
+      "description": "Used like Unmarked Grave, except fully submerged in water.",
+      "source": "NH:SB 97"
+    },
+    {
+      "name": "Wet Dream",
+      "prerequisites": "Majesty ••, Nightmare ••",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "Manipulation + Empathy + Majesty vs Composure + Tolerance",
+      "description": "Inflict ambiguous dreams that eerily fascinate and entice.",
+      "source": "VTR 2e 148"
+    },
+    {
+      "name": "Whip-Sharp Tongue",
+      "prerequisites": "Majesty •, Celerity •• (Lingua Bellum)",
+      "xp": "1",
+      "cost": "●●",
+      "dice_pool": "None",
+      "description": "At the end of the turn, activate this devotion to make a maneauver not used this turn.",
+      "source": "GTTN 137"
+    },
+    {
+      "name": "The Wish",
+      "prerequisites": "Majesty ••••, Celerity ••, Vigor ••",
+      "xp": "2",
+      "cost": "●●●●●",
+      "dice_pool": "Manipulation + Persuasion + Majesty",
+      "description": "Gift vampiric strength and power to a subject for three days, then enthrall them to serve you.",
+      "source": "VTR 2e 148"
+    },
+    {
+      "name": "Wrack the Mind",
+      "prerequisites": "Dominate ••••, Majesty •••",
+      "xp": "3",
+      "cost": "●",
+      "dice_pool": "Manipulation + Intimidation + Dominate vs. Resolve + Blood Potency",
+      "description": "Inflict the Agonized condition.",
+      "source": "GTTN 135"
+    },
+    {
+      "name": "Wraith's Presence",
+      "prerequisites": "Obfuscate •••, Nightmare •",
+      "xp": "2",
+      "cost": "●",
+      "dice_pool": "Wits + Subterfuge + Obfuscate",
+      "description": "Conceal a subject's presence and conjure an illusion of them elsewhere.",
+      "source": "VTR 2e 149"
+    }
+  ]

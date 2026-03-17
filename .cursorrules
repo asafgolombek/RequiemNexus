@@ -7,7 +7,8 @@ decision is teachable. When suggesting code, explain *why* the pattern exists, n
 ## Primary Reference Files
 - `agents.md` — agent startup checklist, architectural laws, forbidden patterns, security rules
 - `docs/Architecture.md` — layer diagram, request flow, performance budgets
-- `docs/mission.md` — current phase (Phase 6 active), completed phases, non-goals
+- `docs/mission.md` — roadmap and active phase status
+- `docs/phase_8_plan.md` — detailed implementation plan for Phase 8
 
 ## Stack
 .NET 10 · C# 14 · Blazor Server · EF Core (SQLite dev / PostgreSQL prod) · Redis · SignalR ·
@@ -191,10 +192,18 @@ demonstrates. Examples:
 
 ## Current Phase & Scope
 
-**Phase 6 — CI/CD Hardening & Supply Chain** is active. See `docs/mission.md` for full status.
+**Phase 8 — The Hidden Blood (Bloodlines & Devotions)** is active. See `docs/mission.md` and `docs/phase_8_plan.md` for full status.
+
+### Phase 8 Architectural Mandate: Content vs. Behavior
+- **Content is data:** Bloodlines and Devotions are seed data (`BloodlineDefinition`, `DevotionDefinition`).
+- **Behavior is code:** A stable domain engine interprets these definitions. Adding a new Bloodline should require a migration/seed update, not a code change.
+- **Unified Pool Resolver:** All dice pools (Attributes, Skills, Disciplines) must be resolved through a single, explicit hydration path.
+- **Clan Constraint:** Characters can only join bloodlines related to their parent clan (supporting shared bloodlines). Enforce in Domain and UI.
 
 Do NOT scaffold the following unless explicitly instructed:
-- SignalR real-time hubs (Phase 7)
-- PWA / offline features (Phase 8)
-- Internationalization / i18n (Phase 9)
-- E2E tests with Playwright (Phase 10)
+- Covenants & Blood Sorcery (Phase 9)
+- Social Maneuvering (Phase 10)
+- Equipment & Assets (Phase 11)
+- Relationship Webs (Phase 12)
+- E2E tests with Playwright (Phase 13)
+- Internationalization / i18n (Phase 14)

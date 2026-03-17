@@ -1,0 +1,131 @@
+[
+    {
+      "parent_clan": "Daeva",
+      "bloodlines": [
+        {
+          "name": "Jharana",
+          "description": "Obsessive technomystics chosen from those touched by the God-Machine.",
+          "disciplines": ["Auspex", "Dead Signal", "Celerity", "Vigor"],
+          "special_feature": "Bloodline Discipline",
+          "weakness": "Risk Persistent Obsession from the Wanton Curse",
+          "source": "NH-SB 20"
+        },
+        {
+          "name": "Lidérc",
+          "description": "Passionate lovers who drink from the ardor they incite.",
+          "disciplines": ["Celerity", "Majesty", "Obfuscate", "Vigor"],
+          "special_feature": "Siphon Devotions",
+          "weakness": "The Wanton Curse also disrupts Touchstones",
+          "source": "NH-SB 24"
+        },
+        {
+          "name": "Vilseduire",
+          "description": "Narcissistic rebels who revel in glamorous transgression",
+          "disciplines": ["Majesty", "Nightmare", "Obfuscate", "Resilience"],
+          "special_feature": "None",
+          "weakness": "Only one Touchstone, and risk detachment at lower Humanity",
+          "source": "NH-SB 50"
+        }
+      ]
+    },
+    {
+      "parent_clan": "Gangrel",
+      "bloodlines": [
+        {
+          "name": "Kerberos",
+          "description": "Self-reinventing social predators who excel at projecting the Beast.",
+          "disciplines": ["Animalism", "Majesty", "Protean", "Resilience"],
+          "special_feature": "Hounds of Hell",
+          "weakness": "Lose 10-again to oppose characters without the Predatory Aura",
+          "source": "Onyx Path blog"
+        },
+        {
+          "name": "Nosoi",
+          "description": "Plague farmers who cultivate blood-borne disease in the herd.",
+          "disciplines": ["Dominate", "Obfuscate", "Protean", "Resilience"],
+          "special_feature": "Bloodline Devotions",
+          "weakness": "Imbibed Vitae untainted by your disease is capped nightly by Humanity",
+          "source": "NH-SB 29"
+        }
+      ]
+    },
+    {
+      "parent_clan": "Mekhet",
+      "bloodlines": [
+        {
+          "name": "Ankou",
+          "description": "Killers who keep the living separate from the dead for the greater good.",
+          "disciplines": ["Auspex", "Celerity", "Obfuscate", "Vigor"],
+          "special_feature": "None",
+          "weakness": "Must roll Humanity to recover Willpower from Mask",
+          "source": "NH-SB 12"
+        },
+        {
+          "name": "Icelus",
+          "description": "Manipulators disguised as hypnotherapists plumbing the collective unconscious.",
+          "disciplines": ["Auspex", "Dominate", "Obfuscate", "Resilience"],
+          "special_feature": "Psychognosis Merit",
+          "weakness": "Detachment inflicts a Mesmerized state",
+          "source": "NH-SB 15"
+        },
+        {
+          "name": "Khaibit",
+          "description": "An ancient line of soldiers who fight darkness by embracing it.",
+          "disciplines": ["Auspex", "Celerity", "Obfuscate", "Vigor"],
+          "special_feature": "Obtenebration Devotions",
+          "weakness": "Temporarily blinded by any light bright enough to inhibit normal vision",
+          "source": "Onyx Path blog"
+        },
+        {
+          "name": "Morbus",
+          "description": "Outcast plague angels who feed on diseased vessels.",
+          "disciplines": ["Auspex", "Celerity", "Cachexy", "Obfuscate"],
+          "special_feature": "Bloodline Discipline",
+          "weakness": "Can't feed on the living free of disease",
+          "source": "DEC 94"
+        }
+      ]
+    },
+    {
+      "parent_clan": "Nosferatu",
+      "bloodlines": [
+        {
+          "name": "Vilseduire",
+          "description": "Narcissistic rebels who revel in glamorous transgression",
+          "disciplines": ["Majesty", "Nightmare", "Obfuscate", "Resilience"],
+          "special_feature": "None",
+          "weakness": "Only one Touchstone, and risk detachment at lower Humanity",
+          "source": "NH-SB 50"
+        }
+      ]
+    },
+    {
+      "parent_clan": "Ventrue",
+      "bloodlines": [
+        {
+          "name": "Bron",
+          "description": "Knights errant and bravos who live by blood, quest, and oath.",
+          "disciplines": ["Animalism", "Crochan", "Dominate", "Resilience"],
+          "special_feature": "Bloodline Discipline",
+          "weakness": "Touchstones are vulnerable to detaching and changing by the whims of fate",
+          "source": "DE2 117"
+        },
+        {
+          "name": "Icelus",
+          "description": "Manipulators disguised as hypnotherapists plumbing the collective unconscious.",
+          "disciplines": ["Auspex", "Dominate", "Obfuscate", "Resilience"],
+          "special_feature": "Psychognosis Merit",
+          "weakness": "Detachment inflicts a Mesmerized state",
+          "source": "NH-SB 15"
+        },
+        {
+          "name": "Vardyvle",
+          "description": "Jealous dreamers who yearn for what they are not and lose themselves in others' lives.",
+          "disciplines": ["Dominate", "Obfuscate", "Protean", "Resilience"],
+          "special_feature": "Shapeshifting Devotion",
+          "weakness": "Feeding from those living your dreams risks False Memories",
+          "source": "NH-SB 45"
+        }
+      ]
+    }
+  ]
