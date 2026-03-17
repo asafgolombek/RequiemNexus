@@ -76,6 +76,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PublicRoll> PublicRolls { get; set; } = default!;
 
+    public DbSet<BloodlineDefinition> BloodlineDefinitions { get; set; } = default!;
+
+    public DbSet<BloodlineClan> BloodlineClans { get; set; } = default!;
+
+    public DbSet<CharacterBloodline> CharacterBloodlines { get; set; } = default!;
+
+    public DbSet<DevotionDefinition> DevotionDefinitions { get; set; } = default!;
+
+    public DbSet<DevotionPrerequisite> DevotionPrerequisites { get; set; } = default!;
+
+    public DbSet<CharacterDevotion> CharacterDevotions { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -471,5 +483,101 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<Merit>()
             .HasIndex(m => m.Name)
             .IsUnique();
+
+        // BloodlineDefinition >- FourthDiscipline
+        builder.Entity<BloodlineDefinition>()
+            .HasOne(b => b.FourthDiscipline)
+            .WithMany()
+            .HasForeignKey(b => b.FourthDisciplineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<BloodlineDefinition>()
+            .HasIndex(b => b.FourthDisciplineId);
+
+        // BloodlineClan >- BloodlineDefinition, Clan (allowed parent clans)
+        builder.Entity<BloodlineClan>()
+            .HasOne(bc => bc.BloodlineDefinition)
+            .WithMany(b => b.AllowedParentClans)
+            .HasForeignKey(bc => bc.BloodlineDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BloodlineClan>()
+            .HasOne(bc => bc.Clan)
+            .WithMany()
+            .HasForeignKey(bc => bc.ClanId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<BloodlineClan>()
+            .HasIndex(bc => bc.BloodlineDefinitionId);
+
+        builder.Entity<BloodlineClan>()
+            .HasIndex(bc => bc.ClanId);
+
+        // CharacterBloodline >- Character, BloodlineDefinition
+        builder.Entity<CharacterBloodline>()
+            .HasOne(cb => cb.Character)
+            .WithMany(c => c.Bloodlines)
+            .HasForeignKey(cb => cb.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterBloodline>()
+            .HasOne(cb => cb.BloodlineDefinition)
+            .WithMany()
+            .HasForeignKey(cb => cb.BloodlineDefinitionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CharacterBloodline>()
+            .HasIndex(cb => cb.CharacterId);
+
+        builder.Entity<CharacterBloodline>()
+            .HasIndex(cb => cb.BloodlineDefinitionId);
+
+        // DevotionDefinition >- RequiredBloodline (optional)
+        builder.Entity<DevotionDefinition>()
+            .HasOne(d => d.RequiredBloodline)
+            .WithMany()
+            .HasForeignKey(d => d.RequiredBloodlineId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<DevotionDefinition>()
+            .HasIndex(d => d.RequiredBloodlineId);
+
+        // DevotionPrerequisite >- DevotionDefinition, Discipline
+        builder.Entity<DevotionPrerequisite>()
+            .HasOne(p => p.DevotionDefinition)
+            .WithMany(d => d.Prerequisites)
+            .HasForeignKey(p => p.DevotionDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DevotionPrerequisite>()
+            .HasOne(p => p.Discipline)
+            .WithMany()
+            .HasForeignKey(p => p.DisciplineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<DevotionPrerequisite>()
+            .HasIndex(p => p.DevotionDefinitionId);
+
+        builder.Entity<DevotionPrerequisite>()
+            .HasIndex(p => p.DisciplineId);
+
+        // CharacterDevotion >- Character, DevotionDefinition
+        builder.Entity<CharacterDevotion>()
+            .HasOne(cd => cd.Character)
+            .WithMany(c => c.Devotions)
+            .HasForeignKey(cd => cd.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterDevotion>()
+            .HasOne(cd => cd.DevotionDefinition)
+            .WithMany()
+            .HasForeignKey(cd => cd.DevotionDefinitionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CharacterDevotion>()
+            .HasIndex(cd => cd.CharacterId);
+
+        builder.Entity<CharacterDevotion>()
+            .HasIndex(cd => cd.DevotionDefinitionId);
     }
 }

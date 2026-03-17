@@ -5,6 +5,7 @@
 @using RequiemNexus.Web.Services
 @using RequiemNexus.Application.Contracts
 @using System.Security.Claims
+@inject ToastService ToastService
 @inject IDiceService DiceService
 @inject SessionClientService SessionClient
 @inject IPublicRollService PublicRollService
@@ -118,8 +119,11 @@
                                 }
                                 else
                                 {
-                                    <div class="share-url" style="font-size: 0.8em; color: var(--gold); word-break: break-all;">
-                                        Link: @GetShareUrl()
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <span class="share-url" style="font-size: 0.8em; color: var(--gold); word-break: break-all;">Link: @GetShareUrl()</span>
+                                        <button type="button" class="btn-ghost" style="font-size: 0.85em; white-space: nowrap;" @onclick="CopyShareUrl" disabled="@_copying">
+                                            @(_copying ? "Copied!" : "📋 Copy")
+                                        </button>
                                     </div>
                                 }
                             </div>
@@ -165,6 +169,7 @@
     private bool _showBurst = false;
     private bool _isRolling = false;
     private bool _sharing = false;
+    private bool _copying = false;
     private string? _shareSlug;
 
     private readonly string[] _attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
@@ -201,6 +206,22 @@
     }
 
     private string GetShareUrl() => $"{NavigationManager.BaseUri}rolls/{_shareSlug}";
+
+    private async Task CopyShareUrl()
+    {
+        if (_shareSlug == null || _copying) return;
+        var url = GetShareUrl();
+        _copying = true;
+        try
+        {
+            await JS.InvokeVoidAsync("copyToClipboard", url);
+            ToastService.Show("Copied", "Link copied to clipboard.", ToastType.Success, 2000);
+        }
+        finally
+        {
+            _copying = false;
+        }
+    }
 
     private async Task ShareRoll()
     {

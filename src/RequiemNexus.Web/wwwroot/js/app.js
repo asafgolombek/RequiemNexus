@@ -17,6 +17,10 @@ window.downloadFileFromBase64 = function (fileName, mimeType, base64) {
     URL.revokeObjectURL(url);
 };
 
+window.copyToClipboard = function (text) {
+    return navigator.clipboard.writeText(text);
+};
+
 window.registerCommandPaletteShortcut = function (dotNetRef) {
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {

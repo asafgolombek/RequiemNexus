@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RequiemNexus.Data;
@@ -11,9 +12,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260317192552_AddBloodlinesAndDevotions")]
+    partial class AddBloodlinesAndDevotions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -739,29 +742,6 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("CharacterConditions");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDevotion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("DevotionDefinitionId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.HasIndex("DevotionDefinitionId");
-
-                    b.ToTable("CharacterDevotions");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
                 {
                     b.Property<int>("Id")
@@ -1192,80 +1172,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ConsentLogs");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionDefinition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ActivationCostDescription")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsPassive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("PoolDefinitionJson")
-                        .HasMaxLength(2000)
-                        .HasColumnType("text");
-
-                    b.Property<int?>("RequiredBloodlineId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Source")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("XpCost")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequiredBloodlineId");
-
-                    b.ToTable("DevotionDefinitions");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionPrerequisite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DevotionDefinitionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("DisciplineId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MinimumLevel")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("OrGroupId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DevotionDefinitionId");
-
-                    b.HasIndex("DisciplineId");
-
-                    b.ToTable("DevotionPrerequisites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.DiceMacro", b =>
@@ -2041,25 +1947,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDevotion", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany("Devotions")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RequiemNexus.Data.Models.DevotionDefinition", "DevotionDefinition")
-                        .WithMany()
-                        .HasForeignKey("DevotionDefinitionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-
-                    b.Navigation("DevotionDefinition");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Character", "Character")
@@ -2225,35 +2112,6 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionDefinition", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.BloodlineDefinition", "RequiredBloodline")
-                        .WithMany()
-                        .HasForeignKey("RequiredBloodlineId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("RequiredBloodline");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionPrerequisite", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.DevotionDefinition", "DevotionDefinition")
-                        .WithMany("Prerequisites")
-                        .HasForeignKey("DevotionDefinitionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RequiemNexus.Data.Models.Discipline", "Discipline")
-                        .WithMany()
-                        .HasForeignKey("DisciplineId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("DevotionDefinition");
-
-                    b.Navigation("Discipline");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.DiceMacro", b =>
@@ -2461,8 +2319,6 @@ namespace RequiemNexus.Data.Migrations
 
                     b.Navigation("CharacterEquipments");
 
-                    b.Navigation("Devotions");
-
                     b.Navigation("Disciplines");
 
                     b.Navigation("Merits");
@@ -2485,11 +2341,6 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.CombatEncounter", b =>
                 {
                     b.Navigation("InitiativeEntries");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionDefinition", b =>
-                {
-                    b.Navigation("Prerequisites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>

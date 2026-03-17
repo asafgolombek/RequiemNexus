@@ -270,17 +270,21 @@ The application is **cloud-agnostic** by design and deployable to any sanctuary:
 - **The Unified Pool Resolver** is the key architectural problem of this phase. Devotions compose dice pools from Attributes, Skills, *and* Discipline ratings — three entity types the Dice Nexus must unify before Devotion activation can be modeled cleanly. Design this first.
 - **Exotic Bloodline escape hatch.** `BloodlineDefinition` includes a nullable `CustomRuleOverride` flag for mechanics that resist clean data modeling. Document every use in `docs/rules-interpretations.md`.
 
+### Pool Resolver Scope (Phase 8)
+
+Phase 8 supports **additive pools only** (e.g., `Strength + Brawl + Vigor`). Contested rolls (`vs Resolve + Tolerance`) and penalty dice (`Pool - Stamina`) are deferred to **Phase 9**. Document deferred formats in `docs/rules-interpretations.md`.
+
 ### Tasks
 
-- [ ] **Unified Pool Resolver** — extend `DiceService` to compose pools from Attributes, Skills, and Discipline ratings in a single, explicit resolution step
+- [ ] **Unified Pool Resolver** — `TraitResolver` (Application) hydrates `PoolDefinition` from Character; produces resolved integer for `DiceService`. Additive pools only; contested/penalty deferred to Phase 9.
 - [ ] **`BloodlineDefinition` seed data** — data model covering prerequisite Blood Potency, parent Clan, Discipline substitutions (replace or supplement), Bane descriptor, and `CustomRuleOverride`
 - [ ] **Bloodline Engine** — stateless domain service that reads a `BloodlineDefinition` and applies it to a character; never knows a Bloodline by name
 - [ ] **Bloodline Validation** — enforce Blood Potency (2+) and Clan prerequisites before the pending state is created; surface as `Result<T>` failures
 - [ ] **`BloodlineStatus` pending flow** — `PendingApproval` state visible to the Storyteller in the Glimpse dashboard; one-tap approve/reject with optional note
-- [ ] **`DevotionDefinition` seed data** — catalog from the rulebook: name, description, prerequisite Disciplines, XP cost, dice pool composition, passive vs. active flag
+- [ ] **`DevotionDefinition` seed data** — catalog from the rulebook: name, description, prerequisite Disciplines (with `OrGroupId` for OR logic), XP cost, dice pool composition, passive vs. active flag, optional `RequiredBloodlineId` for bloodline-gated devotions
 - [ ] **Devotion prerequisite automation** — validate required Discipline levels and XP before purchase; enforced in the Application Layer, not the UI
-- [ ] **Devotion activation** — active Devotions feed into the Unified Pool Resolver; passive Devotions register as modifiers on the character's derived stat cache
-- [ ] **Character sheet visual distinction** — surface Bloodline affiliation and active Devotions as a dedicated section; cache invalidation on any lineage mutation
+- [ ] **Devotion activation** — active Devotions feed into the Unified Pool Resolver; passive Devotions are display-only in Phase 8 — full modifier integration deferred to Phase 9
+- [ ] **Character sheet and Edit Character** — Bloodlines and Devotions are first-class in the character sheet UI and editable via the Edit Character flow (add/remove devotions, apply for bloodline). Dedicated Bloodline section showing lineage and Bane; Devotions list with "Roll" buttons; cache invalidation on any lineage mutation
 - [ ] **Rules Interpretation Log** — document all edge-case V:tR 2e decisions in `docs/rules-interpretations.md`
 
 ---
@@ -293,6 +297,8 @@ The application is **cloud-agnostic** by design and deployable to any sanctuary:
 
 - [ ] **Covenant Integration** — First-class support for the five core Covenants (Carthian, Circle, Invictus, Lancea, Ordo)
 - [ ] **Covenant Merits & Benefits** — Tracking "Carthian Law," "Theban Miracles," and "Invictus Oaths" with their unique mechanical triggers
+- [ ] **Extend Unified Pool Resolver** — Support contested rolls ("vs" format) and penalty dice (e.g., `Pool - Stamina`). Deferred from Phase 8; document formats in `rules-interpretations.md`.
+- [ ] **Passive Devotion Modifier Engine** — Define `PassiveModifier` value object (TargetStat, Delta, OptionalCondition) and integration with derived-stat cache. Deferred from Phase 8; effects that resist data modeling use `CustomRuleOverride`.
 - [ ] **Blood Sorcery Module** — Dedicated UI for Crúac and Theban Sorcery; tracking Rites/Miracles with specific resource costs (Vitae vs. Willpower)
 - [ ] **Sacrifice Mechanics** — Logic for ritual sacrifices or required "Sins" associated with Sorcery rolls
 - [ ] **The Mysteries of the Dragon** — Specialized tracker for Coils and Scales, including the permanent "rule-breaking" modifiers they apply to the core character sheet logic

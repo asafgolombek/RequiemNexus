@@ -95,6 +95,16 @@ public class StorytellerGlimpseService(
             .Where(c => c.CampaignId == campaignId)
             .ToListAsync();
 
+        // Guard against unbounded N+1 latency: each character triggers RecordBeatAsync,
+        // RecordXpCreditAsync (if beat conversion), and BroadcastCharacterUpdateAsync.
+        const int maxBatchSize = 50;
+        if (characters.Count > maxBatchSize)
+        {
+            throw new InvalidOperationException(
+                $"Awarding Beats to all characters is limited to campaigns with at most {maxBatchSize} characters. " +
+                $"This campaign has {characters.Count}. Award Beats per character instead.");
+        }
+
         foreach (Character character in characters)
         {
             await AwardBeatInternalAsync(character, campaignId, reason, storyTellerUserId);

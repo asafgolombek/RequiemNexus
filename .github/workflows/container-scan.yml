@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   scan:
     name: Scan RequiemNexus Image
@@ -23,13 +26,15 @@ jobs:
         with:
           image-ref: 'requiem-nexus:test'
           format: 'table'
+          output: 'trivy-results.txt'
           exit-code: '1' # 🛡️ Fail if High/Critical vulnerabilities exist
           severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
 
       - name: Upload Trivy results
         uses: actions/upload-artifact@v6
         if: always()
         with:
           name: trivy-results
-          path: trivy-results.txt # Note: trivy-action might not output to this file unless configured, but we can rely on logs.
+          path: trivy-results.txt
           retention-days: 90

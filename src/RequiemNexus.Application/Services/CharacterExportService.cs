@@ -16,9 +16,9 @@ public class CharacterExportService(ApplicationDbContext dbContext) : ICharacter
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
     private readonly ApplicationDbContext _dbContext = dbContext;
 
-    public async Task<string> ExportCharacterAsJsonAsync(int characterId)
+    public async Task<string> ExportCharacterAsJsonAsync(int characterId, string userId)
     {
-        Character? character = await LoadCharacterAsync(characterId);
+        Character? character = await LoadCharacterAsync(characterId, userId);
 
         if (character == null)
         {
@@ -343,9 +343,9 @@ public class CharacterExportService(ApplicationDbContext dbContext) : ICharacter
         }).GeneratePdf();
     }
 
-    public async Task<byte[]> ExportCharacterAsPdfAsync(int characterId)
+    public async Task<byte[]> ExportCharacterAsPdfAsync(int characterId, string userId)
     {
-        Character? character = await LoadCharacterAsync(characterId);
+        Character? character = await LoadCharacterAsync(characterId, userId);
 
         if (character == null)
         {
@@ -361,7 +361,7 @@ public class CharacterExportService(ApplicationDbContext dbContext) : ICharacter
         return new string('●', filled) + new string('○', max - filled);
     }
 
-    private async Task<Character?> LoadCharacterAsync(int characterId)
+    private async Task<Character?> LoadCharacterAsync(int characterId, string userId)
     {
         return await _dbContext.Characters
             .Include(c => c.Clan)
@@ -371,7 +371,7 @@ public class CharacterExportService(ApplicationDbContext dbContext) : ICharacter
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Aspirations)
             .Include(c => c.Banes)
-            .Where(c => c.Id == characterId)
+            .Where(c => c.Id == characterId && c.ApplicationUserId == userId)
             .AsNoTracking()
             .FirstOrDefaultAsync();
     }

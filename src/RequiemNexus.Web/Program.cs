@@ -163,6 +163,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterNoteServ
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterEquipmentService, RequiemNexus.Application.Services.CharacterEquipmentService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ITraitResolver, RequiemNexus.Application.Services.TraitResolver>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDiceMacroService, RequiemNexus.Application.Services.DiceMacroService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPublicRollService, RequiemNexus.Application.Services.PublicRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewDisciplineService, RequiemNexus.Application.Services.HomebrewDisciplineService>();

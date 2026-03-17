@@ -25,6 +25,8 @@ public static class DbInitializer
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
         await SeedMeritsAsync(context);
+        await SeedBloodlinesAsync(context);
+        await SeedDevotionsAsync(context);
         await SeedPrebuiltStatBlocksAsync(context);
     }
 
@@ -181,6 +183,33 @@ public static class DbInitializer
             await context.Merits.AddRangeAsync(toAdd);
             await context.SaveChangesAsync();
         }
+    }
+
+    private static async Task SeedBloodlinesAsync(ApplicationDbContext context)
+    {
+        if (await context.BloodlineDefinitions.AnyAsync())
+        {
+            return;
+        }
+
+        var clans = await context.Clans.ToListAsync();
+        var disciplines = await context.Disciplines.ToListAsync();
+        var bloodlines = BloodlineSeedData.GetAllBloodlines(clans, disciplines);
+        await context.BloodlineDefinitions.AddRangeAsync(bloodlines);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedDevotionsAsync(ApplicationDbContext context)
+    {
+        if (await context.DevotionDefinitions.AnyAsync())
+        {
+            return;
+        }
+
+        var disciplines = await context.Disciplines.ToListAsync();
+        var devotions = DevotionSeedData.GetSampleDevotions(disciplines);
+        await context.DevotionDefinitions.AddRangeAsync(devotions);
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedPrebuiltStatBlocksAsync(ApplicationDbContext context)

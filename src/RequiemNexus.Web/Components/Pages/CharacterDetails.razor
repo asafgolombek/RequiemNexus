@@ -13,11 +13,13 @@
 @inject ICharacterEquipmentService EquipmentService
 @inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
+@inject ITraitResolver TraitResolver
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject SessionClientService SessionClient
 @inject ISessionService SessionService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ToastService ToastService
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -85,22 +87,19 @@ else
                         @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
                     </button>
                     <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
-                        Export JSON
+                        @(_isExporting ? "Exporting…" : "Export JSON")
                     </button>
                     <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
-                        Export PDF
+                        @(_isExporting ? "Exporting…" : "Export PDF")
                     </button>
                 </div>
             </div>
         </header>
 
-        <div class="tab-bar">
-            <button class="tab-btn @(_activeTab == "sheet" ? "active" : "")" @onclick='() => _activeTab = "sheet"'>Character
-                Sheet</button>
-            <button class="tab-btn @(_activeTab == "identity" ? "active" : "")"
-            @onclick='() => _activeTab = "identity"'>Identity &amp; Backstory</button>
-            <button class="tab-btn @(_activeTab == "history" ? "active" : "")"
-            @onclick='() => _activeTab = "history"'>XP History</button>
+        <div class="tab-bar" role="tablist" aria-label="Character sheet sections">
+            <button type="button" class="tab-btn @(_activeTab == "sheet" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "sheet")" aria-controls="panel-sheet" id="tab-sheet" @onclick='() => SelectTab("sheet")' @onkeydown="HandleTabKeydown">Character Sheet</button>
+            <button type="button" class="tab-btn @(_activeTab == "identity" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "identity")" aria-controls="panel-identity" id="tab-identity" @onclick='() => SelectTab("identity")' @onkeydown="HandleTabKeydown">Identity &amp; Backstory</button>
+            <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history")" aria-controls="panel-history" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
         </div>
 
         <CascadingValue Value="@(isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
@@ -225,6 +224,64 @@ else
                                 }
                             </ul>
                         </section>
+
+                        <!-- BLOODLINES -->
+                        <section class="cs-section cs-bloodlines">
+                            <h2>Bloodline</h2>
+                            @{
+                                var activeBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Active);
+                            }
+                            @if (activeBloodline?.BloodlineDefinition != null)
+                            {
+                                <div class="bloodline-info" style="margin-bottom: 10px;">
+                                    <strong>@activeBloodline.BloodlineDefinition.Name</strong>
+                                    <p style="font-size: 0.9em; color: #a0a0a0; margin: 4px 0 0 0;">@activeBloodline.BloodlineDefinition.Description</p>
+                                    <div style="margin-top: 8px;">
+                                        <span class="trait-subheading">Lineage:</span> @(_character.Clan?.Name ?? "—") → @activeBloodline.BloodlineDefinition.Name
+                                    </div>
+                                    @if (_character.Banes?.Any() == true)
+                                    {
+                                        <div style="margin-top: 6px;">
+                                            <span class="trait-subheading">Clan Bane:</span> @_character.Banes.First().Description
+                                        </div>
+                                    }
+                                    <div style="margin-top: 6px;">
+                                        <span class="trait-subheading">Bloodline Bane:</span> @activeBloodline.BloodlineDefinition.BaneOverride
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p style="color: #808080; font-size: 0.9em;">None. Apply for a bloodline when Blood Potency 2+.</p>
+                            }
+                        </section>
+
+                        <!-- DEVOTIONS -->
+                        <section class="cs-section cs-devotions">
+                            <h2>Devotions</h2>
+                            @if (_character.Devotions?.Any() == true)
+                            {
+                                <ul class="trait-list">
+                                    @foreach (var cd in _character.Devotions)
+                                    {
+                                        @if (cd.DevotionDefinition != null)
+                                        {
+                                            <li class="trait-item">
+                                                <span>@cd.DevotionDefinition.Name</span>
+                                                @if (!cd.DevotionDefinition.IsPassive && !string.IsNullOrEmpty(cd.DevotionDefinition.PoolDefinitionJson))
+                                                {
+                                                    <button class="btn-ghost" style="padding: 2px 8px; font-size: 0.85em;" @onclick="() => OpenDevotionRoller(cd)">Roll</button>
+                                                }
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p style="color: #808080; font-size: 0.9em;">None yet. Purchase devotions via Advancement.</p>
+                            }
+                        </section>
                     </div>
 
                     <!-- EQUIPMENT -->
@@ -343,24 +400,63 @@ else
         }
     }
 
+    private void SelectTab(string tab) => _activeTab = tab;
+
+    private void HandleTabKeydown(KeyboardEventArgs e)
+    {
+        var tabs = new[] { "sheet", "identity", "history" };
+        int i = Array.IndexOf(tabs, _activeTab);
+        if (i < 0) return;
+        if (e.Key == "ArrowRight" || e.Key == "ArrowDown")
+        {
+            SelectTab(tabs[(i + 1) % tabs.Length]);
+        }
+        else if (e.Key == "ArrowLeft" || e.Key == "ArrowUp")
+        {
+            SelectTab(tabs[(i - 1 + tabs.Length) % tabs.Length]);
+        }
+        else if (e.Key == "Home")
+        {
+            SelectTab(tabs[0]);
+        }
+        else if (e.Key == "End")
+        {
+            SelectTab(tabs[^1]);
+        }
+    }
+
     private async Task ExportJson()
     {
         if (_character == null) return;
         _isExporting = true;
-        var json = ExportService.ExportCharacterAsJson(_character);
-        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-        await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.json", "application/json", base64);
-        _isExporting = false;
+        try
+        {
+            var json = ExportService.ExportCharacterAsJson(_character);
+            var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+            await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.json", "application/json", base64);
+            ToastService.Show("Export complete", "JSON downloaded.", ToastType.Success);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
     }
 
     private async Task ExportPdf()
     {
         if (_character == null) return;
         _isExporting = true;
-        var pdfBytes = ExportService.ExportCharacterAsPdf(_character);
-        var base64 = Convert.ToBase64String(pdfBytes);
-        await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.pdf", "application/pdf", base64);
-        _isExporting = false;
+        try
+        {
+            var pdfBytes = ExportService.ExportCharacterAsPdf(_character);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.pdf", "application/pdf", base64);
+            ToastService.Show("Export complete", "PDF downloaded.", ToastType.Success);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
     }
 
     private void GoToAdvancement()
@@ -487,9 +583,9 @@ else
 
     private async Task AddEquipment()
     {
-        if (_character != null && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId) && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
         {
-            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity);
+            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity, _currentUserId);
             ce.Equipment = _availableEquipment.FirstOrDefault(e => e.Id == _selectedEquipmentId);
             _character.CharacterEquipments.Add(ce);
 
@@ -498,11 +594,31 @@ else
         }
     }
 
+    private void OpenDevotionRoller(CharacterDevotion cd)
+    {
+        if (_character == null || cd.DevotionDefinition?.PoolDefinitionJson == null) return;
+        try
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            var pool = System.Text.Json.JsonSerializer.Deserialize<RequiemNexus.Domain.Models.PoolDefinition>(cd.DevotionDefinition.PoolDefinitionJson, options);
+            _rollerTraitName = cd.DevotionDefinition.Name;
+            _rollerBaseDice = pool != null ? TraitResolver.ResolvePool(_character, pool) : 0;
+            _isRollerOpen = true;
+        }
+        catch
+        {
+            _rollerTraitName = cd.DevotionDefinition.Name;
+            _rollerBaseDice = 0;
+            _isRollerOpen = true;
+        }
+    }
+
     private async Task RemoveEquipment(int ceId)
     {
-        if (_character != null)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await EquipmentService.RemoveEquipmentAsync(ceId);
+            await EquipmentService.RemoveEquipmentAsync(ceId, _currentUserId);
             var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
             if (ce != null) _character.CharacterEquipments.Remove(ce);
         }

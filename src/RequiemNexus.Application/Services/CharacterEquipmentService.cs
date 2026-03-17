@@ -8,9 +8,10 @@ namespace RequiemNexus.Application.Services;
 /// <summary>
 /// Application service for managing character equipment inventory.
 /// </summary>
-public class CharacterEquipmentService(ApplicationDbContext dbContext) : ICharacterEquipmentService
+public class CharacterEquipmentService(ApplicationDbContext dbContext, IAuthorizationHelper authHelper) : ICharacterEquipmentService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
 
     /// <inheritdoc />
     public async Task<List<Equipment>> GetAvailableEquipmentAsync()
@@ -19,8 +20,10 @@ public class CharacterEquipmentService(ApplicationDbContext dbContext) : ICharac
     }
 
     /// <inheritdoc />
-    public async Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity)
+    public async Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity, string userId)
     {
+        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "modify equipment");
+
         CharacterEquipment ce = new()
         {
             CharacterId = characterId,
@@ -33,11 +36,15 @@ public class CharacterEquipmentService(ApplicationDbContext dbContext) : ICharac
     }
 
     /// <inheritdoc />
-    public async Task RemoveEquipmentAsync(int characterEquipmentId)
+    public async Task RemoveEquipmentAsync(int characterEquipmentId, string userId)
     {
-        CharacterEquipment? ce = await _dbContext.CharacterEquipments.FindAsync(characterEquipmentId);
+        CharacterEquipment? ce = await _dbContext.CharacterEquipments
+            .Include(c => c.Character)
+            .FirstOrDefaultAsync(c => c.Id == characterEquipmentId);
+
         if (ce != null)
         {
+            await _authHelper.RequireCharacterAccessAsync(ce.CharacterId, userId, "remove equipment");
             _dbContext.CharacterEquipments.Remove(ce);
             await _dbContext.SaveChangesAsync();
         }

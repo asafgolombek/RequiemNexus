@@ -58,6 +58,9 @@ public class CharacterManagementService(
             .Include(c => c.Skills)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
+            .Include(c => c.Bloodlines).ThenInclude(b => b.BloodlineDefinition)
+            .Include(c => c.Devotions).ThenInclude(d => d.DevotionDefinition)
+            .Include(c => c.Banes)
             .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
