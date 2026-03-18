@@ -22,7 +22,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 6 | CI/CD Hardening & Supply Chain | ✅ Complete |
 | 7 | Realtime Play (The Blood Communion) | ✅ Complete |
 | 8 | The Hidden Blood (Bloodlines & Devotions) | ✅ Complete |
-| 9 | The Accord of Power (Covenants & Blood Sorcery) | 🔄 Active |
+| 9 | The Accord of Power (Covenants & Blood Sorcery) | ✅ Complete |
 | 9.5 | Sacrifice Mechanics (Blood Sorcery) | ⬜ Planned |
 | 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ⬜ Planned |
 | 10 | The Social Graces (Social Maneuvering) | ⬜ Planned |
@@ -31,7 +31,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 9](#-phase-9-the-accord-of-power-covenants--blood-sorcery)**
+> **Currently Active → [Phase 9.5](#-phase-95-sacrifice-mechanics-blood-sorcery)**
 
 ---
 
@@ -274,35 +274,35 @@ The application is **cloud-agnostic** by design and deployable to any sanctuary:
 
 ### Pool Resolver Scope (Phase 8)
 
-Phase 8 supports **additive pools only** (e.g., `Strength + Brawl + Vigor`). Contested rolls (`vs Resolve + Tolerance`) and penalty dice (`Pool - Stamina`) are deferred to **Phase 9**. Document deferred formats in `docs/rules-interpretations.md`.
+Phase 8 supported **additive pools only**; contested rolls and penalty dice were deferred and implemented in Phase 9.
 
 ### Tasks
 
-- [x] **Unified Pool Resolver** — `TraitResolver` (Application) hydrates `PoolDefinition` from Character; produces resolved integer for `DiceService`. Additive pools only; contested/penalty deferred to Phase 9.
+- [x] **Unified Pool Resolver** — `TraitResolver` (Application) hydrates `PoolDefinition` from Character; produces resolved integer for `DiceService`. Additive pools in Phase 8; contested/penalty implemented in Phase 9.
 - [x] **`BloodlineDefinition` seed data** — data model covering prerequisite Blood Potency, parent Clan, Discipline substitutions (replace or supplement), Bane descriptor, and `CustomRuleOverride`
 - [x] **Bloodline Engine** — stateless domain service that reads a `BloodlineDefinition` and applies it to a character; never knows a Bloodline by name
 - [x] **Bloodline Validation** — enforce Blood Potency (2+) and Clan prerequisites before the pending state is created; surface as `Result<T>` failures
 - [x] **`BloodlineStatus` pending flow** — `PendingApproval` state visible to the Storyteller in the Glimpse dashboard; one-tap approve/reject with optional note
 - [x] **`DevotionDefinition` seed data** — catalog from the rulebook: name, description, prerequisite Disciplines (with `OrGroupId` for OR logic), XP cost, dice pool composition, passive vs. active flag, optional `RequiredBloodlineId` for bloodline-gated devotions
 - [x] **Devotion prerequisite automation** — validate required Discipline levels and XP before purchase; enforced in the Application Layer, not the UI
-- [x] **Devotion activation** — active Devotions feed into the Unified Pool Resolver; passive Devotions are display-only in Phase 8 — full modifier integration deferred to Phase 9
+- [x] **Devotion activation** — active Devotions feed into the Unified Pool Resolver; passive Devotions display-only in Phase 8 — full modifier integration implemented in Phase 9.
 - [x] **Character sheet and Edit Character** — Bloodlines and Devotions are first-class in the character sheet UI and editable via the Edit Character flow (add/remove devotions, apply for bloodline). Dedicated Bloodline section showing lineage and Bane; Devotions list with "Roll" buttons; cache invalidation on any lineage mutation
 - [x] **Rules Interpretation Log** — document all edge-case V:tR 2e decisions in `docs/rules-interpretations.md`
 
 ---
 
-## 📅 Phase 9: The Accord of Power (Covenants & Blood Sorcery)
+## 📅 Phase 9: The Accord of Power (Covenants & Blood Sorcery) ✅
 
 **The Objective:** Codify the mystical and political structures of the Danse Macabre.
 
 > The content/behavior separation established in Phase 8 is reused directly here. `CovenantDefinition` mirrors `BloodlineDefinition` in shape.
 
-- [ ] **Covenant Integration** — First-class support for the five core Covenants (Carthian, Circle, Invictus, Lancea, Ordo)
-- [ ] **Covenant Merits & Benefits** — Tracking "Carthian Law," "Theban Miracles," and "Invictus Oaths" with their unique mechanical triggers
-- [ ] **Extend Unified Pool Resolver** — Support contested rolls ("vs" format) and penalty dice (e.g., `Pool - Stamina`). Deferred from Phase 8; document formats in `rules-interpretations.md`.
-- [ ] **Passive Devotion Modifier Engine** — Define `PassiveModifier` value object (TargetStat, Delta, OptionalCondition) and integration with derived-stat cache. Deferred from Phase 8; effects that resist data modeling use `CustomRuleOverride`.
-- [ ] **Blood Sorcery Module** — Dedicated UI for Crúac and Theban Sorcery; tracking Rites/Miracles with specific resource costs (Vitae vs. Willpower)
-- [ ] **The Mysteries of the Dragon** — Specialized tracker for Coils and Scales, including the permanent "rule-breaking" modifiers they apply to the core character sheet logic
+- [x] **Covenant Integration** — First-class support for the five core Covenants (Carthian, Circle, Invictus, Lancea, Ordo)
+- [x] **Covenant Merits & Benefits** — Tracking "Carthian Law," "Theban Miracles," and "Invictus Oaths" with their unique mechanical triggers
+- [x] **Extend Unified Pool Resolver** — Support contested rolls ("vs" format) and penalty dice (e.g., `Pool - Stamina`). Documented in `rules-interpretations.md`.
+- [x] **Passive Devotion Modifier Engine** — `PassiveModifier` value object (TargetStat, Delta, OptionalCondition) integrated with derived-stat cache. Effects that resist data modeling use `CustomRuleOverride`.
+- [x] **Blood Sorcery Module** — Dedicated UI for Crúac and Theban Sorcery; tracking Rites/Miracles with specific resource costs (Vitae vs. Willpower)
+- [x] **The Mysteries of the Dragon** — Specialized tracker for Coils and Scales, including the permanent "rule-breaking" modifiers they apply to the core character sheet logic
 
 ---
 

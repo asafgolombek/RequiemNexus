@@ -321,10 +321,10 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 8 — The Hidden Blood (Bloodlines & Devotions).**
+**Phase 9.5 — Sacrifice Mechanics (Blood Sorcery).**
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list and exit criteria.
-See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the detailed implementation plan.
+See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 
 ---
 

@@ -2,11 +2,11 @@
 
 You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-## 🧭 Active Phase: Phase 8 — The Hidden Blood (Bloodlines & Devotions)
-- **Content vs. Behavior:** Bloodlines and Devotions are seed data interpreted by a stable engine.
-- **Unified Pool Resolver:** Must treat Attributes, Skills, and Disciplines as first-class inputs.
-- **Storyteller Approval:** Lightweight pending state for Bloodline joining.
-- **Clan Constraint:** Characters can only join bloodlines related to their parent clan. Support shared bloodlines.
+## 🧭 Active Phase: Phase 9.5 — Sacrifice Mechanics (Blood Sorcery)
+- **Content vs. Behavior:** Covenants, Blood Sorcery, and Coils/Scales are seed data interpreted by a stable engine.
+- **Pool Resolver:** Supports additive pools, contested rolls, penalty dice, and lower-of. Passive modifier engine integrated.
+- **Blood Sorcery:** Crúac and Theban Sorcery with Rites/Miracles; Coils/Scales (Mysteries of the Dragon) complete.
+- **Next:** Sacrifice types, Sin/Stain integration, and activation cost extensions for rites.
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.
