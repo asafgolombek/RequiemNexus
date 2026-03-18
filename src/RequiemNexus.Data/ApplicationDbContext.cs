@@ -88,6 +88,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<CharacterDevotion> CharacterDevotions { get; set; } = default!;
 
+    public DbSet<CovenantDefinition> CovenantDefinitions { get; set; } = default!;
+
+    public DbSet<CovenantDefinitionMerit> CovenantDefinitionMerits { get; set; } = default!;
+
+    public DbSet<SorceryRiteDefinition> SorceryRiteDefinitions { get; set; } = default!;
+
+    public DbSet<CharacterRite> CharacterRites { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -111,6 +119,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Character>()
             .HasIndex(c => c.ClanId);
+
+        // Character >- CovenantDefinition configuration
+        builder.Entity<Character>()
+            .HasOne(c => c.Covenant)
+            .WithMany()
+            .HasForeignKey(c => c.CovenantId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Character>()
+            .HasIndex(c => c.CovenantId);
 
         // Campaign >- StoryTeller configuration
         builder.Entity<Campaign>()
@@ -579,5 +597,63 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CharacterDevotion>()
             .HasIndex(cd => cd.DevotionDefinitionId);
+
+        // Character >- CovenantDefinition (nullable: Unaligned)
+        builder.Entity<Character>()
+            .HasOne(c => c.Covenant)
+            .WithMany()
+            .HasForeignKey(c => c.CovenantId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Character>()
+            .HasIndex(c => c.CovenantId);
+
+        // CovenantDefinitionMerit (many-to-many: Covenant-specific merits)
+        builder.Entity<CovenantDefinitionMerit>()
+            .HasOne(cdm => cdm.CovenantDefinition)
+            .WithMany(c => c.CovenantSpecificMerits)
+            .HasForeignKey(cdm => cdm.CovenantDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CovenantDefinitionMerit>()
+            .HasOne(cdm => cdm.Merit)
+            .WithMany()
+            .HasForeignKey(cdm => cdm.MeritId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CovenantDefinitionMerit>()
+            .HasIndex(cdm => cdm.CovenantDefinitionId);
+
+        builder.Entity<CovenantDefinitionMerit>()
+            .HasIndex(cdm => cdm.MeritId);
+
+        // SorceryRiteDefinition >- CovenantDefinition
+        builder.Entity<SorceryRiteDefinition>()
+            .HasOne(s => s.RequiredCovenant)
+            .WithMany()
+            .HasForeignKey(s => s.RequiredCovenantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<SorceryRiteDefinition>()
+            .HasIndex(s => s.RequiredCovenantId);
+
+        // CharacterRite >- Character, SorceryRiteDefinition
+        builder.Entity<CharacterRite>()
+            .HasOne(cr => cr.Character)
+            .WithMany(c => c.Rites)
+            .HasForeignKey(cr => cr.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterRite>()
+            .HasOne(cr => cr.SorceryRiteDefinition)
+            .WithMany()
+            .HasForeignKey(cr => cr.SorceryRiteDefinitionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CharacterRite>()
+            .HasIndex(cr => cr.CharacterId);
+
+        builder.Entity<CharacterRite>()
+            .HasIndex(cr => cr.SorceryRiteDefinitionId);
     }
 }

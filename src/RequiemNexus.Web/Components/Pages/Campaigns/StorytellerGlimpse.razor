@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IStorytellerGlimpseService GlimpseService
 @inject IBloodlineService BloodlineService
+@inject ICovenantService CovenantService
+@inject ISorceryService SorceryService
 @inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -98,6 +100,120 @@
                                             style="font-size:0.85em;"
                                             disabled="@(_awarding)"
                                             @onclick="() => StartReject(app.CharacterBloodlineId)">
+                                        Reject
+                                    </button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @* ── Pending Covenant Requests ───────────────────────────────────────── *@
+        @if (_pendingCovenants.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Pending Covenant Requests</h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    @foreach (var app in _pendingCovenants)
+                    {
+                        <li style="display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <span><strong>@app.CharacterName</strong> → @app.CovenantName</span>
+                            <span style="color:var(--text-secondary);font-size:0.85em;">@app.AppliedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                            <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                                @if (_rejectingCovenantCharacterId == app.CharacterId)
+                                {
+                                    <input type="text"
+                                           class="form-control"
+                                           style="width:160px;font-size:0.85em;"
+                                           placeholder="Optional note…"
+                                           @bind="_covenantRejectNote" />
+                                }
+                                <button class="btn-primary-rn"
+                                        style="font-size:0.85em;"
+                                        disabled="@(_awarding)"
+                                        @onclick="() => ApproveCovenant(app.CharacterId)">
+                                    Approve
+                                </button>
+                                @if (_rejectingCovenantCharacterId == app.CharacterId)
+                                {
+                                    <button class="btn-danger-rn"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => ConfirmRejectCovenant(app.CharacterId)">
+                                        Confirm Reject
+                                    </button>
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="CancelRejectCovenant">
+                                        Cancel
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => StartRejectCovenant(app.CharacterId)">
+                                        Reject
+                                    </button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @* ── Pending Rite Learning Requests ───────────────────────────────────── *@
+        @if (_pendingRites.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Pending Rite Learning Requests</h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    @foreach (var app in _pendingRites)
+                    {
+                        <li style="display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <span><strong>@app.CharacterName</strong> → @app.RiteName</span>
+                            <span style="color:var(--text-secondary);font-size:0.85em;">@app.SorceryType Lv.@app.Level — @app.XpCost XP @app.AppliedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                            <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                                @if (_rejectingRiteId == app.CharacterRiteId)
+                                {
+                                    <input type="text"
+                                           class="form-control"
+                                           style="width:160px;font-size:0.85em;"
+                                           placeholder="Optional note…"
+                                           @bind="_riteRejectNote" />
+                                }
+                                <button class="btn-primary-rn"
+                                        style="font-size:0.85em;"
+                                        disabled="@(_awarding)"
+                                        @onclick="() => ApproveRite(app.CharacterRiteId)">
+                                    Approve
+                                </button>
+                                @if (_rejectingRiteId == app.CharacterRiteId)
+                                {
+                                    <button class="btn-danger-rn"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => ConfirmRejectRite(app.CharacterRiteId)">
+                                        Confirm Reject
+                                    </button>
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="CancelRejectRite">
+                                        Cancel
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => StartRejectRite(app.CharacterRiteId)">
                                         Reject
                                     </button>
                                 }
@@ -233,6 +349,16 @@
     private int? _rejectingId;
     private string _rejectNote = string.Empty;
 
+    // Pending covenant requests
+    private List<CovenantApplicationDto> _pendingCovenants = [];
+    private int? _rejectingCovenantCharacterId;
+    private string _covenantRejectNote = string.Empty;
+
+    // Pending rite learning requests
+    private List<RiteApplicationDto> _pendingRites = [];
+    private int? _rejectingRiteId;
+    private string _riteRejectNote = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -254,6 +380,8 @@
         {
             _vitals = await GlimpseService.GetCampaignVitalsAsync(Id, _currentUserId!);
             _pendingBloodlines = await BloodlineService.GetPendingBloodlineApplicationsAsync(Id, _currentUserId!);
+            _pendingCovenants = await CovenantService.GetPendingCovenantApplicationsAsync(Id, _currentUserId!);
+            _pendingRites = await SorceryService.GetPendingRiteApplicationsAsync(Id, _currentUserId!);
             _accessDenied = false;
 
             // Initialise per-character state dictionaries
@@ -396,6 +524,130 @@
             _rejectingId = null;
             _rejectNote = string.Empty;
             ToastService.Show("Rejected", "Bloodline application rejected.", RequiemNexus.Web.Services.ToastType.Info);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private void StartRejectCovenant(int characterId)
+    {
+        _rejectingCovenantCharacterId = characterId;
+        _covenantRejectNote = string.Empty;
+    }
+
+    private void CancelRejectCovenant()
+    {
+        _rejectingCovenantCharacterId = null;
+        _covenantRejectNote = string.Empty;
+    }
+
+    private void StartRejectRite(int characterRiteId)
+    {
+        _rejectingRiteId = characterRiteId;
+        _riteRejectNote = string.Empty;
+    }
+
+    private void CancelRejectRite()
+    {
+        _rejectingRiteId = null;
+        _riteRejectNote = string.Empty;
+    }
+
+    private async Task ApproveRite(int characterRiteId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await SorceryService.ApproveRiteLearnAsync(characterRiteId, null, _currentUserId!);
+            ToastService.Show("Approved", "Rite learning approved.", RequiemNexus.Web.Services.ToastType.Success);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task ConfirmRejectRite(int characterRiteId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await SorceryService.RejectRiteLearnAsync(characterRiteId, string.IsNullOrWhiteSpace(_riteRejectNote) ? null : _riteRejectNote, _currentUserId!);
+            _rejectingRiteId = null;
+            _riteRejectNote = string.Empty;
+            ToastService.Show("Rejected", "Rite learning rejected.", RequiemNexus.Web.Services.ToastType.Info);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task ApproveCovenant(int characterId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await CovenantService.ApproveCovenantAsync(characterId, null, _currentUserId!);
+            ToastService.Show("Approved", "Covenant application approved.", RequiemNexus.Web.Services.ToastType.Success);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task ConfirmRejectCovenant(int characterId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await CovenantService.RejectCovenantAsync(characterId, string.IsNullOrWhiteSpace(_covenantRejectNote) ? null : _covenantRejectNote, _currentUserId!);
+            _rejectingCovenantCharacterId = null;
+            _covenantRejectNote = string.Empty;
+            ToastService.Show("Rejected", "Covenant application rejected.", RequiemNexus.Web.Services.ToastType.Info);
             await LoadVitals();
         }
         catch (Exception ex)

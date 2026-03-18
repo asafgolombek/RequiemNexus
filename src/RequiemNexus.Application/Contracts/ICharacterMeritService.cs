@@ -7,8 +7,12 @@ namespace RequiemNexus.Application.Contracts;
 /// </summary>
 public interface ICharacterMeritService
 {
-    /// <summary>Returns all merits available in the catalogue, ordered by name.</summary>
-    Task<List<Merit>> GetAvailableMeritsAsync();
+    /// <summary>
+    /// Returns merits available for purchase by the character. Covenant-gated merits are included
+    /// only when the character is an approved member of that covenant.
+    /// </summary>
+    /// <param name="character">The character (must have CovenantId/CovenantJoinStatus loaded).</param>
+    Task<List<Merit>> GetAvailableMeritsAsync(Character character);
 
     /// <summary>
     /// Purchases a merit for the character. Deducts <paramref name="xpCost"/> XP and records the ledger entry.

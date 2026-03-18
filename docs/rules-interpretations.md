@@ -16,16 +16,22 @@ This document records deliberate interpretations of *Vampire: The Requiem (Chron
 
 ---
 
-### Pool Resolver Scope — Contested and Penalty Dice (Deferred)
+### Pool Resolver Scope — Contested and Penalty Dice (Phase 9)
 
-**Decision:** Phase 8 supports **additive pools only** (e.g., `Strength + Brawl + Vigor`). Contested rolls (`vs Resolve + Tolerance`) and penalty dice (`Pool - Stamina`) are deferred to Phase 9.
+**Decision:** Phase 9 extends the pool resolver to support:
+- **Contested:** `PoolDefinition.ContestedAgainst` — when set, the UI displays what the target should roll (e.g., "Target rolls: Resolve + Composure"). The target rolls manually; no in-app target selection.
+- **Penalty dice:** `PoolDefinition.PenaltyTraits` — traits subtracted after the additive pool is summed (e.g., `Dexterity + Athletics + Celerity - Stamina`).
+- **Lower of:** `PoolDefinition.LowerOf` — contributes min(left, right) to the pool (e.g., lower of Majesty and Dominate).
 
-**Deferred formats documented here for future implementation:**
-- Contested: `Presence + Empathy + Majesty vs Resolve + Tolerance`
-- Penalty: `Dexterity + Athletics + Celerity - Stamina`
-- Special: `Presence + Empathy + lower Discipline`
+Crúac roll pools contest against Resolve + Composure. Theban Sorcery contests against Composure only.
 
-**Subsystem:** `TraitResolver`, `DevotionDefinition.PoolDefinitionJson`
+**Subsystem:** `TraitResolver`, `PoolDefinition`, `DevotionDefinition.PoolDefinitionJson`
+
+---
+
+### Pool Resolver Scope — Historical (Phase 8 Deferred)
+
+Phase 8 supported additive pools only. The above formats were deferred and are now implemented in Phase 9.
 
 ---
 

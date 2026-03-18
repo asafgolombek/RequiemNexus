@@ -1,0 +1,261 @@
+[
+  {
+    "name": "Coil of the Ascendant",
+    "mystery": "Mystery of the Ascendant",
+    "short Description": "Focuses on conquering vulnerabilities to fire and sunlight, pushing the vampire's body to find a perfected near-life state.",
+    "powers": [
+      {
+        "name": "Surmounting the Daysleep",
+        "ranking": 1,
+        "description": "As long as the vampire benefits from the blush of life, she does not need to roll to resist the daysleep and will not gain the Lethargic Condition for being active during the day.",
+        "roll": "None"
+      },
+      {
+        "name": "The Warm Face",
+        "ranking": 2,
+        "description": "The blush of life now lasts a full 24 hours instead of just one scene.",
+        "roll": "None"
+      },
+      {
+        "name": "Conquer the Red Fear",
+        "ranking": 3,
+        "description": "The vampire no longer risks frenzy from exposure to fire or sunlight. She can stand next to a bonfire or look at the sun and retain total self-control.",
+        "roll": "None"
+      },
+      {
+        "name": "Peace with the Flame",
+        "ranking": 4,
+        "description": "While using the blush of life, the vampire takes lethal damage from fire instead of aggravated damage. If she possesses the Resilience Discipline, each dot reduces one point of this fire damage from lethal to bashing.",
+        "roll": "None"
+      },
+      {
+        "name": "Sun's Forgotten Kiss",
+        "ranking": 5,
+        "description": "When activating the blush of life, the vampire can spend additional Vitae. For each extra Vitae spent, her effective Blood Potency is reduced by one dot (minimum 1) for the purpose of determining the interval at which sunlight harms her.",
+        "roll": "None"
+      }
+    ]
+  },
+  {
+    "name": "Coil of the Wyrm",
+    "mystery": "Mystery of the Wyrm",
+    "short Description": "Centers on taming, waking, and directing the savage Beast, refining it to make it obedient to the vampire's desires.",
+    "powers": [
+      {
+        "name": "Stir the Beast",
+        "ranking": 1,
+        "description": "The vampire can spend a point of Willpower to enter frenzy unprompted, allowing him to set a specific objective. This can also be used reflexively to avoid an involuntary frenzy.",
+        "roll": "None"
+      },
+      {
+        "name": "Beast's Hunger",
+        "ranking": 2,
+        "description": "Whenever the vampire frenzies, he adds his Coil of the Wyrm dots to his Blood Potency to determine the acuity of his Kindred senses and the intensity of his predatory aura.",
+        "roll": "None"
+      },
+      {
+        "name": "Leash the Beast",
+        "ranking": 3,
+        "description": "Riding the wave no longer costs Willpower to attempt, and the vampire adds his Coil of the Wyrm dots as a bonus to the roll to ride the wave.",
+        "roll": "Resolve + Composure (to ride the wave)"
+      },
+      {
+        "name": "Beast's Power",
+        "ranking": 4,
+        "description": "When entering frenzy, the vampire can forego all resistance to let the Beast take over. If he does, he adds his Blood Potency to his Defense, Health, and Speed for the duration of the frenzy.",
+        "roll": "None"
+      },
+      {
+        "name": "Eternal Frenzy",
+        "ranking": 5,
+        "description": "While in a frenzy, the vampire will not fall into torpor even if all his Health levels are filled with lethal damage. He can also choose to retain his frenzy past the end of the scene, riding the wave from impulse to impulse.",
+        "roll": "None"
+      }
+    ]
+  },
+  {
+    "name": "Coil of the Voivode",
+    "mystery": "Mystery of the Voivode",
+    "short Description": "Revolves around mastering blood bonds and servitude to rise above the petty politics of the Damned and become a being of pure, transcendent will.",
+    "powers": [
+      {
+        "name": "Taste of Fealty",
+        "ranking": 1,
+        "description": "The vampire's Vitae becomes highly addictive, counting as two points for Vitae addiction. Those addicted find all other blood tasteless and can only resolve the Deprived condition by drinking from the vampire.",
+        "roll": "None"
+      },
+      {
+        "name": "Into the Fold",
+        "ranking": 2,
+        "description": "Increases the vampire's mastery over blood bonds and servants. (Note: The exact mechanical details for this specific tier are omitted from the provided source texts).",
+        "roll": "None"
+      },
+      {
+        "name": "Call to Serve",
+        "ranking": 3,
+        "description": "The vampire can bleed extra Vitae to expedite the blood-binding process. Spending three Vitae pushes a subject directly to a stage-two bond, and five Vitae pushes them to a stage-three bond with a single sip.",
+        "roll": "None"
+      },
+      {
+        "name": "Voivode Undisputed",
+        "ranking": 4,
+        "description": "Those connected to the vampire via blood sympathy gain no bonus to Discipline usage against her. She also adds her blood sympathy bonus to rolls to resist blood bonds and to contest the predatory aura of anyone she has bound.",
+        "roll": "None"
+      },
+      {
+        "name": "The Vast Dynasty",
+        "ranking": 5,
+        "description": "Removes the automatic Humanity loss associated with Embracing a mortal. The act becomes a breaking point at Humanity 3 instead, and the vampire adds one bonus die to avoid detachment.",
+        "roll": "Humanity Detachment roll"
+      }
+    ]
+  },
+  {
+    "name": "The Coil of Zirnitra",
+    "mystery": "Mystery of Zirnitra",
+    "short Description": "Removes the vampiric limitation that prevents Kindred from developing mortal magics and psychic phenomena.",
+    "powers": [
+      {
+        "name": "Opening the Third Eye",
+        "ranking": 1,
+        "description": "Allows the vampire to learn Supernatural Merits reserved for mortals. Each activation requires spending 1 Vitae in addition to normal costs, and any failure on the roll is automatically considered a dramatic failure.",
+        "roll": "Varies by specific Supernatural Merit"
+      },
+      {
+        "name": "Unleash the Mind",
+        "ranking": 2,
+        "description": "The vampire may spend Willpower to activate Supernatural Merits without the normal per-turn limitation, allowing her to both activate a Merit and boost a dice pool in the same turn.",
+        "roll": "Varies by specific Supernatural Merit"
+      },
+      {
+        "name": "Embolden Potential",
+        "ranking": 3,
+        "description": "The vampire can spend Vitae to increase the dice pools of Supernatural Merits, treating them as if they were Physical Attribute dice pools.",
+        "roll": "Varies by specific Supernatural Merit"
+      },
+      {
+        "name": "The Dragon's Breath",
+        "ranking": 4,
+        "description": "When the vampire spends Willpower to add dice to a Supernatural Merit pool, she adds her dots in the Coil of Zirnitra instead of the normal +3 dice. Failures are no longer automatically dramatic.",
+        "roll": "Varies by specific Supernatural Merit"
+      },
+      {
+        "name": "Ascendancy",
+        "ranking": 5,
+        "description": "By suffering one level of unavoidable aggravated damage, the vampire can roll a Supernatural Merit activation as a rote action. She is also no longer limited in the total number of Supernatural Merits she can possess.",
+        "roll": "Varies by specific Supernatural Merit"
+      }
+    ]
+  },
+  {
+    "name": "The Coil of Ziva",
+    "mystery": "Mystery of Ziva",
+    "short Description": "A heretical path that rejects vampirism to aggressively cling to Humanity and temporarily shed the Beast's skin.",
+    "powers": [
+      {
+        "name": "Denying the Bane",
+        "ranking": 1,
+        "description": "The vampire adds her Coil dots to her Humanity solely for the purpose of determining the effects of her Banes (including clan banes). If this pushes her effective Humanity to 10, the Banes do not affect her.",
+        "roll": "None"
+      },
+      {
+        "name": "Buttress the Soul",
+        "ranking": 2,
+        "description": "When facing a Detachment breaking point, the vampire can spend Vitae (up to her per-turn limit) to add one die per Vitae spent to resist the Humanity loss.",
+        "roll": "Humanity Detachment roll"
+      },
+      {
+        "name": "Enliven the Anima",
+        "ranking": 3,
+        "description": "The vampire becomes resistant to the psychological stains of Humanity loss. Any time she would suffer a Condition for Detachment, she can spend a Willpower point to take the Raptured condition instead.",
+        "roll": "None"
+      },
+      {
+        "name": "Embracing the Banes",
+        "ranking": 4,
+        "description": "The vampire can sustain a number of Banes equal to her Willpower dots, rather than the normal maximum limit of three.",
+        "roll": "None"
+      },
+      {
+        "name": "Shedding the Beast's Skin",
+        "ranking": 5,
+        "description": "By spending 3 Willpower points, the vampire physically sheds her flesh to become effectively human for a number of hours equal to 11 minus her Blood Potency. She loses her Disciplines, banes, and immortality, but her heart beats and she can consume mortal food.",
+        "roll": "None"
+      }
+    ]
+  },
+  {
+    "name": "Coil of the Quintessence",
+    "mystery": "Mystery of the Voivode",
+    "short Description": "Allows an elder vampire to transcend mere rulership and mystically become one with their chosen domain itself.",
+    "powers": [
+      {
+        "name": "Forever Mine",
+        "ranking": 1,
+        "description": "The vampire automatically knows when another Kindred feeds or kills in her domain without permission. She can lash out with her predatory aura against the transgressor from any distance.",
+        "roll": "Predatory Aura roll (Power + Blood Potency)"
+      },
+      {
+        "name": "Home Turf",
+        "ranking": 2,
+        "description": "The domain offers its bounty joyously. Any victim who is a denizen of her domain must spend a Willpower point to resist the vampire's feeding actions.",
+        "roll": "None"
+      },
+      {
+        "name": "Smother",
+        "ranking": 3,
+        "description": "All natural fires in the vampire's vicinity are considered one step lower on the size and heat charts. She gains +1 to resist supernaturally generated fire and can spend 3 Vitae to initiate a Clash of Wills to extinguish a fire in an area around her.",
+        "roll": "Clash of Wills (Blood Potency + Coil of the Quintessence) to extinguish supernatural fire"
+      },
+      {
+        "name": "In the Motherland's Arms",
+        "ranking": 4,
+        "description": "Whenever the vampire slumbers in her domain, she is treated as having dots in the Haven and Safe Place Merits equal to half her Blood Potency, even if she isn't in a haven. If she is in her haven, she treats both Merits as one dot higher.",
+        "roll": "None"
+      },
+      {
+        "name": "Fingers on a Dead Pulse",
+        "ranking": 5,
+        "description": "The vampire shares a weak blood sympathy with the entire city. She may spend 1 Vitae when interacting with a denizen to learn his Vice and secret Conditions. Once per scene, if she observes a denizen gaining Willpower from his Vice, she gains a Willpower point as well.",
+        "roll": "None"
+      }
+    ]
+  },
+  {
+    "name": "Coil of the Vigilant (The Agon)",
+    "mystery": "Mystery of the Vigilant",
+    "short Description": "Allows a vampire to wrest control of their corpse from death to cheat the sleep of ages and mitigate the vulnerabilities of torpor.",
+    "powers": [
+      {
+        "name": "Crossing the First Threshold",
+        "ranking": 1,
+        "description": "The vampire can wake torpid Kindred of equal Blood Potency, and they are capable of waking her.",
+        "roll": "None"
+      },
+      {
+        "name": "Atonement with the Abyss",
+        "ranking": 2,
+        "description": "When entering voluntary torpor, the vampire adds her Coil dots to her effective Humanity (up to a limit of 10). When feeding Vitae to a torpid vampire, she can choose to increase his effective Humanity by a dot for the rest of his torpor instead of waking him.",
+        "roll": "None"
+      },
+      {
+        "name": "Rescue from Without",
+        "ranking": 3,
+        "description": "The vampire does not take the Languid Condition if her last Touchstone is destroyed. She can spend a Vitae to add half her Coil dots (rounded up) to her effective Blood Potency for the purposes of waking other Kindred.",
+        "roll": "None"
+      },
+      {
+        "name": "The Ultimate Boon",
+        "ranking": 4,
+        "description": "As the vampire enters voluntary torpor, she can reflexively spend Vitae to alter her interval of Blood Potency attrition by five years per Vitae spent (up to 50, minimum 5). Her Vitae now increases a torpid vampire's effective Humanity by two dots.",
+        "roll": "None"
+      },
+      {
+        "name": "Freedom to Live",
+        "ranking": 5,
+        "description": "If attacks fill her Health track with lethal damage, the vampire can sacrifice a Willpower dot at the end of the turn to remain awake for the rest of the night, ignoring the normal rules for torpor until sunrise.",
+        "roll": "None"
+      }
+    ]
+  }
+]

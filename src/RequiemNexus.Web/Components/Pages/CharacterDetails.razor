@@ -23,6 +23,8 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ToastService ToastService
 @inject IBloodlineService BloodlineService
+@inject ICovenantService CovenantService
+@inject ISorceryService SorceryService
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -49,6 +51,7 @@ else
                 <div class="char-meta">
                     <span><strong>Concept:</strong> @(string.IsNullOrEmpty(_character.Concept) ? "???" : _character.Concept)</span>
                     <span><strong>Clan:</strong> @(_character.Clan?.Name ?? "None")</span>
+                    <span><strong>Covenant:</strong> @(_character.Covenant?.Name ?? "Unaligned")</span>
                     <span><strong>Chronicle:</strong> @(_character.Campaign?.Name ?? "None")</span>
                     <span><strong>Mask:</strong> @(string.IsNullOrEmpty(_character.Mask) ? "???" : _character.Mask)</span>
                     <span><strong>Dirge:</strong> @(string.IsNullOrEmpty(_character.Dirge) ? "???" : _character.Dirge)</span>
@@ -290,6 +293,46 @@ else
                             }
                         </section>
 
+                        <!-- COVENANT -->
+                        <section class="cs-section cs-covenant">
+                            <h2>Covenant</h2>
+                            @if (_character.Covenant != null && _character.CovenantJoinStatus != Data.Models.Enums.CovenantJoinStatus.Pending)
+                            {
+                                <div class="bloodline-info" style="margin-bottom: 10px;">
+                                    <strong>@_character.Covenant.Name</strong>
+                                    <p style="font-size: 0.9em; color: #a0a0a0; margin: 4px 0 0 0;">@_character.Covenant.Description</p>
+                                    @if (_character.CovenantLeaveRequestedAt.HasValue)
+                                    {
+                                        <p style="color: #a0a0a0; font-size: 0.85em; margin-top: 6px;">Leave requested — awaiting Storyteller approval.</p>
+                                    }
+                                    else if (_character.CampaignId.HasValue && !_character.CovenantLeaveRequestedAt.HasValue)
+                                    {
+                                        <button class="btn-ghost" style="font-size: 0.85em; margin-top: 8px;" @onclick="RequestLeaveCovenant" disabled="@_requestingLeave">
+                                            @(_requestingLeave ? "Requesting…" : "Request to Leave")
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else if (_character.CovenantJoinStatus == Data.Models.Enums.CovenantJoinStatus.Pending && _character.Covenant != null)
+                            {
+                                <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@_character.Covenant.Name</strong> — awaiting Storyteller approval.</p>
+                                <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                                @if (_character.CampaignId.HasValue)
+                                {
+                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+                                }
+                            }
+                            else if (_character.CampaignId.HasValue)
+                            {
+                                <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">Unaligned. Apply to join a covenant.</p>
+                                <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenApplyCovenantModal">Apply for Covenant</button>
+                            }
+                            else
+                            {
+                                <p style="color: #808080; font-size: 0.9em;">Unaligned. Join a campaign to apply for a covenant.</p>
+                            }
+                        </section>
+
                         <!-- DEVOTIONS -->
                         <section class="cs-section cs-devotions">
                             <h2>Devotions</h2>
@@ -316,6 +359,52 @@ else
                                 <p style="color: #808080; font-size: 0.9em;">None yet. Purchase devotions via Advancement.</p>
                             }
                         </section>
+
+                        <!-- BLOOD SORCERY (visible only when in approved Circle of the Crone or Lancea et Sanctum) -->
+                        @if (_character.Covenant != null && _character.CovenantJoinStatus == null &&
+                             (_character.Covenant.Name?.Contains("Crone") == true || _character.Covenant.Name?.Contains("Lancea") == true))
+                        {
+                            <section class="cs-section cs-blood-sorcery">
+                                <h2>Blood Sorcery</h2>
+                                @{
+                                    var approvedRites = _character.Rites?.Where(r => r.Status == Data.Models.Enums.RiteLearnStatus.Approved && r.SorceryRiteDefinition != null).ToList();
+                                    var pendingRite = _character.Rites?.FirstOrDefault(r => r.Status == Data.Models.Enums.RiteLearnStatus.Pending);
+                                }
+                                @if (approvedRites?.Any() == true)
+                                {
+                                    <ul class="trait-list">
+                                        @foreach (var cr in approvedRites)
+                                        {
+                                            @if (cr.SorceryRiteDefinition != null)
+                                            {
+                                                <li class="trait-item">
+                                                    <span>@cr.SorceryRiteDefinition.Name</span>
+                                                    <span style="font-size:0.85em; color:#808080;">Lv.@cr.SorceryRiteDefinition.Level (@(cr.SorceryRiteDefinition.SorceryType == Domain.Enums.SorceryType.Cruac ? "Crúac" : "Theban"))</span>
+                                                    @if (!string.IsNullOrEmpty(cr.SorceryRiteDefinition.PoolDefinitionJson))
+                                                    {
+                                                        <button class="btn-ghost" style="padding: 2px 8px; font-size: 0.85em;" @onclick="() => OpenRiteRoller(cr)">Roll</button>
+                                                    }
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                }
+                                else if (pendingRite?.SorceryRiteDefinition != null)
+                                {
+                                    <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingRite.SorceryRiteDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                                    <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                                    @if (_character.CampaignId.HasValue)
+                                    {
+                                        <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+                                    }
+                                }
+                                else
+                                {
+                                    <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">No rites yet. Purchase Crúac or Theban Sorcery dots via Advancement, then request to learn rites.</p>
+                                    <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
+                                }
+                            </section>
+                        }
                     </div>
 
                     <!-- EQUIPMENT -->
@@ -397,6 +486,14 @@ else
                          IsOpenChanged="HandleApplyBloodlineModalClosed"
                          EligibleBloodlines="_eligibleBloodlines"
                          OnApplyRequested="HandleApplyBloodlineRequested" />
+    <ApplyCovenantModal IsOpen="_isApplyCovenantModalOpen"
+                        IsOpenChanged="HandleApplyCovenantModalClosed"
+                        EligibleCovenants="_eligibleCovenants"
+                        OnApplyRequested="HandleApplyCovenantRequested" />
+    <ApplyLearnRiteModal IsOpen="_isApplyLearnRiteModalOpen"
+                        IsOpenChanged="HandleApplyLearnRiteModalClosed"
+                        EligibleRites="_eligibleRites"
+                        OnApplyRequested="HandleApplyLearnRiteRequested" />
 }
 
 @implements IAsyncDisposable
@@ -420,6 +517,12 @@ else
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
+    private bool _isApplyCovenantModalOpen = false;
+    private bool _isApplyLearnRiteModalOpen = false;
+    private bool _openingRiteModal = false;
+    private List<SorceryRiteSummaryDto> _eligibleRites = [];
+    private bool _requestingLeave = false;
+    private List<CovenantSummaryDto> _eligibleCovenants = [];
     private HashSet<int> _expandedMeritIds = [];
 
     private bool isAdvancementMode = false;
@@ -822,6 +925,153 @@ else
         finally
         {
             _removingBloodline = false;
+        }
+    }
+
+    private void HandleApplyCovenantModalClosed(bool isOpen)
+    {
+        _isApplyCovenantModalOpen = isOpen;
+    }
+
+    private async Task OpenApplyCovenantModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            _eligibleCovenants = await CovenantService.GetEligibleCovenantsAsync(_character.Id, _currentUserId);
+            if (_eligibleCovenants.Count == 0)
+            {
+                ToastService.Show("No eligible covenants", "Join a campaign first, or you may already have a pending application.", ToastType.Info);
+                return;
+            }
+
+            _isApplyCovenantModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task HandleApplyCovenantRequested(int covenantDefinitionId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await CovenantService.ApplyForCovenantAsync(_character.Id, covenantDefinitionId, _currentUserId);
+            ToastService.Show("Application submitted", "Covenant application submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task RequestLeaveCovenant()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId) || _requestingLeave)
+        {
+            return;
+        }
+
+        _requestingLeave = true;
+        try
+        {
+            await CovenantService.RequestLeaveCovenantAsync(_character.Id, _currentUserId);
+            ToastService.Show("Leave requested", "Your request to leave the covenant has been submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _requestingLeave = false;
+        }
+    }
+
+    private void HandleApplyLearnRiteModalClosed(bool isOpen)
+    {
+        _isApplyLearnRiteModalOpen = isOpen;
+    }
+
+    private async Task OpenLearnRiteModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _openingRiteModal = true;
+        try
+        {
+            _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _currentUserId);
+            if (_eligibleRites.Count == 0)
+            {
+                ToastService.Show("No eligible rites", "You need more Crúac or Theban Sorcery dots, or you've learned all available rites.", ToastType.Info);
+                return;
+            }
+
+            _isApplyLearnRiteModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _openingRiteModal = false;
+        }
+    }
+
+    private async Task HandleApplyLearnRiteRequested(int sorceryRiteDefinitionId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await SorceryService.RequestLearnRiteAsync(_character.Id, sorceryRiteDefinitionId, _currentUserId);
+            ToastService.Show("Request submitted", "Rite learning request submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async void OpenRiteRoller(CharacterRite cr)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            var dice = await SorceryService.ResolveRiteActivationPoolAsync(_character.Id, cr.Id, _currentUserId);
+            _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
+            _rollerBaseDice = dice;
+            _isRollerOpen = true;
+        }
+        catch
+        {
+            _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
+            _rollerBaseDice = 0;
+            _isRollerOpen = true;
         }
     }
 }

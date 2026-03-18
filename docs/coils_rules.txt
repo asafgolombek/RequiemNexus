@@ -1,0 +1,18 @@
+The Coils of the Dragon are a mystic path of learning practiced by the Ordo Dracul that allows vampires to avoid, exploit, or transcend aspects of their undead curse
+. These secrets are discovered and refined through clear-minded study and rigorous self-control
+.
+Unlike standard Disciplines that simply augment a vampire's body or Predatory Aura, Coils manipulate and change the very essence of the vampire
+. They provide potent, everlasting changes that allow a vampire to circumvent their banes, empower their blood, and forge a deeper union with their Curse
+. Furthermore, Coils do not drain a vampire's precious Vitae, although they might alter how that Vitae is used
+.
+Mechanically, Coils are organized on a ladder from one to five dots
+. Here is how a vampire acquires and progresses through them:
+Choosing a Mystery: When joining the Ordo Dracul, a vampire must choose a single "Mystery" (which contains a specific Coil) to dedicate themselves to researching and refining
+.
+Experience Costs: A Dragon learns new tiers in their chosen Mystery's Coil for three Experiences per dot
+.
+Learning Outside a Mystery: A vampire can learn Coils outside of their chosen Mystery, but it is more difficult due to ideological differences between adherents
+. Non-Mystery Coils cost four Experiences per dot, and a vampire cannot possess more dots in a non-Mystery Coil than they have dots in the Ordo Dracul Status Merit
+.
+The Crucible Ritual: If a vampire studies and evolves their Coils on a Wyrm's Nest consecrated with the Crucible Ritual, the learning process becomes much easier
+. Purchasing dots in their chosen Mystery Coil drops to two Experiences per dot, while Coils from other Mysteries drop to three Experiences per dot

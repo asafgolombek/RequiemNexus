@@ -1,0 +1,101 @@
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Enums
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="Close" role="dialog" aria-modal="true" aria-labelledby="apply-rite-title">
+        <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3 id="apply-rite-title">Learn Blood Sorcery Rite</h3>
+                <button type="button" class="close-btn" @onclick="Close" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="apply-bloodline-hint">Select a rite to request. Requires covenant membership, matching discipline dots, and sufficient XP. Storyteller approval required.</p>
+                @if (EligibleRites.Count == 0)
+                {
+                    <p class="apply-bloodline-empty">No eligible rites. Ensure you have Crúac or Theban Sorcery dots and covenant membership.</p>
+                }
+                else
+                {
+                    <div class="bloodline-list">
+                        @foreach (var rite in EligibleRites)
+                        {
+                            <div class="bloodline-option @(SelectedRiteId == rite.Id ? "selected" : "")"
+                                 @onclick="() => SelectRite(rite.Id)"
+                                 role="button"
+                                 tabindex="0"
+                                 @onkeydown="(e) => HandleKeydown(e, rite.Id)">
+                                <div class="bloodline-name">@rite.Name — Level @rite.Level @(rite.SorceryType == SorceryType.Cruac ? "Crúac" : "Theban") (@rite.XpCost XP)</div>
+                                <div class="bloodline-desc">@rite.CovenantName</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-ghost" @onclick="Close">Cancel</button>
+                <button type="button"
+                        class="btn-primary-rn"
+                        disabled="@(SelectedRiteId == null || _requesting)"
+                        @onclick="RequestLearn">
+                    @(_requesting ? "Requesting…" : "Request to Learn")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public List<SorceryRiteSummaryDto> EligibleRites { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<int> OnApplyRequested { get; set; }
+
+    private int? SelectedRiteId { get; set; }
+    private bool _requesting;
+
+    private void SelectRite(int id)
+    {
+        SelectedRiteId = id;
+    }
+
+    private void HandleKeydown(KeyboardEventArgs e, int id)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            SelectRite(id);
+        }
+    }
+
+    private async Task Close()
+    {
+        SelectedRiteId = null;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task RequestLearn()
+    {
+        if (SelectedRiteId == null || _requesting)
+        {
+            return;
+        }
+
+        _requesting = true;
+        try
+        {
+            await OnApplyRequested.InvokeAsync(SelectedRiteId.Value);
+            await Close();
+        }
+        finally
+        {
+            _requesting = false;
+        }
+    }
+}

@@ -1,0 +1,100 @@
+@using RequiemNexus.Application.DTOs
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="Close" role="dialog" aria-modal="true" aria-labelledby="apply-covenant-title">
+        <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3 id="apply-covenant-title">Apply for Covenant</h3>
+                <button type="button" class="close-btn" @onclick="Close" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="apply-bloodline-hint">Select a covenant to apply for. Your application requires Storyteller approval.</p>
+                @if (EligibleCovenants.Count == 0)
+                {
+                    <p class="apply-bloodline-empty">No eligible covenants. Join a campaign first.</p>
+                }
+                else
+                {
+                    <div class="bloodline-list">
+                        @foreach (var covenant in EligibleCovenants)
+                        {
+                            <div class="bloodline-option @(SelectedCovenantId == covenant.Id ? "selected" : "")"
+                                 @onclick="() => SelectCovenant(covenant.Id)"
+                                 role="button"
+                                 tabindex="0"
+                                 @onkeydown="(e) => HandleKeydown(e, covenant.Id)">
+                                <div class="bloodline-name">@covenant.Name</div>
+                                <div class="bloodline-desc">@covenant.Description</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-ghost" @onclick="Close">Cancel</button>
+                <button type="button"
+                        class="btn-primary-rn"
+                        disabled="@(SelectedCovenantId == null || _applying)"
+                        @onclick="Apply">
+                    @(_applying ? "Applying…" : "Apply")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public List<CovenantSummaryDto> EligibleCovenants { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<int> OnApplyRequested { get; set; }
+
+    private int? SelectedCovenantId { get; set; }
+    private bool _applying;
+
+    private void SelectCovenant(int id)
+    {
+        SelectedCovenantId = id;
+    }
+
+    private void HandleKeydown(KeyboardEventArgs e, int id)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            SelectCovenant(id);
+        }
+    }
+
+    private async Task Close()
+    {
+        SelectedCovenantId = null;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task Apply()
+    {
+        if (SelectedCovenantId == null || _applying)
+        {
+            return;
+        }
+
+        _applying = true;
+        try
+        {
+            await OnApplyRequested.InvokeAsync(SelectedCovenantId.Value);
+            await Close();
+        }
+        finally
+        {
+            _applying = false;
+        }
+    }
+}

@@ -129,29 +129,54 @@ Blood Sorcery has two distinct lifecycle phases that must not be conflated:
 
 The Ordo Dracul's unique system of permanent physiological changes. Requires Ordo Dracul membership (enforced at application layer) and the Passive Modifier Engine (Section 2).
 
+### 📜 Data Sources
+- **`docs/coils_info.json`** — 7 Scales (Ascendant, Wyrm, Voivode, Zirnitra, Ziva, Quintessence, Vigilant), each with 5 power tiers. Each Scale has a `mystery` field (e.g., "Mystery of the Ascendant") linking to its thematic doctrine.
+- **`docs/Mysteries.txt`** — Thematic descriptions for Ascendant, Wyrm, Voivode, Vigilant (core Mysteries).
+- **`docs/coils_rules.txt`** — XP cost rules, Chosen Mystery, Ordo Status cap, Crucible Ritual.
+
+### 🛡️ Chosen Mystery & XP Costs
+Chosen Mystery selection is **separate from covenant join**. An Ordo Dracul character may join the covenant first and choose their Mystery later, or choose it at any time with Storyteller approval. The choice affects XP costs:
+- **Chosen Mystery Coil:** 3 XP per dot (2 XP when studying at a Wyrm's Nest with the Crucible Ritual).
+- **Non-chosen Mystery Coil:** 4 XP per dot (3 XP with Crucible Ritual). Dots in any non-chosen Coil cannot exceed the character's Ordo Status Merit dots.
+
 ### 🛡️ Prerequisite Chain
-Coils are organized into Scales (thematic groupings). A character must hold Scale N before purchasing Coil N+1 within that Scale. This prerequisite chain must be modeled explicitly — do not rely on implicit ordering.
+Coils are organized into Scales (thematic groupings). A character must hold Coil tier N before purchasing Coil tier N+1 within that Scale. This prerequisite chain must be modeled explicitly — do not rely on implicit ordering.
 
 ### 🛡️ Rule-Breaking Modifiers
-Coils often alter core engine behavior rather than providing numeric deltas (e.g., "Ignore the first 2 points of sunlight damage"). These use the `RuleBreaking` modifier type defined in Section 2, handled via explicit engine flags, not integer math.
+Coils often alter core engine behavior rather than providing numeric deltas (e.g., "Peace with the Flame" changes fire from aggravated to lethal). These use the `RuleBreaking` modifier type defined in Section 2, handled via explicit engine flags, not integer math.
+
+### 🛡️ Crucible Ritual (Wyrm's Nest) — Character-Level, ST-Approved
+The Crucible Ritual consecrates a Wyrm's Nest (a physical locus where Dragons study). When a character studies Coils *at* such a place, XP costs are reduced at purchase time.
+
+**Scope:** Crucible Ritual access is a **character-level feature**. The flag `Character.HasCrucibleRitualAccess` lives on the character and persists once granted. The Storyteller must **approve** the state — e.g., the player requests access (having studied at a Wyrm's Nest in play), and the ST approves or rejects. Once approved, the character gains the cost reduction for all future Coil purchases until revoked.
+
+**Cost reduction:** Chosen Mystery 3→2 XP/dot; non-chosen 4→3 XP/dot. `CoilService` reads the flag at purchase time.
 
 ### Data Models
-- **`ScaleDefinition`**: `Name`, `Description`, `MaxLevel` (the number of Coils in this Scale).
-- **`CoilDefinition`**:
-    - `Name`, `Description`, `Level` (position within its Scale).
+- **`ScaleDefinition`** (Mystery): `Name`, `Description`, `MaxLevel` (5 for all core Scales).
+- **`CoilDefinition`** (one per tier within a Scale):
+    - `Name`, `Description`, `Level` (1–5, position within its Scale).
     - `ScaleId: int` — FK to `ScaleDefinition`.
     - `PrerequisiteCoilId: int?` — explicit prerequisite chain (Coil N requires Coil N-1).
-    - `XpCost: int`.
     - `Modifiers: IReadOnlyList<PassiveModifier>` — uses the engine from Section 2.
+    - `PoolDefinitionJson: string?` — optional; some Coils (e.g., "Rescue from Without") involve rolls. Many are passive (`"roll": "None"`).
+- **`Character`**:
+    - `ChosenMysteryScaleId: int?` — the Scale selected (separate from covenant join; set via ST approval). Null until chosen.
+    - `HasCrucibleRitualAccess: bool` — when true, reduced XP costs apply. ST-approved; once granted, persists on the character until the ST revokes it.
 
 ### Tasks
 - [ ] Create `ScaleDefinition` entity.
-- [ ] Create `CoilDefinition` entity with `ScaleId` FK and `PrerequisiteCoilId` chain.
-- [ ] Implement `CoilService` — enforce Ordo Dracul membership and prerequisite chain on purchase.
+- [ ] Create `CoilDefinition` entity with `ScaleId` FK, `PrerequisiteCoilId` chain, optional `PoolDefinitionJson`.
+- [ ] Add `ChosenMysteryScaleId: int?` and optional `HasCrucibleRitualAccess` to `Character`.
+- [ ] Implement `CoilService` — enforce Ordo Dracul membership, prerequisite chain, Chosen Mystery XP costs (3 vs 4 per dot), Ordo Status cap for non-chosen Coils, Crucible Ritual discount when applicable.
+- [ ] Implement Storyteller approval flow for Chosen Mystery selection (when joining Ordo or changing Mystery).
+- [ ] Implement Storyteller approval flow for Crucible Ritual access (grant/revoke `HasCrucibleRitualAccess` on Character).
 - [ ] Implement `RuleBreaking` modifier handling in the Passive Modifier Engine for Coil-specific effects.
-- [ ] Create UI for "Mysteries of the Dragon" section (visible to Ordo Dracul characters only).
-- [ ] Seed core Scales (Coils of the Beast, Banes, Mortality) and their Coils in `DbInitializer`.
+- [ ] Create UI for "Mysteries of the Dragon" section (visible to Ordo Dracul characters only): show Chosen Mystery, list Scales/Coils with costs, purchase flow.
+- [ ] Seed 7 Scales and their Coils from `docs/coils_info.json` in `DbInitializer` (Ascendant, Wyrm, Voivode, Zirnitra, Ziva, Quintessence, Vigilant).
 - [ ] Wire `CoilDefinition` / `ScaleDefinition` to Redis cache (24h TTL — per `Architecture.md` caching strategy).
+
+> **Rules Interpretation:** Chosen Mystery XP tier, Ordo Status cap for non-chosen Coils, and Crucible Ritual cost reduction to be logged in `docs/rules-interpretations.md`.
 
 ---
 
@@ -162,7 +187,7 @@ Coils often alter core engine behavior rather than providing numeric deltas (e.g
     - `ModifierEngineTests`: Verify Static, Conditional, and RuleBreaking modifier stacking and source tracking.
 - **Application Tests** (`RequiemNexus.Application.Tests`):
     - `SorceryServiceTests`: Verify `LearnRite` approval gate, Covenant prerequisite rejection, and `ActivateRite` cost deduction.
-    - `CoilServiceTests`: Verify Ordo Dracul gating and prerequisite chain enforcement.
+    - `CoilServiceTests`: Verify Ordo Dracul gating, prerequisite chain, Chosen Mystery XP costs (3 vs 4 per dot), Ordo Status cap for non-chosen Coils, Crucible Ritual discount.
     - `CovenantServiceTests`: Verify join pending flow and Covenant-gated Merit/Discipline blocking.
 - **Data Tests** (`RequiemNexus.Data.Tests`):
     - `DbInitializerTests`: Ensure Covenants, Rites, Coils, and Scales are all seeded correctly against a Dockerized PostgreSQL instance.
@@ -179,5 +204,6 @@ All deliberate interpretations of V:tR 2e rules for this phase must be documente
 - Contested pool format for Crúac vs. Theban Sorcery (Section 1).
 - Covenant Status modeled as a Merit, not a standalone field (Section 3).
 - Crúac activation cost and pool composition (Section 4).
+- Coil XP costs: Chosen Mystery 3 XP/dot (2 with Crucible), non-chosen 4 XP/dot (3 with Crucible); Ordo Status cap for non-chosen Coils; Crucible Ritual reduces costs (Section 5).
 
 > *"The blood remembers. The code must too."*

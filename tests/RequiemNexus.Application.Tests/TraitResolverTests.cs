@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
@@ -49,6 +50,14 @@ public class TraitResolverTests
         return character;
     }
 
+    private static TraitResolver CreateTraitResolver()
+    {
+        var modifierServiceMock = new Mock<IModifierService>();
+        modifierServiceMock.Setup(m => m.GetModifiersForCharacterAsync(It.IsAny<int>()))
+            .ReturnsAsync(Array.Empty<PassiveModifier>());
+        return new TraitResolver(modifierServiceMock.Object);
+    }
+
     [Fact]
     public void ResolvePool_AttributePlusSkillPlusDiscipline_SumsCorrectly()
     {
@@ -63,7 +72,7 @@ public class TraitResolverTests
             new TraitReference(TraitType.Discipline, null, null, 1),
         ]);
 
-        var resolver = new TraitResolver();
+        var resolver = CreateTraitResolver();
         int result = resolver.ResolvePool(character, pool);
 
         Assert.Equal(4 + 2 + 3, result);
@@ -75,7 +84,7 @@ public class TraitResolverTests
         var character = CreateCharacterWithTraits();
         var pool = new PoolDefinition([]);
 
-        var resolver = new TraitResolver();
+        var resolver = CreateTraitResolver();
         int result = resolver.ResolvePool(character, pool);
 
         Assert.Equal(0, result);
@@ -93,9 +102,94 @@ public class TraitResolverTests
             new TraitReference(TraitType.Discipline, null, null, 99),
         ]);
 
-        var resolver = new TraitResolver();
+        var resolver = CreateTraitResolver();
         int result = resolver.ResolvePool(character, pool);
 
         Assert.Equal(4 + 0, result);
+    }
+
+    [Fact]
+    public void ResolvePool_WithPenaltyTraits_SubtractsAfterSum()
+    {
+        var character = CreateCharacterWithTraits();
+
+        var pool = new PoolDefinition(
+            Traits:
+            [
+                new TraitReference(TraitType.Attribute, AttributeId.Wits, null, null),
+                new TraitReference(TraitType.Skill, null, SkillId.Athletics, null),
+            ],
+            PenaltyTraits:
+            [
+                new TraitReference(TraitType.Attribute, AttributeId.Stamina, null, null),
+            ]);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal((3 + 2) - 4, result);
+    }
+
+    [Fact]
+    public void ResolvePool_WithLowerOf_UsesMinimumOfTwoTraits()
+    {
+        var character = CreateCharacterWithTraits();
+        character.Disciplines.Add(new CharacterDiscipline { DisciplineId = 3, Rating = 5 });
+        character.Disciplines.First(d => d.DisciplineId == 1).Rating = 2;
+
+        var pool = new PoolDefinition(
+            Traits:
+            [
+                new TraitReference(TraitType.Attribute, AttributeId.Intelligence, null, null),
+                new TraitReference(TraitType.Skill, null, SkillId.Occult, null),
+            ],
+            LowerOf: new LowerOfPair(
+                new TraitReference(TraitType.Discipline, null, null, 1),
+                new TraitReference(TraitType.Discipline, null, null, 3)));
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(2 + 1 + Math.Min(2, 5), result);
+    }
+
+    [Fact]
+    public void ResolvePool_ContestedAgainst_DoesNotAffectCasterPool()
+    {
+        var character = CreateCharacterWithTraits();
+        var contestedPool = new PoolDefinition(
+            [new TraitReference(TraitType.Attribute, AttributeId.Resolve, null, null), new TraitReference(TraitType.Attribute, AttributeId.Composure, null, null)]);
+
+        var pool = new PoolDefinition(
+            Traits:
+            [
+                new TraitReference(TraitType.Attribute, AttributeId.Intelligence, null, null),
+                new TraitReference(TraitType.Skill, null, SkillId.Occult, null),
+            ],
+            ContestedAgainst: contestedPool);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(2 + 1, result);
+    }
+
+    [Fact]
+    public void ResolvePool_PenaltyExceedsSum_ReturnsZero()
+    {
+        var character = CreateCharacterWithTraits();
+
+        var pool = new PoolDefinition(
+            Traits: [new TraitReference(TraitType.Attribute, AttributeId.Stamina, null, null)],
+            PenaltyTraits:
+            [
+                new TraitReference(TraitType.Attribute, AttributeId.Stamina, null, null),
+                new TraitReference(TraitType.Attribute, AttributeId.Stamina, null, null),
+            ]);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(0, result);
     }
 }

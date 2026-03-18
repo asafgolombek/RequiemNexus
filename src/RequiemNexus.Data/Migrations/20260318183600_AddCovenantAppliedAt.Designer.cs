@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RequiemNexus.Data;
@@ -11,9 +12,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318183600_AddCovenantAppliedAt")]
+    partial class AddCovenantAppliedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -904,42 +907,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("CharacterId");
 
                     b.ToTable("CharacterNotes");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterRite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("ResolvedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("SorceryRiteDefinitionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("StorytellerNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.HasIndex("SorceryRiteDefinitionId");
-
-                    b.ToTable("CharacterRites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterSkill", b =>
@@ -1833,57 +1800,6 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("SessionPrepNotes");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.SorceryRiteDefinition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ActivationCostDescription")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Effect")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("PoolDefinitionJson")
-                        .HasMaxLength(2000)
-                        .HasColumnType("text");
-
-                    b.Property<string>("Prerequisites")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("RequiredCovenantId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SorceryType")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("XpCost")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequiredCovenantId");
-
-                    b.ToTable("SorceryRiteDefinitions");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.UserSession", b =>
                 {
                     b.Property<string>("Id")
@@ -2284,25 +2200,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterRite", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany("Rites")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RequiemNexus.Data.Models.SorceryRiteDefinition", "SorceryRiteDefinition")
-                        .WithMany()
-                        .HasForeignKey("SorceryRiteDefinitionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-
-                    b.Navigation("SorceryRiteDefinition");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterSkill", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Character", "Character")
@@ -2584,17 +2481,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Campaign");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.SorceryRiteDefinition", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.CovenantDefinition", "RequiredCovenant")
-                        .WithMany()
-                        .HasForeignKey("RequiredCovenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("RequiredCovenant");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.UserSession", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.ApplicationUser", "User")
@@ -2671,8 +2557,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Disciplines");
 
                     b.Navigation("Merits");
-
-                    b.Navigation("Rites");
 
                     b.Navigation("Skills");
                 });

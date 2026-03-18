@@ -231,12 +231,13 @@ else
         if (!string.IsNullOrEmpty(_userId))
         {
             _character = await CharacterService.GetCharacterByIdAsync(Id, _userId);
-            _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync();
-            _availableDisciplines = await CharacterDisciplineService.GetAvailableDisciplinesAsync();
             if (_character != null)
             {
+                _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync(_character);
                 _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
             }
+
+            _availableDisciplines = await CharacterDisciplineService.GetAvailableDisciplinesAsync();
         }
     }
 

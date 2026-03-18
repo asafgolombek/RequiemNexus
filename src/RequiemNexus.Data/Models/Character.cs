@@ -47,6 +47,21 @@ public class Character
     [ForeignKey(nameof(ClanId))]
     public virtual Clan? Clan { get; set; }
 
+    /// <summary>Covenant membership. Null = Unaligned. Blocked for VII (antagonist covenant).</summary>
+    public int? CovenantId { get; set; }
+
+    [ForeignKey(nameof(CovenantId))]
+    public virtual CovenantDefinition? Covenant { get; set; }
+
+    /// <summary>When non-null, character applied to join; awaiting Storyteller approval. Null when Unaligned or already approved.</summary>
+    public Data.Models.Enums.CovenantJoinStatus? CovenantJoinStatus { get; set; }
+
+    /// <summary>When the covenant application was submitted. Null when not pending.</summary>
+    public DateTime? CovenantAppliedAt { get; set; }
+
+    /// <summary>When set, player has requested to leave; awaiting Storyteller approval. Cleared on approve or reject.</summary>
+    public DateTime? CovenantLeaveRequestedAt { get; set; }
+
     public int? CampaignId { get; set; }
 
     [ForeignKey(nameof(CampaignId))]
@@ -113,6 +128,8 @@ public class Character
     public virtual ICollection<CharacterBloodline> Bloodlines { get; set; } = new List<CharacterBloodline>();
 
     public virtual ICollection<CharacterDevotion> Devotions { get; set; } = new List<CharacterDevotion>();
+
+    public virtual ICollection<CharacterRite> Rites { get; set; } = new List<CharacterRite>();
 
     public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
 

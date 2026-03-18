@@ -21,6 +21,9 @@ public enum XpExpense
     /// <summary>XP spent purchasing a Devotion.</summary>
     Devotion,
 
+    /// <summary>XP spent learning a blood sorcery rite (Crúac or Theban Sorcery).</summary>
+    Rite,
+
     /// <summary>Manual adjustment (e.g., correcting an error).</summary>
     ManualAdjustment,
 }

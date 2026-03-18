@@ -1,7 +1,11 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.SeedData;
+using RequiemNexus.Domain;
+using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Data;
 
@@ -25,8 +29,11 @@ public static class DbInitializer
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
         await SeedMeritsAsync(context);
+        await SeedCovenantsAsync(context);
+        await SeedCovenantDefinitionMeritsAsync(context);
         await SeedBloodlinesAsync(context);
         await SeedDevotionsAsync(context);
+        await SeedSorceryRitesAsync(context);
         await SeedPrebuiltStatBlocksAsync(context);
     }
 
@@ -132,7 +139,10 @@ public static class DbInitializer
             vigor.Powers.Add(new DisciplinePower { Name = "Vigor 4", Level = 4, Description = "Leap incredible distances.", Cost = _costOneVitae });
             vigor.Powers.Add(new DisciplinePower { Name = "Vigor 5", Level = 5, Description = "Strike with earth-shattering force.", Cost = _costOneVitae });
 
-            var disciplinesList = new List<Discipline> { animalism, auspex, celerity, dominate, majesty, nightmare, obfuscate, protean, resilience, vigor };
+            var cruac = new Discipline { Name = "Crúac", Description = "Blood rites of the Circle of the Crone. Rituals draw on pagan power." };
+            var thebanSorcery = new Discipline { Name = "Theban Sorcery", Description = "Sacraments of the Lancea et Sanctum. Miracles channel divine condemnation." };
+
+            var disciplinesList = new List<Discipline> { animalism, auspex, celerity, dominate, majesty, nightmare, obfuscate, protean, resilience, vigor, cruac, thebanSorcery };
             await context.Disciplines.AddRangeAsync(disciplinesList);
             await context.SaveChangesAsync();
 
@@ -185,6 +195,84 @@ public static class DbInitializer
         }
     }
 
+    private static async Task SeedCovenantsAsync(ApplicationDbContext context)
+    {
+        if (await context.CovenantDefinitions.AnyAsync())
+        {
+            return;
+        }
+
+        var covenants = CovenantSeedData.GetAllCovenants();
+        await context.CovenantDefinitions.AddRangeAsync(covenants);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedCovenantDefinitionMeritsAsync(ApplicationDbContext context)
+    {
+        var covenants = await context.CovenantDefinitions.ToListAsync();
+        var merits = await context.Merits.ToListAsync();
+        var existing = await context.CovenantDefinitionMerits
+            .Select(cdm => new { cdm.CovenantDefinitionId, cdm.MeritId })
+            .ToListAsync();
+        var existingSet = new HashSet<(int, int)>(existing.Select(e => (e.CovenantDefinitionId, e.MeritId)));
+
+        var covenantByName = covenants.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+        var meritByName = merits.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
+
+        var links = new List<(string Covenant, string Merit)>
+        {
+            ("The Carthian Movement", "Status (Carthian)"),
+            ("The Carthian Movement", "Carthian Pull"),
+            ("The Carthian Movement", "Plausible Deniability"),
+            ("The Carthian Movement", "Strength of Resolution"),
+            ("The Carthian Movement", "Mandate from the Masses"),
+            ("The Circle of the Crone", "Status (Crone)"),
+            ("The Circle of the Crone", "Altar"),
+            ("The Circle of the Crone", "The Mother-Daughter Bond"),
+            ("The Circle of the Crone", "Undead Menses"),
+            ("The Invictus", "Status (Invictus)"),
+            ("The Invictus", "Attaché"),
+            ("The Invictus", "Friends in High Places"),
+            ("The Invictus", "Invested"),
+            ("The Invictus", "Notary"),
+            ("The Invictus", "Oath of Fealty"),
+            ("The Invictus", "Oath of Penance"),
+            ("The Invictus", "Oath of Serfdom"),
+            ("The Lancea et Sanctum", "Status (Lancea)"),
+            ("The Lancea et Sanctum", "Anointed"),
+            ("The Ordo Dracul", "Status (Ordo)"),
+            ("The Ordo Dracul", "Sworn"),
+        };
+
+        var toAdd = new List<CovenantDefinitionMerit>();
+        foreach (var (covenantName, meritName) in links)
+        {
+            if (!covenantByName.TryGetValue(covenantName, out var covenant) ||
+                !meritByName.TryGetValue(meritName, out var merit))
+            {
+                continue;
+            }
+
+            if (existingSet.Contains((covenant.Id, merit.Id)))
+            {
+                continue;
+            }
+
+            toAdd.Add(new CovenantDefinitionMerit
+            {
+                CovenantDefinitionId = covenant.Id,
+                MeritId = merit.Id,
+            });
+            existingSet.Add((covenant.Id, merit.Id));
+        }
+
+        if (toAdd.Count > 0)
+        {
+            await context.CovenantDefinitionMerits.AddRangeAsync(toAdd);
+            await context.SaveChangesAsync();
+        }
+    }
+
     private static async Task SeedBloodlinesAsync(ApplicationDbContext context)
     {
         if (await context.BloodlineDefinitions.AnyAsync())
@@ -210,6 +298,65 @@ public static class DbInitializer
         var devotions = DevotionSeedData.GetSampleDevotions(disciplines);
         await context.DevotionDefinitions.AddRangeAsync(devotions);
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedSorceryRitesAsync(ApplicationDbContext context)
+    {
+        if (await context.SorceryRiteDefinitions.AnyAsync())
+        {
+            return;
+        }
+
+        var covenants = await context.CovenantDefinitions.ToListAsync();
+        var disciplines = await context.Disciplines.ToListAsync();
+
+        var crone = covenants.FirstOrDefault(c => c.Name == "The Circle of the Crone");
+        var lancea = covenants.FirstOrDefault(c => c.Name == "The Lancea et Sanctum");
+        var cruacDisc = disciplines.FirstOrDefault(d => d.Name == "Crúac");
+        var thebanDisc = disciplines.FirstOrDefault(d => d.Name == "Theban Sorcery");
+
+        if (crone == null || lancea == null || cruacDisc == null || thebanDisc == null)
+        {
+            return;
+        }
+
+        var entries = SorceryRiteSeedData.LoadFromDocs();
+        var rites = new List<SorceryRiteDefinition>();
+
+        foreach (var (name, rating, prerequisites, effect, sorceryType) in entries)
+        {
+            int requiredCovenantId = sorceryType == Domain.Enums.SorceryType.Cruac ? crone.Id : lancea.Id;
+            int disciplineId = sorceryType == Domain.Enums.SorceryType.Cruac ? cruacDisc.Id : thebanDisc.Id;
+            string? poolJson = BuildSorceryPoolJson(disciplineId, sorceryType);
+
+            rites.Add(new SorceryRiteDefinition
+            {
+                Name = name,
+                Description = effect,
+                Level = rating,
+                SorceryType = sorceryType,
+                XpCost = rating,
+                PoolDefinitionJson = poolJson,
+                ActivationCostDescription = "1 Vitae",
+                RequiredCovenantId = requiredCovenantId,
+                Prerequisites = prerequisites,
+                Effect = effect,
+            });
+        }
+
+        await context.SorceryRiteDefinitions.AddRangeAsync(rites);
+        await context.SaveChangesAsync();
+    }
+
+    private static string? BuildSorceryPoolJson(int disciplineId, Domain.Enums.SorceryType sorceryType)
+    {
+        var traits = new List<object>
+        {
+            new { Type = 2, AttributeId = (int?)null, SkillId = (int?)null, DisciplineId = disciplineId, MinimumLevel = (int?)null },
+            new { Type = 0, AttributeId = 0, SkillId = (int?)null, DisciplineId = (int?)null, MinimumLevel = (int?)null },
+            new { Type = 1, AttributeId = (int?)null, SkillId = 5, DisciplineId = (int?)null, MinimumLevel = (int?)null },
+        };
+        return System.Text.Json.JsonSerializer.Serialize(new { Traits = traits });
     }
 
     private static async Task SeedPrebuiltStatBlocksAsync(ApplicationDbContext context)

@@ -132,5 +132,12 @@ public static class MeritSeedData
         new() { Name = "Vice-Ridden", ValidRatings = "••", Description = "Universal Merit: Imported from CofD" },
         new() { Name = "Virtuous", ValidRatings = "••", Description = "Universal Merit: Imported from CofD" },
         new() { Name = "Where the Bodies Are Buried", ValidRatings = "••", Description = "Once per story for every dot in this Merit, your notes on dirty work can turn up dirt on a vampire whose associations you know." },
+
+        // Phase 9: Covenant-specific Status merits (gated via CovenantDefinitionMerit)
+        new() { Name = "Status (Carthian)", ValidRatings = "• to •••••", Description = "Your standing within the Carthian Movement." },
+        new() { Name = "Status (Crone)", ValidRatings = "• to •••••", Description = "Your standing within the Circle of the Crone." },
+        new() { Name = "Status (Invictus)", ValidRatings = "• to •••••", Description = "Your standing within the Invictus." },
+        new() { Name = "Status (Lancea)", ValidRatings = "• to •••••", Description = "Your standing within the Lancea et Sanctum." },
+        new() { Name = "Status (Ordo)", ValidRatings = "• to •••••", Description = "Your standing within the Ordo Dracul." },
     ];
 }

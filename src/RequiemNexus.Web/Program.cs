@@ -162,9 +162,13 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcStatBlockServi
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterNoteService, RequiemNexus.Application.Services.CharacterNoteService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterEquipmentService, RequiemNexus.Application.Services.CharacterEquipmentService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBloodlineService, RequiemNexus.Application.Services.BloodlineService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICovenantService, RequiemNexus.Application.Services.CovenantService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ISorceryService, RequiemNexus.Application.Services.SorceryService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDevotionService, RequiemNexus.Application.Services.DevotionService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IModifierService, RequiemNexus.Application.Services.ModifierService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDerivedStatService, RequiemNexus.Application.Services.DerivedStatService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ITraitResolver, RequiemNexus.Application.Services.TraitResolver>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDiceMacroService, RequiemNexus.Application.Services.DiceMacroService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPublicRollService, RequiemNexus.Application.Services.PublicRollService>();

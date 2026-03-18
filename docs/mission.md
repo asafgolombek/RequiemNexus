@@ -23,6 +23,8 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 7 | Realtime Play (The Blood Communion) | ✅ Complete |
 | 8 | The Hidden Blood (Bloodlines & Devotions) | ✅ Complete |
 | 9 | The Accord of Power (Covenants & Blood Sorcery) | 🔄 Active |
+| 9.5 | Sacrifice Mechanics (Blood Sorcery) | ⬜ Planned |
+| 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ⬜ Planned |
 | 10 | The Social Graces (Social Maneuvering) | ⬜ Planned |
 | 11 | Assets & Armory (Equipment & Services) | ⬜ Planned |
 | 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
@@ -300,5 +302,51 @@ Phase 8 supports **additive pools only** (e.g., `Strength + Brawl + Vigor`). Con
 - [ ] **Extend Unified Pool Resolver** — Support contested rolls ("vs" format) and penalty dice (e.g., `Pool - Stamina`). Deferred from Phase 8; document formats in `rules-interpretations.md`.
 - [ ] **Passive Devotion Modifier Engine** — Define `PassiveModifier` value object (TargetStat, Delta, OptionalCondition) and integration with derived-stat cache. Deferred from Phase 8; effects that resist data modeling use `CustomRuleOverride`.
 - [ ] **Blood Sorcery Module** — Dedicated UI for Crúac and Theban Sorcery; tracking Rites/Miracles with specific resource costs (Vitae vs. Willpower)
-- [ ] **Sacrifice Mechanics** — Logic for ritual sacrifices or required "Sins" associated with Sorcery rolls
 - [ ] **The Mysteries of the Dragon** — Specialized tracker for Coils and Scales, including the permanent "rule-breaking" modifiers they apply to the core character sheet logic
+
+---
+
+## 📅 Phase 9.5: Sacrifice Mechanics (Blood Sorcery)
+
+**The Objective:** Implement ritual sacrifice and "Sins" mechanics associated with Crúac and Theban Sorcery rolls. Deferred from Phase 9 to keep scope manageable; builds on the Blood Sorcery foundation.
+
+### Prerequisites
+
+- Phase 9 Blood Sorcery Module must be complete (SorceryRiteDefinition, SorceryService, CharacterRite, activation flow).
+
+### Scope
+
+- [ ] **Sacrifice Types** — Define data model for sacrifice requirements (e.g., Vitae, Willpower, Humanity stain, material sacrifice) that some rites require for activation or enhanced effect.
+- [ ] **Rite-Sacrifice Linking** — Link `SorceryRiteDefinition` to optional sacrifice requirements (which rites demand what, and under what conditions).
+- [ ] **Sin/Stain Integration** — Logic for rites that require or inflict "Sins" (Humanity-related mechanics); integrate with existing Humanity/Stain tracking.
+- [ ] **Activation Cost Extension** — Extend `ActivationCost` on rites to support sacrifice costs alongside Vitae/Willpower.
+- [ ] **UI for Sacrifice** — Surface sacrifice requirements in the Blood Sorcery UI; prompt for/confirm sacrifice when activating a rite that requires it.
+- [ ] **Rules Interpretation Log** — Document V:tR 2e sacrifice and sin mechanics in `docs/rules-interpretations.md`.
+
+### Non-Goals (Phase 9.5)
+
+- Full narrative automation of sacrifice outcomes — Storyteller judgment remains primary.
+- Sacrifice mechanics for non-sorcery powers (e.g., Devotions) — defer to future phases if needed.
+
+---
+
+## 📅 Phase 9.6: Additional Blood Sorcery Traditions (Necromancy & Ordo Dracul)
+
+**The Objective:** Extend the Blood Sorcery module to support Necromancy and Ordo Dracul rituals. Deferred from Phase 9 to keep scope focused on Crúac and Theban Sorcery.
+
+### Prerequisites
+
+- Phase 9 Blood Sorcery Module complete (Crúac, Theban Sorcery, Discipline model, rite purchase flow).
+
+### Scope
+
+- [ ] **Necromancy** — Add Necromancy as a covenant-gated Discipline (Mekhet-associated or open). Seed rituals from source material (corpse manipulation, ghost binding, Avernian Gates, etc.).
+- [ ] **Ordo Dracul Rituals** — Add Ordo Dracul–specific blood sorcery rituals (e.g., Dragon's Own Fire, Taste of the Dragon, Pasha's Vision, Kale-Kob, Intikam, Burn the Dragon's Blood).
+- [ ] **Data model extension** — Extend `SorceryRiteDefinition` / seeding pipeline to support additional `SorceryType` values and covenant gating.
+- [ ] **UI** — Surface Necromancy and Ordo rituals in the Blood Sorcery UI for eligible characters.
+- [ ] **Rules Interpretation Log** — Document Necromancy and Ordo ritual mechanics in `docs/rules-interpretations.md`.
+
+### Non-Goals (Phase 9.6)
+
+- Phase 9.5 Sacrifice Mechanics — handled separately.
+- Exotic or homebrew blood sorcery traditions — defer to future phases.

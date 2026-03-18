@@ -53,6 +53,7 @@ public class CharacterManagementService(
         // is tracked by EF so that subsequent mutations (AddBeatAsync, SaveAsync, etc.) persist.
         return await _dbContext.Characters
             .Include(c => c.Clan)
+            .Include(c => c.Covenant)
             .Include(c => c.Campaign)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
@@ -60,6 +61,7 @@ public class CharacterManagementService(
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
             .Include(c => c.Bloodlines).ThenInclude(b => b.BloodlineDefinition)
             .Include(c => c.Devotions).ThenInclude(d => d.DevotionDefinition)
+            .Include(c => c.Rites).ThenInclude(r => r.SorceryRiteDefinition)
             .Include(c => c.Banes)
             .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
