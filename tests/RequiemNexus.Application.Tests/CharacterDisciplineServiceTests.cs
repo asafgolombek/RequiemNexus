@@ -34,7 +34,7 @@ public class CharacterDisciplineServiceTests
         clan.ClanDisciplines.Add(new ClanDiscipline { ClanId = 1, DisciplineId = 1 });
         ctx.Clans.Add(clan);
         ctx.Disciplines.Add(disc);
-        
+
         var character = new Character { Id = 1, Name = "Test", ClanId = 1, ExperiencePoints = 100, BloodPotency = 1 };
         character.Clan = clan; // Set for helper
         ctx.Characters.Add(character);
@@ -62,7 +62,7 @@ public class CharacterDisciplineServiceTests
         var disc = new Discipline { Id = 2, Name = "Vigor" }; // Not in Ventrue
         ctx.Clans.Add(clan);
         ctx.Disciplines.Add(disc);
-        
+
         var character = new Character { Id = 1, Name = "Test", ClanId = 1, ExperiencePoints = 100, BloodPotency = 1 };
         character.Clan = clan;
         ctx.Characters.Add(character);
@@ -89,7 +89,7 @@ public class CharacterDisciplineServiceTests
         clan.ClanDisciplines.Add(new ClanDiscipline { ClanId = 1, DisciplineId = 1 });
         ctx.Clans.Add(clan);
         ctx.Disciplines.Add(disc);
-        
+
         var character = new Character { Id = 1, Name = "Test", ClanId = 1, ExperiencePoints = 100, BloodPotency = 1 };
         character.Clan = clan;
         var cd = new CharacterDiscipline { Id = 1, CharacterId = 1, DisciplineId = 1, Rating = 1 };

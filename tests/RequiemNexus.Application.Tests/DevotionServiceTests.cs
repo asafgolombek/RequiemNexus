@@ -33,7 +33,7 @@ public class DevotionServiceTests
         devotion.Prerequisites.Add(new DevotionPrerequisite { DevotionDefinitionId = 1, DisciplineId = 1, MinimumLevel = 2 });
         ctx.Disciplines.Add(disc);
         ctx.DevotionDefinitions.Add(devotion);
-        
+
         var character = new Character { Id = 1, Name = "Test", ExperiencePoints = 10, BloodPotency = 1 };
         character.Disciplines.Add(new CharacterDiscipline { CharacterId = 1, DisciplineId = 1, Rating = 2 });
         ctx.Characters.Add(character);
