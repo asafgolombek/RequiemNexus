@@ -23,10 +23,10 @@ The most critical architectural task of Phase 8 is the **Unified Pool Resolver**
     3. The resulting integer is passed to the `DiceService` (Domain).
 
 ### Tasks
-- [ ] Define `TraitReference` record in `Domain` (Type: Attribute/Skill/Discipline, Name/Id).
-- [ ] Define `PoolDefinition` in `Domain` (Collection of `TraitReference`).
-- [ ] Implement `ITraitResolver` in `Application` to hydrate `PoolDefinition` from a `Character`.
-- [ ] Update `DiceService` (or create a wrapper) to handle `PoolDefinition` hydration result.
+- [x] Define `TraitReference` record in `Domain` (Type: Attribute/Skill/Discipline, Name/Id).
+- [x] Define `PoolDefinition` in `Domain` (Collection of `TraitReference`).
+- [x] Implement `ITraitResolver` in `Application` to hydrate `PoolDefinition` from a `Character`.
+- [x] Update `DiceService` (or create a wrapper) to handle `PoolDefinition` hydration result.
 
 ---
 
@@ -59,11 +59,11 @@ Joining a bloodline grants:
     - `CustomRuleOverride`: Boolean flag for mechanics that resist data modeling.
 
 ### Tasks
-- [ ] Create `BloodlineDefinition` entity in `Data.Models`.
-- [ ] Create `CharacterBloodline` join table/status entity.
-- [ ] Implement `BloodlineEngine` in `Domain` to validate prerequisites.
-- [ ] Add `BloodlineStatus` (Pending, Active, Rejected) for Storyteller approval flow.
-- [ ] Seed core Bloodlines (e.g., *Bruja*, *En*) in `DbInitializer`.
+- [x] Create `BloodlineDefinition` entity in `Data.Models`.
+- [x] Create `CharacterBloodline` join table/status entity.
+- [x] Implement `BloodlineEngine` in `Domain` to validate prerequisites.
+- [x] Add `BloodlineStatus` (Pending, Active, Rejected) for Storyteller approval flow.
+- [x] Seed core Bloodlines (e.g., *Bruja*, *En*) in `DbInitializer`.
 
 ---
 
@@ -94,18 +94,18 @@ Use **fully structured** prerequisites (Option 1): parse seed data into `List<(D
     - `IsPassive`: Boolean (passive modifiers vs. active rolls). Passive modifier engine deferred to Phase 9 — see mission.md.
 
 ### Tasks
-- [ ] Create `DevotionDefinition` entity in `Data.Models`.
-- [ ] Create `CharacterDevotion` join table.
-- [ ] Implement Devotion prerequisite validation in `Application`.
-- [ ] Integrate Devotion pools into the **Unified Pool Resolver**.
-- [ ] Seed sample Devotions in `DbInitializer`.
+- [x] Create `DevotionDefinition` entity in `Data.Models`.
+- [x] Create `CharacterDevotion` join table.
+- [x] Implement Devotion prerequisite validation in `Application`.
+- [x] Integrate Devotion pools into the **Unified Pool Resolver**.
+- [x] Seed sample Devotions in `DbInitializer`.
 
 ---
 
 ## 🎭 4. Storyteller & UI Integration
 
-- **Storyteller Glimpse**: A new "Pending Requests" tab for Bloodline applications.
-- **Character Sheet** (and **Edit Character** flow):
+- [x] **Storyteller Glimpse**: A new "Pending Requests" tab for Bloodline applications.
+- [x] **Character Sheet** (and **Edit Character** flow):
     - Bloodlines and Devotions are first-class sections on the character sheet.
     - Players can view and **edit** Bloodline affiliation and Devotions as part of the Edit Character flow (subject to ST approval for Bloodlines and prerequisite validation for Devotions).
     - Dedicated Bloodline section showing the lineage and Bane (both clan and bloodline banes displayed).
@@ -116,12 +116,12 @@ Use **fully structured** prerequisites (Option 1): parse seed data into `List<(D
 
 ## 🧪 5. Testing Strategy
 
-- **Domain Tests**:
+- [x] **Domain Tests**:
     - `BloodlineEngineTests`: Verify prerequisite logic (BP 2+, Clan match).
     - `PoolResolverTests`: Verify correct summation of Attributes, Skills, and Disciplines.
-- **Application Tests**:
+- [x] **Application Tests**:
     - `BloodlineServiceTests`: Verify the ST approval workflow and `Result<T>` handling.
-- **Integration Tests**:
+- [x] **Integration Tests**:
     - `DbInitializerTests`: Ensure all definitions are seeded correctly.
 
 ---

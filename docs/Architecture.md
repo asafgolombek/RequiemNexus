@@ -117,11 +117,27 @@ Cross-domain interaction is only allowed via **explicit contracts**.
 
 ### Unified Pool Resolver (Phase 8+)
 
-The Dice Nexus resolves pools from a single, unified source regardless of the component types involved. Prior to Phase 8, pools were composed from Attributes and Skills only. From Phase 8 onward, Devotions and exotic Bloodline powers introduce pools that combine Attributes, Skills, *and* Discipline ratings.
+The Dice Nexus resolves pools from a single, unified source regardless of the component types involved. 
 
-**The resolver must treat all three as first-class inputs.** A pool definition is a declarative list of typed references — `{ type: Attribute, name: "Wits" }`, `{ type: Skill, name: "Subterfuge" }`, `{ type: Discipline, name: "Obfuscate", minimumRating: 2 }` — and the resolver hydrates each from its respective domain, sums them, and emits a `DicePool` value object to `DiceService`. No caller constructs a raw integer pool directly.
+- **Phase 8**: Pools composed of Attributes, Skills, and Discipline ratings (additive only).
+- **Phase 9**: Extended to support **Contested Rolls** (`vs` format), **Penalty Dice** (`Pool - Stat`), and **Lower Discipline** logic.
 
-This design ensures that Devotions (Phase 8), Blood Sorcery (Phase 9), and Equipment modifiers (Phase 11) all feed into the same resolution path without ad-hoc additions to `DiceService`.
+**The resolver must treat all traits as first-class inputs.** A pool definition is a declarative list of typed references — `{ type: Attribute, name: "Wits" }`, `{ type: Skill, name: "Subterfuge" }`, `{ type: Discipline, name: "Obfuscate", minimumRating: 2 }` — and the resolver hydrates each from its respective domain, applies any active modifiers, and emits a `DicePool` value object. No caller constructs a raw integer pool directly.
+
+This design ensures that Devotions (Phase 8), Blood Sorcery (Phase 9), and Equipment modifiers (Phase 11) all feed into the same resolution path.
+
+---
+
+## ⚙️ Passive Modifier Engine (Phase 9+)
+
+Many advanced Kindred powers (Devotions, Coils, Covenant benefits) provide permanent or conditional stat deltas rather than active rolls.
+
+- **Stateless Aggregation**: Modifiers are never "applied" to a base stat permanently. Instead, an `IModifierService` aggregates all active `PassiveModifier` records for a character at the moment a stat is requested.
+- **Modifier Types**:
+    - **Static**: Persistent bonus/penalty to a Trait or derived stat (e.g., +1 Speed).
+    - **Conditional**: Modifiers that apply only under specific circumstances (e.g., +2 to resist frenzy).
+    - **Rule-Breaking**: Modifiers that alter core engine behavior (e.g., "Ignore wound penalties," handled by explicit flags).
+- **Injection**: The `TraitResolver` and derived stat calculators (Health, Speed, Defense) must query the `IModifierService` to ensure all deltas are accounted for before returning a value.
 
 ---
 
@@ -284,9 +300,11 @@ Lighthouse runs as a GitHub Actions step on every PR targeting `main`. It audits
 | Character derived stats | 60s | Any attribute mutation |
 | Game reference data (Clans, Covenants, Disciplines) | 24h | Seed data update |
 | `BloodlineDefinition` / `DevotionDefinition` | 24h | Seed data update |
+| `CovenantDefinition` / `SorceryRiteDefinition` | 24h | Seed data update |
+| `CoilDefinition` / `ScaleDefinition` | 24h | Seed data update |
 | SignalR backplane messages | Transient | Delivered and discarded |
 
-> **Note:** `BloodlineDefinition` and `DevotionDefinition` are reference data in the same category as Clans and Disciplines — they are defined in seed, change only on deploy, and are read-heavy. They must be cached at the same TTL and share the same invalidation trigger. Do not treat them as mutable character data.
+> **Note:** Reference data (Clans, Disciplines, Bloodlines, Devotions, Covenants, Rites) are defined in seed, change only on deploy, and are read-heavy. They must be cached at the same TTL and share the same invalidation trigger. Do not treat them as mutable character data.
 
 ### Query Rules
 

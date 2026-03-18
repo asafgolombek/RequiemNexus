@@ -21,15 +21,15 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 5 | Automated Deployments & Observability | ✅ Complete |
 | 6 | CI/CD Hardening & Supply Chain | ✅ Complete |
 | 7 | Realtime Play (The Blood Communion) | ✅ Complete |
-| 8 | The Hidden Blood (Bloodlines & Devotions) | 🔄 Active |
-| 9 | The Accord of Power (Covenants & Blood Sorcery) | ⬜ Planned |
+| 8 | The Hidden Blood (Bloodlines & Devotions) | ✅ Complete |
+| 9 | The Accord of Power (Covenants & Blood Sorcery) | 🔄 Active |
 | 10 | The Social Graces (Social Maneuvering) | ⬜ Planned |
 | 11 | Assets & Armory (Equipment & Services) | ⬜ Planned |
 | 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 8](#-phase-8-the-hidden-blood-bloodlines--devotions)**
+> **Currently Active → [Phase 9](#-phase-9-the-accord-of-power-covenants--blood-sorcery)**
 
 ---
 
@@ -276,16 +276,16 @@ Phase 8 supports **additive pools only** (e.g., `Strength + Brawl + Vigor`). Con
 
 ### Tasks
 
-- [ ] **Unified Pool Resolver** — `TraitResolver` (Application) hydrates `PoolDefinition` from Character; produces resolved integer for `DiceService`. Additive pools only; contested/penalty deferred to Phase 9.
-- [ ] **`BloodlineDefinition` seed data** — data model covering prerequisite Blood Potency, parent Clan, Discipline substitutions (replace or supplement), Bane descriptor, and `CustomRuleOverride`
-- [ ] **Bloodline Engine** — stateless domain service that reads a `BloodlineDefinition` and applies it to a character; never knows a Bloodline by name
-- [ ] **Bloodline Validation** — enforce Blood Potency (2+) and Clan prerequisites before the pending state is created; surface as `Result<T>` failures
-- [ ] **`BloodlineStatus` pending flow** — `PendingApproval` state visible to the Storyteller in the Glimpse dashboard; one-tap approve/reject with optional note
-- [ ] **`DevotionDefinition` seed data** — catalog from the rulebook: name, description, prerequisite Disciplines (with `OrGroupId` for OR logic), XP cost, dice pool composition, passive vs. active flag, optional `RequiredBloodlineId` for bloodline-gated devotions
-- [ ] **Devotion prerequisite automation** — validate required Discipline levels and XP before purchase; enforced in the Application Layer, not the UI
-- [ ] **Devotion activation** — active Devotions feed into the Unified Pool Resolver; passive Devotions are display-only in Phase 8 — full modifier integration deferred to Phase 9
-- [ ] **Character sheet and Edit Character** — Bloodlines and Devotions are first-class in the character sheet UI and editable via the Edit Character flow (add/remove devotions, apply for bloodline). Dedicated Bloodline section showing lineage and Bane; Devotions list with "Roll" buttons; cache invalidation on any lineage mutation
-- [ ] **Rules Interpretation Log** — document all edge-case V:tR 2e decisions in `docs/rules-interpretations.md`
+- [x] **Unified Pool Resolver** — `TraitResolver` (Application) hydrates `PoolDefinition` from Character; produces resolved integer for `DiceService`. Additive pools only; contested/penalty deferred to Phase 9.
+- [x] **`BloodlineDefinition` seed data** — data model covering prerequisite Blood Potency, parent Clan, Discipline substitutions (replace or supplement), Bane descriptor, and `CustomRuleOverride`
+- [x] **Bloodline Engine** — stateless domain service that reads a `BloodlineDefinition` and applies it to a character; never knows a Bloodline by name
+- [x] **Bloodline Validation** — enforce Blood Potency (2+) and Clan prerequisites before the pending state is created; surface as `Result<T>` failures
+- [x] **`BloodlineStatus` pending flow** — `PendingApproval` state visible to the Storyteller in the Glimpse dashboard; one-tap approve/reject with optional note
+- [x] **`DevotionDefinition` seed data** — catalog from the rulebook: name, description, prerequisite Disciplines (with `OrGroupId` for OR logic), XP cost, dice pool composition, passive vs. active flag, optional `RequiredBloodlineId` for bloodline-gated devotions
+- [x] **Devotion prerequisite automation** — validate required Discipline levels and XP before purchase; enforced in the Application Layer, not the UI
+- [x] **Devotion activation** — active Devotions feed into the Unified Pool Resolver; passive Devotions are display-only in Phase 8 — full modifier integration deferred to Phase 9
+- [x] **Character sheet and Edit Character** — Bloodlines and Devotions are first-class in the character sheet UI and editable via the Edit Character flow (add/remove devotions, apply for bloodline). Dedicated Bloodline section showing lineage and Bane; Devotions list with "Roll" buttons; cache invalidation on any lineage mutation
+- [x] **Rules Interpretation Log** — document all edge-case V:tR 2e decisions in `docs/rules-interpretations.md`
 
 ---
 
@@ -302,64 +302,3 @@ Phase 8 supports **additive pools only** (e.g., `Strength + Brawl + Vigor`). Con
 - [ ] **Blood Sorcery Module** — Dedicated UI for Crúac and Theban Sorcery; tracking Rites/Miracles with specific resource costs (Vitae vs. Willpower)
 - [ ] **Sacrifice Mechanics** — Logic for ritual sacrifices or required "Sins" associated with Sorcery rolls
 - [ ] **The Mysteries of the Dragon** — Specialized tracker for Coils and Scales, including the permanent "rule-breaking" modifiers they apply to the core character sheet logic
-
----
-
-## 📅 Phase 10: The Social Graces (Social Maneuvering)
-
-**The Objective:** Automate the formal systems of social dominance, investigation, and manipulation.
-
-- [ ] **Doors Tracker** — Real-time visualization of "Doors" for Social Maneuvering (Chapter 4)
-- [ ] **Impression Management** — Tracking the current Impression level (Hostile to Perfect) and its effect on Door resolution
-- [ ] **Leverage UI** — A specialized interface for players to present "Leverage" (Hard or Soft) to the Storyteller to force Door openings
-- [ ] **Investigation Support** — Automated tracking of Clues and "Interception" of social maneuvers
-- [ ] **Social Condition Integration** — Automatic application of *Inspired*, *Shaken*, or *Swooned* based on maneuver outcomes
-
----
-
-## 📅 Phase 11: Assets & Armory (Equipment & Services)
-
-**The Objective:** Standardize physical assets and their mechanical impact on play.
-
-- [ ] **Equipment Database** — Searchable catalog of physical (weapons/armor), mental (hacking tools), and social (luxury cars) equipment
-- [ ] **Stat Tracking** — Explicit tracking for Durability, Size, Availability, and Structure of items
-- [ ] **Dynamic Modifiers** — Equipment bonuses automatically injected into the Dice Nexus pool for relevant skill rolls via the Unified Pool Resolver
-- [ ] **Service Management** — Tracking "Services" (Security, Medical, Occult Research) with their associated Costs and Availability ratings
-
----
-
-## 📅 Phase 12: The Web of Night (Relationship Webs)
-
-**The Objective:** Visualize and automate the spiritual and social ties that govern Kindred life.
-
-- [ ] **Blood Ties & Sympathy** — Real-time tracking of family trees (Sires, Childer) and the "Blood Sympathy" sense across distances
-- [ ] **Blood Bond Tracker** — Automated tracking of the three stages of the Blood Bond, including the specific Conditions they impose on the thrall
-- [ ] **Predatory Aura Interaction** — A dedicated UI for "Lashing Out" with the Predatory Aura, automating contested Blood Potency rolls and the resulting *Beaten* or *Shaken* states
-- [ ] **Ghoul Management** — Support for mortal retainers, tracking their Vitae dependency, monthly aging checks, and minor Discipline access
-
----
-
-## 📅 Phase 13: End-to-End Testing & Accessibility
-
-**The Objective:** Harden the ecosystem for all users and ensure the Gothic aesthetic remains usable.
-
-- [ ] **Full E2E Playwright Suite** — Testing critical paths: Character Evolution (Phases 8–9) and Social Maneuvers (Phase 10)
-- [ ] **Automated Accessibility Scanning** — WCAG 2.1 AA audit integrated into the CI pipeline
-- [ ] **Screen Reader Optimization** — Ensuring all real-time dice rolls and Blood Sorcery results are announced via ARIA live regions
-- [ ] **Visual Regression Baseline** — Catching UI drift in the "Bone-white and Crimson" palette across browser updates
-
----
-
-## 📅 Phase 14: The Global Embrace
-
-**The Objective:** Final polish and expansion into the international community.
-
-- [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
-- [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools
-- [ ] **Discord Rich Presence** — Enhanced webhooks for detailed session summaries and "Coterie Status" updates
-- [ ] **Production Rollout** — Final optimization of SignalR hubs for high-concurrency public traffic
-
----
-
-> _The blood remembers._
-> _The code must too._
