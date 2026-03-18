@@ -5,9 +5,11 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IStorytellerGlimpseService GlimpseService
+@inject IBloodlineService BloodlineService
 @inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject RequiemNexus.Web.Services.ToastService ToastService
 
 <PageTitle>Storyteller Glimpse - Requiem Nexus</PageTitle>
 
@@ -48,6 +50,63 @@
                 <p class="feedback-ok" style="margin-top:0.5rem;">@_coteMessage</p>
             }
         </div>
+
+        @* ── Pending Bloodline Requests ──────────────────────────────────────── *@
+        @if (_pendingBloodlines.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Pending Bloodline Requests</h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    @foreach (var app in _pendingBloodlines)
+                    {
+                        <li style="display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <span><strong>@app.CharacterName</strong> → @app.BloodlineName</span>
+                            <span style="color:var(--text-secondary);font-size:0.85em;">@app.AppliedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                            <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                                @if (_rejectingId == app.CharacterBloodlineId)
+                                {
+                                    <input type="text"
+                                           class="form-control"
+                                           style="width:160px;font-size:0.85em;"
+                                           placeholder="Optional note…"
+                                           @bind="_rejectNote" />
+                                }
+                                <button class="btn-primary-rn"
+                                        style="font-size:0.85em;"
+                                        disabled="@(_awarding)"
+                                        @onclick="() => ApproveBloodline(app.CharacterBloodlineId)">
+                                    Approve
+                                </button>
+                                @if (_rejectingId == app.CharacterBloodlineId)
+                                {
+                                    <button class="btn-danger-rn"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => ConfirmRejectBloodline(app.CharacterBloodlineId)">
+                                        Confirm Reject
+                                    </button>
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="CancelReject">
+                                        Cancel
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => StartReject(app.CharacterBloodlineId)">
+                                        Reject
+                                    </button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
 
         @* ── Character Cards ─────────────────────────────────────────────────── *@
         @if (!_vitals.Any())
@@ -169,6 +228,11 @@
     private string _coteReason = string.Empty;
     private string _coteMessage = string.Empty;
 
+    // Pending bloodline requests
+    private List<BloodlineApplicationDto> _pendingBloodlines = [];
+    private int? _rejectingId;
+    private string _rejectNote = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -189,6 +253,7 @@
         try
         {
             _vitals = await GlimpseService.GetCampaignVitalsAsync(Id, _currentUserId!);
+            _pendingBloodlines = await BloodlineService.GetPendingBloodlineApplicationsAsync(Id, _currentUserId!);
             _accessDenied = false;
 
             // Initialise per-character state dictionaries
@@ -280,4 +345,66 @@
     /// <summary>Returns a 0–100 percentage, clamped, for CSS bar widths.</summary>
     private static int BarPct(int current, int max) =>
         max <= 0 ? 0 : Math.Clamp(current * 100 / max, 0, 100);
+
+    private void StartReject(int characterBloodlineId)
+    {
+        _rejectingId = characterBloodlineId;
+        _rejectNote = string.Empty;
+    }
+
+    private void CancelReject()
+    {
+        _rejectingId = null;
+        _rejectNote = string.Empty;
+    }
+
+    private async Task ApproveBloodline(int characterBloodlineId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await BloodlineService.ApproveBloodlineAsync(characterBloodlineId, null, _currentUserId!);
+            ToastService.Show("Approved", "Bloodline application approved.", RequiemNexus.Web.Services.ToastType.Success);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task ConfirmRejectBloodline(int characterBloodlineId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await BloodlineService.RejectBloodlineAsync(characterBloodlineId, string.IsNullOrWhiteSpace(_rejectNote) ? null : _rejectNote, _currentUserId!);
+            _rejectingId = null;
+            _rejectNote = string.Empty;
+            ToastService.Show("Rejected", "Bloodline application rejected.", RequiemNexus.Web.Services.ToastType.Info);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
 }

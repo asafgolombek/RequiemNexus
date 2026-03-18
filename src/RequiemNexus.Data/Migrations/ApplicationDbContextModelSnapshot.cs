@@ -317,6 +317,70 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("BeatLedger");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.BloodlineClan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BloodlineDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClanId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BloodlineDefinitionId");
+
+                    b.HasIndex("ClanId");
+
+                    b.ToTable("BloodlineClans");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.BloodlineDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BaneOverride")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("CustomRuleOverride")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CustomRuleOverrideDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("FourthDisciplineId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("PrerequisiteBloodPotency")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FourthDisciplineId");
+
+                    b.ToTable("BloodlineDefinitions");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Campaign", b =>
                 {
                     b.Property<int>("Id")
@@ -594,6 +658,42 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("CharacterBanes");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterBloodline", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("BloodlineDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StorytellerNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BloodlineDefinitionId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("CharacterBloodlines");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCondition", b =>
                 {
                     b.Property<int>("Id")
@@ -637,6 +737,29 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("CharacterId");
 
                     b.ToTable("CharacterConditions");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDevotion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DevotionDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("DevotionDefinitionId");
+
+                    b.ToTable("CharacterDevotions");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
@@ -1069,6 +1192,80 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ConsentLogs");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActivationCostDescription")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsPassive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("PoolDefinitionJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RequiredBloodlineId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("XpCost")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequiredBloodlineId");
+
+                    b.ToTable("DevotionDefinitions");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionPrerequisite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DevotionDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DisciplineId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinimumLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OrGroupId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DevotionDefinitionId");
+
+                    b.HasIndex("DisciplineId");
+
+                    b.ToTable("DevotionPrerequisites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.DiceMacro", b =>
@@ -1700,6 +1897,36 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Character");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.BloodlineClan", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.BloodlineDefinition", "BloodlineDefinition")
+                        .WithMany("AllowedParentClans")
+                        .HasForeignKey("BloodlineDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.Clan", "Clan")
+                        .WithMany()
+                        .HasForeignKey("ClanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BloodlineDefinition");
+
+                    b.Navigation("Clan");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.BloodlineDefinition", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.Discipline", "FourthDiscipline")
+                        .WithMany()
+                        .HasForeignKey("FourthDisciplineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FourthDiscipline");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Campaign", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.ApplicationUser", null)
@@ -1784,6 +2011,25 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Character");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterBloodline", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.BloodlineDefinition", "BloodlineDefinition")
+                        .WithMany()
+                        .HasForeignKey("BloodlineDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
+                        .WithMany("Bloodlines")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BloodlineDefinition");
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCondition", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Character", "Character")
@@ -1793,6 +2039,25 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDevotion", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
+                        .WithMany("Devotions")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.DevotionDefinition", "DevotionDefinition")
+                        .WithMany()
+                        .HasForeignKey("DevotionDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("DevotionDefinition");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterDiscipline", b =>
@@ -1960,6 +2225,35 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionDefinition", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.BloodlineDefinition", "RequiredBloodline")
+                        .WithMany()
+                        .HasForeignKey("RequiredBloodlineId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("RequiredBloodline");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionPrerequisite", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.DevotionDefinition", "DevotionDefinition")
+                        .WithMany("Prerequisites")
+                        .HasForeignKey("DevotionDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.Discipline", "Discipline")
+                        .WithMany()
+                        .HasForeignKey("DisciplineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DevotionDefinition");
+
+                    b.Navigation("Discipline");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.DiceMacro", b =>
@@ -2137,6 +2431,11 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("StoryToldCampaigns");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.BloodlineDefinition", b =>
+                {
+                    b.Navigation("AllowedParentClans");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Campaign", b =>
                 {
                     b.Navigation("Characters");
@@ -2158,7 +2457,11 @@ namespace RequiemNexus.Data.Migrations
 
                     b.Navigation("Banes");
 
+                    b.Navigation("Bloodlines");
+
                     b.Navigation("CharacterEquipments");
+
+                    b.Navigation("Devotions");
 
                     b.Navigation("Disciplines");
 
@@ -2182,6 +2485,11 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.CombatEncounter", b =>
                 {
                     b.Navigation("InitiativeEntries");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.DevotionDefinition", b =>
+                {
+                    b.Navigation("Prerequisites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>

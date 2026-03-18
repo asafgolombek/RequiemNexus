@@ -26,11 +26,13 @@ public class ExperienceCostRulesTests
     }
 
     [Theory]
-    [InlineData(1, 2, 10)]  // 2 * 5 = 10
-    [InlineData(0, 3, 30)]  // (1+2+3)*5 = 30
-    public void CalculateDisciplineUpgradeCost_ReturnsCorrectValue(int from, int to, int expected)
+    [InlineData(1, 2, 10, false)]   // 2 * 5 = 10 (out-of-clan)
+    [InlineData(0, 3, 30, false)]   // (1+2+3)*5 = 30 (out-of-clan)
+    [InlineData(1, 2, 8, true)]    // 2 * 4 = 8 (in-clan)
+    [InlineData(0, 3, 24, true)]   // (1+2+3)*4 = 24 (in-clan)
+    public void CalculateDisciplineUpgradeCost_ReturnsCorrectValue(int from, int to, int expected, bool isInClan)
     {
-        int cost = _rules.CalculateDisciplineUpgradeCost(from, to);
+        int cost = _rules.CalculateDisciplineUpgradeCost(from, to, isInClan);
         Assert.Equal(expected, cost);
     }
 

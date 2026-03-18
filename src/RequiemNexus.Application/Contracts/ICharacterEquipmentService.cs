@@ -14,9 +14,11 @@ public interface ICharacterEquipmentService
     /// <param name="characterId">The character receiving the equipment.</param>
     /// <param name="equipmentId">The catalogue item to add.</param>
     /// <param name="quantity">How many units to add.</param>
-    Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity);
+    /// <param name="userId">The authenticated user (must own the character or be Storyteller).</param>
+    Task<CharacterEquipment> AddEquipmentAsync(int characterId, int equipmentId, int quantity, string userId);
 
     /// <summary>Removes an equipment entry from the character's inventory.</summary>
     /// <param name="characterEquipmentId">The specific inventory row to remove.</param>
-    Task RemoveEquipmentAsync(int characterEquipmentId);
+    /// <param name="userId">The authenticated user (must own the character or be Storyteller).</param>
+    Task RemoveEquipmentAsync(int characterEquipmentId, string userId);
 }

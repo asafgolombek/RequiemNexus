@@ -16,6 +16,7 @@
 @inject IDisciplineService DisciplineService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject RequiemNexus.Web.Services.ToastService ToastService
 
 <PageTitle>Create Character - Requiem Nexus</PageTitle>
 
@@ -102,7 +103,7 @@
         }
         else
         {
-            <button class="btn-primary-rn wizard-btn-embrace" @onclick="SaveCharacter">Embrace</button>
+            <button class="btn-primary-rn wizard-btn-embrace" @onclick="SaveCharacter" disabled="@_isSaving">@(_isSaving ? "Embrace…" : "Embrace")</button>
         }
     </div>
 </div>
@@ -111,6 +112,7 @@
 
     private CreationStep _currentStep = CreationStep.BasicInformation;
     private readonly Character _newCharacter = new Character();
+    private bool _isSaving = false;
     private List<Clan> _availableClans = new List<Clan>();
     private string? _currentUserId;
 
@@ -271,6 +273,8 @@
 
     private async Task SaveCharacter()
     {
+        if (_isSaving) return;
+        _isSaving = true;
         try
         {
             await CharacterService.EmbraceCharacterAsync(_newCharacter);
@@ -278,8 +282,11 @@
         }
         catch (Exception ex)
         {
-            // Simple error handling for now
-            Console.WriteLine($"Error saving character: {ex.Message}");
+            ToastService.Show("Creation Failed", ex.Message, RequiemNexus.Web.Services.ToastType.Error, 5000);
+        }
+        finally
+        {
+            _isSaving = false;
         }
     }
 }

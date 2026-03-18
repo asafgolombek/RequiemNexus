@@ -1,8 +1,11 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using RequiemNexus.Web.Components.Layout
 @using RequiemNexus.Web.Services
 @inject CommandPaletteService PaletteService
+@inject SessionClientService SessionClient
+@inject ToastService ToastService
 @inject IJSRuntime JS
+@implements IDisposable
 
 <div id="app" class="h-full overflow-auto grimoire-bg">
 
@@ -32,12 +35,29 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        SessionClient.BloodlineApproved += OnBloodlineApproved;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await JS.InvokeVoidAsync("registerCommandPaletteShortcut", DotNetObjectReference.Create(this));
         }
+    }
+
+    private async void OnBloodlineApproved(int characterId, string bloodlineName)
+    {
+        ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
+        var key = $"bloodline-approved-{characterId}";
+        await JS.InvokeVoidAsync("sessionStorageSet", key, "1");
+    }
+
+    public void Dispose()
+    {
+        SessionClient.BloodlineApproved -= OnBloodlineApproved;
     }
 
     [JSInvokable]

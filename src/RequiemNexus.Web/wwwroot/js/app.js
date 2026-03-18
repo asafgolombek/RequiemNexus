@@ -17,6 +17,18 @@ window.downloadFileFromBase64 = function (fileName, mimeType, base64) {
     URL.revokeObjectURL(url);
 };
 
+window.copyToClipboard = function (text) {
+    return navigator.clipboard.writeText(text);
+};
+
+window.sessionStorageGet = function (key) {
+    return sessionStorage.getItem(key) || '';
+};
+
+window.sessionStorageSet = function (key, value) {
+    sessionStorage.setItem(key, value);
+};
+
 window.registerCommandPaletteShortcut = function (dotNetRef) {
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {

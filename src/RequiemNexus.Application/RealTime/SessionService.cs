@@ -180,6 +180,21 @@ public class SessionService(
     }
 
     /// <inheritdoc />
+    public async Task BroadcastBloodlineApprovedAsync(int characterId, string bloodlineName)
+    {
+        var character = await _db.Characters
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == characterId);
+
+        // Only send to the character owner — bloodline approval is a personal notification.
+        // Sending to Group would notify other players and could show the toast to non-owners.
+        if (!string.IsNullOrEmpty(character?.ApplicationUserId))
+        {
+            await _publisher.User(character.ApplicationUserId).ReceiveBloodlineApproved(characterId, bloodlineName);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task BroadcastChronicleUpdateAsync(ChronicleUpdateDto patch)
     {
         await _publisher.Group(patch.ChronicleId).ReceiveChronicleUpdate(patch);

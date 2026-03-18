@@ -6,18 +6,23 @@
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
 @using RequiemNexus.Application.RealTime
+@using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject ICharacterEquipmentService EquipmentService
 @inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
+@inject ITraitResolver TraitResolver
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject SessionClientService SessionClient
 @inject ISessionService SessionService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ToastService ToastService
+@inject IBloodlineService BloodlineService
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -85,22 +90,19 @@ else
                         @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
                     </button>
                     <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
-                        Export JSON
+                        @(_isExporting ? "Exporting…" : "Export JSON")
                     </button>
                     <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
-                        Export PDF
+                        @(_isExporting ? "Exporting…" : "Export PDF")
                     </button>
                 </div>
             </div>
         </header>
 
-        <div class="tab-bar">
-            <button class="tab-btn @(_activeTab == "sheet" ? "active" : "")" @onclick='() => _activeTab = "sheet"'>Character
-                Sheet</button>
-            <button class="tab-btn @(_activeTab == "identity" ? "active" : "")"
-            @onclick='() => _activeTab = "identity"'>Identity &amp; Backstory</button>
-            <button class="tab-btn @(_activeTab == "history" ? "active" : "")"
-            @onclick='() => _activeTab = "history"'>XP History</button>
+        <div class="tab-bar" role="tablist" aria-label="Character sheet sections">
+            <button type="button" class="tab-btn @(_activeTab == "sheet" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "sheet")" aria-controls="panel-sheet" id="tab-sheet" @onclick='() => SelectTab("sheet")' @onkeydown="HandleTabKeydown">Character Sheet</button>
+            <button type="button" class="tab-btn @(_activeTab == "identity" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "identity")" aria-controls="panel-identity" id="tab-identity" @onclick='() => SelectTab("identity")' @onkeydown="HandleTabKeydown">Identity &amp; Backstory</button>
+            <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history")" aria-controls="panel-history" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
         </div>
 
         <CascadingValue Value="@(isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
@@ -171,11 +173,21 @@ else
                             <ul class="trait-list">
                                 @foreach (var merit in _character.Merits)
                                 {
-                                    <li class="trait-item">
-                                        <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" :
-                                $"({merit.Specification})")</span>
-                                        <span class="trait-dots">@(new string('•',
-                                merit.Rating))</span>
+                                    <li class="trait-item merit-item @(_expandedMeritIds.Contains(merit.Id) ? "expanded" : "")"
+                                        @onclick="() => ToggleMeritExpanded(merit.Id)"
+                                        role="button"
+                                        tabindex="0"
+                                        @onkeydown="(e) => HandleMeritKeydown(e, merit.Id)">
+                                        <div class="merit-header">
+                                            <span>@merit.Merit?.Name @(string.IsNullOrEmpty(merit.Specification) || merit.Specification == "N/A" ? "" :
+                                                $"({merit.Specification})")</span>
+                                            <span class="trait-dots">@(new string('•', merit.Rating))</span>
+                                            <span class="merit-chevron">@(_expandedMeritIds.Contains(merit.Id) ? "▼" : "▶")</span>
+                                        </div>
+                                        @if (_expandedMeritIds.Contains(merit.Id) && merit.Merit != null && !string.IsNullOrEmpty(merit.Merit.Description))
+                                        {
+                                            <div class="merit-description">@merit.Merit.Description</div>
+                                        }
                                     </li>
                                 }
                             </ul>
@@ -224,6 +236,85 @@ else
                                     </li>
                                 }
                             </ul>
+                        </section>
+
+                        <!-- BLOODLINES -->
+                        <section class="cs-section cs-bloodlines">
+                            <h2>Bloodline</h2>
+                            @{
+                                var activeBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Active);
+                                var pendingBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Pending);
+                            }
+                            @if (activeBloodline?.BloodlineDefinition != null)
+                            {
+                                <div class="bloodline-info" style="margin-bottom: 10px;">
+                                    <strong>@activeBloodline.BloodlineDefinition.Name</strong>
+                                    <p style="font-size: 0.9em; color: #a0a0a0; margin: 4px 0 0 0;">@activeBloodline.BloodlineDefinition.Description</p>
+                                    <div style="margin-top: 8px;">
+                                        <span class="trait-subheading">Lineage:</span> @(_character.Clan?.Name ?? "—") → @activeBloodline.BloodlineDefinition.Name
+                                    </div>
+                                    @if (_character.Banes?.Any() == true)
+                                    {
+                                        <div style="margin-top: 6px;">
+                                            <span class="trait-subheading">Clan Bane:</span> @_character.Banes.First().Description
+                                        </div>
+                                    }
+                                    <div style="margin-top: 6px;">
+                                        <span class="trait-subheading">Bloodline Bane:</span> @activeBloodline.BloodlineDefinition.BaneOverride
+                                    </div>
+                                    @if (_isFreeEditMode)
+                                    {
+                                        <button class="btn-ghost" style="font-size: 0.85em; margin-top: 8px;" @onclick="() => RemoveBloodline(activeBloodline.Id)" disabled="@_removingBloodline">
+                                            @(_removingBloodline ? "Removing…" : "Remove Bloodline")
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else if (pendingBloodline?.BloodlineDefinition != null)
+                            {
+                                <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingBloodline.BloodlineDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                                <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                                @if (_character.CampaignId.HasValue)
+                                {
+                                    <a href="/campaigns/@_character.CampaignId" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">View Campaign</a>
+                                }
+                            }
+                            else if (_character.BloodPotency >= 2 && _character.ClanId.HasValue && _character.CampaignId.HasValue)
+                            {
+                                <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">None. Apply when Blood Potency 2+.</p>
+                                <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
+                            }
+                            else
+                            {
+                                <p style="color: #808080; font-size: 0.9em;">None. Apply for a bloodline when Blood Potency 2+.</p>
+                            }
+                        </section>
+
+                        <!-- DEVOTIONS -->
+                        <section class="cs-section cs-devotions">
+                            <h2>Devotions</h2>
+                            @if (_character.Devotions?.Any() == true)
+                            {
+                                <ul class="trait-list">
+                                    @foreach (var cd in _character.Devotions)
+                                    {
+                                        @if (cd.DevotionDefinition != null)
+                                        {
+                                            <li class="trait-item">
+                                                <span>@cd.DevotionDefinition.Name</span>
+                                                @if (!cd.DevotionDefinition.IsPassive && !string.IsNullOrEmpty(cd.DevotionDefinition.PoolDefinitionJson))
+                                                {
+                                                    <button class="btn-ghost" style="padding: 2px 8px; font-size: 0.85em;" @onclick="() => OpenDevotionRoller(cd)">Roll</button>
+                                                }
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p style="color: #808080; font-size: 0.9em;">None yet. Purchase devotions via Advancement.</p>
+                            }
                         </section>
                     </div>
 
@@ -302,6 +393,10 @@ else
     </div>
 
     <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" />
+    <ApplyBloodlineModal IsOpen="_isApplyBloodlineModalOpen"
+                         IsOpenChanged="HandleApplyBloodlineModalClosed"
+                         EligibleBloodlines="_eligibleBloodlines"
+                         OnApplyRequested="HandleApplyBloodlineRequested" />
 }
 
 @implements IAsyncDisposable
@@ -322,6 +417,10 @@ else
     private bool _isRollerOpen = false;
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
+    private bool _isApplyBloodlineModalOpen = false;
+    private bool _removingBloodline = false;
+    private List<BloodlineSummaryDto> _eligibleBloodlines = [];
+    private HashSet<int> _expandedMeritIds = [];
 
     private bool isAdvancementMode = false;
     private bool _isFreeEditMode = false;
@@ -343,24 +442,63 @@ else
         }
     }
 
+    private void SelectTab(string tab) => _activeTab = tab;
+
+    private void HandleTabKeydown(KeyboardEventArgs e)
+    {
+        var tabs = new[] { "sheet", "identity", "history" };
+        int i = Array.IndexOf(tabs, _activeTab);
+        if (i < 0) return;
+        if (e.Key == "ArrowRight" || e.Key == "ArrowDown")
+        {
+            SelectTab(tabs[(i + 1) % tabs.Length]);
+        }
+        else if (e.Key == "ArrowLeft" || e.Key == "ArrowUp")
+        {
+            SelectTab(tabs[(i - 1 + tabs.Length) % tabs.Length]);
+        }
+        else if (e.Key == "Home")
+        {
+            SelectTab(tabs[0]);
+        }
+        else if (e.Key == "End")
+        {
+            SelectTab(tabs[^1]);
+        }
+    }
+
     private async Task ExportJson()
     {
         if (_character == null) return;
         _isExporting = true;
-        var json = ExportService.ExportCharacterAsJson(_character);
-        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-        await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.json", "application/json", base64);
-        _isExporting = false;
+        try
+        {
+            var json = ExportService.ExportCharacterAsJson(_character);
+            var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+            await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.json", "application/json", base64);
+            ToastService.Show("Export complete", "JSON downloaded.", ToastType.Success);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
     }
 
     private async Task ExportPdf()
     {
         if (_character == null) return;
         _isExporting = true;
-        var pdfBytes = ExportService.ExportCharacterAsPdf(_character);
-        var base64 = Convert.ToBase64String(pdfBytes);
-        await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.pdf", "application/pdf", base64);
-        _isExporting = false;
+        try
+        {
+            var pdfBytes = ExportService.ExportCharacterAsPdf(_character);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.pdf", "application/pdf", base64);
+            ToastService.Show("Export complete", "PDF downloaded.", ToastType.Success);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
     }
 
     private void GoToAdvancement()
@@ -421,21 +559,88 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _character?.CampaignId != null && !string.IsNullOrEmpty(_currentUserId))
+        if (!firstRender || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        if (_character.CampaignId != null)
         {
             // Auto-join if session is active (uses cache)
             bool isActive = await SessionClient.GetSessionActiveAsync(_character.CampaignId.Value, SessionService);
-            
+
             // Connect to hub for character updates regardless of live session state
             await SessionClient.StartAsync(_character.CampaignId.Value, _character.Id, _currentUserId, _cookieHeader);
-            
-            StateHasChanged();
+
+            SessionClient.CharacterUpdated += HandleCharacterUpdated;
+            SessionClient.BloodlineApproved += HandleBloodlineApproved;
         }
+
+        // Fallback: show approval toast if character has recently approved bloodline and user hasn't seen it this session
+        await TryShowRecentBloodlineApprovalToastAsync();
+
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
     {
+        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        SessionClient.BloodlineApproved -= HandleBloodlineApproved;
         await SessionClient.StopAsync();
+    }
+
+    private async void HandleCharacterUpdated(CharacterUpdateDto patch)
+    {
+        if (patch.CharacterId != Id || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task TryShowRecentBloodlineApprovalToastAsync()
+    {
+        if (_character == null)
+        {
+            return;
+        }
+
+        var activeBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Active);
+        if (activeBloodline?.ResolvedAt == null)
+        {
+            return;
+        }
+
+        var hoursSinceApproval = (DateTime.UtcNow - activeBloodline.ResolvedAt.Value).TotalHours;
+        if (hoursSinceApproval > 24)
+        {
+            return;
+        }
+
+        var key = $"bloodline-approved-{_character.Id}";
+        var alreadyShown = await JS.InvokeAsync<string>("sessionStorageGet", key);
+        if (!string.IsNullOrEmpty(alreadyShown))
+        {
+            return;
+        }
+
+        var bloodlineName = activeBloodline.BloodlineDefinition?.Name ?? "Bloodline";
+        ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
+        await JS.InvokeVoidAsync("sessionStorageSet", key, "1");
+    }
+
+    private async void HandleBloodlineApproved(int characterId, string bloodlineName)
+    {
+        if (characterId != Id || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        // Toast is shown by MainLayout (global subscriber) so player sees it from any page
+        _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+        await InvokeAsync(StateHasChanged);
     }
 
     private static void OpenReference(string traitName)
@@ -487,9 +692,9 @@ else
 
     private async Task AddEquipment()
     {
-        if (_character != null && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId) && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
         {
-            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity);
+            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity, _currentUserId);
             ce.Equipment = _availableEquipment.FirstOrDefault(e => e.Id == _selectedEquipmentId);
             _character.CharacterEquipments.Add(ce);
 
@@ -498,13 +703,125 @@ else
         }
     }
 
+    private void OpenDevotionRoller(CharacterDevotion cd)
+    {
+        if (_character == null || cd.DevotionDefinition?.PoolDefinitionJson == null) return;
+        try
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            var pool = System.Text.Json.JsonSerializer.Deserialize<RequiemNexus.Domain.Models.PoolDefinition>(cd.DevotionDefinition.PoolDefinitionJson, options);
+            _rollerTraitName = cd.DevotionDefinition.Name;
+            _rollerBaseDice = pool != null ? TraitResolver.ResolvePool(_character, pool) : 0;
+            _isRollerOpen = true;
+        }
+        catch
+        {
+            _rollerTraitName = cd.DevotionDefinition.Name;
+            _rollerBaseDice = 0;
+            _isRollerOpen = true;
+        }
+    }
+
     private async Task RemoveEquipment(int ceId)
     {
-        if (_character != null)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await EquipmentService.RemoveEquipmentAsync(ceId);
+            await EquipmentService.RemoveEquipmentAsync(ceId, _currentUserId);
             var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
             if (ce != null) _character.CharacterEquipments.Remove(ce);
+        }
+    }
+
+    private void ToggleMeritExpanded(int characterMeritId)
+    {
+        if (_expandedMeritIds.Contains(characterMeritId))
+        {
+            _ = _expandedMeritIds.Remove(characterMeritId);
+        }
+        else
+        {
+            _expandedMeritIds.Add(characterMeritId);
+        }
+    }
+
+    private void HandleMeritKeydown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, int characterMeritId)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            ToggleMeritExpanded(characterMeritId);
+        }
+    }
+
+    private void HandleApplyBloodlineModalClosed(bool isOpen)
+    {
+        _isApplyBloodlineModalOpen = isOpen;
+    }
+
+    private async Task OpenApplyBloodlineModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            _eligibleBloodlines = await BloodlineService.GetEligibleBloodlinesAsync(_character.Id, _currentUserId);
+            if (_eligibleBloodlines.Count == 0)
+            {
+                ToastService.Show("No eligible bloodlines", "No eligible bloodlines for your clan.", ToastType.Info);
+                return;
+            }
+
+            _isApplyBloodlineModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task HandleApplyBloodlineRequested(int bloodlineDefinitionId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await BloodlineService.ApplyForBloodlineAsync(_character.Id, bloodlineDefinitionId, _currentUserId);
+            ToastService.Show("Application submitted", "Bloodline application submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task RemoveBloodline(int characterBloodlineId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId) || _removingBloodline)
+        {
+            return;
+        }
+
+        _removingBloodline = true;
+        try
+        {
+            await BloodlineService.RemoveBloodlineAsync(characterBloodlineId, _currentUserId);
+            ToastService.Show("Bloodline removed", "The bloodline has been removed from your character.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _removingBloodline = false;
         }
     }
 }

@@ -110,6 +110,10 @@ public class Character
 
     public virtual ICollection<CharacterDiscipline> Disciplines { get; set; } = new List<CharacterDiscipline>();
 
+    public virtual ICollection<CharacterBloodline> Bloodlines { get; set; } = new List<CharacterBloodline>();
+
+    public virtual ICollection<CharacterDevotion> Devotions { get; set; } = new List<CharacterDevotion>();
+
     public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
 
     /// <summary>Gets or sets a value indicating whether the character is retired from campaign play.
@@ -139,5 +143,41 @@ public class Character
     public int GetSkillRating(string name)
     {
         return Skills.FirstOrDefault(s => s.Name == name)?.Rating ?? 0;
+    }
+
+    /// <summary>Gets the rating for a Discipline by its ID. Returns 0 if the character does not have the discipline.</summary>
+    public int GetDisciplineRating(int disciplineId)
+    {
+        return Disciplines.FirstOrDefault(d => d.DisciplineId == disciplineId)?.Rating ?? 0;
+    }
+
+    /// <summary>Gets the rating for a Discipline by name. Returns 0 if the character does not have the discipline.</summary>
+    public int GetDisciplineRating(string name)
+    {
+        return Disciplines.FirstOrDefault(d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase))?.Rating ?? 0;
+    }
+
+    /// <summary>
+    /// Checks if a discipline is in-clan for this character.
+    /// In-clan disciplines include the three standard clan disciplines plus the fourth discipline from an active bloodline.
+    /// </summary>
+    /// <param name="disciplineId">The ID of the discipline to check.</param>
+    /// <returns>True if the discipline is in-clan; otherwise, false.</returns>
+    public bool IsDisciplineInClan(int disciplineId)
+    {
+        // 1. Check parent clan disciplines
+        if (Clan?.ClanDisciplines.Any(cd => cd.DisciplineId == disciplineId) == true)
+        {
+            return true;
+        }
+
+        // 2. Check active bloodline fourth discipline
+        var activeBloodline = Bloodlines.FirstOrDefault(b => b.Status == Enums.BloodlineStatus.Active);
+        if (activeBloodline?.BloodlineDefinition?.FourthDisciplineId == disciplineId)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

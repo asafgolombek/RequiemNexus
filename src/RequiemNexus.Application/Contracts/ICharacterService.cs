@@ -11,6 +11,12 @@ public interface ICharacterService
 
     Task<Character?> GetCharacterByIdAsync(int id, string userId);
 
+    /// <summary>
+    /// Reloads the character from the database, bypassing EF tracking cache.
+    /// Use after external mutations (e.g. bloodline removal) to get fresh navigation properties.
+    /// </summary>
+    Task<Character?> ReloadCharacterAsync(int id, string userId);
+
     Task DeleteCharacterAsync(int id, string userId);
 
     Task<Character> EmbraceCharacterAsync(Character newCharacter);

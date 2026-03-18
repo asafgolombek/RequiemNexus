@@ -8,8 +8,6 @@
 @using RequiemNexus.Application.Contracts
 @inject ICharacterService CharacterService
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IJSRuntime JSRuntime
-
 <PageTitle>My Characters - Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
@@ -100,7 +98,7 @@
                     </div>
                     <div class="card-actions">
                         <a href="/character/@character.Id" class="btn-primary-rn">View Sheet</a>
-                        <button @onclick="() => DeleteCharacter(character)" class="btn-danger-rn">Delete</button>
+                        <button @onclick="() => _characterToDelete = character" class="btn-danger-rn">Delete</button>
                     </div>
                 </div>
             }
@@ -108,9 +106,17 @@
     }
 </div>
 
+<ConfirmModal IsOpen="@(_characterToDelete != null)"
+              Title="Delete Character"
+              Message="@(_characterToDelete != null ? $"Are you sure you want to delete {_characterToDelete.Name}? This cannot be undone." : "")"
+              ConfirmLabel="Delete"
+              OnConfirmClicked="ConfirmDeleteCharacter"
+              OnCancelClicked="CancelDelete" />
+
 @code {
     private List<Character>? _characters;
     private string? _currentUserId;
+    private Character? _characterToDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,13 +133,18 @@
         }
     }
 
-    private async Task DeleteCharacter(Character character)
+    private async Task ConfirmDeleteCharacter()
     {
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {character.Name}?");
-        if (confirmed && !string.IsNullOrEmpty(_currentUserId))
+        if (_characterToDelete != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await CharacterService.DeleteCharacterAsync(character.Id, _currentUserId);
-            _characters?.Remove(character);
+            await CharacterService.DeleteCharacterAsync(_characterToDelete.Id, _currentUserId);
+            _characters?.Remove(_characterToDelete);
         }
+        _characterToDelete = null;
+    }
+
+    private void CancelDelete()
+    {
+        _characterToDelete = null;
     }
 }

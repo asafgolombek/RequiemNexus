@@ -18,6 +18,9 @@ public enum XpExpense
     /// <summary>XP spent purchasing or upgrading a Merit.</summary>
     Merit,
 
+    /// <summary>XP spent purchasing a Devotion.</summary>
+    Devotion,
+
     /// <summary>Manual adjustment (e.g., correcting an error).</summary>
     ManualAdjustment,
 }

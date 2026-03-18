@@ -80,7 +80,7 @@ public class CharacterExportServiceTests
         await ctx.SaveChangesAsync();
 
         var svc = new CharacterExportService(ctx);
-        var json = await svc.ExportCharacterAsJsonAsync(character.Id);
+        var json = await svc.ExportCharacterAsJsonAsync(character.Id, "test-user");
 
         var doc = JsonDocument.Parse(json);
         Assert.Equal("Lord Ashford", doc.RootElement.GetProperty("Name").GetString());
@@ -94,7 +94,7 @@ public class CharacterExportServiceTests
         using var ctx = CreateContext(nameof(ExportCharacterAsJsonAsync_WithInvalidId_ReturnsEmptyJson));
         var svc = new CharacterExportService(ctx);
 
-        var json = await svc.ExportCharacterAsJsonAsync(999);
+        var json = await svc.ExportCharacterAsJsonAsync(999, "test-user");
 
         Assert.Equal("{}", json);
     }
@@ -141,7 +141,7 @@ public class CharacterExportServiceTests
         using var ctx = CreateContext(nameof(ExportCharacterAsPdfAsync_WithInvalidId_ReturnsEmptyBytes));
         var svc = new CharacterExportService(ctx);
 
-        var pdfBytes = await svc.ExportCharacterAsPdfAsync(999);
+        var pdfBytes = await svc.ExportCharacterAsPdfAsync(999, "test-user");
 
         Assert.Empty(pdfBytes);
     }

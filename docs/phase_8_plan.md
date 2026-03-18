@@ -16,6 +16,7 @@ The most critical architectural task of Phase 8 is the **Unified Pool Resolver**
 
 ### Design
 - **Pool Definition:** A declarative list of trait references.
+- **Phase 8 Scope:** Additive pools only (e.g., `Strength + Brawl + Vigor`). Contested rolls ("vs") and penalty dice are deferred to Phase 9 — see mission.md.
 - **Resolution Path:**
     1. `Application` layer receives a request to roll a pool (e.g., for a Devotion).
     2. `TraitResolver` (Application Service) hydrates the pool by fetching the relevant ratings from the `Character` entity.
@@ -46,7 +47,7 @@ A character **MUST** belong to one of the allowed parent clans for a bloodline.
 Joining a bloodline grants:
 1.  **A Fourth In-Clan Discipline:** This Discipline is purchased at the in-clan XP rate.
 2.  **Access to Bloodline Devotions:** Some bloodlines (e.g., *Khaibit*) unlock specialized Devotions.
-3.  **Bloodline Bane:** This new Bane is added to the character sheet and layered over the parent clan's existing rules.
+3.  **Bloodline Bane:** The character gains an *additional* Bane. The bloodline bane does **not** replace the parent clan's bane — both apply simultaneously. The bloodline bane typically works in tandem with, or stacks on top of, the original clan curse.
 
 ### Data Models
 - **`BloodlineDefinition`**:
@@ -78,12 +79,19 @@ A character **MUST** meet all discipline level requirements and have sufficient 
 - Prerequisites are enforced in the `Application` layer.
 - The UI should filter devotions by their prerequisites, but the authoritative check is in the backend.
 
+### Prerequisite Design (Long-Term Choice)
+Use **fully structured** prerequisites (Option 1): parse source data into `DevotionPrerequisite` rows with `OrGroupId` for OR logic. This is best for long-term maintainability — explicit, queryable, testable, no runtime parsing of freeform strings. Aligns with Antigravity: "If it's implicit, it's a bug waiting to happen."
+
+### Prerequisite Design (Long-Term)
+Use **fully structured** prerequisites (Option 1): parse seed data into `List<(DisciplineId, MinLevel)>` with `OrGroupId` for OR logic. Bloodline-tagged prerequisites map to `RequiredBloodlineId` or `CustomRuleOverride`. This is preferred over hybrid/freeform strings because: explicit and queryable, no runtime parsing, testable, and aligns with Antigravity ("if it's implicit, it's a bug waiting to happen").
+
 ### Data Models
 - **`DevotionDefinition`**:
     - `Name`, `Description`, `XpCost`.
-    - `Prerequisites`: List of `(DisciplineId, MinimumLevel)`.
+    - `Prerequisites`: Structured list with OR support via `OrGroupId` — satisfy any group. Bloodline-tagged prerequisites (e.g., "Ascendancy") map to `RequiredBloodlineId` or `CustomRuleOverride`.
+    - `RequiredBloodlineId?`: Optional — gates devotions that only characters in specific bloodlines can learn.
     - `PoolDefinition`: The dice pool used to activate the power (handled by the **Unified Pool Resolver**).
-    - `IsPassive`: Boolean (passive modifiers vs. active rolls).
+    - `IsPassive`: Boolean (passive modifiers vs. active rolls). Passive modifier engine deferred to Phase 9 — see mission.md.
 
 ### Tasks
 - [ ] Create `DevotionDefinition` entity in `Data.Models`.
@@ -97,9 +105,11 @@ A character **MUST** meet all discipline level requirements and have sufficient 
 ## 🎭 4. Storyteller & UI Integration
 
 - **Storyteller Glimpse**: A new "Pending Requests" tab for Bloodline applications.
-- **Character Sheet**:
-    - Dedicated Bloodline section showing the lineage and Bane.
-    - Devotions list with "Roll" buttons (using the Unified Pool Resolver).
+- **Character Sheet** (and **Edit Character** flow):
+    - Bloodlines and Devotions are first-class sections on the character sheet.
+    - Players can view and **edit** Bloodline affiliation and Devotions as part of the Edit Character flow (subject to ST approval for Bloodlines and prerequisite validation for Devotions).
+    - Dedicated Bloodline section showing the lineage and Bane (both clan and bloodline banes displayed).
+    - Devotions list with "Roll" buttons for active Devotions (using the Unified Pool Resolver).
     - "Apply for Bloodline" dialog (filtering by Clan and Blood Potency).
 
 ---

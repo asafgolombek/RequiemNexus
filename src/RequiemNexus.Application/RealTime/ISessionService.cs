@@ -75,6 +75,13 @@ public interface ISessionService
     Task BroadcastCharacterUpdateAsync(int characterId);
 
     /// <summary>
+    /// Broadcasts bloodline approval notification to the chronicle group.
+    /// </summary>
+    /// <param name="characterId">Primary key of the character whose bloodline was approved.</param>
+    /// <param name="bloodlineName">Name of the approved bloodline.</param>
+    Task BroadcastBloodlineApprovedAsync(int characterId, string bloodlineName);
+
+    /// <summary>
     /// Broadcasts a chronicle state update to the group.
     /// </summary>
     /// <param name="patch">The delta update.</param>

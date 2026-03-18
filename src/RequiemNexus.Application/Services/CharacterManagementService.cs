@@ -58,8 +58,24 @@ public class CharacterManagementService(
             .Include(c => c.Skills)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
+            .Include(c => c.Bloodlines).ThenInclude(b => b.BloodlineDefinition)
+            .Include(c => c.Devotions).ThenInclude(d => d.DevotionDefinition)
+            .Include(c => c.Banes)
             .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
+    }
+
+    /// <inheritdoc />
+    public async Task<Character?> ReloadCharacterAsync(int id, string userId)
+    {
+        // Detach any existing tracked entity so the next query loads fresh from DB
+        Character? existing = _dbContext.Characters.Local.FirstOrDefault(c => c.Id == id && c.ApplicationUserId == userId);
+        if (existing != null)
+        {
+            _dbContext.Entry(existing).State = EntityState.Detached;
+        }
+
+        return await GetCharacterByIdAsync(id, userId);
     }
 
     public async Task DeleteCharacterAsync(int id, string userId)

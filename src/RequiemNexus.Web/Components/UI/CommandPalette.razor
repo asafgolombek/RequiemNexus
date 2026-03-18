@@ -13,7 +13,7 @@
 @if (PaletteService.IsOpen)
 {
     <div class="palette-overlay" @onclick="Close" role="dialog" aria-modal="true" aria-label="Command palette">
-        <div class="palette-card" @onclick:stopPropagation="true">
+        <div class="palette-card" @onclick:stopPropagation>
             <input @ref="_inputRef" class="palette-input" placeholder="Search characters, campaigns, pages..."
                    @bind-value="_query" @bind-value:event="oninput" @onkeydown="OnKeyDown" autofocus />
             <div class="palette-results">

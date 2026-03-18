@@ -9,7 +9,7 @@ public interface IExperienceCostRules
 
     int CalculateSkillUpgradeCost(int fromRating, int toRating);
 
-    int CalculateDisciplineUpgradeCost(int fromRating, int toRating);
+    int CalculateDisciplineUpgradeCost(int fromRating, int toRating, bool isInClan);
 
     int CalculateMeritCost(int fromRating, int toRating);
 }
