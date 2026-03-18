@@ -11,10 +11,12 @@ namespace RequiemNexus.Application.Services;
 /// </summary>
 public class CharacterDisciplineService(
     ApplicationDbContext dbContext,
-    IBeatLedgerService beatLedger) : ICharacterDisciplineService
+    IBeatLedgerService beatLedger,
+    RequiemNexus.Domain.Contracts.IExperienceCostRules experienceCostRules) : ICharacterDisciplineService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
+    private readonly RequiemNexus.Domain.Contracts.IExperienceCostRules _experienceCostRules = experienceCostRules;
 
     /// <inheritdoc />
     public async Task<List<Discipline>> GetAvailableDisciplinesAsync()
@@ -23,11 +25,18 @@ public class CharacterDisciplineService(
     }
 
     /// <inheritdoc />
-    public async Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, int xpCost)
+    public async Task<CharacterDiscipline> AddDisciplineAsync(Character character, int disciplineId, int rating, string? userId)
     {
+        bool isInClan = character.IsDisciplineInClan(disciplineId);
+        int xpCost = _experienceCostRules.CalculateDisciplineUpgradeCost(0, rating, isInClan);
+
+        if (character.ExperiencePoints < xpCost)
+        {
+            throw new InvalidOperationException($"Insufficient XP. Required: {xpCost}, Available: {character.ExperiencePoints}");
+        }
+
         character.ExperiencePoints -= xpCost;
 
-        // Rating is set directly (not via Upgrade()) because no XP deduction applies at creation time.
         CharacterDiscipline cd = new()
         {
             CharacterId = character.Id,
@@ -40,11 +49,43 @@ public class CharacterDisciplineService(
             character.Id,
             character.CampaignId,
             xpCost,
-            XpExpense.Discipline,
-            $"Purchased Discipline (Id={disciplineId}, rating={rating})",
-            null);
+            RequiemNexus.Domain.Enums.XpExpense.Discipline,
+            $"Purchased Discipline (Id={disciplineId}, rating={rating}, in-clan={isInClan})",
+            userId);
 
         await _dbContext.SaveChangesAsync();
         return cd;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TryUpgradeDisciplineAsync(Character character, int characterDisciplineId, int newRating, string? userId)
+    {
+        CharacterDiscipline? cd = character.Disciplines.FirstOrDefault(d => d.Id == characterDisciplineId);
+        if (cd == null || newRating <= cd.Rating)
+        {
+            return false;
+        }
+
+        bool isInClan = character.IsDisciplineInClan(cd.DisciplineId);
+        int xpCost = _experienceCostRules.CalculateDisciplineUpgradeCost(cd.Rating, newRating, isInClan);
+
+        if (character.ExperiencePoints >= xpCost)
+        {
+            character.ExperiencePoints -= xpCost;
+            cd.Rating = newRating;
+
+            await _beatLedger.RecordXpSpendAsync(
+                character.Id,
+                character.CampaignId,
+                xpCost,
+                RequiemNexus.Domain.Enums.XpExpense.Discipline,
+                $"Upgraded Discipline {cd.Discipline?.Name ?? "Id=" + cd.DisciplineId} to {newRating} (in-clan={isInClan})",
+                userId);
+
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        return false;
     }
 }

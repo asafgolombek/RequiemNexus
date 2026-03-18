@@ -44,10 +44,10 @@ public class ExperienceCostRules : IExperienceCostRules
         => CalculateUpgradeCost(fromRating, toRating, costMultiplier: 2);
 
     /// <summary>
-    /// Discipline upgrade cost: each new dot costs (dot level × 5).
+    /// Discipline upgrade cost: each new dot costs (dot level × 4) if in-clan, or (dot level × 5) if out-of-clan.
     /// </summary>
-    public int CalculateDisciplineUpgradeCost(int fromRating, int toRating)
-        => CalculateUpgradeCost(fromRating, toRating, costMultiplier: 5);
+    public int CalculateDisciplineUpgradeCost(int fromRating, int toRating, bool isInClan)
+        => CalculateUpgradeCost(fromRating, toRating, isInClan ? 4 : 5);
 
     /// <summary>
     /// Merit purchase/upgrade cost: 1 XP per dot.

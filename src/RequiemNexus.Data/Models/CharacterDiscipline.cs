@@ -26,7 +26,7 @@ public class CharacterDiscipline : IRatedTrait
     public string Name => Discipline?.Name ?? string.Empty;
 
     public int CalculateUpgradeCost(int toRating)
-        => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, costMultiplier: 5);
+        => ExperienceCostRules.CalculateUpgradeCost(Rating, toRating, (Character?.IsDisciplineInClan(DisciplineId) ?? false) ? 4 : 5);
 
     public int Upgrade(int toRating, IExperienceCostRules rules)
     {
@@ -35,7 +35,8 @@ public class CharacterDiscipline : IRatedTrait
             throw new ArgumentException("Upgrade must be to a higher rating.", nameof(toRating));
         }
 
-        int cost = rules.CalculateDisciplineUpgradeCost(Rating, toRating);
+        bool isInClan = Character?.IsDisciplineInClan(DisciplineId) ?? false;
+        int cost = rules.CalculateDisciplineUpgradeCost(Rating, toRating, isInClan);
         Rating = toRating;
         return cost;
     }

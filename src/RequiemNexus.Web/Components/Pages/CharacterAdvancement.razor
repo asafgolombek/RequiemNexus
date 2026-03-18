@@ -14,6 +14,7 @@
 @inject IDisciplineService DisciplineService
 @inject ICharacterMeritService CharacterMeritService
 @inject ICharacterDisciplineService CharacterDisciplineService
+@inject IDevotionService DevotionService
 @inject RequiemNexus.Domain.Contracts.IExperienceCostRules ExperienceCostRules
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -94,12 +95,13 @@ else
                 @if (_character.Disciplines.Any())
                 {
                     <section class="cs-section cs-disciplines">
-                        <h2>Disciplines (New Dot x 5 XP)</h2>
+                        <h2>Disciplines (In-Clan: x4 | Out-of-Clan: x5)</h2>
                         <ul class="trait-list disciplines-list" style="max-width: 400px;">
                             @foreach (var disc in _character.Disciplines)
                             {
+                                bool isInClan = _character.IsDisciplineInClan(disc.DisciplineId);
                                 <li class="trait-item discipline-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <span style="flex-grow: 1;">@disc.Discipline?.Name</span>
+                                    <span style="flex-grow: 1;">@disc.Discipline?.Name @(isInClan ? "(In-Clan)" : "")</span>
                                     <DotScale Value="disc.Rating" ValueChanged='(int val) => TryUpgradeDiscipline(disc, val)' Max="5" ShowRollButton="false" />
                                 </li>
                             }
@@ -135,13 +137,14 @@ else
 
                 <!-- ADD NEW DISCIPLINE -->
                 <section class="cs-section cs-disciplines">
-                    <h2>Add New Discipline (Rating x 5 XP)</h2>
+                    <h2>Add New Discipline</h2>
                     <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <select @bind="_selectedDisciplineId" class="equipment-select" style="min-width: 200px;">
                             <option value="0">-- Select Discipline --</option>
                             @foreach (var d in _availableDisciplines.Where(ad => !_character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
                             {
-                                <option value="@d.Id">@d.Name</option>
+                                bool isInClan = _character.IsDisciplineInClan(d.Id);
+                                <option value="@d.Id">@d.Name @(isInClan ? "(In-Clan: x4)" : "(Out-of-Clan: x5)")</option>
                             }
                         </select>
 
@@ -152,6 +155,45 @@ else
 
                         <button class="btn-primary-rn" @onclick="AddNewDiscipline" disabled="@(_selectedDisciplineId == 0)">Add</button>
                     </div>
+                </section>
+
+                <!-- ADD NEW DEVOTION -->
+                <section class="cs-section cs-devotions">
+                    <h2>Purchase Devotions</h2>
+                    @if (_eligibleDevotions.Any())
+                    {
+                        <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <select @bind="_selectedDevotionId" class="equipment-select" style="min-width: 200px;">
+                                <option value="0">-- Select Devotion --</option>
+                                @foreach (var d in _eligibleDevotions)
+                                {
+                                    <option value="@d.Id">@d.Name (@d.XpCost XP)</option>
+                                }
+                            </select>
+                            <button class="btn-primary-rn" @onclick="AddNewDevotion" disabled="@(_selectedDevotionId == 0)">Purchase</button>
+                        </div>
+                        
+                        @if (_selectedDevotionId != 0)
+                        {
+                            var selected = _eligibleDevotions.First(d => d.Id == _selectedDevotionId);
+                            <div style="margin-top: 10px; font-size: 0.9em; color: #d0d0d0; background: #1a1a1a; padding: 10px; border-radius: 4px; border-left: 3px solid #550000;">
+                                <strong>@selected.Name</strong>
+                                <p style="margin: 5px 0;">@selected.Description</p>
+                                <div style="font-size: 0.85em; color: #a0a0a0;">
+                                    Prerequisites: 
+                                    @foreach (var p in selected.Prerequisites.OrderBy(p => p.OrGroupId).ThenBy(p => p.DisciplineId))
+                                    {
+                                        <span>@(p.Discipline?.Name ?? "Discipline") @p.MinimumLevel</span>
+                                        @if (p != selected.Prerequisites.Last()) { <span>, </span> }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p style="color: #808080; font-size: 0.9em;">No new devotions eligible for purchase at this time.</p>
+                    }
                 </section>
             </div>
         </CascadingValue>
@@ -175,6 +217,9 @@ else
     private int _selectedDisciplineId = 0;
     private int _newDisciplineRating = 1;
 
+    private List<DevotionDefinition> _eligibleDevotions = new();
+    private int _selectedDevotionId = 0;
+
     private bool SelectedMeritRequiresSpec => 
         _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId)?.RequiresSpecification ?? false;
 
@@ -188,6 +233,10 @@ else
             _character = await CharacterService.GetCharacterByIdAsync(Id, _userId);
             _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync();
             _availableDisciplines = await CharacterDisciplineService.GetAvailableDisciplinesAsync();
+            if (_character != null)
+            {
+                _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
+            }
         }
     }
 
@@ -246,13 +295,11 @@ else
 
         _errorMessage = null;
 
-        // Use centralized ExperienceCostRules
-        int totalCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(cd.Rating, newRating);
-
-        if (_character.ExperiencePoints >= totalCost)
+        bool success = await CharacterDisciplineService.TryUpgradeDisciplineAsync(_character, cd.Id, newRating, _userId);
+        if (success)
         {
-            _character.ExperiencePoints -= totalCost;
-            cd.Rating = newRating;
+            // Re-check eligible devotions after discipline upgrade
+            _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
             await CharacterService.SaveAsync(_character);
             StateHasChanged();
         }
@@ -292,22 +339,47 @@ else
         if (_character == null || _selectedDisciplineId == 0) return;
 
         _errorMessage = null;
-        int xpCost = ExperienceCostRules.CalculateDisciplineUpgradeCost(0, _newDisciplineRating);
-
-        if (_character.ExperiencePoints >= xpCost)
+        
+        try 
         {
             var disc = _availableDisciplines.First(d => d.Id == _selectedDisciplineId);
-            var cd = await CharacterDisciplineService.AddDisciplineAsync(_character, _selectedDisciplineId, _newDisciplineRating, xpCost);
+            var cd = await CharacterDisciplineService.AddDisciplineAsync(_character, _selectedDisciplineId, _newDisciplineRating, _userId);
             cd.Discipline = disc;
             _character.Disciplines.Add(cd);
+
+            // Re-check eligible devotions
+            _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
 
             _selectedDisciplineId = 0;
             _newDisciplineRating = 1;
             StateHasChanged();
         }
-        else
+        catch (Exception ex)
         {
-            _errorMessage = $"Not enough Experiences to add that discipline. Cost is {xpCost} XP.";
+            _errorMessage = ex.Message;
+        }
+    }
+
+    private async Task AddNewDevotion()
+    {
+        if (_character == null || _selectedDevotionId == 0) return;
+
+        _errorMessage = null;
+
+        try
+        {
+            var devotionDef = _eligibleDevotions.First(d => d.Id == _selectedDevotionId);
+            var cd = await DevotionService.PurchaseDevotionAsync(_character, _selectedDevotionId, _userId);
+            cd.DevotionDefinition = devotionDef;
+            _character.Devotions.Add(cd);
+
+            _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
+            _selectedDevotionId = 0;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
         }
     }
 }
