@@ -186,9 +186,11 @@ public class SessionService(
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == characterId);
 
-        if (character?.CampaignId.HasValue == true)
+        // Only send to the character owner — bloodline approval is a personal notification.
+        // Sending to Group would notify other players and could show the toast to non-owners.
+        if (!string.IsNullOrEmpty(character?.ApplicationUserId))
         {
-            await _publisher.Group(character.CampaignId.Value).ReceiveBloodlineApproved(characterId, bloodlineName);
+            await _publisher.User(character.ApplicationUserId).ReceiveBloodlineApproved(characterId, bloodlineName);
         }
     }
 

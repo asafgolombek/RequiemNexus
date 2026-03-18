@@ -273,9 +273,10 @@ else
                             else if (pendingBloodline?.BloodlineDefinition != null)
                             {
                                 <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingBloodline.BloodlineDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                                <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">View in Glimpse</a>
+                                    <a href="/campaigns/@_character.CampaignId" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">View Campaign</a>
                                 }
                             }
                             else if (_character.BloodPotency >= 2 && _character.ClanId.HasValue && _character.CampaignId.HasValue)
@@ -558,7 +559,12 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _character?.CampaignId != null && !string.IsNullOrEmpty(_currentUserId))
+        if (!firstRender || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        if (_character.CampaignId != null)
         {
             // Auto-join if session is active (uses cache)
             bool isActive = await SessionClient.GetSessionActiveAsync(_character.CampaignId.Value, SessionService);
@@ -568,9 +574,12 @@ else
 
             SessionClient.CharacterUpdated += HandleCharacterUpdated;
             SessionClient.BloodlineApproved += HandleBloodlineApproved;
-
-            StateHasChanged();
         }
+
+        // Fallback: show approval toast if character has recently approved bloodline and user hasn't seen it this session
+        await TryShowRecentBloodlineApprovalToastAsync();
+
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
@@ -591,6 +600,37 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task TryShowRecentBloodlineApprovalToastAsync()
+    {
+        if (_character == null)
+        {
+            return;
+        }
+
+        var activeBloodline = _character.Bloodlines?.FirstOrDefault(b => b.Status == Data.Models.Enums.BloodlineStatus.Active);
+        if (activeBloodline?.ResolvedAt == null)
+        {
+            return;
+        }
+
+        var hoursSinceApproval = (DateTime.UtcNow - activeBloodline.ResolvedAt.Value).TotalHours;
+        if (hoursSinceApproval > 24)
+        {
+            return;
+        }
+
+        var key = $"bloodline-approved-{_character.Id}";
+        var alreadyShown = await JS.InvokeAsync<string>("sessionStorageGet", key);
+        if (!string.IsNullOrEmpty(alreadyShown))
+        {
+            return;
+        }
+
+        var bloodlineName = activeBloodline.BloodlineDefinition?.Name ?? "Bloodline";
+        ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
+        await JS.InvokeVoidAsync("sessionStorageSet", key, "1");
+    }
+
     private async void HandleBloodlineApproved(int characterId, string bloodlineName)
     {
         if (characterId != Id || _character == null || string.IsNullOrEmpty(_currentUserId))
@@ -598,7 +638,7 @@ else
             return;
         }
 
-        ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
+        // Toast is shown by MainLayout (global subscriber) so player sees it from any page
         _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
         await InvokeAsync(StateHasChanged);
     }
