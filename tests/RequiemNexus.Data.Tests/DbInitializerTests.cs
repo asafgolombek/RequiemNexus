@@ -1,0 +1,139 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using RequiemNexus.Data;
+using RequiemNexus.Data.Models;
+using Xunit;
+
+namespace RequiemNexus.Data.Tests;
+
+/// <summary>
+/// Integration tests for DbInitializer — verifies Bloodline and Devotion definitions are seeded correctly.
+/// </summary>
+public class DbInitializerTests
+{
+    private static ServiceProvider CreateServiceProvider(string dbName)
+    {
+        var services = new ServiceCollection();
+
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase(dbName));
+
+        services.AddLogging();
+
+        services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        return services.BuildServiceProvider();
+    }
+
+    [Fact]
+    public async Task InitializeAsync_SeedsBloodlineDefinitions()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_SeedsBloodlineDefinitions));
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+
+        var bloodlines = await context.BloodlineDefinitions
+            .Include(b => b.AllowedParentClans)
+            .ToListAsync();
+
+        Assert.True(bloodlines.Count >= 8, $"Expected at least 8 bloodlines, got {bloodlines.Count}");
+
+        var expectedNames = new[] { "Ankou", "Icelus", "Khaibit", "Kerberos", "Lidérc", "Nosoi", "Vardyvle", "Vilseduire" };
+        foreach (var name in expectedNames)
+        {
+            var b = bloodlines.FirstOrDefault(x => x.Name == name);
+            Assert.NotNull(b);
+            Assert.True(b.FourthDisciplineId > 0);
+            Assert.False(string.IsNullOrEmpty(b.BaneOverride));
+            Assert.True(b.PrerequisiteBloodPotency >= 2);
+        }
+
+        var icelus = bloodlines.First(b => b.Name == "Icelus");
+        Assert.Equal(2, icelus.AllowedParentClans.Count);
+
+        var vilseduire = bloodlines.First(b => b.Name == "Vilseduire");
+        Assert.Equal(2, vilseduire.AllowedParentClans.Count);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_SeedsDevotionDefinitions()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_SeedsDevotionDefinitions));
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+
+        var devotions = await context.DevotionDefinitions
+            .Include(d => d.Prerequisites)
+            .ToListAsync();
+
+        Assert.True(devotions.Count >= 4, $"Expected at least 4 devotions, got {devotions.Count}");
+
+        var expectedNames = new[] { "Body of Will", "Best Served Cold", "Blood Scenting", "Bones of the Mountain" };
+        foreach (var name in expectedNames)
+        {
+            var d = devotions.FirstOrDefault(x => x.Name == name);
+            Assert.NotNull(d);
+            Assert.False(string.IsNullOrEmpty(d.PoolDefinitionJson));
+            Assert.True(d.XpCost > 0);
+        }
+
+        var bonesOfMountain = devotions.First(d => d.Name == "Bones of the Mountain");
+        Assert.True(bonesOfMountain.Prerequisites.Count >= 3);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_BloodlinesDependOnClansAndDisciplines()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_BloodlinesDependOnClansAndDisciplines));
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+
+        var clanIds = await context.Clans.Select(c => c.Id).ToHashSetAsync();
+        var disciplineIds = await context.Disciplines.Select(d => d.Id).ToHashSetAsync();
+
+        var bloodlines = await context.BloodlineDefinitions
+            .Include(b => b.AllowedParentClans)
+            .ToListAsync();
+
+        foreach (var b in bloodlines)
+        {
+            Assert.True(disciplineIds.Contains(b.FourthDisciplineId), $"Bloodline {b.Name} has invalid FourthDisciplineId {b.FourthDisciplineId}");
+            foreach (var bc in b.AllowedParentClans)
+            {
+                Assert.True(clanIds.Contains(bc.ClanId), $"Bloodline {b.Name} has invalid ClanId {bc.ClanId}");
+            }
+        }
+    }
+
+    [Fact]
+    public async Task InitializeAsync_Idempotent_DoesNotDuplicateOnSecondRun()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_Idempotent_DoesNotDuplicateOnSecondRun));
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        var bloodlineCount1 = await context.BloodlineDefinitions.CountAsync();
+        var devotionCount1 = await context.DevotionDefinitions.CountAsync();
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        var bloodlineCount2 = await context.BloodlineDefinitions.CountAsync();
+        var devotionCount2 = await context.DevotionDefinitions.CountAsync();
+
+        Assert.Equal(bloodlineCount1, bloodlineCount2);
+        Assert.Equal(devotionCount1, devotionCount2);
+    }
+}
