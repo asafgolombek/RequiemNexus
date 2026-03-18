@@ -1,0 +1,57 @@
+@using RequiemNexus.Application.DTOs
+
+<div class="modal-backdrop @(IsOpen ? "open" : "")" @onclick="CloseModal">
+    <div class="modal-dialog" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="coil-modal-title">
+        <div class="modal-header">
+            <h2 id="coil-modal-title">Purchase Coil</h2>
+            <button class="modal-close" @onclick="CloseModal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            @if (Coils.Count == 0)
+            {
+                <p style="color: var(--text-secondary);">No eligible Coils.</p>
+            }
+            else
+            {
+                <ul class="bloodline-list" role="list">
+                    @foreach (var coil in Coils.OrderBy(c => c.ScaleName).ThenBy(c => c.Level))
+                    {
+                        <li class="bloodline-item" role="listitem">
+                            <div class="bloodline-info">
+                                <strong>@coil.Name</strong>
+                                <span style="font-size:0.85em; color:#808080;">
+                                    @coil.ScaleName — Tier @coil.Level
+                                    @if (coil.IsChosenMystery) { <span style="color:#c0a060;"> ★ Chosen</span> }
+                                </span>
+                                <span style="font-size:0.85em; color:#a0a0a0;">Cost: @coil.XpCost XP</span>
+                                @if (!string.IsNullOrEmpty(coil.Description))
+                                {
+                                    <p style="font-size:0.85em; color:var(--text-secondary); margin:4px 0 0;">@coil.Description</p>
+                                }
+                            </div>
+                            <button class="btn-primary-rn" @onclick="() => SelectCoil(coil.Id)">Purchase</button>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter] public List<CoilSummaryDto> Coils { get; set; } = [];
+    [Parameter] public EventCallback<int> OnCoilSelected { get; set; }
+
+    private async Task SelectCoil(int coilId)
+    {
+        await OnCoilSelected.InvokeAsync(coilId);
+        await CloseModal();
+    }
+
+    private async Task CloseModal()
+    {
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

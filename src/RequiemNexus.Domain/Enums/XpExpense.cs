@@ -24,6 +24,9 @@ public enum XpExpense
     /// <summary>XP spent learning a blood sorcery rite (Crúac or Theban Sorcery).</summary>
     Rite,
 
+    /// <summary>XP spent purchasing a Coil tier (Ordo Dracul).</summary>
+    Coil,
+
     /// <summary>Manual adjustment (e.g., correcting an error).</summary>
     ManualAdjustment,
 }

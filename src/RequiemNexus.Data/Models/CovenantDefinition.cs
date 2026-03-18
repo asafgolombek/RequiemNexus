@@ -20,6 +20,9 @@ public class CovenantDefinition
     /// <summary>When false, characters cannot join (e.g., VII for antagonist use only).</summary>
     public bool IsPlayable { get; set; } = true;
 
+    /// <summary>When true, this covenant grants access to Blood Sorcery (Crúac or Theban Sorcery).</summary>
+    public bool SupportsBloodSorcery { get; set; }
+
     /// <summary>Merits gated by this covenant (e.g., Covenant Status).</summary>
     public virtual ICollection<CovenantDefinitionMerit> CovenantSpecificMerits { get; set; } = new List<CovenantDefinitionMerit>();
 }

@@ -25,6 +25,7 @@
 @inject IBloodlineService BloodlineService
 @inject ICovenantService CovenantService
 @inject ISorceryService SorceryService
+@inject ICoilService CoilService
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
@@ -361,8 +362,7 @@ else
                         </section>
 
                         <!-- BLOOD SORCERY (visible only when in approved Circle of the Crone or Lancea et Sanctum) -->
-                        @if (_character.Covenant != null && _character.CovenantJoinStatus == null &&
-                             (_character.Covenant.Name?.Contains("Crone") == true || _character.Covenant.Name?.Contains("Lancea") == true))
+                        @if (IsInSorceryCovenant)
                         {
                             <section class="cs-section cs-blood-sorcery">
                                 <h2>Blood Sorcery</h2>
@@ -402,6 +402,61 @@ else
                                 {
                                     <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">No rites yet. Purchase Crúac or Theban Sorcery dots via Advancement, then request to learn rites.</p>
                                     <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
+                                }
+                            </section>
+                        }
+
+                        <!-- MYSTERIES OF THE DRAGON (visible only to Ordo Dracul members) -->
+                        @if (IsOrdoDraculMember)
+                        {
+                            <section class="cs-section cs-coils">
+                                <h2>Mysteries of the Dragon</h2>
+                                @if (_character.ChosenMysteryScaleId.HasValue)
+                                {
+                                    <p style="font-size:0.9em; color:#a0a0a0; margin-bottom:8px;">
+                                        <strong>Chosen Mystery:</strong> @(_character.ChosenMysteryScale?.Name ?? "Unknown")
+                                    </p>
+                                }
+                                else if (_character.PendingChosenMysteryScaleId.HasValue)
+                                {
+                                    <p style="color:#a0a0a0; font-size:0.9em;">
+                                        Chosen Mystery pending: <strong>@(_character.PendingChosenMysteryScale?.Name ?? "Unknown")</strong> — awaiting Storyteller approval.
+                                    </p>
+                                }
+                                else if (_character.CampaignId.HasValue)
+                                {
+                                    <p style="color:#808080; font-size:0.9em; margin-bottom:8px;">No Chosen Mystery selected.</p>
+                                    <button class="btn-primary-rn" style="font-size:0.9em;" @onclick="OpenChosenMysteryModal">Select Chosen Mystery</button>
+                                }
+                                @{
+                                    var approvedCoils = _character.Coils?.Where(cc => cc.Status == Data.Models.Enums.CoilLearnStatus.Approved && cc.CoilDefinition != null).ToList();
+                                    var pendingCoil = _character.Coils?.FirstOrDefault(cc => cc.Status == Data.Models.Enums.CoilLearnStatus.Pending);
+                                }
+                                @if (approvedCoils?.Any() == true)
+                                {
+                                    <ul class="trait-list" style="margin-top:8px;">
+                                        @foreach (var cc in approvedCoils.OrderBy(c => c.CoilDefinition!.ScaleId).ThenBy(c => c.CoilDefinition!.Level))
+                                        {
+                                            <li class="trait-item">
+                                                <span>@cc.CoilDefinition!.Name</span>
+                                                <span style="font-size:0.85em; color:#808080;">@cc.CoilDefinition.Scale?.Name — Tier @cc.CoilDefinition.Level</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else if (pendingCoil?.CoilDefinition != null)
+                                {
+                                    <p style="color:#a0a0a0; font-size:0.9em; margin-top:6px;">
+                                        Pending: <strong>@pendingCoil.CoilDefinition.Name</strong> — awaiting Storyteller approval.
+                                    </p>
+                                }
+                                @if (_character.CampaignId.HasValue)
+                                {
+                                    <button class="btn-ghost" style="font-size:0.9em; margin-top:8px;" @onclick="OpenLearnCoilModal">Purchase Coil</button>
+                                }
+                                @if (_character.HasCrucibleRitualAccess)
+                                {
+                                    <p style="font-size:0.8em; color:#808080; margin-top:4px;">Crucible Ritual active — reduced XP costs apply.</p>
                                 }
                             </section>
                         }
@@ -494,6 +549,14 @@ else
                         IsOpenChanged="HandleApplyLearnRiteModalClosed"
                         EligibleRites="_eligibleRites"
                         OnApplyRequested="HandleApplyLearnRiteRequested" />
+    <SelectScaleModal IsOpen="_isChosenMysteryModalOpen"
+                      IsOpenChanged="(v) => _isChosenMysteryModalOpen = v"
+                      Scales="_eligibleScales"
+                      OnScaleSelected="HandleChosenMysteryRequested" />
+    <SelectCoilModal IsOpen="_isLearnCoilModalOpen"
+                     IsOpenChanged="(v) => _isLearnCoilModalOpen = v"
+                     Coils="_eligibleCoils"
+                     OnCoilSelected="HandleLearnCoilRequested" />
 }
 
 @implements IAsyncDisposable
@@ -521,6 +584,10 @@ else
     private bool _isApplyLearnRiteModalOpen = false;
     private bool _openingRiteModal = false;
     private List<SorceryRiteSummaryDto> _eligibleRites = [];
+    private bool _isChosenMysteryModalOpen = false;
+    private bool _isLearnCoilModalOpen = false;
+    private List<ScaleSummaryDto> _eligibleScales = [];
+    private List<CoilSummaryDto> _eligibleCoils = [];
     private bool _requestingLeave = false;
     private List<CovenantSummaryDto> _eligibleCovenants = [];
     private HashSet<int> _expandedMeritIds = [];
@@ -532,6 +599,16 @@ else
     private bool _isExporting = false;
 
     private readonly HashSet<int> _expandedDisciplines = new HashSet<int>();
+
+    /// <summary>True when character has joined an approved covenant that supports Blood Sorcery (Crúac or Theban).</summary>
+    private bool IsInSorceryCovenant =>
+        _character?.Covenant != null
+        && _character.CovenantJoinStatus == null
+        && _character.Covenant.SupportsBloodSorcery;
+
+    private bool IsOrdoDraculMember =>
+        _character?.Covenant?.Name == "The Ordo Dracul"
+        && _character.CovenantJoinStatus == null;
 
     private void ToggleDiscipline(int disciplineId)
     {
@@ -1050,6 +1127,82 @@ else
         catch (Exception ex)
         {
             ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task OpenChosenMysteryModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId)) return;
+        try
+        {
+            _eligibleScales = await CoilService.GetScalesAsync();
+            if (_eligibleScales.Count == 0)
+            {
+                ToastService.Show("No scales found", "No Scale definitions found in the database.", ToastType.Info);
+                return;
+            }
+            _isChosenMysteryModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task HandleChosenMysteryRequested(int scaleId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId)) return;
+        try
+        {
+            await CoilService.RequestChosenMysteryAsync(_character.Id, scaleId, _currentUserId);
+            ToastService.Show("Request submitted", "Chosen Mystery request submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _isChosenMysteryModalOpen = false;
+        }
+    }
+
+    private async Task OpenLearnCoilModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId)) return;
+        try
+        {
+            _eligibleCoils = await CoilService.GetEligibleCoilsAsync(_character.Id, _currentUserId);
+            if (_eligibleCoils.Count == 0)
+            {
+                ToastService.Show("No eligible coils", "No eligible Coils to purchase. Check prerequisites and Ordo Status.", ToastType.Info);
+                return;
+            }
+            _isLearnCoilModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task HandleLearnCoilRequested(int coilDefinitionId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId)) return;
+        try
+        {
+            await CoilService.RequestLearnCoilAsync(_character.Id, coilDefinitionId, _currentUserId);
+            ToastService.Show("Request submitted", "Coil purchase request submitted. Awaiting Storyteller approval.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _isLearnCoilModalOpen = false;
         }
     }
 

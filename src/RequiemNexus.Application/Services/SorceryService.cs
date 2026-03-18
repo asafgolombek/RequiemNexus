@@ -196,13 +196,17 @@ public class SorceryService(
         var rite = cr.SorceryRiteDefinition!;
         var character = cr.Character!;
 
-        if (character.ExperiencePoints < rite.XpCost)
-        {
-            throw new InvalidOperationException($"Character has insufficient XP ({character.ExperiencePoints}) for rite cost {rite.XpCost}.");
-        }
+        int rowsAffected = await _dbContext.Characters
+            .Where(c => c.Id == character.Id && c.ExperiencePoints >= rite.XpCost)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(c => c.ExperiencePoints, c => c.ExperiencePoints - rite.XpCost)
+                .SetProperty(c => c.TotalExperiencePoints, c => c.TotalExperiencePoints - rite.XpCost));
 
-        character.ExperiencePoints -= rite.XpCost;
-        character.TotalExperiencePoints -= rite.XpCost;
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException(
+                $"Character has insufficient XP for rite cost {rite.XpCost}, or a concurrent update occurred.");
+        }
 
         await _beatLedger.RecordXpSpendAsync(
             character.Id,
@@ -289,8 +293,15 @@ public class SorceryService(
             var pool = JsonSerializer.Deserialize<PoolDefinition>(cr.SorceryRiteDefinition.PoolDefinitionJson, options);
             return pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(
+                ex,
+                "Failed to resolve activation pool for rite {RiteId} ({RiteName}) on character {CharacterId}. PoolJson: {PoolJson}",
+                cr.SorceryRiteDefinitionId,
+                cr.SorceryRiteDefinition.Name,
+                characterId,
+                cr.SorceryRiteDefinition.PoolDefinitionJson);
             return 0;
         }
     }

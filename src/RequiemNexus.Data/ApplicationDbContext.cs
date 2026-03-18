@@ -96,6 +96,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<CharacterRite> CharacterRites { get; set; } = default!;
 
+    public DbSet<ScaleDefinition> ScaleDefinitions { get; set; } = default!;
+
+    public DbSet<CoilDefinition> CoilDefinitions { get; set; } = default!;
+
+    public DbSet<CharacterCoil> CharacterCoils { get; set; } = default!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -655,5 +661,69 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CharacterRite>()
             .HasIndex(cr => cr.SorceryRiteDefinitionId);
+
+        // ScaleDefinition — standalone entity
+        builder.Entity<ScaleDefinition>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        // CoilDefinition >- ScaleDefinition
+        builder.Entity<CoilDefinition>()
+            .HasOne(c => c.Scale)
+            .WithMany(s => s.Coils)
+            .HasForeignKey(c => c.ScaleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CoilDefinition>()
+            .HasIndex(c => c.ScaleId);
+
+        // CoilDefinition self-reference: prerequisite chain
+        builder.Entity<CoilDefinition>()
+            .HasOne(c => c.PrerequisiteCoil)
+            .WithMany()
+            .HasForeignKey(c => c.PrerequisiteCoilId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CoilDefinition>()
+            .HasIndex(c => c.PrerequisiteCoilId);
+
+        // CharacterCoil >- Character, CoilDefinition
+        builder.Entity<CharacterCoil>()
+            .HasOne(cc => cc.Character)
+            .WithMany(c => c.Coils)
+            .HasForeignKey(cc => cc.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CharacterCoil>()
+            .HasOne(cc => cc.CoilDefinition)
+            .WithMany()
+            .HasForeignKey(cc => cc.CoilDefinitionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CharacterCoil>()
+            .HasIndex(cc => cc.CharacterId);
+
+        builder.Entity<CharacterCoil>()
+            .HasIndex(cc => cc.CoilDefinitionId);
+
+        // Character >- ScaleDefinition (chosen mystery, nullable)
+        builder.Entity<Character>()
+            .HasOne(c => c.ChosenMysteryScale)
+            .WithMany()
+            .HasForeignKey(c => c.ChosenMysteryScaleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Character>()
+            .HasIndex(c => c.ChosenMysteryScaleId);
+
+        // Character >- ScaleDefinition (pending chosen mystery, nullable)
+        builder.Entity<Character>()
+            .HasOne(c => c.PendingChosenMysteryScale)
+            .WithMany()
+            .HasForeignKey(c => c.PendingChosenMysteryScaleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Character>()
+            .HasIndex(c => c.PendingChosenMysteryScaleId);
     }
 }

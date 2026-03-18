@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RequiemNexus.Data;
@@ -11,9 +12,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318205815_AddSupportsBloodSorceryToCovenant")]
+    partial class AddSupportsBloodSorceryToCovenant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -481,9 +484,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<int?>("CampaignId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ChosenMysteryScaleId")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("ClanId")
                         .HasColumnType("integer");
 
@@ -531,9 +531,6 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<bool>("HasCrucibleRitualAccess")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("HealthDamage")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -572,9 +569,6 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int?>("PendingChosenMysteryScaleId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("RetiredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -595,13 +589,9 @@ namespace RequiemNexus.Data.Migrations
 
                     b.HasIndex("CampaignId");
 
-                    b.HasIndex("ChosenMysteryScaleId");
-
                     b.HasIndex("ClanId");
 
                     b.HasIndex("CovenantId");
-
-                    b.HasIndex("PendingChosenMysteryScaleId");
 
                     b.ToTable("Characters");
                 });
@@ -719,42 +709,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("CharacterId");
 
                     b.ToTable("CharacterBloodlines");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCoil", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CoilDefinitionId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("ResolvedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("StorytellerNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CharacterId");
-
-                    b.HasIndex("CoilDefinitionId");
-
-                    b.ToTable("CharacterCoils");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCondition", b =>
@@ -1223,48 +1177,6 @@ namespace RequiemNexus.Data.Migrations
                     b.HasIndex("DisciplineId");
 
                     b.ToTable("ClanDisciplines");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CoilDefinition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ModifiersJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<int?>("PrerequisiteCoilId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RollDescription")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("ScaleId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PrerequisiteCoilId");
-
-                    b.HasIndex("ScaleId");
-
-                    b.ToTable("CoilDefinitions");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CombatEncounter", b =>
@@ -1895,39 +1807,6 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("PublicRolls");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.ScaleDefinition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("MaxLevel")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("MysteryName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("ScaleDefinitions");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.SessionPrepNote", b =>
                 {
                     b.Property<int>("Id")
@@ -2242,11 +2121,6 @@ namespace RequiemNexus.Data.Migrations
                         .HasForeignKey("CampaignId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RequiemNexus.Data.Models.ScaleDefinition", "ChosenMysteryScale")
-                        .WithMany()
-                        .HasForeignKey("ChosenMysteryScaleId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("RequiemNexus.Data.Models.Clan", "Clan")
                         .WithMany()
                         .HasForeignKey("ClanId")
@@ -2257,20 +2131,11 @@ namespace RequiemNexus.Data.Migrations
                         .HasForeignKey("CovenantId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RequiemNexus.Data.Models.ScaleDefinition", "PendingChosenMysteryScale")
-                        .WithMany()
-                        .HasForeignKey("PendingChosenMysteryScaleId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Campaign");
-
-                    b.Navigation("ChosenMysteryScale");
 
                     b.Navigation("Clan");
 
                     b.Navigation("Covenant");
-
-                    b.Navigation("PendingChosenMysteryScale");
 
                     b.Navigation("User");
                 });
@@ -2325,25 +2190,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("BloodlineDefinition");
 
                     b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCoil", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Character", "Character")
-                        .WithMany("Coils")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RequiemNexus.Data.Models.CoilDefinition", "CoilDefinition")
-                        .WithMany()
-                        .HasForeignKey("CoilDefinitionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-
-                    b.Navigation("CoilDefinition");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CharacterCondition", b =>
@@ -2538,24 +2384,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Clan");
 
                     b.Navigation("Discipline");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.CoilDefinition", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.CoilDefinition", "PrerequisiteCoil")
-                        .WithMany()
-                        .HasForeignKey("PrerequisiteCoilId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("RequiemNexus.Data.Models.ScaleDefinition", "Scale")
-                        .WithMany("Coils")
-                        .HasForeignKey("ScaleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PrerequisiteCoil");
-
-                    b.Navigation("Scale");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CombatEncounter", b =>
@@ -2844,8 +2672,6 @@ namespace RequiemNexus.Data.Migrations
 
                     b.Navigation("CharacterEquipments");
 
-                    b.Navigation("Coils");
-
                     b.Navigation("Devotions");
 
                     b.Navigation("Disciplines");
@@ -2887,11 +2713,6 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>
                 {
                     b.Navigation("Powers");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.ScaleDefinition", b =>
-                {
-                    b.Navigation("Coils");
                 });
 #pragma warning restore 612, 618
         }

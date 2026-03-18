@@ -62,6 +62,21 @@ public class Character
     /// <summary>When set, player has requested to leave; awaiting Storyteller approval. Cleared on approve or reject.</summary>
     public DateTime? CovenantLeaveRequestedAt { get; set; }
 
+    /// <summary>Ordo Dracul: the approved chosen Mystery Scale. Null until approved by Storyteller.</summary>
+    public int? ChosenMysteryScaleId { get; set; }
+
+    [ForeignKey(nameof(ChosenMysteryScaleId))]
+    public virtual ScaleDefinition? ChosenMysteryScale { get; set; }
+
+    /// <summary>Ordo Dracul: pending chosen Mystery Scale awaiting Storyteller approval. Null when no pending request.</summary>
+    public int? PendingChosenMysteryScaleId { get; set; }
+
+    [ForeignKey(nameof(PendingChosenMysteryScaleId))]
+    public virtual ScaleDefinition? PendingChosenMysteryScale { get; set; }
+
+    /// <summary>Ordo Dracul: ST-approved Crucible Ritual access. Reduces Coil XP costs when true.</summary>
+    public bool HasCrucibleRitualAccess { get; set; }
+
     public int? CampaignId { get; set; }
 
     [ForeignKey(nameof(CampaignId))]
@@ -130,6 +145,8 @@ public class Character
     public virtual ICollection<CharacterDevotion> Devotions { get; set; } = new List<CharacterDevotion>();
 
     public virtual ICollection<CharacterRite> Rites { get; set; } = new List<CharacterRite>();
+
+    public virtual ICollection<CharacterCoil> Coils { get; set; } = new List<CharacterCoil>();
 
     public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
 

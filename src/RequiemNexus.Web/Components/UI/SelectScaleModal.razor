@@ -1,0 +1,53 @@
+@using RequiemNexus.Application.DTOs
+
+<div class="modal-backdrop @(IsOpen ? "open" : "")" @onclick="CloseModal">
+    <div class="modal-dialog" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="scale-modal-title">
+        <div class="modal-header">
+            <h2 id="scale-modal-title">Select Chosen Mystery</h2>
+            <button class="modal-close" @onclick="CloseModal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            @if (Scales.Count == 0)
+            {
+                <p style="color: var(--text-secondary);">No Scales available.</p>
+            }
+            else
+            {
+                <ul class="bloodline-list" role="list">
+                    @foreach (var scale in Scales)
+                    {
+                        <li class="bloodline-item" role="listitem">
+                            <div class="bloodline-info">
+                                <strong>@scale.Name</strong>
+                                <span style="font-size:0.85em; color:#808080;">@scale.MysteryName</span>
+                                @if (!string.IsNullOrEmpty(scale.Description))
+                                {
+                                    <p style="font-size:0.9em; color:var(--text-secondary); margin:4px 0 0;">@scale.Description</p>
+                                }
+                            </div>
+                            <button class="btn-primary-rn" @onclick="() => SelectScale(scale.Id)">Select</button>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter] public List<ScaleSummaryDto> Scales { get; set; } = [];
+    [Parameter] public EventCallback<int> OnScaleSelected { get; set; }
+
+    private async Task SelectScale(int scaleId)
+    {
+        await OnScaleSelected.InvokeAsync(scaleId);
+        await CloseModal();
+    }
+
+    private async Task CloseModal()
+    {
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

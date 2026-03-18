@@ -26,6 +26,7 @@ public static class CovenantSeedData
                 Name = "The Circle of the Crone",
                 Description = "A covenant of ritualistic Kindred who revere pagan gods, spirits, pantheons, and progenitors.",
                 IsPlayable = true,
+                SupportsBloodSorcery = true,
             },
             new CovenantDefinition
             {
@@ -38,6 +39,7 @@ public static class CovenantSeedData
                 Name = "The Lancea et Sanctum",
                 Description = "The vampiric church believing Kindred are cursed to do God's dark work.",
                 IsPlayable = true,
+                SupportsBloodSorcery = true,
             },
             new CovenantDefinition
             {

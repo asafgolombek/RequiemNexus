@@ -34,6 +34,7 @@ public static class DbInitializer
         await SeedBloodlinesAsync(context);
         await SeedDevotionsAsync(context);
         await SeedSorceryRitesAsync(context);
+        await SeedCoilsAsync(context);
         await SeedPrebuiltStatBlocksAsync(context);
     }
 
@@ -357,6 +358,37 @@ public static class DbInitializer
             new { Type = 1, AttributeId = (int?)null, SkillId = 5, DisciplineId = (int?)null, MinimumLevel = (int?)null },
         };
         return System.Text.Json.JsonSerializer.Serialize(new { Traits = traits });
+    }
+
+    private static async Task SeedCoilsAsync(ApplicationDbContext context)
+    {
+        if (await context.ScaleDefinitions.AnyAsync())
+        {
+            return;
+        }
+
+        var entries = CoilSeedData.LoadFromDocs();
+
+        foreach (var (scale, coils) in entries)
+        {
+            context.ScaleDefinitions.Add(scale);
+            await context.SaveChangesAsync();
+
+            // Resolve prerequisite chain — coils reference each other in memory;
+            // assign ScaleId and save level-by-level so FK to prerequisiteCoilId resolves correctly.
+            foreach (var coil in coils.OrderBy(c => c.Level))
+            {
+                coil.ScaleId = scale.Id;
+                if (coil.PrerequisiteCoil != null && coil.PrerequisiteCoil.Id > 0)
+                {
+                    coil.PrerequisiteCoilId = coil.PrerequisiteCoil.Id;
+                    coil.PrerequisiteCoil = null; // avoid EF tracking conflicts
+                }
+
+                context.CoilDefinitions.Add(coil);
+                await context.SaveChangesAsync();
+            }
+        }
     }
 
     private static async Task SeedPrebuiltStatBlocksAsync(ApplicationDbContext context)

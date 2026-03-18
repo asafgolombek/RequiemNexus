@@ -164,6 +164,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterEquipmen
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBloodlineService, RequiemNexus.Application.Services.BloodlineService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICovenantService, RequiemNexus.Application.Services.CovenantService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ISorceryService, RequiemNexus.Application.Services.SorceryService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICoilService, RequiemNexus.Application.Services.CoilService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDevotionService, RequiemNexus.Application.Services.DevotionService>();
