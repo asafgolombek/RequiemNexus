@@ -14,6 +14,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 {
     private HubConnection? _hubConnection;
     private int? _currentChronicleId;
+    private int? _currentCharacterId;
     private string? _currentUserId;
     private CancellationTokenSource? _stopCts;
     private bool? _isSessionActiveCache;
@@ -50,7 +51,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
         if (_hubConnection != null && _currentChronicleId == chronicleId && IsConnected)
         {
-            // Already connected to this session, just ensure we are in it
+            _currentCharacterId = characterId;
             await SafeInvokeAsync("JoinSession", chronicleId, characterId);
             return;
         }
@@ -61,6 +62,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         }
 
         _currentChronicleId = chronicleId;
+        _currentCharacterId = characterId;
         _currentUserId = userId;
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(navManager.ToAbsoluteUri("/hubs/session"), options =>
@@ -73,10 +75,14 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
             .WithAutomaticReconnect()
             .Build();
 
-        _hubConnection.On("SessionStarted", () =>
+        _hubConnection.On("SessionStarted", async () =>
         {
             _isSessionActiveCache = true;
             SessionStarted?.Invoke();
+            if (_currentChronicleId.HasValue)
+            {
+                await SafeInvokeAsync("JoinSession", _currentChronicleId.Value, _currentCharacterId ?? (object?)null);
+            }
         });
 
         _hubConnection.On<string>("SessionEnded", reason =>
@@ -117,6 +123,15 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
             toastService.Show("⚠️ Connection Error", "Unable to establish real-time link.", ToastType.Error);
             Console.WriteLine($"Hub Start Error: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Hydrates the presence bar with current session state (e.g. from REST API on page load).
+    /// Use when connecting to show existing players before the first hub broadcast.
+    /// </summary>
+    public void SetPresence(IEnumerable<PlayerPresenceDto> players)
+    {
+        PresenceUpdated?.Invoke(players);
     }
 
     /// <summary>
@@ -271,6 +286,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         }
 
         _currentChronicleId = null;
+        _currentCharacterId = null;
         _isSessionActiveCache = null;
     }
 }

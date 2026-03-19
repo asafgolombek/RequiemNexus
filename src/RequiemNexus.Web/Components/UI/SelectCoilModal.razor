@@ -1,6 +1,8 @@
 @using RequiemNexus.Application.DTOs
 
-<div class="modal-backdrop @(IsOpen ? "open" : "")" @onclick="CloseModal">
+@if (IsOpen)
+{
+<div class="modal-backdrop open" @onclick="CloseModal">
     <div class="modal-dialog" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="coil-modal-title">
         <div class="modal-header">
             <h2 id="coil-modal-title">Purchase Coil</h2>
@@ -37,6 +39,7 @@
         </div>
     </div>
 </div>
+}
 
 @code {
     [Parameter] public bool IsOpen { get; set; }

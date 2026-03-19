@@ -6,7 +6,7 @@
 @if (_players.Any())
 {
     <div class="presence-bar-container">
-        <div class="presence-header">🩸 Players Online</div>
+        <div class="presence-header" title="Players who have this campaign or a campaign character open.">🩸 In Session</div>
         <div class="presence-bar">
             @foreach (var player in _players)
             {

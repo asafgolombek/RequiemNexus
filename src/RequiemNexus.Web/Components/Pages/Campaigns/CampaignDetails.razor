@@ -349,6 +349,13 @@
                 // We don't specify characterId here as we might have multiple or none
                 await SessionClient.StartAsync(Id, null, _currentUserId, _cookieHeader);
             }
+
+            // Hydrate initial presence from REST API so we show existing players before hub broadcasts
+            var state = await SessionService.GetSessionStateAsync(Id);
+            if (state?.Presence != null)
+            {
+                SessionClient.SetPresence(state.Presence);
+            }
         }
         catch (HttpRequestException)
         {
