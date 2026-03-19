@@ -6,33 +6,26 @@ using RequiemNexus.Domain.Enums;
 namespace RequiemNexus.Data.SeedData;
 
 /// <summary>
-/// Loads Crúac rites and Theban rituals from docs/ JSON files for database seeding.
+/// Loads Crúac rites and Theban rituals from SeedSource JSON files for database seeding.
 /// Falls back to a minimal inline set if files are not found.
 /// </summary>
 public static class SorceryRiteSeedData
 {
     /// <summary>
-    /// Loads rites from docs/rites.json (Crúac) and docs/rituals.json (Theban).
+    /// Loads rites from SeedSource/rites.json (Crúac) and SeedSource/rituals.json (Theban).
     /// Returns list of (Name, Rating, Prerequisites, Effect, SorceryType).
     /// </summary>
     public static List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType)> LoadFromDocs()
     {
         var result = new List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType)>();
 
-        var basePaths = new[]
-        {
-            Path.Combine(Directory.GetCurrentDirectory(), "docs"),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "docs"),
-            Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "docs"),
-        };
-
-        string? docsDir = basePaths.FirstOrDefault(Directory.Exists);
-        if (docsDir == null)
+        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
+        if (seedDir == null)
         {
             return GetMinimalSeed();
         }
 
-        var ritesPath = Path.Combine(docsDir, "rites.json");
+        var ritesPath = Path.Combine(seedDir, "rites.json");
         if (File.Exists(ritesPath))
         {
             try
@@ -61,7 +54,7 @@ public static class SorceryRiteSeedData
             result.AddRange(GetMinimalCruac());
         }
 
-        var ritualsPath = Path.Combine(docsDir, "rituals.json");
+        var ritualsPath = Path.Combine(seedDir, "rituals.json");
         if (File.Exists(ritualsPath))
         {
             try

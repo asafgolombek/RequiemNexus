@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
 using Xunit;
 
@@ -65,7 +66,7 @@ public class DanseMacabreServiceTests
         ChronicleNpcService service = CreateNpcService(ctx);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.CreateNpcAsync(campaign.Id, "Elias Vance", null, null, null, string.Empty, "random-user"));
+            () => service.CreateNpcAsync(campaign.Id, "Elias Vance", null, null, null, string.Empty, CreatureType.Mortal, "random-user"));
     }
 
     [Fact]
@@ -101,9 +102,9 @@ public class DanseMacabreServiceTests
         ChronicleNpcService npcService = CreateNpcService(ctx);
 
         CityFaction faction = await factionService.CreateFactionAsync(campaign.Id, "Invictus", FactionType.Covenant, 3, string.Empty, "st-1");
-        ChronicleNpc npc = await npcService.CreateNpcAsync(campaign.Id, "Elias", null, null, null, string.Empty, "st-1");
+        ChronicleNpc npc = await npcService.CreateNpcAsync(campaign.Id, "Elias", null, null, null, string.Empty, CreatureType.Mortal, "st-1");
 
-        await npcService.UpdateNpcAsync(npc.Id, npc.Name, null, faction.Id, "Legate", string.Empty, string.Empty, null, false, "{}", "{}", "st-1");
+        await npcService.UpdateNpcAsync(npc.Id, npc.Name, null, faction.Id, "Legate", string.Empty, string.Empty, null, CreatureType.Mortal, "{}", "{}", "st-1");
 
         ChronicleNpc? loaded = await ctx.ChronicleNpcs.FindAsync(npc.Id);
         Assert.Equal(faction.Id, loaded!.PrimaryFactionId);
@@ -143,7 +144,7 @@ public class DanseMacabreServiceTests
         Campaign campaign = await SeedCampaignAsync(ctx);
         ChronicleNpcService service = CreateNpcService(ctx);
 
-        ChronicleNpc npc = await service.CreateNpcAsync(campaign.Id, "Elias", null, null, null, string.Empty, "st-1");
+        ChronicleNpc npc = await service.CreateNpcAsync(campaign.Id, "Elias", null, null, null, string.Empty, CreatureType.Mortal, "st-1");
         await service.SetNpcAliveAsync(npc.Id, false, "st-1");
 
         ChronicleNpc? loaded = await ctx.ChronicleNpcs.FindAsync(npc.Id);
@@ -157,8 +158,8 @@ public class DanseMacabreServiceTests
         Campaign campaign = await SeedCampaignAsync(ctx);
         ChronicleNpcService service = CreateNpcService(ctx);
 
-        ChronicleNpc alive = await service.CreateNpcAsync(campaign.Id, "Alive NPC", null, null, null, string.Empty, "st-1");
-        ChronicleNpc deceased = await service.CreateNpcAsync(campaign.Id, "Dead NPC", null, null, null, string.Empty, "st-1");
+        ChronicleNpc alive = await service.CreateNpcAsync(campaign.Id, "Alive NPC", null, null, null, string.Empty, CreatureType.Mortal, "st-1");
+        ChronicleNpc deceased = await service.CreateNpcAsync(campaign.Id, "Dead NPC", null, null, null, string.Empty, CreatureType.Mortal, "st-1");
         await service.SetNpcAliveAsync(deceased.Id, false, "st-1");
 
         List<ChronicleNpc> result = await service.GetNpcsAsync(campaign.Id, includeDeceased: false);

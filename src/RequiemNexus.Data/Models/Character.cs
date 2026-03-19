@@ -47,6 +47,9 @@ public class Character
     [ForeignKey(nameof(ClanId))]
     public virtual Clan? Clan { get; set; }
 
+    /// <summary>Type of creature. Player-created characters default to Vampire. ST can set any type for NPCs.</summary>
+    public Data.Models.Enums.CreatureType CreatureType { get; set; } = Data.Models.Enums.CreatureType.Vampire;
+
     /// <summary>Covenant membership. Null = Unaligned. Blocked for VII (antagonist covenant).</summary>
     public int? CovenantId { get; set; }
 

@@ -21,7 +21,7 @@ public class CoilService(
     ISessionService sessionService,
     ILogger<CoilService> logger) : ICoilService
 {
-    private const string OrdoDraculName = "The Ordo Dracul";
+    private const string _ordoDraculName = "The Ordo Dracul";
 
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
@@ -492,7 +492,7 @@ public class CoilService(
 
     private static bool IsOrdoDraculMember(Character character)
     {
-        return character.Covenant?.Name == OrdoDraculName
+        return character.Covenant?.Name == _ordoDraculName
             && character.CovenantJoinStatus != Data.Models.Enums.CovenantJoinStatus.Pending;
     }
 

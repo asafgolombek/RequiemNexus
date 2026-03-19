@@ -1,15 +1,73 @@
+using System.Text.Json;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data.SeedData;
 
 /// <summary>
-/// Seed data for covenant definitions. Maps from Covenants.json.
+/// Seed data for covenant definitions. Loads from SeedSource/Covenants.json when available.
 /// VII is seeded for worldbuilding but IsPlayable = false (block character join).
 /// </summary>
 public static class CovenantSeedData
 {
     /// <summary>
-    /// Creates covenant definitions. Five core covenants are playable; VII is not.
+    /// Loads covenant definitions from SeedSource/Covenants.json when available.
+    /// Maps short description to Description; VII is not playable; Crone and Lancea support Blood Sorcery.
+    /// Falls back to <see cref="GetAllCovenants"/> when file is missing or invalid.
+    /// </summary>
+    public static List<CovenantDefinition> LoadFromDocs()
+    {
+        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
+        if (seedDir == null)
+        {
+            return GetAllCovenants();
+        }
+
+        var path = Path.Combine(seedDir, "Covenants.json");
+        if (!File.Exists(path))
+        {
+            return GetAllCovenants();
+        }
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            using var doc = JsonDocument.Parse(json);
+            var result = new List<CovenantDefinition>();
+
+            foreach (var el in doc.RootElement.EnumerateArray())
+            {
+                string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+                string description = el.TryGetProperty("short description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    continue;
+                }
+
+                bool isPlayable = !string.Equals(name, "VII", StringComparison.OrdinalIgnoreCase);
+                bool supportsBloodSorcery = string.Equals(name, "The Circle of the Crone", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(name, "The Lancea et Sanctum", StringComparison.OrdinalIgnoreCase);
+
+                result.Add(new CovenantDefinition
+                {
+                    Name = name,
+                    Description = description,
+                    IsPlayable = isPlayable,
+                    SupportsBloodSorcery = supportsBloodSorcery,
+                });
+            }
+
+            return result.Count > 0 ? result : GetAllCovenants();
+        }
+        catch
+        {
+            return GetAllCovenants();
+        }
+    }
+
+    /// <summary>
+    /// Creates covenant definitions inline. Five core covenants are playable; VII is not.
+    /// Used when LoadFromDocs cannot read the JSON file.
     /// </summary>
     public static List<CovenantDefinition> GetAllCovenants()
     {

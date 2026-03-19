@@ -1,4 +1,4 @@
-[
+﻿[
     {
       "name": "Lair of the Beast",
       "Rating": 1,
@@ -27,7 +27,7 @@
       "name": "The Mantle of Amorous Fire",
       "Rating": 2,
       "Prerequisites": "Enact the Blush of Life and dance in an ecstatic trance.",
-      "Effect": "The vampire stands proud, fiery, and lusty, adding her Crúac dots to her Presence for the remainder of the evening."
+      "Effect": "The vampire stands proud, fiery, and lusty, adding her Cr├║ac dots to her Presence for the remainder of the evening."
     },
     {
       "name": "The Pool of Forbidden Truths",
@@ -75,7 +75,7 @@
       "name": "Mantle of the Beast's Breath",
       "Rating": 3,
       "Prerequisites": "Dance in an ecstatic trance, enact Blush of Life, spend a point of Willpower.",
-      "Effect": "Grants the Raptured Condition and adds Crúac dots as a bonus to rolls for riding the wave of frenzy."
+      "Effect": "Grants the Raptured Condition and adds Cr├║ac dots as a bonus to rolls for riding the wave of frenzy."
     },
     {
       "name": "Mantle of the Glorious Dervish",
@@ -159,7 +159,7 @@
       "name": "Mantle of the Predator Goddess",
       "Rating": 4,
       "Prerequisites": "Dance in an ecstatic trance, enact Blush of Life, spend a point of Willpower.",
-      "Effect": "Grants the grace of a perfect predator, adding Crúac dots to feeding and the Herd Merit, and inflicting the Raptured condition on victims."
+      "Effect": "Grants the grace of a perfect predator, adding Cr├║ac dots to feeding and the Herd Merit, and inflicting the Raptured condition on victims."
     },
     {
       "name": "Doom of Osiris",

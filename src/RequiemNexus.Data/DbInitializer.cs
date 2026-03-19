@@ -182,16 +182,43 @@ public static class DbInitializer
 
     private static async Task SeedMeritsAsync(ApplicationDbContext context)
     {
-        var existingNames = await context.Merits.Select(m => m.Name).ToListAsync();
-        var existingSet = new HashSet<string>(existingNames, StringComparer.Ordinal);
+        var officialMerits = await context.Merits
+            .Where(m => !m.IsHomebrew)
+            .ToListAsync();
 
-        var toAdd = MeritSeedData.GetAllMerits()
-            .Where(m => !existingSet.Contains(m.Name))
-            .ToList();
-
-        if (toAdd.Count > 0)
+        if (officialMerits.Count > 0)
         {
-            await context.Merits.AddRangeAsync(toAdd);
+            var officialMeritIds = officialMerits.Select(m => m.Id).ToHashSet();
+
+            var meritPrereqsToRemove = await context.MeritPrerequisites
+                .Where(mp => officialMeritIds.Contains(mp.MeritId))
+                .ToListAsync();
+            context.MeritPrerequisites.RemoveRange(meritPrereqsToRemove);
+
+            var covenantLinksToRemove = await context.CovenantDefinitionMerits
+                .Where(cdm => officialMeritIds.Contains(cdm.MeritId))
+                .ToListAsync();
+            context.CovenantDefinitionMerits.RemoveRange(covenantLinksToRemove);
+
+            var characterMeritsToRemove = await context.CharacterMerits
+                .Where(cm => officialMeritIds.Contains(cm.MeritId))
+                .ToListAsync();
+            context.CharacterMerits.RemoveRange(characterMeritsToRemove);
+
+            context.Merits.RemoveRange(officialMerits);
+            await context.SaveChangesAsync();
+        }
+
+        var merits = MeritSeedData.LoadFromDocs();
+        await context.Merits.AddRangeAsync(merits);
+        await context.SaveChangesAsync();
+
+        var meritIdsByName = (await context.Merits.Where(m => !m.IsHomebrew).ToListAsync())
+            .ToDictionary(m => m.Name, m => m.Id, StringComparer.OrdinalIgnoreCase);
+        var prereqs = MeritPrerequisiteSeedData.GetPrerequisitesToSeed(meritIdsByName);
+        if (prereqs.Count > 0)
+        {
+            await context.MeritPrerequisites.AddRangeAsync(prereqs);
             await context.SaveChangesAsync();
         }
     }
@@ -203,7 +230,7 @@ public static class DbInitializer
             return;
         }
 
-        var covenants = CovenantSeedData.GetAllCovenants();
+        var covenants = CovenantSeedData.LoadFromDocs();
         await context.CovenantDefinitions.AddRangeAsync(covenants);
         await context.SaveChangesAsync();
     }
@@ -283,7 +310,7 @@ public static class DbInitializer
 
         var clans = await context.Clans.ToListAsync();
         var disciplines = await context.Disciplines.ToListAsync();
-        var bloodlines = BloodlineSeedData.GetAllBloodlines(clans, disciplines);
+        var bloodlines = BloodlineSeedData.LoadFromDocs(clans, disciplines);
         await context.BloodlineDefinitions.AddRangeAsync(bloodlines);
         await context.SaveChangesAsync();
     }
@@ -296,7 +323,7 @@ public static class DbInitializer
         }
 
         var disciplines = await context.Disciplines.ToListAsync();
-        var devotions = DevotionSeedData.GetSampleDevotions(disciplines);
+        var devotions = DevotionSeedData.LoadFromDocs(disciplines);
         await context.DevotionDefinitions.AddRangeAsync(devotions);
         await context.SaveChangesAsync();
     }

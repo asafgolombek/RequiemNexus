@@ -4,32 +4,25 @@ using RequiemNexus.Data.Models;
 namespace RequiemNexus.Data.SeedData;
 
 /// <summary>
-/// Loads Scale and Coil definitions from docs/coils_info.json for database seeding.
+/// Loads Scale and Coil definitions from SeedSource/coils_info.json for database seeding.
 /// Each entry in coils_info.json is one Scale with 5 Coil tiers.
 /// </summary>
 public static class CoilSeedData
 {
     /// <summary>
-    /// Loads Scale and Coil definitions from docs/coils_info.json.
+    /// Loads Scale and Coil definitions from SeedSource/coils_info.json.
     /// Returns a list of (Scale, Coils) tuples with prerequisite chain constructed in-memory.
     /// Scales and Coils do not yet have database Ids when returned — caller assigns them on insert.
     /// </summary>
     public static List<(ScaleDefinition Scale, List<CoilDefinition> Coils)> LoadFromDocs()
     {
-        var basePaths = new[]
-        {
-            Path.Combine(Directory.GetCurrentDirectory(), "docs"),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "docs"),
-            Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "docs"),
-        };
-
-        string? docsDir = basePaths.FirstOrDefault(Directory.Exists);
-        if (docsDir == null)
+        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
+        if (seedDir == null)
         {
             return GetMinimalSeed();
         }
 
-        string coilsPath = Path.Combine(docsDir, "coils_info.json");
+        string coilsPath = Path.Combine(seedDir, "coils_info.json");
         if (!File.Exists(coilsPath))
         {
             return GetMinimalSeed();

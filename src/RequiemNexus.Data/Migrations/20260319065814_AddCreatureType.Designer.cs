@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RequiemNexus.Data;
@@ -11,9 +12,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319065814_AddCreatureType")]
+    partial class AddCreatureType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1795,36 +1798,6 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("Merits");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.MeritPrerequisite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("MeritId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MinimumRating")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("OrGroupId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PrerequisiteType")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ReferenceId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MeritId");
-
-                    b.ToTable("MeritPrerequisites");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.NpcStatBlock", b =>
                 {
                     b.Property<int>("Id")
@@ -2760,17 +2733,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Encounter");
                 });
 
-            modelBuilder.Entity("RequiemNexus.Data.Models.MeritPrerequisite", b =>
-                {
-                    b.HasOne("RequiemNexus.Data.Models.Merit", "Merit")
-                        .WithMany("Prerequisites")
-                        .HasForeignKey("MeritId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Merit");
-                });
-
             modelBuilder.Entity("RequiemNexus.Data.Models.NpcStatBlock", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
@@ -2934,11 +2896,6 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>
                 {
                     b.Navigation("Powers");
-                });
-
-            modelBuilder.Entity("RequiemNexus.Data.Models.Merit", b =>
-                {
-                    b.Navigation("Prerequisites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.ScaleDefinition", b =>

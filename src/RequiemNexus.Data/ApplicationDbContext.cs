@@ -30,6 +30,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Merit> Merits { get; set; } = default!;
 
+    public DbSet<MeritPrerequisite> MeritPrerequisites { get; set; } = default!;
+
     public DbSet<ClanDiscipline> ClanDisciplines { get; set; } = default!;
 
     public DbSet<Equipment> Equipment { get; set; } = default!;
@@ -584,6 +586,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<DevotionPrerequisite>()
             .HasIndex(p => p.DisciplineId);
+
+        // MeritPrerequisite >- Merit
+        builder.Entity<MeritPrerequisite>()
+            .HasOne(p => p.Merit)
+            .WithMany(m => m.Prerequisites)
+            .HasForeignKey(p => p.MeritId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<MeritPrerequisite>()
+            .HasIndex(p => p.MeritId);
 
         // CharacterDevotion >- Character, DevotionDefinition
         builder.Entity<CharacterDevotion>()

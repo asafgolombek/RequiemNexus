@@ -120,6 +120,9 @@ public class CharacterManagementService(
         newCharacter.MaxVitae = maxVitae;
         newCharacter.CurrentVitae = currentVitae;
 
+        // Player-created characters are always Vampires.
+        newCharacter.CreatureType = RequiemNexus.Data.Models.Enums.CreatureType.Vampire;
+
         _dbContext.Characters.Add(newCharacter);
         await _dbContext.SaveChangesAsync();
 

@@ -12,7 +12,7 @@
 @using RequiemNexus.Web.Helpers
 @inject ICharacterService CharacterService
 @inject IClanService ClanService
-@inject IMeritService MeritService
+@inject ICharacterMeritService CharacterMeritService
 @inject IDisciplineService DisciplineService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -73,7 +73,8 @@
                                       IsValid="IsMeritDisciplineDistributionValid()" 
                                       OnAddMerit="HandleAddMerit" 
                                       OnAdjustMeritRating="AdjustMeritRating" 
-                                      OnRemoveMerit="RemoveMerit" 
+                                      OnRemoveMerit="RemoveMerit"
+                                      OnMeritsChanged="HandleMeritsChanged"
                                       OnAddDiscipline="HandleAddDiscipline" 
                                       OnAdjustDisciplineDots="AdjustDisciplineDots" 
                                       OnRemoveDiscipline="RemoveDiscipline" 
@@ -96,10 +97,10 @@
 
     <div class="wizard-footer">
         <button class="btn-ghost" @onclick="PreviousStep" disabled="@(_currentStep == CreationStep.BasicInformation)">Back</button>
-        
+
         @if (_currentStep < CreationStep.ReviewAndEmbrace)
         {
-            <button class="btn-primary-rn" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">Next Step</button>
+            <button class="btn-primary-rn" @onclick="NextStepAsync" disabled="@(!CanProceedToNextStep())">Next Step</button>
         }
         else
         {
@@ -150,7 +151,6 @@
         CharacterTraitHelper.SeedSkills(_newCharacter);
 
         _availableClans = await ClanService.GetAllClansAsync();
-        _availableMerits = await MeritService.GetAllMeritsAsync();
         _availableDisciplines = await DisciplineService.GetAllDisciplinesAsync();
     }
 
@@ -188,6 +188,12 @@
         _newCharacter.Merits.Add(new CharacterMerit { MeritId = meritId, Rating = startingRating, Specification = "" });
     }
 
+    private async Task HandleMeritsChanged()
+    {
+        _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync(_newCharacter);
+        StateHasChanged();
+    }
+
     private static void AdjustMeritRating(CharacterMerit cm, int change)
     {
         if (cm.Rating + change >= 1 && cm.Rating + change <= 5)
@@ -222,15 +228,25 @@
         _newCharacter.Disciplines.Remove(cd);
     }
 
-    private void NextStep()
+    private async Task NextStep()
     {
-        if (_currentStep < CreationStep.ReviewAndEmbrace) _currentStep++;
+        if (_currentStep < CreationStep.ReviewAndEmbrace)
+        {
+            if (_currentStep == CreationStep.Skills)
+            {
+                _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync(_newCharacter);
+            }
+
+            _currentStep++;
+        }
     }
 
     private void PreviousStep()
     {
         if (_currentStep > CreationStep.BasicInformation) _currentStep--;
     }
+
+    private async Task NextStepAsync() => await NextStep();
 
     private bool IsAttributeDistributionValid()
     {
