@@ -2,36 +2,39 @@
 
 @if (IsOpen)
 {
-<div class="modal-backdrop open" @onclick="CloseModal">
-    <div class="modal-dialog" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="coil-modal-title">
-        <div class="modal-header">
-            <h2 id="coil-modal-title">Purchase Coil</h2>
-            <button class="modal-close" @onclick="CloseModal" aria-label="Close">×</button>
+<div class="rn-modal-backdrop" @onclick="CloseModal">
+    <div class="rn-modal-panel rn-modal-panel--wide" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="coil-modal-title">
+        <div class="rn-modal-header">
+            <h2 id="coil-modal-title" class="rn-modal-title">Purchase Coil</h2>
+            <button type="button" class="rn-modal-close" @onclick="CloseModal" aria-label="Close">×</button>
         </div>
-        <div class="modal-body">
+        <div class="rn-modal-body">
             @if (Coils.Count == 0)
             {
-                <p style="color: var(--text-secondary);">No eligible Coils.</p>
+                <p class="rn-modal-empty">No eligible Coils.</p>
             }
             else
             {
-                <ul class="bloodline-list" role="list">
+                <ul class="rn-selection-list" role="list">
                     @foreach (var coil in Coils.OrderBy(c => c.ScaleName).ThenBy(c => c.Level))
                     {
-                        <li class="bloodline-item" role="listitem">
-                            <div class="bloodline-info">
-                                <strong>@coil.Name</strong>
-                                <span style="font-size:0.85em; color:#808080;">
+                        <li class="rn-selection-item" role="listitem">
+                            <div class="rn-selection-info">
+                                <strong class="rn-selection-name">@coil.Name</strong>
+                                <span class="rn-selection-meta">
                                     @coil.ScaleName — Tier @coil.Level
-                                    @if (coil.IsChosenMystery) { <span style="color:#c0a060;"> ★ Chosen</span> }
+                                    @if (coil.IsChosenMystery)
+                                    {
+                                        <span class="rn-selection-badge">★ Chosen</span>
+                                    }
                                 </span>
-                                <span style="font-size:0.85em; color:#a0a0a0;">Cost: @coil.XpCost XP</span>
+                                <span class="rn-selection-cost">Cost: @coil.XpCost XP</span>
                                 @if (!string.IsNullOrEmpty(coil.Description))
                                 {
-                                    <p style="font-size:0.85em; color:var(--text-secondary); margin:4px 0 0;">@coil.Description</p>
+                                    <p class="rn-selection-desc">@coil.Description</p>
                                 }
                             </div>
-                            <button class="btn-primary-rn" @onclick="() => SelectCoil(coil.Id)">Purchase</button>
+                            <button type="button" class="btn-primary-rn rn-selection-action" @onclick="() => SelectCoil(coil.Id)">Purchase</button>
                         </li>
                     }
                 </ul>

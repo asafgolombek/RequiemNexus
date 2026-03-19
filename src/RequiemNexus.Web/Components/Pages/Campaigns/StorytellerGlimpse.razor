@@ -8,6 +8,7 @@
 @inject IBloodlineService BloodlineService
 @inject ICovenantService CovenantService
 @inject ISorceryService SorceryService
+@inject ICoilService CoilService
 @inject ICampaignService CampaignService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -224,6 +225,111 @@
             </div>
         }
 
+        @* ── Pending Chosen Mystery (Ordo Dracul) ─────────────────────────────── *@
+        @if (_pendingChosenMysteries.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Pending Chosen Mystery Requests</h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    @foreach (var app in _pendingChosenMysteries)
+                    {
+                        <li style="display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <span><strong>@app.CharacterName</strong> → @app.ScaleName</span>
+                            <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                                <button class="btn-primary-rn"
+                                        style="font-size:0.85em;"
+                                        disabled="@(_awarding)"
+                                        @onclick="() => ApproveChosenMystery(app.CharacterId)">
+                                    Approve
+                                </button>
+                                @if (_rejectingChosenMysteryCharacterId == app.CharacterId)
+                                {
+                                    <button class="btn-danger-rn"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => ConfirmRejectChosenMystery(app.CharacterId)">
+                                        Confirm Reject
+                                    </button>
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="CancelRejectChosenMystery">
+                                        Cancel
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => StartRejectChosenMystery(app.CharacterId)">
+                                        Reject
+                                    </button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @* ── Pending Coil Purchase Requests (Ordo Dracul) ─────────────────────── *@
+        @if (_pendingCoils.Count > 0)
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:0.75rem;">Pending Coil Purchase Requests</h3>
+                <ul style="list-style:none;padding:0;margin:0;">
+                    @foreach (var app in _pendingCoils)
+                    {
+                        <li style="display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <span><strong>@app.CharacterName</strong> → @app.CoilName (@app.ScaleName, dot @app.Level)</span>
+                            <span style="color:var(--text-secondary);font-size:0.85em;">@app.XpCost XP @app.AppliedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                            <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                                @if (_rejectingCoilId == app.CharacterCoilId)
+                                {
+                                    <input type="text"
+                                           class="form-control"
+                                           style="width:160px;font-size:0.85em;"
+                                           placeholder="Optional note…"
+                                           @bind="_coilRejectNote" />
+                                }
+                                <button class="btn-primary-rn"
+                                        style="font-size:0.85em;"
+                                        disabled="@(_awarding)"
+                                        @onclick="() => ApproveCoil(app.CharacterCoilId)">
+                                    Approve
+                                </button>
+                                @if (_rejectingCoilId == app.CharacterCoilId)
+                                {
+                                    <button class="btn-danger-rn"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => ConfirmRejectCoil(app.CharacterCoilId)">
+                                        Confirm Reject
+                                    </button>
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="CancelRejectCoil">
+                                        Cancel
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn-ghost"
+                                            style="font-size:0.85em;"
+                                            disabled="@(_awarding)"
+                                            @onclick="() => StartRejectCoil(app.CharacterCoilId)">
+                                        Reject
+                                    </button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
         @* ── Character Cards ─────────────────────────────────────────────────── *@
         @if (!_vitals.Any())
         {
@@ -359,6 +465,13 @@
     private int? _rejectingRiteId;
     private string _riteRejectNote = string.Empty;
 
+    // Pending Ordo Dracul: Chosen Mystery + Coil purchases
+    private List<ChosenMysteryApplicationDto> _pendingChosenMysteries = [];
+    private int? _rejectingChosenMysteryCharacterId;
+    private List<CoilApplicationDto> _pendingCoils = [];
+    private int? _rejectingCoilId;
+    private string _coilRejectNote = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -382,6 +495,8 @@
             _pendingBloodlines = await BloodlineService.GetPendingBloodlineApplicationsAsync(Id, _currentUserId!);
             _pendingCovenants = await CovenantService.GetPendingCovenantApplicationsAsync(Id, _currentUserId!);
             _pendingRites = await SorceryService.GetPendingRiteApplicationsAsync(Id, _currentUserId!);
+            _pendingChosenMysteries = await CoilService.GetPendingChosenMysteryApplicationsAsync(Id, _currentUserId!);
+            _pendingCoils = await CoilService.GetPendingCoilApplicationsAsync(Id, _currentUserId!);
             _accessDenied = false;
 
             // Initialise per-character state dictionaries
@@ -648,6 +763,130 @@
             _rejectingCovenantCharacterId = null;
             _covenantRejectNote = string.Empty;
             ToastService.Show("Rejected", "Covenant application rejected.", RequiemNexus.Web.Services.ToastType.Info);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private void StartRejectChosenMystery(int characterId)
+    {
+        _rejectingChosenMysteryCharacterId = characterId;
+    }
+
+    private void CancelRejectChosenMystery()
+    {
+        _rejectingChosenMysteryCharacterId = null;
+    }
+
+    private async Task ApproveChosenMystery(int characterId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await CoilService.ApproveChosenMysteryAsync(characterId, _currentUserId!);
+            ToastService.Show("Approved", "Chosen Mystery approved.", RequiemNexus.Web.Services.ToastType.Success);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task ConfirmRejectChosenMystery(int characterId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await CoilService.RejectChosenMysteryAsync(characterId, _currentUserId!);
+            _rejectingChosenMysteryCharacterId = null;
+            ToastService.Show("Rejected", "Chosen Mystery request rejected.", RequiemNexus.Web.Services.ToastType.Info);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private void StartRejectCoil(int characterCoilId)
+    {
+        _rejectingCoilId = characterCoilId;
+        _coilRejectNote = string.Empty;
+    }
+
+    private void CancelRejectCoil()
+    {
+        _rejectingCoilId = null;
+        _coilRejectNote = string.Empty;
+    }
+
+    private async Task ApproveCoil(int characterCoilId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await CoilService.ApproveCoilLearnAsync(characterCoilId, null, _currentUserId!);
+            ToastService.Show("Approved", "Coil purchase approved.", RequiemNexus.Web.Services.ToastType.Success);
+            await LoadVitals();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, RequiemNexus.Web.Services.ToastType.Error);
+        }
+        finally
+        {
+            _awarding = false;
+        }
+    }
+
+    private async Task ConfirmRejectCoil(int characterCoilId)
+    {
+        if (_awarding)
+        {
+            return;
+        }
+
+        _awarding = true;
+        try
+        {
+            await CoilService.RejectCoilLearnAsync(
+                characterCoilId,
+                string.IsNullOrWhiteSpace(_coilRejectNote) ? null : _coilRejectNote,
+                _currentUserId!);
+            _rejectingCoilId = null;
+            _coilRejectNote = string.Empty;
+            ToastService.Show("Rejected", "Coil purchase rejected.", RequiemNexus.Web.Services.ToastType.Info);
             await LoadVitals();
         }
         catch (Exception ex)

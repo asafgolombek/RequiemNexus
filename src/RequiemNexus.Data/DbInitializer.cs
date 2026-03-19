@@ -387,23 +387,33 @@ public static class DbInitializer
         return System.Text.Json.JsonSerializer.Serialize(new { Traits = traits });
     }
 
+    /// <summary>
+    /// Ensures Scale and Coil definitions exist for every entry in coil seed data.
+    /// Inserts only scales missing by name so existing databases pick up new Mysteries when seed JSON grows.
+    /// </summary>
     private static async Task SeedCoilsAsync(ApplicationDbContext context)
     {
-        if (await context.ScaleDefinitions.AnyAsync())
-        {
-            return;
-        }
-
         var entries = CoilSeedData.LoadFromDocs();
+        List<string> existingNames = await context.ScaleDefinitions
+            .AsNoTracking()
+            .Select(s => s.Name)
+            .ToListAsync();
+        HashSet<string> existingScaleNames = existingNames.ToHashSet(StringComparer.Ordinal);
 
-        foreach (var (scale, coils) in entries)
+        foreach ((ScaleDefinition scale, List<CoilDefinition> coils) in entries)
         {
+            if (existingScaleNames.Contains(scale.Name))
+            {
+                continue;
+            }
+
             context.ScaleDefinitions.Add(scale);
             await context.SaveChangesAsync();
+            existingScaleNames.Add(scale.Name);
 
             // Resolve prerequisite chain — coils reference each other in memory;
             // assign ScaleId and save level-by-level so FK to prerequisiteCoilId resolves correctly.
-            foreach (var coil in coils.OrderBy(c => c.Level))
+            foreach (CoilDefinition coil in coils.OrderBy(c => c.Level))
             {
                 coil.ScaleId = scale.Id;
                 if (coil.PrerequisiteCoil != null && coil.PrerequisiteCoil.Id > 0)
