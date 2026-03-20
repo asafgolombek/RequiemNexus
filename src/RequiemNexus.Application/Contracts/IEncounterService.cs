@@ -71,6 +71,16 @@ public interface IEncounterService
     Task ResolveEncounterAsync(int encounterId, string storyTellerUserId);
 
     /// <summary>
+    /// Pauses a running encounter: initiative remains in the database; live session initiative is cleared.
+    /// </summary>
+    Task PauseEncounterAsync(int encounterId, string storyTellerUserId);
+
+    /// <summary>
+    /// Resumes a paused encounter and republishes initiative to the session.
+    /// </summary>
+    Task ResumeEncounterAsync(int encounterId, string storyTellerUserId);
+
+    /// <summary>
     /// Returns encounters for a campaign (ST-only).
     /// </summary>
     Task<List<CombatEncounter>> GetEncountersAsync(int campaignId, string storyTellerUserId);

@@ -141,6 +141,7 @@ public class EncounterServiceTests
         Assert.Equal("The Alley Brawl", stored.Name);
         Assert.True(stored.IsDraft);
         Assert.False(stored.IsActive);
+        Assert.False(stored.IsPaused);
         Assert.Null(stored.ResolvedAt);
     }
 
@@ -308,5 +309,89 @@ public class EncounterServiceTests
         Assert.Equal(2, encounters.Count);
         Assert.True(encounters[0].IsActive && !encounters[0].IsDraft);
         Assert.False(encounters[1].IsActive);
+    }
+
+    // ── Pause / Resume ─────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task PauseEncounterAsync_SetsPaused_And_ClearsActive()
+    {
+        ApplicationDbContext ctx = CreateContext(nameof(PauseEncounterAsync_SetsPaused_And_ClearsActive));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
+        Assert.NotNull(stored);
+        Assert.False(stored.IsActive);
+        Assert.True(stored.IsPaused);
+        Assert.Null(stored.ResolvedAt);
+    }
+
+    [Fact]
+    public async Task ResumeEncounterAsync_RestoresActive_FromPaused()
+    {
+        ApplicationDbContext ctx = CreateContext(nameof(ResumeEncounterAsync_RestoresActive_FromPaused));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+        await service.ResumeEncounterAsync(encounterId, "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
+        Assert.NotNull(stored);
+        Assert.True(stored.IsActive);
+        Assert.False(stored.IsPaused);
+    }
+
+    [Fact]
+    public async Task LaunchEncounterAsync_Throws_WhenAnotherEncounterIsPaused()
+    {
+        ApplicationDbContext ctx = CreateContext(nameof(LaunchEncounterAsync_Throws_WhenAnotherEncounterIsPaused));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx);
+
+        CombatEncounter first = await service.CreateDraftEncounterAsync(campaign.Id, "First", "st-1");
+        await service.LaunchEncounterAsync(first.Id, "st-1");
+        await service.PauseEncounterAsync(first.Id, "st-1");
+
+        CombatEncounter second = await service.CreateDraftEncounterAsync(campaign.Id, "Second", "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.LaunchEncounterAsync(second.Id, "st-1"));
+    }
+
+    [Fact]
+    public async Task ResolveEncounterAsync_WorksFromPausedState()
+    {
+        ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_WorksFromPausedState));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
+        Assert.NotNull(stored);
+        Assert.NotNull(stored.ResolvedAt);
+        Assert.False(stored.IsActive);
+        Assert.False(stored.IsPaused);
+    }
+
+    [Fact]
+    public async Task ResumeEncounterAsync_Throws_WhenAlreadyResolved()
+    {
+        ApplicationDbContext ctx = CreateContext(nameof(ResumeEncounterAsync_Throws_WhenAlreadyResolved));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ResumeEncounterAsync(encounterId, "st-1"));
     }
 }

@@ -36,6 +36,7 @@ public class EncounterService(
             Name = name,
             IsDraft = true,
             IsActive = false,
+            IsPaused = false,
             CurrentRound = 1,
             CreatedAt = DateTime.UtcNow,
         };
@@ -73,7 +74,7 @@ public class EncounterService(
 
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
-        await EnsureNoOtherActiveEncounterAsync(encounter.CampaignId, exceptEncounterId: encounterId);
+        await EnsureNoOtherOpenEncounterAsync(encounter.CampaignId, exceptEncounterId: encounterId);
 
         foreach (EncounterNpcTemplate template in encounter.NpcTemplates)
         {
@@ -98,6 +99,7 @@ public class EncounterService(
 
         encounter.IsDraft = false;
         encounter.IsActive = true;
+        encounter.IsPaused = false;
         encounter.CurrentRound = 1;
 
         await _dbContext.SaveChangesAsync();
@@ -329,10 +331,29 @@ public class EncounterService(
     /// <inheritdoc />
     public async Task ResolveEncounterAsync(int encounterId, string storyTellerUserId)
     {
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
+        CombatEncounter encounter = await _dbContext.CombatEncounters
+            .FirstOrDefaultAsync(e => e.Id == encounterId)
+            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
+
+        if (encounter.IsDraft)
+        {
+            throw new InvalidOperationException("Only a started encounter can be resolved.");
+        }
+
+        if (encounter.ResolvedAt != null)
+        {
+            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
+        }
+
+        if (!encounter.IsActive && !encounter.IsPaused)
+        {
+            throw new InvalidOperationException($"Encounter {encounterId} is not running or paused.");
+        }
+
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         encounter.IsActive = false;
+        encounter.IsPaused = false;
         encounter.ResolvedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
@@ -340,6 +361,51 @@ public class EncounterService(
 
         _logger.LogInformation(
             "Encounter {EncounterId} resolved by ST {UserId}",
+            encounterId,
+            storyTellerUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task PauseEncounterAsync(int encounterId, string storyTellerUserId)
+    {
+        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+
+        encounter.IsActive = false;
+        encounter.IsPaused = true;
+        await _dbContext.SaveChangesAsync();
+
+        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, encounter.CampaignId, Array.Empty<InitiativeEntryDto>());
+
+        _logger.LogInformation(
+            "Encounter {EncounterId} paused by ST {UserId}",
+            encounterId,
+            storyTellerUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task ResumeEncounterAsync(int encounterId, string storyTellerUserId)
+    {
+        CombatEncounter encounter = await _dbContext.CombatEncounters
+            .FirstOrDefaultAsync(e => e.Id == encounterId)
+            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
+
+        if (!encounter.IsPaused || encounter.IsDraft || encounter.ResolvedAt != null)
+        {
+            throw new InvalidOperationException($"Encounter {encounterId} is not paused or cannot be resumed.");
+        }
+
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+
+        await EnsureNoOtherOpenEncounterAsync(encounter.CampaignId, exceptEncounterId: encounterId);
+
+        encounter.IsPaused = false;
+        encounter.IsActive = true;
+        await _dbContext.SaveChangesAsync();
+        await PublishInitiativeAsync(encounterId, storyTellerUserId);
+
+        _logger.LogInformation(
+            "Encounter {EncounterId} resumed by ST {UserId}",
             encounterId,
             storyTellerUserId);
     }
@@ -354,6 +420,8 @@ public class EncounterService(
             .Include(e => e.NpcTemplates)
             .Where(e => e.CampaignId == campaignId)
             .OrderByDescending(e => e.IsActive && !e.IsDraft)
+            .ThenByDescending(e => e.IsPaused && !e.IsDraft && e.ResolvedAt == null)
+            .ThenByDescending(e => e.IsDraft)
             .ThenByDescending(e => e.CreatedAt)
             .ToListAsync();
     }
@@ -641,6 +709,7 @@ public class EncounterService(
             Name = source.Name,
             IsActive = source.IsActive,
             IsDraft = source.IsDraft,
+            IsPaused = source.IsPaused,
             CurrentRound = source.CurrentRound,
             CreatedAt = source.CreatedAt,
             ResolvedAt = source.ResolvedAt,
@@ -722,19 +791,22 @@ public class EncounterService(
         return Task.FromResult(entry);
     }
 
-    private async Task EnsureNoOtherActiveEncounterAsync(int campaignId, int exceptEncounterId)
+    /// <summary>
+    /// At most one open fight per campaign: launched and not resolved (running or paused).
+    /// </summary>
+    private async Task EnsureNoOtherOpenEncounterAsync(int campaignId, int exceptEncounterId)
     {
         bool conflict = await _dbContext.CombatEncounters.AnyAsync(e =>
             e.CampaignId == campaignId
             && e.Id != exceptEncounterId
-            && e.IsActive
             && !e.IsDraft
-            && e.ResolvedAt == null);
+            && e.ResolvedAt == null
+            && (e.IsActive || e.IsPaused));
 
         if (conflict)
         {
             throw new InvalidOperationException(
-                "Another encounter is already active. Resolve it before launching a new one.");
+                "Another encounter is already in progress or paused. Resolve or resume it before starting a new one.");
         }
     }
 

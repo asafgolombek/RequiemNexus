@@ -34,12 +34,16 @@
             <a href="/campaigns/@Id" class="btn-ghost">← Back to Campaign</a>
         </div>
 
-        @* Smart launch (active encounter) *@
-        @if (_smartLaunchEncounterId.HasValue && _campaignCharacters.Count > 0)
+        @* Smart launch: add PCs to running fight, or start prep encounter (launch + bulk) *@
+        @if (_smartLaunchEncounterId.HasValue && (_campaignCharacters.Count > 0 || _smartLaunchIsPrepStart))
         {
             <div class="card-rn" style="margin-bottom:1.5rem;">
-                <h3 style="margin-bottom:0.75rem;">Roll initiative for online players</h3>
+                <h3 style="margin-bottom:0.75rem;">@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")</h3>
                 <p style="font-size:0.85em;color:var(--gothic-muted);">Checked characters must be online in the session and not already in this encounter.</p>
+                @if (_campaignCharacters.Count == 0)
+                {
+                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign — only NPC lines will be in initiative.</p>
+                }
                 @foreach (Character ch in _campaignCharacters)
                 {
                     <label style="display:flex;align-items:center;gap:0.5rem;margin:0.35rem 0;">
@@ -48,8 +52,8 @@
                     </label>
                 }
                 <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;">
-                    <button class="btn-primary-rn" disabled="@_busy" @onclick="ConfirmSmartLaunch">Roll initiative &amp; join</button>
-                    <button class="btn-ghost" type="button" @onclick="() => _smartLaunchEncounterId = null">Cancel</button>
+                    <button class="btn-primary-rn" disabled="@_busy" @onclick="ConfirmSmartLaunch">@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative &amp; join")</button>
+                    <button class="btn-ghost" type="button" @onclick="CancelSmartLaunch">Cancel</button>
                 </div>
                 @if (!string.IsNullOrEmpty(_smartLaunchError))
                 {
@@ -58,12 +62,12 @@
             </div>
         }
 
-        @* New draft *@
+        @* Create encounter (prep) *@
         <div class="card-rn" style="margin-bottom:1.5rem;">
-            <h3 style="margin-bottom:0.75rem;">New draft encounter</h3>
+            <h3 style="margin-bottom:0.75rem;">Create encounter</h3>
             <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
                 <input class="form-control" style="flex:1;min-width:200px;" placeholder="Encounter name…" @bind="_newEncounterName" />
-                <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newEncounterName) || _busy)" @onclick="CreateDraft">Create draft</button>
+                <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newEncounterName) || _busy)" @onclick="CreateDraft">Create</button>
             </div>
             @if (!string.IsNullOrEmpty(_createError))
             {
@@ -85,15 +89,23 @@
                         }
                     </select>
                     <input class="form-control" style="min-width:180px;" placeholder="Encounter name…" @bind="_fromTemplateEncounterName" />
-                    <button class="btn-primary-rn" disabled="@(_selectedTemplateId == 0 || _busy)" @onclick="CreateFromTemplate">Create draft from template</button>
+                    <button class="btn-primary-rn" disabled="@(_selectedTemplateId == 0 || _busy)" @onclick="CreateFromTemplate">Create from template</button>
                 </div>
             </div>
         }
 
-        @* Draft encounters *@
+        @* Encounters in prep *@
         @if (DraftEncounters.Any())
         {
-            <h3 style="margin-bottom:0.75rem;">Draft encounters (prep)</h3>
+            @if (!string.IsNullOrEmpty(_prepFeedback))
+            {
+                <p class="card-rn" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.9em;color:var(--gothic-muted);">@_prepFeedback</p>
+            }
+            <h3 style="margin-bottom:0.75rem;">Encounters in prep</h3>
+            @if (!string.IsNullOrEmpty(_createError))
+            {
+                <p class="text-danger" style="margin-bottom:0.75rem;">@_createError</p>
+            }
             <div class="character-grid" style="margin-bottom:1.5rem;">
                 @foreach (CombatEncounter enc in DraftEncounters)
                 {
@@ -124,8 +136,9 @@
                             <input class="form-control" placeholder="Mask label if hidden (optional)" @bind="_tplMask[enc.Id]" />
                             <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => AddTemplateRow(enc.Id)">+ Add NPC line</button>
                         </div>
-                        <div class="card-actions" style="margin-top:0.75rem;">
-                            <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@_busy" @onclick="() => LaunchDraft(enc.Id)">Launch encounter</button>
+                        <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+                            <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenSmartLaunch(enc.Id, prepStart: true)">Start</button>
+                            <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" type="button" @onclick="() => AckSaveForLater()">Save for later</button>
                             <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenNpcPicker(enc.Id, isDraft: true)">+ From stat block</button>
                         </div>
                     </div>
@@ -177,22 +190,45 @@
                         </p>
                         <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
                             <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-primary-rn" style="font-size:0.85em;">⚔️ Open tracker</a>
-                            <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenSmartLaunch(enc.Id)">+ Online players</button>
+                            <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenSmartLaunch(enc.Id, prepStart: false)">+ Online players</button>
                             <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenNpcPicker(enc.Id, isDraft: false)">+ NPC</button>
+                            <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => PauseEncounter(enc.Id)">⏸ Pause</button>
                             <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">✓ Resolve</button>
                         </div>
                     </div>
                 }
             </div>
         }
-        else if (!DraftEncounters.Any())
+        @* Paused *@
+        @if (PausedEncounters.Any())
         {
-            <div class="empty-state-rn" style="margin-bottom:1.5rem;">
-                <p>No encounters yet. Create a draft above, add NPC lines, then launch when play starts.</p>
+            <h3 style="margin-bottom:0.75rem;">Paused encounter</h3>
+            <div class="character-grid" style="margin-bottom:1.5rem;">
+                @foreach (CombatEncounter enc in PausedEncounters)
+                {
+                    <div class="card-rn">
+                        <h4>@enc.Name</h4>
+                        <p style="font-size:0.85em;color:var(--gothic-muted);">
+                            Round @enc.CurrentRound · Paused — resume to continue combat
+                        </p>
+                        <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
+                            <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResumeEncounter(enc.Id)">▶ Resume</button>
+                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-ghost" style="font-size:0.85em;">👁 View tracker</a>
+                            <button class="btn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">✓ Resolve</button>
+                        </div>
+                    </div>
+                }
             </div>
         }
 
-        @* Past *@
+        @if (!DraftEncounters.Any() && !LaunchedEncounters.Any() && !PausedEncounters.Any())
+        {
+            <div class="empty-state-rn" style="margin-bottom:1.5rem;">
+                <p>No encounters yet. Create one above, add NPC lines, then use <strong>Start</strong> when play begins or <strong>Save for later</strong> to keep prepping.</p>
+            </div>
+        }
+
+        @* Past (resolved only) *@
         @if (PastEncounters.Any())
         {
             <details>
@@ -221,7 +257,9 @@
     private List<Character> _campaignCharacters = [];
     private readonly Dictionary<int, bool> _smartLaunchSelection = [];
     private int? _smartLaunchEncounterId;
+    private bool _smartLaunchIsPrepStart;
     private string _smartLaunchError = string.Empty;
+    private string _prepFeedback = string.Empty;
 
     private bool _loading = true;
     private bool _accessDenied;
@@ -245,7 +283,8 @@
 
     private List<CombatEncounter> DraftEncounters => _encounters.Where(e => e.IsDraft).ToList();
     private List<CombatEncounter> LaunchedEncounters => _encounters.Where(e => e.IsActive && !e.IsDraft).ToList();
-    private List<CombatEncounter> PastEncounters => _encounters.Where(e => !e.IsActive && !e.IsDraft).ToList();
+    private List<CombatEncounter> PausedEncounters => _encounters.Where(e => e.IsPaused && !e.IsDraft && e.ResolvedAt == null).ToList();
+    private List<CombatEncounter> PastEncounters => _encounters.Where(e => e.ResolvedAt != null).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -395,27 +434,9 @@
         }
     }
 
-    private async Task LaunchDraft(int encounterId)
+    private void AckSaveForLater()
     {
-        if (_busy)
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await EncounterService.LaunchEncounterAsync(encounterId, _currentUserId!);
-            NavigationManager.NavigateTo($"/campaigns/{Id}/encounter/{encounterId}", forceLoad: true);
-        }
-        catch (Exception ex)
-        {
-            _createError = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
+        _prepFeedback = "Saved. This encounter stays in your list until you use Start.";
     }
 
     private void OpenNpcPicker(int encounterId, bool isDraft)
@@ -493,14 +514,23 @@
         }
     }
 
-    private void OpenSmartLaunch(int encounterId)
+    private void OpenSmartLaunch(int encounterId, bool prepStart)
     {
         _smartLaunchEncounterId = encounterId;
+        _smartLaunchIsPrepStart = prepStart;
         _smartLaunchError = string.Empty;
+        _createError = string.Empty;
         foreach (Character ch in _campaignCharacters)
         {
             _smartLaunchSelection[ch.Id] = true;
         }
+    }
+
+    private void CancelSmartLaunch()
+    {
+        _smartLaunchEncounterId = null;
+        _smartLaunchIsPrepStart = false;
+        _smartLaunchError = string.Empty;
     }
 
     private async Task ConfirmSmartLaunch()
@@ -510,6 +540,9 @@
             return;
         }
 
+        bool startedFromPrep = _smartLaunchIsPrepStart;
+        int encounterId = _smartLaunchEncounterId.Value;
+
         List<int> ids = _campaignCharacters
             .Where(c => _smartLaunchSelection.GetValueOrDefault(c.Id, false))
             .Select(c => c.Id)
@@ -517,15 +550,74 @@
 
         _busy = true;
         _smartLaunchError = string.Empty;
+        _createError = string.Empty;
         try
         {
-            await EncounterService.BulkAddOnlinePlayersAsync(_smartLaunchEncounterId.Value, ids, _currentUserId!);
-            _smartLaunchEncounterId = null;
+            if (startedFromPrep)
+            {
+                await EncounterService.LaunchEncounterAsync(encounterId, _currentUserId!);
+            }
+
+            await EncounterService.BulkAddOnlinePlayersAsync(encounterId, ids, _currentUserId!);
+
+            CancelSmartLaunch();
             await LoadEncounters();
+
+            if (startedFromPrep)
+            {
+                NavigationManager.NavigateTo($"/campaigns/{Id}/encounter/{encounterId}", forceLoad: true);
+            }
         }
         catch (Exception ex)
         {
-            _smartLaunchError = ex.Message;
+            await LoadEncounters();
+            CancelSmartLaunch();
+            if (startedFromPrep)
+            {
+                _createError = ex.Message;
+            }
+            else
+            {
+                _smartLaunchError = ex.Message;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task PauseEncounter(int encounterId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.PauseEncounterAsync(encounterId, _currentUserId!);
+            await LoadEncounters();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ResumeEncounter(int encounterId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.ResumeEncounterAsync(encounterId, _currentUserId!);
+            await LoadEncounters();
         }
         finally
         {

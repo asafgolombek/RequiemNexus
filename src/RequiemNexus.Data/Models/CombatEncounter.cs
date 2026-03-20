@@ -26,6 +26,9 @@ public class CombatEncounter
     /// <summary>Pre-session prep encounter; cannot be advanced until launched.</summary>
     public bool IsDraft { get; set; }
 
+    /// <summary>True when a launched encounter is paused; initiative stays in the database but live session broadcast is cleared.</summary>
+    public bool IsPaused { get; set; }
+
     /// <summary>Combat round counter (starts at 1 when the encounter is launched).</summary>
     public int CurrentRound { get; set; } = 1;
 

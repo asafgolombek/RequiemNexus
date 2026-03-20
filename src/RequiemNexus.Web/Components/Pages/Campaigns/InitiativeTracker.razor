@@ -52,18 +52,26 @@
                     }
                     else if (_encounter.IsDraft)
                     {
-                        <text>Draft — launch from Encounter Manager to begin combat</text>
+                        <text>Draft — start from Encounter Manager to begin combat</text>
+                    }
+                    else if (_encounter.IsPaused)
+                    {
+                        <text>Paused — resume from Encounter Manager to continue combat</text>
+                    }
+                    else if (_encounter.ResolvedAt != null)
+                    {
+                        <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
                     }
                     else
                     {
-                        <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
+                        <text>Inactive</text>
                     }
                 </span>
             </div>
             <a href="/campaigns/@CampaignId/encounters" class="btn-ghost">← Encounters</a>
         </div>
 
-        @if (_isSt && _encounter.ResolvedAt == null)
+        @if (_isSt && _encounter.ResolvedAt == null && !_encounter.IsPaused)
         {
             <div class="card-rn" style="margin-bottom:1.5rem;">
                 <h3 style="margin-bottom:0.75rem;">Add Participant</h3>
