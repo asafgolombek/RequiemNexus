@@ -6,6 +6,7 @@ using Microsoft.JSInterop;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 using RequiemNexus.Web.Services;
@@ -77,6 +78,13 @@ public partial class StorytellerGlimpse
     private readonly Dictionary<int, int> _forceBpSeverityByManeuverId = [];
     private readonly Dictionary<int, int> _narrativeDoorsDraftByManeuverId = [];
 
+    // Social maneuver — investigation clues (Phase 10.5)
+    private int _investigationThresholdDraft = 3;
+    private readonly Dictionary<int, int> _bankSuccessesByManeuverId = [];
+    private readonly Dictionary<int, string> _manualClueSourceByManeuverId = [];
+    private readonly Dictionary<int, ClueLeverageKind> _manualClueLeverageByManeuverId = [];
+    private readonly Dictionary<int, string> _spendBenefitByClueId = [];
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -136,6 +144,13 @@ public partial class StorytellerGlimpse
         {
             _socialManeuvers = (await SocialManeuveringService.ListForCampaignAsync(Id, _currentUserId!)).ToList();
             _npcs = await ChronicleNpcService.GetNpcsAsync(Id);
+
+            Campaign? camp = await CampaignService.GetCampaignByIdAsync(Id, _currentUserId!);
+            if (camp != null)
+            {
+                _investigationThresholdDraft = camp.SocialManeuverInvestigationSuccessesPerClue;
+            }
+
             foreach (SocialManeuver m in _socialManeuvers)
             {
                 _openDoorPoolByManeuverId.TryAdd(m.Id, 5);
@@ -143,6 +158,13 @@ public partial class StorytellerGlimpse
                 _forceHardLeverageByManeuverId.TryAdd(m.Id, false);
                 _forceBpSeverityByManeuverId.TryAdd(m.Id, 7);
                 _narrativeDoorsDraftByManeuverId[m.Id] = m.RemainingDoors;
+                _bankSuccessesByManeuverId.TryAdd(m.Id, 1);
+                _manualClueSourceByManeuverId.TryAdd(m.Id, string.Empty);
+                _manualClueLeverageByManeuverId.TryAdd(m.Id, ClueLeverageKind.Soft);
+                foreach (ManeuverClue clue in m.Clues)
+                {
+                    _spendBenefitByClueId.TryAdd(clue.Id, string.Empty);
+                }
             }
         }
         catch (UnauthorizedAccessException)
@@ -271,6 +293,147 @@ public partial class StorytellerGlimpse
         try
         {
             await SocialManeuveringService.SetRemainingDoorsNarrativeAsync(maneuverId, doors, _currentUserId!);
+            await LoadSocialManeuversAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _socialBusy = false;
+        }
+    }
+
+    private static int GetClueThreshold(SocialManeuver m) =>
+        m.Campaign?.SocialManeuverInvestigationSuccessesPerClue ?? 3;
+
+    private int GetBankSuccesses(int maneuverId) => _bankSuccessesByManeuverId.GetValueOrDefault(maneuverId, 1);
+
+    private void SetBankSuccesses(int maneuverId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v) && v >= 1)
+        {
+            _bankSuccessesByManeuverId[maneuverId] = v;
+        }
+    }
+
+    private string GetManualClueSource(int maneuverId) =>
+        _manualClueSourceByManeuverId.GetValueOrDefault(maneuverId, string.Empty);
+
+    private void SetManualClueSource(int maneuverId, ChangeEventArgs e) =>
+        _manualClueSourceByManeuverId[maneuverId] = e.Value?.ToString() ?? string.Empty;
+
+    private ClueLeverageKind GetManualClueLeverage(int maneuverId) =>
+        _manualClueLeverageByManeuverId.GetValueOrDefault(maneuverId, ClueLeverageKind.Soft);
+
+    private void SetManualClueLeverage(int maneuverId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int raw)
+            && Enum.IsDefined(typeof(ClueLeverageKind), raw))
+        {
+            _manualClueLeverageByManeuverId[maneuverId] = (ClueLeverageKind)raw;
+        }
+    }
+
+    private string GetSpendBenefit(int clueId) => _spendBenefitByClueId.GetValueOrDefault(clueId, string.Empty);
+
+    private void SetSpendBenefit(int clueId, ChangeEventArgs e) =>
+        _spendBenefitByClueId[clueId] = e.Value?.ToString() ?? string.Empty;
+
+    private async Task SaveInvestigationThresholdAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _socialBusy = true;
+        try
+        {
+            await SocialManeuveringService.SetInvestigationSuccessesPerClueAsync(
+                Id,
+                _investigationThresholdDraft,
+                _currentUserId!);
+            ToastService.Show("Saved", "Investigation clue threshold updated.", ToastType.Success);
+            await LoadSocialManeuversAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _socialBusy = false;
+        }
+    }
+
+    private async Task BankInvestigationAsync(int maneuverId)
+    {
+        _socialBusy = true;
+        try
+        {
+            int n = GetBankSuccesses(maneuverId);
+            await SocialManeuveringService.BankInvestigationSuccessesAsync(maneuverId, n, _currentUserId!);
+            ToastService.Show("Investigation", $"Banked {n} success(es).", ToastType.Success);
+            await LoadSocialManeuversAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _socialBusy = false;
+        }
+    }
+
+    private async Task AddManualClueAsync(int maneuverId)
+    {
+        string src = GetManualClueSource(maneuverId).Trim();
+        if (string.IsNullOrEmpty(src))
+        {
+            ToastService.Show("Clue", "Enter a source description.", ToastType.Warning);
+            return;
+        }
+
+        _socialBusy = true;
+        try
+        {
+            await SocialManeuveringService.AddManeuverClueAsync(
+                maneuverId,
+                src,
+                GetManualClueLeverage(maneuverId),
+                _currentUserId!);
+            _manualClueSourceByManeuverId[maneuverId] = string.Empty;
+            ToastService.Show("Clue", "Maneuver clue added.", ToastType.Success);
+            await LoadSocialManeuversAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _socialBusy = false;
+        }
+    }
+
+    private async Task SpendClueAsync(int clueId)
+    {
+        string benefit = GetSpendBenefit(clueId).Trim();
+        if (string.IsNullOrEmpty(benefit))
+        {
+            ToastService.Show("Clue", "Enter the recorded benefit before spending.", ToastType.Warning);
+            return;
+        }
+
+        _socialBusy = true;
+        try
+        {
+            await SocialManeuveringService.SpendManeuverClueAsync(clueId, benefit, _currentUserId!);
+            _spendBenefitByClueId[clueId] = string.Empty;
+            ToastService.Show("Clue", "Clue spent.", ToastType.Success);
             await LoadSocialManeuversAsync();
         }
         catch (Exception ex)

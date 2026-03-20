@@ -1,4 +1,5 @@
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 
@@ -59,4 +60,28 @@ public interface ISocialManeuveringService
     /// Sets remaining Doors for narrative adjustment. Storyteller-only; clamped to [0, <see cref="SocialManeuver.InitialDoors"/>].
     /// </summary>
     Task SetRemainingDoorsNarrativeAsync(int maneuverId, int remainingDoors, string storytellerUserId);
+
+    /// <summary>
+    /// Storyteller-only: sets how many Investigation successes are required to create one <see cref="ManeuverClue"/> when banking (clamped 1–50).
+    /// </summary>
+    Task SetInvestigationSuccessesPerClueAsync(int campaignId, int successesPerClue, string storytellerUserId);
+
+    /// <summary>
+    /// Banks Investigation successes toward automatic clues for this maneuver. Initiator owner or Storyteller; maneuver must be <see cref="ManeuverStatus.Active"/>.
+    /// </summary>
+    Task BankInvestigationSuccessesAsync(int maneuverId, int successes, string userId);
+
+    /// <summary>
+    /// Storyteller-only: adds a maneuver clue (manual ST grant).
+    /// </summary>
+    Task<ManeuverClue> AddManeuverClueAsync(
+        int maneuverId,
+        string sourceDescription,
+        ClueLeverageKind leverageKind,
+        string storytellerUserId);
+
+    /// <summary>
+    /// Spends an unspent clue (ST or initiator). Records mechanical benefit text; publishes update.
+    /// </summary>
+    Task SpendManeuverClueAsync(int clueId, string benefit, string userId);
 }

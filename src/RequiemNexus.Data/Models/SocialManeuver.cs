@@ -53,5 +53,8 @@ public class SocialManeuver
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+    /// <summary>Successes banked toward the next automatic <see cref="ManeuverClue"/> (Phase 10.5).</summary>
+    public int InvestigationProgressTowardNextClue { get; set; }
+
     public virtual ICollection<ManeuverClue> Clues { get; set; } = new List<ManeuverClue>();
 }

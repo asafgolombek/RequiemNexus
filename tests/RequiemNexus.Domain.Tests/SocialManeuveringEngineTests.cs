@@ -134,6 +134,30 @@ public class SocialManeuveringEngineTests
         Assert.Equal(2, r.Value);
     }
 
+    [Theory]
+    [InlineData(0, 5, 3, 1, 2)]
+    [InlineData(2, 2, 3, 1, 1)]
+    [InlineData(0, 2, 5, 0, 2)]
+    public void AccrueInvestigationTowardClues_ComputesProgressAndClueCount(
+        int progress,
+        int add,
+        int threshold,
+        int expectedClues,
+        int expectedNewProgress)
+    {
+        (int newProgress, int clues) = SocialManeuveringEngine.AccrueInvestigationTowardClues(progress, add, threshold);
+        Assert.Equal(expectedClues, clues);
+        Assert.Equal(expectedNewProgress, newProgress);
+    }
+
+    [Fact]
+    public void AccrueInvestigationTowardClues_ZeroAdds_ReturnsUnchanged()
+    {
+        (int newProgress, int clues) = SocialManeuveringEngine.AccrueInvestigationTowardClues(2, 0, 3);
+        Assert.Equal(0, clues);
+        Assert.Equal(2, newProgress);
+    }
+
     [Fact]
     public void ShouldFailFromHostileWeek_AfterSevenDays_True()
     {

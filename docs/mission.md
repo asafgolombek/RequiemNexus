@@ -25,13 +25,13 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 9 | The Accord of Power (Covenants & Blood Sorcery) | ✅ Complete |
 | 9.5 | Sacrifice Mechanics (Blood Sorcery) | ✅ Complete |
 | 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ✅ Complete |
-| 10 | The Social Graces (Social Maneuvering) | 🔄 In progress |
+| 10 | The Social Graces (Social Maneuvering) | ✅ Complete |
 | 11 | Assets & Armory (Equipment & Services) | ⬜ Planned |
 | 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → Phase 10 — The Social Graces (Social Maneuvering)** (Phases 9.5–9.6 delivered; see phase table above).
+> **Currently Active → Phase 11 — Assets & Armory** (Phase 10 Social Maneuvering delivered; see phase table above).
 
 ---
 
@@ -360,8 +360,8 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - [x] **Doors Tracker** — Glimpse + character sheet show remaining/total Doors; SignalR `ReceiveSocialManeuverUpdate` refreshes connected clients (`docs/PHASE_10_SOCIAL_GRACES.md`).
 - [x] **Impression Management** — Impression shown on sheet and ST dropdown on Glimpse; open-Door timing enforced server-side and reflected in sheet copy/countdown.
 - [x] **Leverage UI** — Hard leverage (breaking-point severity + door removal before force) on Glimpse and character sheet; soft/narrative leverage remains ST/table roleplay per book.
-- [ ] **Investigation Support** — Automated tracking of Clues and "Interception" of social maneuvers
-- [ ] **Social Condition Integration** — Automatic application of *Inspired*, *Shaken*, or *Swooned* based on maneuver outcomes
+- [x] **Investigation Support** — Clue banking (configurable successes-per-clue per chronicle), ST manual clues, spend workflow; **Interception** deferred (see `docs/PHASE_10_SOCIAL_GRACES.md` §8)
+- [x] **Social Condition Integration** — *Inspired* (exceptional open-Door), *Shaken* (dramatic failure, failed force/Burnt, hostile-week failure), *Swooned* (maneuver success open or forced); skips duplicate active Condition of the same type
 
 ---
 

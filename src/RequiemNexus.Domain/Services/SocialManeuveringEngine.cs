@@ -155,5 +155,30 @@ public static class SocialManeuveringEngine
         return nowUtc >= hostileSinceUtc.Value.AddDays(7);
     }
 
+    /// <summary>
+    /// Banks Investigation successes toward automatic maneuver clues. When total crosses <paramref name="threshold"/>,
+    /// one clue is granted per full threshold (remainder kept as progress).
+    /// </summary>
+    /// <param name="currentProgress">Stored progress toward the next clue (0 .. threshold-1).</param>
+    /// <param name="successesToAdd">Positive count of Investigation successes to bank.</param>
+    /// <param name="threshold">Successes per clue; values below 1 are treated as 1.</param>
+    /// <returns>New progress remainder and how many clues to create.</returns>
+    public static (int NewProgress, int CluesGranted) AccrueInvestigationTowardClues(
+        int currentProgress,
+        int successesToAdd,
+        int threshold)
+    {
+        if (successesToAdd < 1)
+        {
+            return (currentProgress, 0);
+        }
+
+        int t = threshold < 1 ? 1 : threshold;
+        int total = currentProgress + successesToAdd;
+        int cluesGranted = total / t;
+        int newProgress = total % t;
+        return (newProgress, cluesGranted);
+    }
+
     private static int ClampDot(int value) => Math.Clamp(value, 1, 5);
 }

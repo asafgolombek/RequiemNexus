@@ -322,7 +322,7 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 10 — The Social Graces (Social Maneuvering).** Phases 9.5–9.6 (sacrifice mechanics, Necromancy/Ordo rites) are complete.
+**Phase 11 — Assets & Armory.** Phase 10 (Social Maneuvering, clues, social Conditions) is complete. Phases 9.5–9.6 (sacrifice mechanics, Necromancy/Ordo rites) are complete.
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list and exit criteria.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.

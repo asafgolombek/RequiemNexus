@@ -61,4 +61,10 @@ public enum ConditionType
 
     /// <summary>A Storyteller-defined condition not covered by the canonical list.</summary>
     Custom,
+
+    /// <summary>
+    /// Chronicles of Darkness — energized by success. Resolve when you relinquish the bonus this Condition provides.
+    /// Appended after <see cref="ConditionType.Custom"/> to preserve stored enum values for existing rows.
+    /// </summary>
+    Inspired,
 }

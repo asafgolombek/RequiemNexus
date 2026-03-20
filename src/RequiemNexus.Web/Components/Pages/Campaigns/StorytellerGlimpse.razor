@@ -17,8 +17,10 @@
 @inject RequiemNexus.Web.Services.ToastService ToastService
 @inject IJSRuntime JSRuntime
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Domain.Enums
 @using Microsoft.JSInterop
+@using System.Linq
 
 <PageTitle>Storyteller Glimpse - Requiem Nexus</PageTitle>
 
@@ -66,6 +68,16 @@
             <p style="color:var(--text-secondary);font-size:0.9em;margin-bottom:1rem;">
                 Targets must be chronicle NPCs only. On <strong>Force Doors</strong>, failure marks the relationship <strong>Burnt</strong> — no further Social maneuvering against that NPC by this PC.
             </p>
+
+            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;margin-bottom:1rem;padding:0.65rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">
+                <label style="font-size:0.85em;display:flex;flex-direction:column;gap:0.25rem;">
+                    Investigation successes per clue (chronicle)
+                    <input type="number" class="form-control" style="width:72px;" min="1" max="50"
+                           @bind="_investigationThresholdDraft" />
+                </label>
+                <button type="button" class="btn-ghost" style="font-size:0.85em;" disabled="@_socialBusy"
+                        @onclick="SaveInvestigationThresholdAsync">Save threshold</button>
+            </div>
 
             <div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;padding:0.75rem;border:1px solid rgba(255,255,255,0.12);border-radius:8px;">
                 <strong style="font-size:0.95em;">New maneuver</strong>
@@ -129,6 +141,67 @@
                                 @if (m.LastRollAt.HasValue)
                                 {
                                     <span><strong>Last roll:</strong> @m.LastRollAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") UTC</span>
+                                }
+                            </div>
+                            <div style="font-size:0.82em;margin:0.45rem 0;padding:0.5rem;border:1px solid rgba(255,255,255,0.08);border-radius:6px;">
+                                <strong>Clues</strong>
+                                <span style="color:var(--text-secondary);margin-left:0.35rem;">Progress @m.InvestigationProgressTowardNextClue / @GetClueThreshold(m)</span>
+                                @if (m.Status == ManeuverStatus.Active)
+                                {
+                                    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.4rem;">
+                                        <input type="number" class="form-control" style="width:52px;" min="1" max="30"
+                                               value="@GetBankSuccesses(m.Id)"
+                                               @onchange="e => SetBankSuccesses(m.Id, e)" />
+                                        <button type="button" class="btn-ghost" style="font-size:0.8em;" disabled="@_socialBusy"
+                                                @onclick="() => BankInvestigationAsync(m.Id)">Bank Investigation</button>
+                                    </div>
+                                }
+                                <div style="margin-top:0.45rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;">
+                                    <label style="font-size:0.78em;flex:1;min-width:140px;">
+                                        Manual clue (ST)
+                                        <input class="form-control" style="margin-top:0.2rem;font-size:0.9em;"
+                                               placeholder="Source / discovery…"
+                                               value="@GetManualClueSource(m.Id)"
+                                               @onchange="e => SetManualClueSource(m.Id, e)" />
+                                    </label>
+                                    <label style="font-size:0.78em;">
+                                        Leverage
+                                        <select class="form-control" style="margin-top:0.2rem;min-width:100px;"
+                                                value="@((int)GetManualClueLeverage(m.Id))"
+                                                @onchange="e => SetManualClueLeverage(m.Id, e)">
+                                            <option value="@((int)ClueLeverageKind.Soft)">Soft</option>
+                                            <option value="@((int)ClueLeverageKind.Hard)">Hard</option>
+                                        </select>
+                                    </label>
+                                    <button type="button" class="btn-ghost" style="font-size:0.8em;" disabled="@_socialBusy"
+                                            @onclick="() => AddManualClueAsync(m.Id)">Add clue</button>
+                                </div>
+                                @if (m.Clues.Any())
+                                {
+                                    <ul style="list-style:none;padding:0;margin:0.45rem 0 0;font-size:0.8em;">
+                                        @foreach (var clue in m.Clues.OrderByDescending(c => c.Id))
+                                        {
+                                            <li style="padding:0.25rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+                                                @if (clue.IsSpent)
+                                                {
+                                                    <span style="color:var(--text-secondary);">Spent:</span>
+                                                    <span>@clue.SourceDescription — @clue.Benefit</span>
+                                                }
+                                                else
+                                                {
+                                                    <div><strong>Unspent</strong> · @clue.SourceDescription <span style="color:var(--text-secondary);">(@clue.LeverageKind)</span></div>
+                                                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.25rem;">
+                                                        <input class="form-control" style="flex:1;min-width:120px;font-size:0.9em;"
+                                                               placeholder="Recorded benefit…"
+                                                               value="@GetSpendBenefit(clue.Id)"
+                                                               @onchange="e => SetSpendBenefit(clue.Id, e)" />
+                                                        <button type="button" class="btn-primary-rn" style="font-size:0.78em;" disabled="@_socialBusy"
+                                                                @onclick="() => SpendClueAsync(clue.Id)">Spend</button>
+                                                    </div>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
                                 }
                             </div>
                             <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin-bottom:0.5rem;">

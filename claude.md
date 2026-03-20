@@ -2,11 +2,11 @@
 
 You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-## 🧭 Active Phase: Phase 10 — The Social Graces (Social Maneuvering)
+## 🧭 Active Phase: Phase 11 — Assets & Armory (Equipment & Services)
 - **Content vs. Behavior:** Covenants, Blood Sorcery, and Coils/Scales are seed data interpreted by a stable engine.
 - **Pool Resolver:** Supports additive pools, contested rolls, penalty dice, and lower-of. Passive modifier engine integrated.
 - **Blood Sorcery:** Phases 9.5–9.6 delivered — `RequirementsJson`, `BeginRiteActivationAsync`, Necromancy/Ordo rites, `HumanityStains`; temporary ritual-granted Coils deferred.
-- **Next:** Social maneuvering per `docs/mission.md` Phase 10.
+- **Next:** Equipment & services per `docs/mission.md` Phase 11.
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.

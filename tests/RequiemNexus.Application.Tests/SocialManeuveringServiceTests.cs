@@ -6,6 +6,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -33,13 +34,36 @@ public class SocialManeuveringServiceTests
         ApplicationDbContext ctx,
         IAuthorizationHelper? authHelper = null,
         IDiceService? diceService = null,
-        ISessionPublisher? sessionPublisher = null)
+        ISessionPublisher? sessionPublisher = null,
+        IConditionService? conditionService = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var dice = diceService ?? CreateDiceMock(1).Object;
         var logger = new Mock<ILogger<SocialManeuveringService>>().Object;
         var publisher = sessionPublisher ?? CreateSessionPublisherMock().Object;
-        return new SocialManeuveringService(ctx, auth, dice, publisher, logger);
+        var conditions = conditionService ?? CreateConditionNoOpMock().Object;
+        return new SocialManeuveringService(ctx, auth, dice, publisher, conditions, logger);
+    }
+
+    private static Mock<IConditionService> CreateConditionNoOpMock()
+    {
+        var mock = new Mock<IConditionService>();
+        mock.Setup(c => c.ApplyConditionAsync(
+                It.IsAny<int>(),
+                It.IsAny<ConditionType>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string>()))
+            .ReturnsAsync((int cid, ConditionType t, string? cn, string? desc, string uid) => new CharacterCondition
+            {
+                Id = 1,
+                CharacterId = cid,
+                ConditionType = t,
+                CustomName = cn,
+                Description = desc,
+                AppliedByUserId = uid,
+            });
+        return mock;
     }
 
     private static Mock<ISessionPublisher> CreateSessionPublisherMock()
@@ -262,5 +286,82 @@ public class SocialManeuveringServiceTests
         Assert.Single(list);
         Assert.Equal("PC", list[0].InitiatorCharacter?.Name);
         Assert.Equal("NPC", list[0].TargetNpc?.Name);
+    }
+
+    [Fact]
+    public async Task BankInvestigationSuccessesAsync_AtThreshold_CreatesClue()
+    {
+        using var ctx = CreateContext(nameof(BankInvestigationSuccessesAsync_AtThreshold_CreatesClue));
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var service = CreateService(ctx);
+
+        SocialManeuver created = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        await service.BankInvestigationSuccessesAsync(created.Id, 3, "player");
+
+        List<ManeuverClue> clues = await ctx.ManeuverClues.Where(c => c.SocialManeuverId == created.Id).ToListAsync();
+        Assert.Single(clues);
+        Assert.False(clues[0].IsSpent);
+        SocialManeuver? m = await ctx.SocialManeuvers.AsNoTracking().FirstOrDefaultAsync(x => x.Id == created.Id);
+        Assert.NotNull(m);
+        Assert.Equal(0, m.InvestigationProgressTowardNextClue);
+    }
+
+    [Fact]
+    public async Task SpendManeuverClueAsync_SetsBenefitAndSpent()
+    {
+        using var ctx = CreateContext(nameof(SpendManeuverClueAsync_SetsBenefitAndSpent));
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var service = CreateService(ctx);
+
+        SocialManeuver created = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        ctx.ManeuverClues.Add(new ManeuverClue
+        {
+            SocialManeuverId = created.Id,
+            SourceDescription = "ST grant",
+            LeverageKind = ClueLeverageKind.Soft,
+        });
+        await ctx.SaveChangesAsync();
+
+        int clueId = (await ctx.ManeuverClues.FirstAsync()).Id;
+
+        await service.SpendManeuverClueAsync(clueId, "+1 impression shift (approved)", "player");
+
+        ManeuverClue? reloaded = await ctx.ManeuverClues.AsNoTracking().FirstAsync(c => c.Id == clueId);
+        Assert.True(reloaded.IsSpent);
+        Assert.Contains("impression", reloaded.Benefit, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RollOpenDoorAsync_ExceptionalSuccess_CallsConditionService()
+    {
+        using var ctx = CreateContext(nameof(RollOpenDoorAsync_ExceptionalSuccess_CallsConditionService));
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var conditions = CreateConditionNoOpMock();
+        var service = CreateService(ctx, diceService: CreateDiceMock(5).Object, conditionService: conditions.Object);
+
+        SocialManeuver created = await service.CreateAsync(
+            1,
+            1,
+            1,
+            "goal",
+            goalWouldBeBreakingPoint: true,
+            goalPreventsAspiration: false,
+            actsAgainstVirtueOrMask: false,
+            "st-user");
+
+        await service.RollOpenDoorAsync(created.Id, 8, "player");
+
+        conditions.Verify(
+            c => c.ApplyConditionAsync(
+                1,
+                ConditionType.Inspired,
+                null,
+                It.IsAny<string?>(),
+                "player"),
+            Times.Once);
     }
 }

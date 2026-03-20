@@ -4,6 +4,7 @@ using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -20,12 +21,14 @@ public class SocialManeuveringService(
     IAuthorizationHelper authHelper,
     IDiceService diceService,
     ISessionPublisher sessionPublisher,
+    IConditionService conditionService,
     ILogger<SocialManeuveringService> logger) : ISocialManeuveringService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IDiceService _diceService = diceService;
     private readonly ISessionPublisher _sessionPublisher = sessionPublisher;
+    private readonly IConditionService _conditionService = conditionService;
     private readonly ILogger<SocialManeuveringService> _logger = logger;
 
     /// <inheritdoc />
@@ -123,6 +126,8 @@ public class SocialManeuveringService(
             .AsNoTracking()
             .Include(m => m.InitiatorCharacter)
             .Include(m => m.TargetNpc)
+            .Include(m => m.Campaign)
+            .Include(m => m.Clues)
             .Where(m => m.CampaignId == campaignId)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -137,6 +142,8 @@ public class SocialManeuveringService(
             .AsNoTracking()
             .Include(m => m.InitiatorCharacter)
             .Include(m => m.TargetNpc)
+            .Include(m => m.Campaign)
+            .Include(m => m.Clues)
             .Where(m => m.InitiatorCharacterId == characterId)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -197,6 +204,8 @@ public class SocialManeuveringService(
             doorsOpened,
             maneuver.RemainingDoors,
             userId);
+
+        await ApplyOpenDoorOutcomeConditionsAsync(maneuver, roll, doorsOpened, userId);
 
         await PublishManeuverUpdateAsync(maneuver.Id);
 
@@ -266,6 +275,24 @@ public class SocialManeuveringService(
             maneuver.Status,
             userId);
 
+        if (!forcedSuccess)
+        {
+            await ApplySocialConditionIfAbsentAsync(
+                maneuver.InitiatorCharacterId,
+                ConditionType.Shaken,
+                "From failing to force Doors in Social maneuvering — the relationship is burnt.",
+                userId);
+        }
+        else
+        {
+            string npcName = maneuver.TargetNpc?.Name ?? "the target";
+            await ApplySocialConditionIfAbsentAsync(
+                maneuver.InitiatorCharacterId,
+                ConditionType.Swooned,
+                $"From Social maneuver success (forced Doors) toward {npcName}.",
+                userId);
+        }
+
         await PublishManeuverUpdateAsync(maneuver.Id);
 
         return (maneuver, roll, forcedSuccess);
@@ -329,6 +356,149 @@ public class SocialManeuveringService(
         await PublishManeuverUpdateAsync(maneuver.Id);
     }
 
+    /// <inheritdoc />
+    public async Task SetInvestigationSuccessesPerClueAsync(int campaignId, int successesPerClue, string storytellerUserId)
+    {
+        await _authHelper.RequireStorytellerAsync(campaignId, storytellerUserId, "configure Social maneuver investigation threshold");
+
+        int clamped = Math.Clamp(successesPerClue, 1, 50);
+        Campaign campaign = await _dbContext.Campaigns.FindAsync(campaignId)
+            ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
+
+        campaign.SocialManeuverInvestigationSuccessesPerClue = clamped;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Campaign {CampaignId} Social maneuver investigation successes-per-clue set to {Threshold} by ST {UserId}",
+            campaignId,
+            clamped,
+            storytellerUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task BankInvestigationSuccessesAsync(int maneuverId, int successes, string userId)
+    {
+        SocialManeuver maneuver = await LoadManeuverForMutationAsync(maneuverId);
+        await RequireInitiatorOrStorytellerAsync(maneuver, userId, "bank Investigation successes");
+
+        if (maneuver.Status != ManeuverStatus.Active)
+        {
+            throw new InvalidOperationException("Investigation successes can only be banked on an active maneuver.");
+        }
+
+        if (successes < 1)
+        {
+            throw new InvalidOperationException("Success count must be at least 1.");
+        }
+
+        Campaign campaign = maneuver.Campaign
+            ?? await _dbContext.Campaigns.AsNoTracking().FirstAsync(c => c.Id == maneuver.CampaignId);
+
+        (int newProgress, int cluesGranted) = SocialManeuveringEngine.AccrueInvestigationTowardClues(
+            maneuver.InvestigationProgressTowardNextClue,
+            successes,
+            campaign.SocialManeuverInvestigationSuccessesPerClue);
+
+        maneuver.InvestigationProgressTowardNextClue = newProgress;
+
+        for (int i = 0; i < cluesGranted; i++)
+        {
+            _dbContext.ManeuverClues.Add(new ManeuverClue
+            {
+                SocialManeuverId = maneuver.Id,
+                SourceDescription = "Investigation — successes reached the chronicle clue threshold (Nexus).",
+                LeverageKind = ClueLeverageKind.Soft,
+            });
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Banked {Successes} Investigation successes on maneuver {ManeuverId}: cluesGranted={Clues}, newProgress={Progress}, user {UserId}",
+            successes,
+            maneuverId,
+            cluesGranted,
+            newProgress,
+            userId);
+
+        await PublishManeuverUpdateAsync(maneuver.Id);
+    }
+
+    /// <inheritdoc />
+    public async Task<ManeuverClue> AddManeuverClueAsync(
+        int maneuverId,
+        string sourceDescription,
+        ClueLeverageKind leverageKind,
+        string storytellerUserId)
+    {
+        SocialManeuver maneuver = await LoadManeuverForMutationAsync(maneuverId);
+        await _authHelper.RequireStorytellerAsync(maneuver.CampaignId, storytellerUserId, "add a maneuver clue");
+
+        if (string.IsNullOrWhiteSpace(sourceDescription))
+        {
+            throw new InvalidOperationException("Clue source description is required.");
+        }
+
+        ManeuverClue clue = new()
+        {
+            SocialManeuverId = maneuver.Id,
+            SourceDescription = sourceDescription.Trim(),
+            LeverageKind = leverageKind,
+        };
+
+        _dbContext.ManeuverClues.Add(clue);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Maneuver clue {ClueId} added to maneuver {ManeuverId} by ST {UserId}",
+            clue.Id,
+            maneuverId,
+            storytellerUserId);
+
+        await PublishManeuverUpdateAsync(maneuver.Id);
+
+        return clue;
+    }
+
+    /// <inheritdoc />
+    public async Task SpendManeuverClueAsync(int clueId, string benefit, string userId)
+    {
+        ManeuverClue clue = await _dbContext.ManeuverClues
+            .Include(c => c.SocialManeuver)
+            .ThenInclude(m => m!.TargetNpc)
+            .FirstOrDefaultAsync(c => c.Id == clueId)
+            ?? throw new InvalidOperationException($"Maneuver clue {clueId} not found.");
+
+        if (clue.SocialManeuver is null)
+        {
+            throw new InvalidOperationException($"Maneuver clue {clueId} has no maneuver.");
+        }
+
+        await RequireInitiatorOrStorytellerAsync(clue.SocialManeuver, userId, "spend a maneuver clue");
+
+        if (clue.IsSpent)
+        {
+            throw new InvalidOperationException("This clue has already been spent.");
+        }
+
+        if (string.IsNullOrWhiteSpace(benefit))
+        {
+            throw new InvalidOperationException("Recorded benefit text is required when spending a clue.");
+        }
+
+        clue.IsSpent = true;
+        clue.Benefit = benefit.Trim();
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Maneuver clue {ClueId} spent on maneuver {ManeuverId} by user {UserId}",
+            clueId,
+            clue.SocialManeuverId,
+            userId);
+
+        await PublishManeuverUpdateAsync(clue.SocialManeuverId);
+    }
+
     private async Task PublishManeuverUpdateAsync(int maneuverId)
     {
         SocialManeuver? row = await _dbContext.SocialManeuvers
@@ -363,6 +533,8 @@ public class SocialManeuveringService(
     private async Task<SocialManeuver> LoadManeuverForMutationAsync(int maneuverId)
     {
         SocialManeuver maneuver = await _dbContext.SocialManeuvers
+            .Include(m => m.TargetNpc)
+            .Include(m => m.Campaign)
             .FirstOrDefaultAsync(m => m.Id == maneuverId)
             ?? throw new InvalidOperationException($"Social maneuver {maneuverId} not found.");
 
@@ -388,6 +560,19 @@ public class SocialManeuveringService(
             maneuver.Id);
 
         await _dbContext.SaveChangesAsync();
+
+        string stUserId = maneuver.Campaign?.StoryTellerId
+            ?? await _dbContext.Campaigns.AsNoTracking()
+                .Where(c => c.Id == maneuver.CampaignId)
+                .Select(c => c.StoryTellerId)
+                .FirstAsync();
+
+        await ApplySocialConditionIfAbsentAsync(
+            maneuver.InitiatorCharacterId,
+            ConditionType.Shaken,
+            "From Social maneuver failure: Hostile impression lasted a week.",
+            stUserId);
+
         await PublishManeuverUpdateAsync(maneuver.Id);
     }
 
@@ -412,5 +597,59 @@ public class SocialManeuveringService(
             throw new UnauthorizedAccessException(
                 $"Only the initiating character's owner or the Storyteller may {operationName}.");
         }
+    }
+
+    private async Task ApplyOpenDoorOutcomeConditionsAsync(
+        SocialManeuver maneuver,
+        RollResult roll,
+        int doorsOpened,
+        string actingUserId)
+    {
+        if (maneuver.Status == ManeuverStatus.Succeeded)
+        {
+            string npcName = maneuver.TargetNpc?.Name ?? "the target";
+            await ApplySocialConditionIfAbsentAsync(
+                maneuver.InitiatorCharacterId,
+                ConditionType.Swooned,
+                $"From Social maneuver success toward {npcName}.",
+                actingUserId);
+            return;
+        }
+
+        if (roll.IsDramaticFailure)
+        {
+            await ApplySocialConditionIfAbsentAsync(
+                maneuver.InitiatorCharacterId,
+                ConditionType.Shaken,
+                "From a dramatic failure while opening a Door in Social maneuvering.",
+                actingUserId);
+            return;
+        }
+
+        if (roll.IsExceptionalSuccess && doorsOpened > 0)
+        {
+            await ApplySocialConditionIfAbsentAsync(
+                maneuver.InitiatorCharacterId,
+                ConditionType.Inspired,
+                "From an exceptional success while opening a Door in Social maneuvering.",
+                actingUserId);
+        }
+    }
+
+    private async Task ApplySocialConditionIfAbsentAsync(
+        int characterId,
+        ConditionType type,
+        string? descriptionOverride,
+        string actingUserId)
+    {
+        bool hasActive = await _dbContext.CharacterConditions.AnyAsync(
+            c => c.CharacterId == characterId && !c.IsResolved && c.ConditionType == type);
+
+        if (hasActive)
+        {
+            return;
+        }
+
+        await _conditionService.ApplyConditionAsync(characterId, type, null, descriptionOverride, actingUserId);
     }
 }
