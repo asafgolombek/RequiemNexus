@@ -344,7 +344,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - [x] **Ordo Dracul Rituals** — `SorceryType.OrdoDraculRitual`, `CovenantDefinition.SupportsOrdoRituals`, `Ordo Sorcery` discipline track for pools; sample rite `Dragon's Own Fire` (further rites: same pipeline).
 - [ ] **Expanded ritual catalog** — Full rulebook/supplement list (e.g. Taste of the Dragon, Pasha's Vision, …) deferred to content passes; structure is in place.
 - [x] **Data model extension** — `SorceryType` values, nullable `RequiredCovenantId`, `RequiredClanId`, `RequirementsJson`, migration `Phase95Phase96BloodSorceryExtensions`.
-- [x] **UI** — Blood Sorcery section for Crúac/Theban, Ordo (`SupportsOrdoRituals`), or any character with Necromancy dots; learn modal labels all traditions.
+- [x] **UI** — Blood Sorcery section for Crúac/Theban, Ordo (`SupportsOrdoRituals`), or any character with Necromancy dots; rite requests from **Advancement** (`ApplyLearnRiteModal`); sheet uses activation only; modal labels all traditions.
 - [x] **Rules Interpretation Log** — Necromancy/Ordo pool and gating decisions in `docs/rules-interpretations.md`.
 - [ ] **Temporary ritual-granted Coils/Scales** — Deferred; no timed `PassiveModifier` from rites yet—Storyteller applies table-side or via existing tools.
 
@@ -352,3 +352,61 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 - Phase 9.5 Sacrifice Mechanics — handled separately.
 - Exotic or homebrew blood sorcery traditions — defer to future phases.
+## 📅 Phase 10: The Social Graces (Social Maneuvering)
+
+**The Objective:** Automate the formal systems of social dominance, investigation, and manipulation.
+
+- [ ] **Doors Tracker** — Real-time visualization of "Doors" for Social Maneuvering (Chapter 4)
+- [ ] **Impression Management** — Tracking the current Impression level (Hostile to Perfect) and its effect on Door resolution
+- [ ] **Leverage UI** — A specialized interface for players to present "Leverage" (Hard or Soft) to the Storyteller to force Door openings
+- [ ] **Investigation Support** — Automated tracking of Clues and "Interception" of social maneuvers
+- [ ] **Social Condition Integration** — Automatic application of *Inspired*, *Shaken*, or *Swooned* based on maneuver outcomes
+
+---
+
+## 📅 Phase 11: Assets & Armory (Equipment & Services)
+
+**The Objective:** Standardize physical assets and their mechanical impact on play.
+
+- [ ] **Equipment Database** — Searchable catalog of physical (weapons/armor), mental (hacking tools), and social (luxury cars) equipment
+- [ ] **Stat Tracking** — Explicit tracking for Durability, Size, Availability, and Structure of items
+- [ ] **Dynamic Modifiers** — Equipment bonuses automatically injected into the Dice Nexus pool for relevant skill rolls via the Unified Pool Resolver
+- [ ] **Service Management** — Tracking "Services" (Security, Medical, Occult Research) with their associated Costs and Availability ratings
+
+---
+
+## 📅 Phase 12: The Web of Night (Relationship Webs)
+
+**The Objective:** Visualize and automate the spiritual and social ties that govern Kindred life.
+
+- [ ] **Blood Ties & Sympathy** — Real-time tracking of family trees (Sires, Childer) and the "Blood Sympathy" sense across distances
+- [ ] **Blood Bond Tracker** — Automated tracking of the three stages of the Blood Bond, including the specific Conditions they impose on the thrall
+- [ ] **Predatory Aura Interaction** — A dedicated UI for "Lashing Out" with the Predatory Aura, automating contested Blood Potency rolls and the resulting *Beaten* or *Shaken* states
+- [ ] **Ghoul Management** — Support for mortal retainers, tracking their Vitae dependency, monthly aging checks, and minor Discipline access
+
+---
+
+## 📅 Phase 13: End-to-End Testing & Accessibility
+
+**The Objective:** Harden the ecosystem for all users and ensure the Gothic aesthetic remains usable.
+
+- [ ] **Full E2E Playwright Suite** — Testing critical paths: Character Evolution (Phases 8–9) and Social Maneuvers (Phase 10)
+- [ ] **Automated Accessibility Scanning** — WCAG 2.1 AA audit integrated into the CI pipeline
+- [ ] **Screen Reader Optimization** — Ensuring all real-time dice rolls and Blood Sorcery results are announced via ARIA live regions
+- [ ] **Visual Regression Baseline** — Catching UI drift in the "Bone-white and Crimson" palette across browser updates
+
+---
+
+## 📅 Phase 14: The Global Embrace
+
+**The Objective:** Final polish and expansion into the international community.
+
+- [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
+- [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools
+- [ ] **Discord Rich Presence** — Enhanced webhooks for detailed session summaries and "Coterie Status" updates
+- [ ] **Production Rollout** — Final optimization of SignalR hubs for high-concurrency public traffic
+
+---
+
+> _The blood remembers._
+> _The code must too._

@@ -13,7 +13,7 @@ Write-Host "Running Requiem Nexus - $Configuration Configuration" -ForegroundCol
 Write-Host "========================================" -ForegroundColor Cyan
 
 Write-Host "`nApplying database migrations..." -ForegroundColor DarkGray
-dotnet ef database update --project (Join-Path $RootDir "src\RequiemNexus.Data") --startup-project $WebProjPath
+dotnet ef database update --project $DataProjPath --startup-project $WebProjPath
 
 Write-Host "`nBooting application..." -ForegroundColor Green
 dotnet run --project $WebProjPath -c $Configuration --launch-profile https

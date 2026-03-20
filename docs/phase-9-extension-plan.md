@@ -9,7 +9,7 @@ This document codifies the architectural and implementation strategy for extendi
 - Domain: `SacrificeType`, `RiteRequirement`, `RiteActivationAcknowledgment`, `RiteActivationResourceSnapshot`; `RiteRequirementValidator` (parse, validate resources/acks, aggregate costs).
 - Data: `SorceryRiteDefinition.RequirementsJson`; nullable `RequiredCovenantId`; `RequiredClanId`; `Character.HumanityStains`; `CovenantDefinition.SupportsOrdoRituals`; migration `Phase95Phase96BloodSorceryExtensions`.
 - Application: **`SorceryService.BeginRiteActivationAsync`** (Masquerade, conditional `ExecuteUpdateAsync` for Vitae/Willpower/stains, then `TraitResolver` pool); `BeginRiteActivationRequest` DTO; generalized rite eligibility/learn for all `SorceryType` values.
-- Web: Character sheet Blood Sorcery uses **`BeginRiteActivationAsync`**; narrative `confirm` when external sacrifice acks are required; section visibility for Crúac/Theban, Ordo rituals, or Necromancy dots; learn-rite modal tradition labels.
+- Web: Character sheet Blood Sorcery uses **`BeginRiteActivationAsync`**; rite learning requests live on **Advancement** (`ApplyLearnRiteModal`); narrative `confirm` when external sacrifice acks are required; section visibility for Crúac/Theban, Ordo rituals, or Necromancy dots; learn-rite modal tradition labels.
 
 ## 🧬 Architectural Principles (The Grimoire)
 

@@ -21,11 +21,13 @@ public class CharacterMeritService(
     public async Task<List<Merit>> GetAvailableMeritsAsync(Character character)
     {
         var covenantGatedMeritIds = await _dbContext.CovenantDefinitionMerits
+            .AsNoTracking()
             .Select(cdm => cdm.MeritId)
             .Distinct()
             .ToListAsync();
 
         var covenantMeritIdsByCovenant = await _dbContext.CovenantDefinitionMerits
+            .AsNoTracking()
             .Where(cdm => character.CovenantId != null && cdm.CovenantDefinitionId == character.CovenantId)
             .Select(cdm => cdm.MeritId)
             .ToListAsync();

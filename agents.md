@@ -47,8 +47,9 @@ It is also a **learning artifact — the Grimoire**. Every architectural decisio
 ## How to Run Locally
 
 ```powershell
-.\scripts\build-debug.ps1   # Start full dev stack (hot reload via .NET Aspire)
-.\scripts\test-local.ps1    # Run full test suite before opening a PR
+.\scripts\build-debug.ps1     # Start full dev stack (hot reload via .NET Aspire)
+.\scripts\test-local.ps1      # Unit + integration tests + format check (see script for scope)
+.\scripts\run-performance.ps1  # NBomber load tests — requires a running app
 ```
 
 A new developer or agent must be able to run the project in **under 10 minutes**.

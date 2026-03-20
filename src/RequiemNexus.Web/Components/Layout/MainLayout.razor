@@ -37,7 +37,7 @@
 @code {
     protected override void OnInitialized()
     {
-        SessionClient.BloodlineApproved += OnBloodlineApproved;
+        SessionClient.BloodlineApproved += OnBloodlineApprovedHandler;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -48,16 +48,19 @@
         }
     }
 
-    private async void OnBloodlineApproved(int characterId, string bloodlineName)
+    private void OnBloodlineApprovedHandler(int characterId, string bloodlineName)
     {
-        ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
-        var key = $"bloodline-approved-{characterId}";
-        await JS.InvokeVoidAsync("sessionStorageSet", key, "1");
+        _ = InvokeAsync(async () =>
+        {
+            ToastService.Show("Bloodline approved", $"Your bloodline application for {bloodlineName} has been approved!", ToastType.Success);
+            var key = $"bloodline-approved-{characterId}";
+            await JS.InvokeVoidAsync("sessionStorageSet", key, "1");
+        });
     }
 
     public void Dispose()
     {
-        SessionClient.BloodlineApproved -= OnBloodlineApproved;
+        SessionClient.BloodlineApproved -= OnBloodlineApprovedHandler;
     }
 
     [JSInvokable]

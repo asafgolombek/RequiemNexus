@@ -7,7 +7,7 @@ namespace RequiemNexus.PerformanceTests;
 public static class Program
 {
 #pragma warning disable S1075 // URIs should not be hardcoded. This is a local development default and can be overridden via TARGET_URL env var.
-    private const string _defaultTargetUrl = "http://localhost:5000";
+    private const string _defaultTargetUrl = "http://localhost:5251";
 #pragma warning restore S1075
 
     public static async Task Main(string[] args)
