@@ -1,6 +1,6 @@
 # Phase 10 Plan: The Social Graces (Social Maneuvering)
 
-**Status:** Draft / Planned  
+**Status:** In progress (10.1–10.2 delivered in code; UI and extensions pending)  
 **Goal:** Automate the formal **Social maneuvering** system from *Vampire: The Requiem 2nd Edition* (Doors, impressions, forcing Doors, hard leverage), with optional **Nexus extensions** for investigation clues and real-time play. See also [mission.md](./mission.md) Phase 10.
 
 ---
@@ -200,7 +200,7 @@ Against a **thrall**, regnant’s impression is treated as **one, two, or perfec
 ## 7. Phased implementation (sub-tasks)
 
 - **Phase 10.1 (Data):** EF migration for `SocialManeuver` (+ `ManeuverClue` if clues ship with core). Omit `ManeuverDoor` unless audit requirement is confirmed. **Implemented:** `SocialManeuver` targets `ChronicleNpc` via `TargetChronicleNpcId` (initiator: `Character`); migration `Phase10SocialManeuvering`.
-- **Phase 10.2 (Engine):** `SocialManeuveringService` + domain helpers — intervals, door math, force + hard leverage, Aspiration / failure rules.
+- **Phase 10.2 (Engine):** **`SocialManeuveringEngine`** (Domain) + **`SocialManeuveringService`** (Application) — initial Doors, impression intervals, open-Door rolls (cumulative failure dice, exceptional opens two), force + hard leverage, hostile-week auto-failure on mutation load. Aspiration “free Door” / dramatic-trust end remain ST/UI judgment (manual door edits).
 - **Phase 10.3 (UI — ST):** Glimpse maneuver management.
 - **Phase 10.4 (UI — player):** Character sheet widget + countdown.
 - **Phase 10.5 (Investigation extension):** Clue discovery thresholds and spend workflow (configurable **N**).

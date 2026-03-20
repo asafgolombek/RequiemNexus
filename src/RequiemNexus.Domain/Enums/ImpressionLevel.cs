@@ -1,4 +1,4 @@
-namespace RequiemNexus.Data.Models.Enums;
+namespace RequiemNexus.Domain.Enums;
 
 /// <summary>
 /// Victim's impression of the persuader; sets the minimum interval between rolls to open a Door (VtR 2e, Social Maneuvering).

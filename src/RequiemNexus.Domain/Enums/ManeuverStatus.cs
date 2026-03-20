@@ -1,4 +1,4 @@
-namespace RequiemNexus.Data.Models.Enums;
+namespace RequiemNexus.Domain.Enums;
 
 /// <summary>
 /// Lifecycle state of a social maneuver against an NPC.

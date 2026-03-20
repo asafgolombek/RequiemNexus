@@ -25,7 +25,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 9 | The Accord of Power (Covenants & Blood Sorcery) | ✅ Complete |
 | 9.5 | Sacrifice Mechanics (Blood Sorcery) | ✅ Complete |
 | 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ✅ Complete |
-| 10 | The Social Graces (Social Maneuvering) | ⬜ Planned |
+| 10 | The Social Graces (Social Maneuvering) | 🔄 In progress |
 | 11 | Assets & Armory (Equipment & Services) | ⬜ Planned |
 | 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
@@ -356,6 +356,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **The Objective:** Automate the formal systems of social dominance, investigation, and manipulation.
 
+- [x] **Core persistence & engine** — `SocialManeuver` / `ManeuverClue` (EF), `SocialManeuveringEngine` + `ISocialManeuveringService` (NPC-only targets, Masquerade, server-side open/force rolls, hard leverage, hostile-week failure). See `docs/PHASE_10_SOCIAL_GRACES.md`.
 - [ ] **Doors Tracker** — Real-time visualization of "Doors" for Social Maneuvering (Chapter 4)
 - [ ] **Impression Management** — Tracking the current Impression level (Hostile to Perfect) and its effect on Door resolution
 - [ ] **Leverage UI** — A specialized interface for players to present "Leverage" (Hard or Soft) to the Storyteller to force Door openings

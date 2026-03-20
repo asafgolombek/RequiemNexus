@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Data.Models;
 
