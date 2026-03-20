@@ -15,9 +15,11 @@ namespace RequiemNexus.Application.Services;
 /// Application service for Conditions and Tilts.
 /// Verifies that the requesting user is the character's owner or the campaign Storyteller before mutating.
 /// Automatically writes Beat ledger entries when a Beat-awarding Condition is resolved.
+/// Uses <see cref="IDbContextFactory{TContext}"/> so Blazor Server circuits can run overlapping loads without
+/// sharing one scoped <see cref="ApplicationDbContext"/> instance (avoids concurrent access exceptions).
 /// </summary>
 public class ConditionService(
-    ApplicationDbContext dbContext,
+    IDbContextFactory<ApplicationDbContext> dbContextFactory,
     IConditionRules conditionRules,
     IBeatLedgerService beatLedger,
     ILogger<ConditionService> logger,
@@ -25,7 +27,7 @@ public class ConditionService(
     ICharacterCreationRules creationRules,
     ISessionService sessionService) : IConditionService
 {
-    private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly IConditionRules _conditionRules = conditionRules;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly ILogger<ConditionService> _logger = logger;
@@ -42,6 +44,8 @@ public class ConditionService(
     {
         await _authHelper.RequireCharacterAccessAsync(characterId, userId, "apply or resolve conditions and tilts");
 
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
         CharacterCondition condition = new()
         {
             CharacterId = characterId,
@@ -53,10 +57,25 @@ public class ConditionService(
             AppliedByUserId = userId,
         };
 
-        _dbContext.CharacterConditions.Add(condition);
-        await _dbContext.SaveChangesAsync();
+        db.CharacterConditions.Add(condition);
+        await db.SaveChangesAsync();
 
         await sessionService.BroadcastCharacterUpdateAsync(characterId);
+
+        string? ownerId = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == characterId)
+            .Select(c => c.ApplicationUserId)
+            .FirstOrDefaultAsync();
+        if (!string.IsNullOrEmpty(ownerId))
+        {
+            await sessionService.NotifyConditionToastAsync(
+                ownerId,
+                new ConditionNotificationDto(
+                    characterId,
+                    condition.CustomName ?? condition.ConditionType.ToString(),
+                    IsTilt: false,
+                    IsRemoval: false));
+        }
 
         _logger.LogInformation(
             "Condition {ConditionType} applied to character {CharacterId} by user {UserId}",
@@ -70,7 +89,9 @@ public class ConditionService(
     /// <inheritdoc />
     public async Task ResolveConditionAsync(int conditionId, string userId)
     {
-        CharacterCondition condition = await _dbContext.CharacterConditions
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
+        CharacterCondition condition = await db.CharacterConditions
             .Include(c => c.Character)
             .FirstOrDefaultAsync(c => c.Id == conditionId)
             ?? throw new InvalidOperationException($"Condition {conditionId} not found.");
@@ -94,8 +115,7 @@ public class ConditionService(
                 $"Resolved Condition: {condition.CustomName ?? condition.ConditionType.ToString()}",
                 userId);
 
-            // Increment character Beats and handle conversion
-            Character character = await _dbContext.Characters.FindAsync(condition.CharacterId)
+            Character character = await db.Characters.FindAsync(condition.CharacterId)
                 ?? throw new InvalidOperationException($"Character {condition.CharacterId} not found.");
 
             character.Beats++;
@@ -116,9 +136,24 @@ public class ConditionService(
             }
         }
 
-        await _dbContext.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         await sessionService.BroadcastCharacterUpdateAsync(condition.CharacterId);
+
+        string? ownerResolved = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == condition.CharacterId)
+            .Select(c => c.ApplicationUserId)
+            .FirstOrDefaultAsync();
+        if (!string.IsNullOrEmpty(ownerResolved))
+        {
+            await sessionService.NotifyConditionToastAsync(
+                ownerResolved,
+                new ConditionNotificationDto(
+                    condition.CharacterId,
+                    condition.CustomName ?? condition.ConditionType.ToString(),
+                    IsTilt: false,
+                    IsRemoval: true));
+        }
 
         _logger.LogInformation(
             "Condition {ConditionId} ({ConditionType}) resolved for character {CharacterId} by user {UserId}. BeatAwarded={AwardsBeat}",
@@ -132,7 +167,8 @@ public class ConditionService(
     /// <inheritdoc />
     public async Task<List<CharacterCondition>> GetConditionsAsync(int characterId)
     {
-        return await _dbContext.CharacterConditions
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+        return await db.CharacterConditions
             .Where(c => c.CharacterId == characterId)
             .OrderByDescending(c => c.AppliedAt)
             .AsNoTracking()
@@ -149,6 +185,8 @@ public class ConditionService(
     {
         await _authHelper.RequireCharacterAccessAsync(characterId, userId, "apply or resolve conditions and tilts");
 
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
         CharacterTilt tilt = new()
         {
             CharacterId = characterId,
@@ -160,10 +198,25 @@ public class ConditionService(
             AppliedByUserId = userId,
         };
 
-        _dbContext.CharacterTilts.Add(tilt);
-        await _dbContext.SaveChangesAsync();
+        db.CharacterTilts.Add(tilt);
+        await db.SaveChangesAsync();
 
         await sessionService.BroadcastCharacterUpdateAsync(characterId);
+
+        string? ownerTilt = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == characterId)
+            .Select(c => c.ApplicationUserId)
+            .FirstOrDefaultAsync();
+        if (!string.IsNullOrEmpty(ownerTilt))
+        {
+            await sessionService.NotifyConditionToastAsync(
+                ownerTilt,
+                new ConditionNotificationDto(
+                    characterId,
+                    tilt.CustomName ?? tilt.TiltType.ToString(),
+                    IsTilt: true,
+                    IsRemoval: false));
+        }
 
         _logger.LogInformation(
             "Tilt {TiltType} applied to character {CharacterId} by user {UserId}",
@@ -177,7 +230,9 @@ public class ConditionService(
     /// <inheritdoc />
     public async Task RemoveTiltAsync(int tiltId, string userId)
     {
-        CharacterTilt tilt = await _dbContext.CharacterTilts
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
+        CharacterTilt tilt = await db.CharacterTilts
             .FirstOrDefaultAsync(t => t.Id == tiltId)
             ?? throw new InvalidOperationException($"Tilt {tiltId} not found.");
 
@@ -190,9 +245,24 @@ public class ConditionService(
 
         tilt.IsActive = false;
         tilt.RemovedAt = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         await sessionService.BroadcastCharacterUpdateAsync(tilt.CharacterId);
+
+        string? ownerRm = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == tilt.CharacterId)
+            .Select(c => c.ApplicationUserId)
+            .FirstOrDefaultAsync();
+        if (!string.IsNullOrEmpty(ownerRm))
+        {
+            await sessionService.NotifyConditionToastAsync(
+                ownerRm,
+                new ConditionNotificationDto(
+                    tilt.CharacterId,
+                    tilt.CustomName ?? tilt.TiltType.ToString(),
+                    IsTilt: true,
+                    IsRemoval: true));
+        }
 
         _logger.LogInformation(
             "Tilt {TiltId} ({TiltType}) removed from character {CharacterId} by user {UserId}",
@@ -205,7 +275,8 @@ public class ConditionService(
     /// <inheritdoc />
     public async Task<List<CharacterTilt>> GetActiveTiltsAsync(int characterId)
     {
-        return await _dbContext.CharacterTilts
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+        return await db.CharacterTilts
             .Where(t => t.CharacterId == characterId && t.IsActive)
             .OrderBy(t => t.AppliedAt)
             .AsNoTracking()

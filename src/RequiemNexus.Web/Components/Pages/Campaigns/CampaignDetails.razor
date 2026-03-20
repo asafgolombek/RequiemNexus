@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
 @using RequiemNexus.Application.RealTime
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
@@ -9,6 +10,7 @@
 @using System.Threading
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ICampaignService CampaignService
+@inject IPerceptionRollService PerceptionRollService
 @inject ICharacterService CharacterService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -139,6 +141,32 @@
                                         <span>🩸 BP: @character.BloodPotency</span>
                                         <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
                                     </div>
+                                    @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+                                    {
+                                        <div @onclick:stopPropagation="true" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border-subtle);">
+                                            <button type="button" class="btn-ghost" style="font-size:0.75em;" @onclick="() => TogglePerception(character.Id)">👁 Hidden perception</button>
+                                            @if (_perceptionOpenId == character.Id)
+                                            {
+                                                <div style="margin-top:0.35rem;display:flex;flex-direction:column;gap:0.35rem;max-width:280px;">
+                                                    <label style="font-size:0.8em;display:flex;align-items:center;gap:0.35rem;">
+                                                        <input type="checkbox" @bind="PerceptionUseAwareness" /> Wits + Awareness (else Composure)
+                                                    </label>
+                                                    <label style="font-size:0.8em;">Penalty dice
+                                                        <input type="number" class="form-control" style="width:80px;display:inline-block;" @bind="PerceptionPenalty" min="0" max="20" />
+                                                    </label>
+                                                    <button type="button" class="btn-primary-rn" style="font-size:0.8em;align-self:flex-start;" disabled="@_perceptionBusy" @onclick="() => RollPerception(character.Id)">Roll</button>
+                                                    @if (_perceptionBusy)
+                                                    {
+                                                        <span style="font-size:0.75em;color:var(--gothic-muted);">Rolling…</span>
+                                                    }
+                                                    @if (_perceptionResults.TryGetValue(character.Id, out string? pr))
+                                                    {
+                                                        <p style="font-size:0.8em;margin:0;color:var(--gothic-muted);white-space:pre-wrap;">@pr</p>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                     <div class="card-actions" style="margin-top:10px;">
                                         @if (isOwn)
                                         {
@@ -301,6 +329,15 @@
     private Timer? _heartbeatTimer;
 
     private readonly AddCharacterModel _addModel = new();
+    private int? _perceptionOpenId;
+    private bool _perceptionBusy;
+    private readonly Dictionary<int, string> _perceptionResults = new();
+
+    /// <summary>Bound from ST perception panel (Wits + Awareness vs Composure).</summary>
+    private bool PerceptionUseAwareness { get; set; }
+
+    /// <summary>Penalty dice for hidden perception roll.</summary>
+    private int PerceptionPenalty { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -615,6 +652,44 @@
             await CampaignService.AddCharacterToCampaignAsync(_campaign.Id, _addModel.CharacterId, _currentUserId);
             await LoadData();
             _showAddCharacter = false;
+        }
+    }
+
+    private void TogglePerception(int characterId)
+    {
+        _perceptionOpenId = _perceptionOpenId == characterId ? null : characterId;
+    }
+
+    private async Task RollPerception(int characterId)
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _perceptionBusy = true;
+        StateHasChanged();
+        try
+        {
+            PerceptionRollResultDto result = await PerceptionRollService.RollPerceptionAsync(
+                characterId,
+                PerceptionUseAwareness,
+                PerceptionPenalty,
+                _currentUserId);
+            string dice = string.Join(", ", result.DiceRolled);
+            _perceptionResults[characterId] =
+                $"{result.PoolDescription}: [{dice}] → {result.Successes} successes" +
+                (result.IsExceptionalSuccess ? " (exceptional)" : string.Empty) +
+                (result.IsDramaticFailure ? " (dramatic failure)" : string.Empty);
+        }
+        catch (Exception ex)
+        {
+            _perceptionResults[characterId] = ex.Message;
+        }
+        finally
+        {
+            _perceptionBusy = false;
+            StateHasChanged();
         }
     }
 

@@ -234,7 +234,8 @@ public class SocialManeuveringService(
         {
             Character initiator = await _dbContext.Characters
                 .AsNoTracking()
-                .FirstAsync(c => c.Id == maneuver.InitiatorCharacterId);
+                .FirstOrDefaultAsync(c => c.Id == maneuver.InitiatorCharacterId)
+                ?? throw new InvalidOperationException($"Character {maneuver.InitiatorCharacterId} not found.");
 
             Result<int> removed = SocialManeuveringEngine.ComputeHardLeverageDoorsRemoved(
                 breakingPointSeverity,
@@ -392,7 +393,8 @@ public class SocialManeuveringService(
         }
 
         Campaign campaign = maneuver.Campaign
-            ?? await _dbContext.Campaigns.AsNoTracking().FirstAsync(c => c.Id == maneuver.CampaignId);
+            ?? await _dbContext.Campaigns.AsNoTracking().FirstOrDefaultAsync(c => c.Id == maneuver.CampaignId)
+            ?? throw new InvalidOperationException($"Campaign {maneuver.CampaignId} not found.");
 
         (int newProgress, int cluesGranted) = SocialManeuveringEngine.AccrueInvestigationTowardClues(
             maneuver.InvestigationProgressTowardNextClue,
@@ -580,7 +582,8 @@ public class SocialManeuveringService(
     {
         Character initiator = await _dbContext.Characters
             .AsNoTracking()
-            .FirstAsync(c => c.Id == maneuver.InitiatorCharacterId);
+            .FirstOrDefaultAsync(c => c.Id == maneuver.InitiatorCharacterId)
+            ?? throw new InvalidOperationException($"Character {maneuver.InitiatorCharacterId} not found.");
 
         bool isOwner = initiator.ApplicationUserId == userId;
         bool isStoryteller = await _dbContext.Campaigns.AnyAsync(

@@ -31,6 +31,8 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
     public event Action<IEnumerable<InitiativeEntryDto>>? InitiativeUpdated;
 
+    public event Action<ConditionNotificationDto>? ConditionNotificationReceived;
+
     public event Action<ChronicleUpdateDto>? ChronicleUpdated;
 
     public event Action<SocialManeuverUpdateDto>? SocialManeuverUpdated;
@@ -113,6 +115,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         _hubConnection.On<CharacterUpdateDto>("ReceiveCharacterUpdate", patch => CharacterUpdated?.Invoke(patch));
         _hubConnection.On<int, string>("ReceiveBloodlineApproved", (characterId, bloodlineName) => BloodlineApproved?.Invoke(characterId, bloodlineName));
         _hubConnection.On<IEnumerable<InitiativeEntryDto>>("ReceiveInitiativeUpdate", entries => InitiativeUpdated?.Invoke(entries));
+        _hubConnection.On<ConditionNotificationDto>("ReceiveConditionNotification", n => ConditionNotificationReceived?.Invoke(n));
         _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
         _hubConnection.On<SocialManeuverUpdateDto>("ReceiveSocialManeuverUpdate", update => SocialManeuverUpdated?.Invoke(update));
 

@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using Xunit;
 
 namespace RequiemNexus.Data.Tests;
@@ -20,8 +23,29 @@ public class EncounterServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private static EncounterService CreateService(ApplicationDbContext ctx) =>
-        new(ctx, NullLogger<EncounterService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
+    private static EncounterService CreateService(ApplicationDbContext ctx, Mock<ISessionService>? sessionMock = null)
+    {
+        Mock<ISessionService> mock = sessionMock ?? new Mock<ISessionService>();
+        mock
+            .Setup(s => s.UpdateInitiativeAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IEnumerable<InitiativeEntryDto>>()))
+            .Returns(Task.CompletedTask);
+
+        return new EncounterService(
+            ctx,
+            NullLogger<EncounterService>.Instance,
+            new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance),
+            mock.Object);
+    }
+
+    /// <summary>
+    /// Creates a draft, launches it (no NPC templates), and returns the encounter id for active-combat operations.
+    /// </summary>
+    private static async Task<int> CreateLaunchedEmptyEncounterAsync(EncounterService service, int campaignId, string stId)
+    {
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaignId, "Fight", stId);
+        await service.LaunchEncounterAsync(draft.Id, stId);
+        return draft.Id;
+    }
 
     private static async Task<Campaign> SeedCampaignAsync(
         ApplicationDbContext ctx,
@@ -53,14 +77,14 @@ public class EncounterServiceTests
     // ── Authorization ────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task CreateEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
+    public async Task CreateDraftEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(CreateEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
+        ApplicationDbContext ctx = CreateContext(nameof(CreateDraftEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.CreateEncounterAsync(campaign.Id, "Test Encounter", "random-user"));
+            () => service.CreateDraftEncounterAsync(campaign.Id, "Test Encounter", "random-user"));
     }
 
     [Fact]
@@ -69,11 +93,11 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(AddCharacterToEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
         Character character = await SeedCharacterAsync(ctx, campaign.Id);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.AddCharacterToEncounterAsync(encounter.Id, character.Id, 3, 7, "random-user"));
+            () => service.AddCharacterToEncounterAsync(encounterId, character.Id, 3, 7, "random-user"));
     }
 
     [Fact]
@@ -82,10 +106,11 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(AdvanceTurnAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 3, 5, "st-1");
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.AdvanceTurnAsync(encounter.Id, "random-user"));
+            () => service.AdvanceTurnAsync(encounterId, "random-user"));
     }
 
     [Fact]
@@ -94,27 +119,28 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.ResolveEncounterAsync(encounter.Id, "random-user"));
+            () => service.ResolveEncounterAsync(encounterId, "random-user"));
     }
 
-    // ── CreateEncounterAsync ─────────────────────────────────────────────────
+    // ── CreateDraftEncounterAsync ────────────────────────────────────────────
 
     [Fact]
-    public async Task CreateEncounterAsync_Persists_WhenCallerIsStoryteller()
+    public async Task CreateDraftEncounterAsync_Persists_WhenCallerIsStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(CreateEncounterAsync_Persists_WhenCallerIsStoryteller));
+        ApplicationDbContext ctx = CreateContext(nameof(CreateDraftEncounterAsync_Persists_WhenCallerIsStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
 
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "The Alley Brawl", "st-1");
+        CombatEncounter encounter = await service.CreateDraftEncounterAsync(campaign.Id, "The Alley Brawl", "st-1");
 
         CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounter.Id);
         Assert.NotNull(stored);
         Assert.Equal("The Alley Brawl", stored.Name);
-        Assert.True(stored.IsActive);
+        Assert.True(stored.IsDraft);
+        Assert.False(stored.IsActive);
         Assert.Null(stored.ResolvedAt);
     }
 
@@ -126,22 +152,19 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(InitiativeOrder_SortsByTotalDescending));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
-        // NPC with Total = 3+5 = 8
-        await service.AddNpcToEncounterAsync(encounter.Id, "Guard", 3, 5, "st-1");
-        // NPC with Total = 2+3 = 5
-        await service.AddNpcToEncounterAsync(encounter.Id, "Rat", 2, 3, "st-1");
-        // NPC with Total = 4+8 = 12
-        await service.AddNpcToEncounterAsync(encounter.Id, "Boss", 4, 8, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 3, 5, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Rat", 2, 3, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Boss", 4, 8, "st-1");
 
-        CombatEncounter? loaded = await service.GetEncounterAsync(encounter.Id);
+        CombatEncounter? loaded = await service.GetEncounterAsync(encounterId, "st-1");
         List<InitiativeEntry> entries = loaded!.InitiativeEntries.OrderBy(i => i.Order).ToList();
 
         Assert.Equal(3, entries.Count);
-        Assert.Equal("Boss", entries[0].NpcName);   // Total 12 — first
-        Assert.Equal("Guard", entries[1].NpcName);  // Total 8 — second
-        Assert.Equal("Rat", entries[2].NpcName);    // Total 5 — third
+        Assert.Equal("Boss", entries[0].NpcName);
+        Assert.Equal("Guard", entries[1].NpcName);
+        Assert.Equal("Rat", entries[2].NpcName);
     }
 
     [Fact]
@@ -150,13 +173,12 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(InitiativeOrder_TieBreak_HigherModWins));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
-        // Both total 10, but "Swift" has higher mod (6 > 4)
-        await service.AddNpcToEncounterAsync(encounter.Id, "Slow", 4, 6, "st-1");   // mod=4, roll=6, total=10
-        await service.AddNpcToEncounterAsync(encounter.Id, "Swift", 6, 4, "st-1");  // mod=6, roll=4, total=10
+        await service.AddNpcToEncounterAsync(encounterId, "Slow", 4, 6, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Swift", 6, 4, "st-1");
 
-        CombatEncounter? loaded = await service.GetEncounterAsync(encounter.Id);
+        CombatEncounter? loaded = await service.GetEncounterAsync(encounterId, "st-1");
         List<InitiativeEntry> entries = loaded!.InitiativeEntries.OrderBy(i => i.Order).ToList();
 
         Assert.Equal("Swift", entries[0].NpcName);
@@ -169,18 +191,17 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(InitiativeOrder_TieBreak_PlayerCharacterBeforeNpc));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
         Character character = await SeedCharacterAsync(ctx, campaign.Id);
 
-        // Both total 10, same mod — PC should come before NPC
-        await service.AddNpcToEncounterAsync(encounter.Id, "Guard", 5, 5, "st-1");              // total=10, NPC
-        await service.AddCharacterToEncounterAsync(encounter.Id, character.Id, 5, 5, "st-1");   // total=10, PC
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 5, 5, "st-1");
+        await service.AddCharacterToEncounterAsync(encounterId, character.Id, 5, 5, "st-1");
 
-        CombatEncounter? loaded = await service.GetEncounterAsync(encounter.Id);
+        CombatEncounter? loaded = await service.GetEncounterAsync(encounterId, "st-1");
         List<InitiativeEntry> entries = loaded!.InitiativeEntries.OrderBy(i => i.Order).ToList();
 
-        Assert.NotNull(entries[0].CharacterId);  // PC first
-        Assert.Null(entries[1].CharacterId);     // NPC second
+        Assert.NotNull(entries[0].CharacterId);
+        Assert.Null(entries[1].CharacterId);
     }
 
     // ── AdvanceTurnAsync ─────────────────────────────────────────────────────
@@ -191,18 +212,17 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(AdvanceTurnAsync_MarksCurrentActorAsActed));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "Guard", 3, 5, "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "Boss", 4, 8, "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 3, 5, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Boss", 4, 8, "st-1");
 
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
 
         List<InitiativeEntry> entries = await ctx.InitiativeEntries
-            .Where(i => i.EncounterId == encounter.Id)
+            .Where(i => i.EncounterId == encounterId)
             .OrderBy(i => i.Order)
             .ToListAsync();
 
-        // First in order (Order=1) should now have acted; second should not.
         Assert.True(entries[0].HasActed);
         Assert.False(entries[1].HasActed);
     }
@@ -213,28 +233,23 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(AdvanceTurnAsync_ResetsAllEntries_WhenRoundEnds));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "A", 3, 5, "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "B", 2, 3, "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "A", 3, 5, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "B", 2, 3, "st-1");
 
-        // Advance twice — both participants act, ending the round.
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
-        // Third advance: all have acted, so the round resets (all → HasActed = false).
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
 
         List<InitiativeEntry> entries = await ctx.InitiativeEntries
-            .Where(i => i.EncounterId == encounter.Id)
+            .Where(i => i.EncounterId == encounterId)
             .ToListAsync();
 
-        // After the reset call: no one has acted yet in the new round.
         Assert.All(entries, e => Assert.False(e.HasActed));
 
-        // Fourth advance: the first participant acts in the new round.
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
-        // Re-fetch after the fourth advance.
+        await service.AdvanceTurnAsync(encounterId, "st-1");
         entries = await ctx.InitiativeEntries
-            .Where(i => i.EncounterId == encounter.Id)
+            .Where(i => i.EncounterId == encounterId)
             .ToListAsync();
 
         Assert.Equal(1, entries.Count(e => e.HasActed));
@@ -249,11 +264,11 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_SetsIsActiveFalse));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
-        await service.ResolveEncounterAsync(encounter.Id, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
 
-        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounter.Id);
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
         Assert.NotNull(stored);
         Assert.False(stored.IsActive);
         Assert.NotNull(stored.ResolvedAt);
@@ -265,11 +280,11 @@ public class EncounterServiceTests
         ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_ThrowsInvalidOperation_WhenAlreadyResolved));
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
-        await service.ResolveEncounterAsync(encounter.Id, "st-1");
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.ResolveEncounterAsync(encounter.Id, "st-1"));
+            () => service.ResolveEncounterAsync(encounterId, "st-1"));
     }
 
     // ── GetEncountersAsync ───────────────────────────────────────────────────
@@ -281,14 +296,17 @@ public class EncounterServiceTests
         Campaign campaign = await SeedCampaignAsync(ctx);
         EncounterService service = CreateService(ctx);
 
-        CombatEncounter first = await service.CreateEncounterAsync(campaign.Id, "Past Fight", "st-1");
-        await service.ResolveEncounterAsync(first.Id, "st-1");
-        await service.CreateEncounterAsync(campaign.Id, "Current Fight", "st-1");
+        CombatEncounter pastDraft = await service.CreateDraftEncounterAsync(campaign.Id, "Past Fight", "st-1");
+        await service.LaunchEncounterAsync(pastDraft.Id, "st-1");
+        await service.ResolveEncounterAsync(pastDraft.Id, "st-1");
 
-        List<CombatEncounter> encounters = await service.GetEncountersAsync(campaign.Id);
+        CombatEncounter currentDraft = await service.CreateDraftEncounterAsync(campaign.Id, "Current Fight", "st-1");
+        await service.LaunchEncounterAsync(currentDraft.Id, "st-1");
+
+        List<CombatEncounter> encounters = await service.GetEncountersAsync(campaign.Id, "st-1");
 
         Assert.Equal(2, encounters.Count);
-        Assert.True(encounters[0].IsActive);   // Active encounter first
-        Assert.False(encounters[1].IsActive);  // Resolved encounter second
+        Assert.True(encounters[0].IsActive && !encounters[0].IsDraft);
+        Assert.False(encounters[1].IsActive);
     }
 }

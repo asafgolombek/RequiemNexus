@@ -111,6 +111,11 @@ else
             <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history")" aria-controls="panel-history" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
         </div>
 
+        @if (_character.CampaignId is int chronicleId)
+        {
+            <EncounterInitiativeEmbed CampaignId="chronicleId" CharacterId="_character.Id" />
+        }
+
         <CascadingValue Value="@(_isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
             @if (_activeTab == "sheet")
             {

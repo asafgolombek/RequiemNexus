@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RequiemNexus.Application.Contracts;
@@ -7,6 +6,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using Xunit;
@@ -15,7 +15,16 @@ namespace RequiemNexus.Data.Tests;
 
 public class ConditionServiceTests
 {
-    private static ConditionService CreateConditionService(ApplicationDbContext ctx)
+    private sealed class TestDbContextFactory : IDbContextFactory<ApplicationDbContext>
+    {
+        private readonly DbContextOptions<ApplicationDbContext> _options;
+
+        public TestDbContextFactory(DbContextOptions<ApplicationDbContext> options) => _options = options;
+
+        public ApplicationDbContext CreateDbContext() => new(_options);
+    }
+
+    private static ConditionService CreateConditionService(IDbContextFactory<ApplicationDbContext> factory)
     {
         var logger = new Mock<ILogger<ConditionService>>().Object;
         var rules = new Mock<IConditionRules>().Object;
@@ -23,23 +32,29 @@ public class ConditionServiceTests
         var authHelper = new Mock<IAuthorizationHelper>().Object;
         var creationRules = new Mock<ICharacterCreationRules>().Object;
 
-        return new ConditionService(ctx, rules, beatLedger, logger, authHelper, creationRules, new Mock<ISessionService>().Object);
+        var session = new Mock<ISessionService>();
+        session.Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
+        session
+            .Setup(s => s.NotifyConditionToastAsync(It.IsAny<string>(), It.IsAny<ConditionNotificationDto>()))
+            .Returns(Task.CompletedTask);
+
+        return new ConditionService(factory, rules, beatLedger, logger, authHelper, creationRules, session.Object);
     }
 
-    private static ApplicationDbContext CreateContext(string dbName)
-    {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+    private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>
+        new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName)
             .Options;
-        return new ApplicationDbContext(options);
-    }
+
+    private static ApplicationDbContext CreateContext(string dbName) => new(CreateOptions(dbName));
 
     [Fact]
     public async Task ApplyConditionAsync_CreatesActiveCondition()
     {
         // Arrange
-        using var ctx = CreateContext(nameof(ApplyConditionAsync_CreatesActiveCondition));
-        var service = CreateConditionService(ctx);
+        string dbName = nameof(ApplyConditionAsync_CreatesActiveCondition);
+        var factory = new TestDbContextFactory(CreateOptions(dbName));
+        var service = CreateConditionService(factory);
 
         // Act
         var result = await service.ApplyConditionAsync(1, ConditionType.Guilty, "Custom", "Desc", "user");
@@ -54,8 +69,10 @@ public class ConditionServiceTests
     public async Task ResolveConditionAsync_SetsResolvedFlag()
     {
         // Arrange
-        using var ctx = CreateContext(nameof(ResolveConditionAsync_SetsResolvedFlag));
-        var service = CreateConditionService(ctx);
+        string dbName = nameof(ResolveConditionAsync_SetsResolvedFlag);
+        using var ctx = CreateContext(dbName);
+        var factory = new TestDbContextFactory(CreateOptions(dbName));
+        var service = CreateConditionService(factory);
 
         var character = new Character { Name = "Test", ApplicationUserId = "user" };
         ctx.Characters.Add(character);
@@ -68,8 +85,9 @@ public class ConditionServiceTests
         // Act
         await service.ResolveConditionAsync(cond.Id, "user");
 
-        // Assert
-        var dbCond = await ctx.CharacterConditions.FindAsync(cond.Id);
+        // Assert — resolution used a different factory context; clear local tracker to read store state.
+        ctx.ChangeTracker.Clear();
+        CharacterCondition? dbCond = await ctx.CharacterConditions.AsNoTracking().FirstOrDefaultAsync(c => c.Id == cond.Id);
         Assert.NotNull(dbCond);
         Assert.True(dbCond.IsResolved);
         Assert.NotNull(dbCond.ResolvedAt);

@@ -214,4 +214,15 @@ public class SessionService(
 
         return new SessionStateDto(chronicleId, presence, rollHistory, initiative);
     }
+
+    /// <inheritdoc />
+    public async Task NotifyConditionToastAsync(string targetUserId, ConditionNotificationDto notification)
+    {
+        if (string.IsNullOrEmpty(targetUserId))
+        {
+            return;
+        }
+
+        await _publisher.User(targetUserId).ReceiveConditionNotification(notification);
+    }
 }

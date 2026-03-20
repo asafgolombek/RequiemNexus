@@ -39,6 +39,23 @@ public class InitiativeEntry
     /// <summary>True once this participant has taken their action this round.</summary>
     public bool HasActed { get; set; }
 
+    /// <summary>True when this combatant is holding their action until released by the ST.</summary>
+    public bool IsHeld { get; set; }
+
+    /// <summary>When false, players see <see cref="MaskedDisplayName"/> or a generic label instead of <see cref="NpcName"/>.</summary>
+    public bool IsRevealed { get; set; } = true;
+
+    /// <summary>Optional label shown to players when <see cref="IsRevealed"/> is false (template default or ST override).</summary>
+    [MaxLength(200)]
+    public string? MaskedDisplayName { get; set; }
+
+    /// <summary>ST-only: size of the NPC health track.</summary>
+    public int NpcHealthBoxes { get; set; } = 7;
+
+    /// <summary>ST-only: damage string (same convention as <see cref="Character.HealthDamage"/>).</summary>
+    [MaxLength(200)]
+    public string NpcHealthDamage { get; set; } = string.Empty;
+
     /// <summary>Position in turn order (1-indexed, lower = acts sooner).</summary>
     public int Order { get; set; }
 }

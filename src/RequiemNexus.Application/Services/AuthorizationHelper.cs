@@ -74,4 +74,25 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
                 $"Only the character's owner may {operationName}.");
         }
     }
+
+    /// <inheritdoc />
+    public async Task RequireCampaignMemberAsync(int campaignId, string userId, string operationName = "access this campaign")
+    {
+        bool allowed = await dbContext.Campaigns
+            .AnyAsync(c =>
+                c.Id == campaignId
+                && (c.StoryTellerId == userId || c.Characters.Any(ch => ch.ApplicationUserId == userId)));
+
+        if (!allowed)
+        {
+            logger.LogWarning(
+                "Unauthorized attempt to {OperationName} on campaign {CampaignId} by user {UserId}",
+                operationName,
+                campaignId,
+                userId);
+
+            throw new UnauthorizedAccessException(
+                $"You must be the Storyteller or a player in this campaign to {operationName}.");
+        }
+    }
 }

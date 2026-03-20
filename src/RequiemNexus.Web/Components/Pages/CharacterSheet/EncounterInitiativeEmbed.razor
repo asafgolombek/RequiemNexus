@@ -1,0 +1,128 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Services
+@implements IAsyncDisposable
+@inject IEncounterService EncounterService
+@inject SessionClientService SessionClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (_encounter != null && _encounter.IsActive && !_encounter.IsDraft)
+{
+    <section class="card-rn encounter-embed" style="margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+            <h3 style="margin:0;font-size:1rem;">⚔️ Initiative — @_encounter.Name</h3>
+            <span style="font-size:0.85em;color:var(--gothic-muted);">Round @_encounter.CurrentRound</span>
+        </div>
+        <div class="initiative-list" style="margin-top:0.75rem;">
+            @foreach (InitiativeEntry entry in Sorted)
+            {
+                bool isCurrent = Current?.Id == entry.Id;
+                string name = entry.Character?.Name ?? entry.NpcName ?? "Unknown";
+                <div class="initiative-row @(isCurrent ? "initiative-current" : "") @(entry.HasActed ? "initiative-acted" : "")"
+                     style="padding:0.35rem 0;">
+                    <div class="initiative-order">@entry.Order</div>
+                    <div class="initiative-info">
+                        <span class="initiative-name">
+                            @if (isCurrent)
+                            {
+                                <strong>▶ @name</strong>
+                            }
+                            else
+                            {
+                                @name
+                            }
+                        </span>
+                        @if (entry.CharacterId == CharacterId && entry.Character != null)
+                        {
+                            <div class="mini-health-track">
+                                @for (int i = 0; i < entry.Character.CalculatedMaxHealth; i++)
+                                {
+                                    <span class="health-box-mini @DamageClass(entry.Character, i)"></span>
+                                }
+                            </div>
+                        }
+                        <span class="initiative-total" style="font-size:0.85em;">
+                            Init <strong>@entry.Total</strong>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+        <a href="/campaigns/@CampaignId/encounter/@_encounter.Id" class="btn-ghost" style="font-size:0.8em;margin-top:0.5rem;display:inline-block;">Open full tracker</a>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired] public int CharacterId { get; set; }
+
+    private CombatEncounter? _encounter;
+    private string? _userId;
+
+    private List<InitiativeEntry> Sorted =>
+        _encounter?.InitiativeEntries.OrderBy(e => e.Order).ToList() ?? [];
+
+    private InitiativeEntry? Current =>
+        _encounter is { ResolvedAt: null } ? Sorted.FirstOrDefault(e => !e.HasActed) : null;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        System.Security.Claims.ClaimsPrincipal user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        _userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        SessionClient.InitiativeUpdated += OnInitiativeUpdated;
+        await ReloadAsync();
+    }
+
+    private void OnInitiativeUpdated(IEnumerable<RequiemNexus.Data.RealTime.InitiativeEntryDto> dtos)
+    {
+        if (dtos is null)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(ReloadAsync);
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (string.IsNullOrEmpty(_userId))
+        {
+            return;
+        }
+
+        try
+        {
+            _encounter = await EncounterService.GetActiveEncounterForCampaignAsync(CampaignId, _userId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _encounter = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private static string DamageClass(Character character, int index)
+    {
+        if (string.IsNullOrEmpty(character.HealthDamage) || index >= character.HealthDamage.Length)
+        {
+            return string.Empty;
+        }
+
+        return character.HealthDamage[index] switch
+        {
+            '/' => "bashing",
+            'X' => "lethal",
+            '*' => "aggravated",
+            _ => string.Empty,
+        };
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        SessionClient.InitiativeUpdated -= OnInitiativeUpdated;
+    }
+}

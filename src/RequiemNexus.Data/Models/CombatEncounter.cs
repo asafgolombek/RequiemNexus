@@ -20,12 +20,20 @@ public class CombatEncounter
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>True until the ST explicitly resolves the encounter.</summary>
-    public bool IsActive { get; set; } = true;
+    /// <summary>True for a running fight (launched). Drafts use <see cref="IsDraft"/> and stay inactive until launch.</summary>
+    public bool IsActive { get; set; }
+
+    /// <summary>Pre-session prep encounter; cannot be advanced until launched.</summary>
+    public bool IsDraft { get; set; }
+
+    /// <summary>Combat round counter (starts at 1 when the encounter is launched).</summary>
+    public int CurrentRound { get; set; } = 1;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? ResolvedAt { get; set; }
 
     public virtual ICollection<InitiativeEntry> InitiativeEntries { get; set; } = [];
+
+    public virtual ICollection<EncounterNpcTemplate> NpcTemplates { get; set; } = [];
 }

@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @using RequiemNexus.Web.Components.Layout
+@using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
 @inject CommandPaletteService PaletteService
 @inject SessionClientService SessionClient
@@ -26,6 +27,7 @@
 </div>
 
 <ToastContainer />
+<ConditionToastHost />
 <CommandPalette />
 
 <div id="blazor-error-ui" data-nosnippet>

@@ -63,6 +63,12 @@ public interface ISessionClient
     Task ReceiveInitiativeUpdate(IEnumerable<InitiativeEntryDto> entries);
 
     /// <summary>
+    /// Notifies a specific player about a condition or tilt applied to their character.
+    /// </summary>
+    /// <param name="notification">Condition summary for in-app toast.</param>
+    Task ReceiveConditionNotification(ConditionNotificationDto notification);
+
+    /// <summary>
     /// Broadcasts the current presence list to all connected clients.
     /// </summary>
     /// <param name="players">The list of all currently active players.</param>

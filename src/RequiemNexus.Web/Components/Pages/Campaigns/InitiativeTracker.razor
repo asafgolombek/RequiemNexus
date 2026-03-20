@@ -16,6 +16,7 @@
 @inject SessionClientService SessionClient
 @inject ISessionService SessionService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject PersistentComponentState ApplicationState
 @implements IAsyncDisposable
 
 <PageTitle>Initiative Tracker - Requiem Nexus</PageTitle>
@@ -24,6 +25,13 @@
     @if (_loading)
     {
         <p><em>Loading encounter...</em></p>
+    }
+    else if (_accessDenied)
+    {
+        <div class="alert-rn alert-danger">
+            <strong>Access Denied</strong> — you are not a member of this campaign.
+        </div>
+        <a href="/campaigns/@CampaignId" class="btn-ghost">← Back to Campaign</a>
     }
     else if (_encounter == null)
     {
@@ -38,13 +46,24 @@
             <div>
                 <h2>⚔️ @_encounter.Name</h2>
                 <span style="font-size:0.85em;color:var(--gothic-muted);">
-                    @(_encounter.IsActive ? "Active" : $"Resolved {_encounter.ResolvedAt?.ToLocalTime():g}")
+                    @if (_encounter.IsActive && !_encounter.IsDraft)
+                    {
+                        <text>Round @_encounter.CurrentRound · Active</text>
+                    }
+                    else if (_encounter.IsDraft)
+                    {
+                        <text>Draft — launch from Encounter Manager to begin combat</text>
+                    }
+                    else
+                    {
+                        <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
+                    }
                 </span>
             </div>
             <a href="/campaigns/@CampaignId/encounters" class="btn-ghost">← Encounters</a>
         </div>
 
-        @if (_isSt && _encounter.IsActive)
+        @if (_isSt && _encounter.ResolvedAt == null)
         {
             <div class="card-rn" style="margin-bottom:1.5rem;">
                 <h3 style="margin-bottom:0.75rem;">Add Participant</h3>
@@ -108,12 +127,17 @@
         else
         {
             <div style="margin-bottom:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
-                @if (_isSt && _encounter.IsActive)
+                @if (_isSt && _encounter.IsActive && !_encounter.IsDraft)
                 {
                     <button class="btn-primary-rn"
                             disabled="@_busy"
                             @onclick="AdvanceTurn">
                         ▶ Advance Turn
+                    </button>
+                    <button class="btn-ghost"
+                            disabled="@_busy"
+                            @onclick="HoldTurn">
+                        ⏸ Hold action
                     </button>
                     <button class="btn-ghost"
                             disabled="@_busy"
@@ -134,8 +158,8 @@
                     string displayName = entry.Character?.Name ?? entry.NpcName ?? "Unknown";
                     bool isNpc = entry.CharacterId == null;
 
-                    <div class="initiative-row @(isCurrent ? "initiative-current" : "") @(entry.HasActed ? "initiative-acted" : "") @(_isSt ? "draggable-row" : "")"
-                         draggable="@(_isSt ? "true" : "false")"
+                    <div class="initiative-row @(isCurrent ? "initiative-current" : "") @(entry.HasActed ? "initiative-acted" : "") @(_isSt && _encounter.IsActive && !_encounter.IsDraft ? "draggable-row" : "")"
+                         draggable="@(_isSt && _encounter.IsActive && !_encounter.IsDraft ? "true" : "false")"
                          @ondragstart="() => OnDragStart(entry)"
                          @ondragover:preventDefault="true"
                          @ondrop="() => OnDrop(entry)">
@@ -158,13 +182,28 @@
                                 }
                             </span>
                             
-                            @if (entry.Character != null)
+                            @if (entry.Character != null && ShowPlayerHealth(entry))
                             {
                                 <div class="mini-health-track">
                                     @for (int i = 0; i < entry.Character.CalculatedMaxHealth; i++)
                                     {
                                         <span class="health-box-mini @GetDamageClass(entry.Character, i)"></span>
                                     }
+                                </div>
+                            }
+                            @if (isNpc && _isSt)
+                            {
+                                <div class="mini-health-track">
+                                    @for (int i = 0; i < entry.NpcHealthBoxes; i++)
+                                    {
+                                        <span class="health-box-mini @GetNpcDamageClass(entry.NpcHealthDamage, i)"></span>
+                                    }
+                                </div>
+                                <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.25rem;">
+                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '/')">+B</button>
+                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, 'X')">+L</button>
+                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '*')">+A</button>
+                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcHeal(entry.Id)">Heal</button>
                                 </div>
                             }
 
@@ -175,7 +214,7 @@
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 1.5rem;">
-                            @if (_isSt && _encounter.IsActive && entry.CharacterId.HasValue)
+                            @if (_isSt && _encounter.IsActive && !_encounter.IsDraft && entry.CharacterId.HasValue)
                             {
                                 <div class="initiative-tilts">
                                     @if (_activeTilts.TryGetValue(entry.CharacterId.Value, out List<CharacterTilt>? tilts) && tilts.Any())
@@ -212,8 +251,18 @@
                                 </div>
                             }
 
-                            @if (_isSt && _encounter.IsActive)
+                            @if (_isSt && _encounter.IsActive && !_encounter.IsDraft)
                             {
+                                @if (isNpc)
+                                {
+                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcReveal(entry)">
+                                        @(entry.IsRevealed ? "🙈 Hide" : "👁 Reveal")
+                                    </button>
+                                }
+                                @if (entry.IsHeld)
+                                {
+                                    <button type="button" class="btn-primary-rn" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ReleaseHeld(entry.Id)">Release</button>
+                                }
                                 <button class="btn-ghost"
                                         style="font-size:0.75em;align-self:flex-start;"
                                         disabled="@_busy"
@@ -234,6 +283,7 @@
     [Parameter] public int EncounterId { get; set; }
 
     private CombatEncounter? _encounter;
+    private bool _accessDenied;
     private List<Character> _campaignCharacters = [];
     private Dictionary<int, List<CharacterTilt>> _activeTilts = [];
     private Dictionary<int, TiltType> _tiltSelections = [];
@@ -247,7 +297,7 @@
         _encounter?.InitiativeEntries.OrderBy(i => i.Order).ToList() ?? [];
 
     private InitiativeEntry? CurrentActor =>
-        _encounter?.IsActive == true ? SortedEntries.FirstOrDefault(i => !i.HasActed) : null;
+        _encounter is { ResolvedAt: null } ? SortedEntries.FirstOrDefault(i => !i.HasActed) : null;
 
     private string _addType = "character";
     private int _addCharacterId;
@@ -256,9 +306,21 @@
     private int _addRoll = 1;
     private string _addError = string.Empty;
     private string _actionFeedback = string.Empty;
+    private string? _cookieHeader;
+    private PersistingComponentStateSubscription _persistingSubscription;
+    private int _lastLoadedEncounterId = int.MinValue;
+    private int _lastLoadedCampaignId = int.MinValue;
+    private int? _hubConnectedCampaignId;
 
     protected override async Task OnInitializedAsync()
     {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistCookieHeader);
+
+        if (!ApplicationState.TryTakeFromJson<string>("rnCookieHeader", out _cookieHeader))
+        {
+            _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        }
+
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -270,14 +332,49 @@
 
         SessionClient.InitiativeUpdated += HandleInitiativeUpdated;
         SessionClient.CharacterUpdated += HandleCharacterUpdated;
-        
-        // Use cache to check if session is active
-        await SessionClient.GetSessionActiveAsync(CampaignId, SessionService);
-        
-        // Connect to hub
-        await SessionClient.StartAsync(CampaignId, null, _currentUserId);
 
         await LoadEncounter();
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        if (EncounterId == _lastLoadedEncounterId && CampaignId == _lastLoadedCampaignId)
+        {
+            return;
+        }
+
+        await LoadEncounter();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        if (!firstRender && _hubConnectedCampaignId == CampaignId)
+        {
+            return;
+        }
+
+        _hubConnectedCampaignId = CampaignId;
+        _ = await SessionClient.GetSessionActiveAsync(CampaignId, SessionService);
+        await SessionClient.StartAsync(CampaignId, null, _currentUserId, _cookieHeader);
+    }
+
+    private Task PersistCookieHeader()
+    {
+        ApplicationState.PersistAsJson("rnCookieHeader", _cookieHeader);
+        return Task.CompletedTask;
     }
 
     private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)
@@ -296,9 +393,22 @@
         _loading = true;
         try
         {
-            _encounter = await EncounterService.GetEncounterAsync(EncounterId);
+            _accessDenied = false;
+            try
+            {
+                _encounter = await EncounterService.GetEncounterAsync(EncounterId, _currentUserId!);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _encounter = null;
+                _accessDenied = true;
+                return;
+            }
 
-            if (_encounter == null) return;
+            if (_encounter == null)
+            {
+                return;
+            }
 
             Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId, _currentUserId!);
             _isSt = campaign != null && CampaignService.IsStoryteller(campaign, _currentUserId!);
@@ -314,6 +424,8 @@
         finally
         {
             _loading = false;
+            _lastLoadedEncounterId = EncounterId;
+            _lastLoadedCampaignId = CampaignId;
         }
     }
 
@@ -358,8 +470,7 @@
             _addNpcName = string.Empty;
             _addInitMod = 0;
             _addRoll = 1;
-            
-            await BroadcastInitiativeUpdate();
+
             await LoadEncounter();
         }
         catch (Exception ex)
@@ -381,13 +492,92 @@
         try
         {
             await EncounterService.AdvanceTurnAsync(EncounterId, _currentUserId!);
-            await BroadcastInitiativeUpdate();
             await LoadEncounter();
 
             if (SortedEntries.All(i => !i.HasActed))
             {
-                _actionFeedback = "New round!";
+                _actionFeedback = $"Round {_encounter?.CurrentRound ?? 1}";
             }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task HoldTurn()
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.HoldActionAsync(EncounterId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ReleaseHeld(int entryId)
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.ReleaseHeldActionAsync(EncounterId, entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task NpcDamage(int entryId, char type)
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.ApplyNpcDamageAsync(entryId, type, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task NpcHeal(int entryId)
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.HealNpcDamageAsync(entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ToggleNpcReveal(InitiativeEntry entry)
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.SetNpcEntryRevealAsync(entry.Id, !entry.IsRevealed, entry.MaskedDisplayName, _currentUserId!);
+            await LoadEncounter();
         }
         finally
         {
@@ -403,7 +593,6 @@
         try
         {
             await EncounterService.ResolveEncounterAsync(EncounterId, _currentUserId!);
-            await BroadcastInitiativeUpdate();
             await LoadEncounter();
         }
         finally
@@ -420,7 +609,6 @@
         try
         {
             await EncounterService.RemoveEntryAsync(entryId, _currentUserId!);
-            await BroadcastInitiativeUpdate();
             await LoadEncounter();
         }
         finally
@@ -461,40 +649,54 @@
         }
     }
 
-    private async Task BroadcastInitiativeUpdate()
-    {
-        var entries = SortedEntries.Select(i => new InitiativeEntryDto(
-            i.CharacterId,
-            i.Character?.Name ?? i.NpcName ?? "Unknown",
-            i.Total,
-            CurrentActor?.Id == i.Id,
-            i.CharacterId == null
-        )).ToList();
-
-        await SessionClient.UpdateInitiativeAsync(entries);
-    }
-
     private void OnDragStart(InitiativeEntry item) => _draggedItem = item;
 
     private async Task OnDrop(InitiativeEntry target)
     {
-        if (_draggedItem is null || _draggedItem == target || _encounter == null) return;
-        
-        var list = _encounter.InitiativeEntries.OrderBy(i => i.Order).ToList();
-        var oldIdx = list.IndexOf(_draggedItem);
-        var newIdx = list.IndexOf(target);
+        if (_draggedItem is null || _draggedItem == target || _encounter == null)
+        {
+            return;
+        }
+
+        List<InitiativeEntry> list = _encounter.InitiativeEntries.OrderBy(i => i.Order).ToList();
+        int oldIdx = list.IndexOf(_draggedItem);
+        int newIdx = list.IndexOf(target);
 
         list.RemoveAt(oldIdx);
         list.Insert(newIdx, _draggedItem);
 
-        for (int i = 0; i < list.Count; i++)
+        List<int> orderIds = list.Select(e => e.Id).ToList();
+        _draggedItem = null;
+
+        _busy = true;
+        try
         {
-            list[i].Order = i + 1;
+            await EncounterService.ReorderInitiativeAsync(EncounterId, orderIds, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private bool ShowPlayerHealth(InitiativeEntry entry) =>
+        entry.Character != null && (_isSt || entry.Character.ApplicationUserId == _currentUserId);
+
+    private string GetNpcDamageClass(string damage, int index)
+    {
+        if (string.IsNullOrEmpty(damage) || index >= damage.Length)
+        {
+            return string.Empty;
         }
 
-        _draggedItem = null;
-        await BroadcastInitiativeUpdate();
-        StateHasChanged();
+        return damage[index] switch
+        {
+            '/' => "bashing",
+            'X' => "lethal",
+            '*' => "aggravated",
+            _ => string.Empty,
+        };
     }
 
     private string GetDamageClass(Character character, int index)
@@ -513,6 +715,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        _persistingSubscription.Dispose();
         SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
         await SessionClient.StopAsync();
