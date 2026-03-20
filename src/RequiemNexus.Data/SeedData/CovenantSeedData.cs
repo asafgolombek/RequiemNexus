@@ -47,6 +47,7 @@ public static class CovenantSeedData
                 bool isPlayable = !string.Equals(name, "VII", StringComparison.OrdinalIgnoreCase);
                 bool supportsBloodSorcery = string.Equals(name, "The Circle of the Crone", StringComparison.OrdinalIgnoreCase)
                     || string.Equals(name, "The Lancea et Sanctum", StringComparison.OrdinalIgnoreCase);
+                bool supportsOrdoRituals = string.Equals(name, "The Ordo Dracul", StringComparison.OrdinalIgnoreCase);
 
                 result.Add(new CovenantDefinition
                 {
@@ -54,6 +55,7 @@ public static class CovenantSeedData
                     Description = description,
                     IsPlayable = isPlayable,
                     SupportsBloodSorcery = supportsBloodSorcery,
+                    SupportsOrdoRituals = supportsOrdoRituals,
                 });
             }
 
@@ -104,6 +106,7 @@ public static class CovenantSeedData
                 Name = "The Ordo Dracul",
                 Description = "A covenant of vampires known for mystic studies and desire to transcend the curse.",
                 IsPlayable = true,
+                SupportsOrdoRituals = true,
             },
             new CovenantDefinition
             {

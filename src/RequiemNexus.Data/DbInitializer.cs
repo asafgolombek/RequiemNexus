@@ -19,6 +19,9 @@ public static class DbInitializer
     private const string _costOneVitae = "1 Vitae";
     private const string _costOneWillpower = "1 Willpower";
 
+    /// <summary>Default activation cost when no structured requirements are specified (Phase 9.5).</summary>
+    private const string _defaultRiteRequirementsJson = """[{"type":"InternalVitae","value":1,"isConsumed":true}]""";
+
     public static async Task InitializeAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager, bool runMigrations = false)
     {
         if (runMigrations)
@@ -34,6 +37,7 @@ public static class DbInitializer
         await SeedBloodlinesAsync(context);
         await SeedDevotionsAsync(context);
         await SeedSorceryRitesAsync(context);
+        await EnsureBloodSorceryPhaseExtensionsAsync(context);
         await SeedCoilsAsync(context);
         await SeedPrebuiltStatBlocksAsync(context);
     }
@@ -355,7 +359,7 @@ public static class DbInitializer
         {
             int requiredCovenantId = sorceryType == Domain.Enums.SorceryType.Cruac ? crone.Id : lancea.Id;
             int disciplineId = sorceryType == Domain.Enums.SorceryType.Cruac ? cruacDisc.Id : thebanDisc.Id;
-            string? poolJson = BuildSorceryPoolJson(disciplineId, sorceryType);
+            string? poolJson = BuildSorceryPoolJson(disciplineId);
 
             rites.Add(new SorceryRiteDefinition
             {
@@ -367,6 +371,7 @@ public static class DbInitializer
                 PoolDefinitionJson = poolJson,
                 ActivationCostDescription = "1 Vitae",
                 RequiredCovenantId = requiredCovenantId,
+                RequirementsJson = _defaultRiteRequirementsJson,
                 Prerequisites = prerequisites,
                 Effect = effect,
             });
@@ -376,7 +381,7 @@ public static class DbInitializer
         await context.SaveChangesAsync();
     }
 
-    private static string? BuildSorceryPoolJson(int disciplineId, Domain.Enums.SorceryType sorceryType)
+    private static string? BuildSorceryPoolJson(int disciplineId)
     {
         var traits = new List<object>
         {
@@ -385,6 +390,94 @@ public static class DbInitializer
             new { Type = 1, AttributeId = (int?)null, SkillId = 5, DisciplineId = (int?)null, MinimumLevel = (int?)null },
         };
         return System.Text.Json.JsonSerializer.Serialize(new { Traits = traits });
+    }
+
+    /// <summary>
+    /// Ensures Phase 9.5/9.6 disciplines, covenant flags, default requirements JSON, and sample Necromancy/Ordo rites exist.
+    /// </summary>
+    private static async Task EnsureBloodSorceryPhaseExtensionsAsync(ApplicationDbContext context)
+    {
+        await EnsureDisciplineExistsAsync(context, "Necromancy", "Death sorcery associated with the Mekhet — corpses, shades, and the other side.");
+        await EnsureDisciplineExistsAsync(context, "Ordo Sorcery", "Covenant rituals of the Ordo Dracul; used for unified dice pools in Requiem Nexus.");
+
+        CovenantDefinition? ordoCovenant = await context.CovenantDefinitions.FirstOrDefaultAsync(c => c.Name == "The Ordo Dracul");
+        if (ordoCovenant != null && !ordoCovenant.SupportsOrdoRituals)
+        {
+            ordoCovenant.SupportsOrdoRituals = true;
+            await context.SaveChangesAsync();
+        }
+
+        List<SorceryRiteDefinition> missingReq = await context.SorceryRiteDefinitions
+            .Where(r => r.RequirementsJson == null || r.RequirementsJson == string.Empty)
+            .ToListAsync();
+        foreach (SorceryRiteDefinition row in missingReq)
+        {
+            row.RequirementsJson = _defaultRiteRequirementsJson;
+        }
+
+        if (missingReq.Count > 0)
+        {
+            await context.SaveChangesAsync();
+        }
+
+        Clan? mekhet = await context.Clans.AsNoTracking().FirstOrDefaultAsync(c => c.Name == _clanMekhet);
+        Discipline? necromancy = await context.Disciplines.AsNoTracking().FirstOrDefaultAsync(d => d.Name == "Necromancy");
+        Discipline? ordoSorcery = await context.Disciplines.AsNoTracking().FirstOrDefaultAsync(d => d.Name == "Ordo Sorcery");
+        CovenantDefinition? ordo = await context.CovenantDefinitions.AsNoTracking().FirstOrDefaultAsync(c => c.Name == "The Ordo Dracul");
+
+        if (mekhet != null && necromancy != null
+            && !await context.SorceryRiteDefinitions.AnyAsync(r => r.Name == "Corrupting the Corpse"))
+        {
+            string? poolN = BuildSorceryPoolJson(necromancy.Id);
+            context.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Name = "Corrupting the Corpse",
+                Description = "Warp a corpse so it resists identification and sanctified rest.",
+                Level = 1,
+                SorceryType = Domain.Enums.SorceryType.Necromancy,
+                XpCost = 1,
+                PoolDefinitionJson = poolN,
+                ActivationCostDescription = "1 Vitae + focus",
+                RequiredCovenantId = null,
+                RequiredClanId = mekhet.Id,
+                RequirementsJson = """[{"type":"MaterialFocus","value":1,"isConsumed":false},{"type":"InternalVitae","value":1,"isConsumed":true}]""",
+                Prerequisites = "Corpse present; narrative focus required (acknowledge in app).",
+                Effect = "Prepares the remains for further necromantic workings.",
+            });
+        }
+
+        if (ordo != null && ordoSorcery != null
+            && !await context.SorceryRiteDefinitions.AnyAsync(r => r.Name == "Dragon's Own Fire"))
+        {
+            string? poolO = BuildSorceryPoolJson(ordoSorcery.Id);
+            context.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Name = "Dragon's Own Fire",
+                Description = "Kindle supernatural flame from the character's Vitae.",
+                Level = 2,
+                SorceryType = Domain.Enums.SorceryType.OrdoDraculRitual,
+                XpCost = 2,
+                PoolDefinitionJson = poolO,
+                ActivationCostDescription = "2 Vitae",
+                RequiredCovenantId = ordo.Id,
+                RequirementsJson = """[{"type":"InternalVitae","value":2,"isConsumed":true}]""",
+                Prerequisites = "Member of the Ordo Dracul.",
+                Effect = "Produces draconic flame; combat and duration resolved at the table.",
+            });
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task EnsureDisciplineExistsAsync(ApplicationDbContext context, string name, string description)
+    {
+        if (await context.Disciplines.AnyAsync(d => d.Name == name))
+        {
+            return;
+        }
+
+        context.Disciplines.Add(new Discipline { Name = name, Description = description });
+        await context.SaveChangesAsync();
     }
 
     /// <summary>

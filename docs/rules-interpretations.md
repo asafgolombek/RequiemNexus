@@ -90,3 +90,69 @@ The `ContestedAgainst` field on `PoolDefinition` is display-only: the UI shows "
 **Subsystem:** `CoilService.RequestChosenMysteryAsync`, `CoilService.ApproveChosenMysteryAsync`
 
 **Source:** V:tR 2e rules for the Ordo Dracul; Requiem Nexus mirrors the same approval pattern used for Covenant join and Bloodline join.
+
+---
+
+## Phase 9.5 & 9.6: Sacrifice, Necromancy, and Ordo Rituals
+
+### Ritual activation costs are committed before the roll
+
+**Decision:** `BeginRiteActivationAsync` validates and applies **internal** costs (Vitae, Willpower, Humanity stains) in one transaction **before** returning the dice pool. A failed roll does **not** refund those costs.
+
+**Subsystem:** `SorceryService`, `SorceryRiteDefinition.RequirementsJson`
+
+**Source:** V:tR 2e Blood Sorcery tone; Requiem Nexus automates only trackable resources.
+
+---
+
+### Internal Vitae vs spilled Vitae
+
+**Decision:** Both reduce `CurrentVitae` equally. `SacrificeType` distinguishes them in logs only.
+
+**Subsystem:** `SacrificeType`, activation logging
+
+---
+
+### External sacrifices (sacrament, heart, offerings, focus)
+
+**Decision:** No inventory (Phase 11). `BeginRiteActivationRequest` carries per-category acknowledgment flags; validation fails if a required external sacrifice is not acknowledged.
+
+**Subsystem:** `BeginRiteActivationRequest`, `SorceryService`
+
+---
+
+### Humanity stains
+
+**Decision:** `Character.HumanityStains` tracks stains from automated rites. The app does **not** run degeneration when stains reach five; the Storyteller resolves breaking points at the table.
+
+**Subsystem:** `Character.HumanityStains`
+
+**Source:** V:tR 2e Humanity; full degeneration automation deferred.
+
+---
+
+### Necromancy eligibility
+
+**Decision:** Necromancy rites require **Mekhet** (`RequiredClanId`) and **no specific covenant** (`RequiredCovenantId` null). Discipline dots in **Necromancy** must meet the rite level.
+
+**Subsystem:** `SorceryRiteDefinition.RequiredClanId`, `SorceryService`
+
+---
+
+### Ordo Dracul rituals and the dice pool
+
+**Decision:** Ordo covenant rituals use `SorceryType.OrdoDraculRitual` and the **Ordo Sorcery** discipline (seeded as a covenant ritual track) for pool construction: Intelligence + Occult + Ordo Sorcery, matching the Crúac/Theban sorcery pattern. This is a **pragmatic data model** for the unified pool resolver; it is not a claim that the core book names a separate “discipline” in all editions.
+
+**Subsystem:** `Discipline` seed “Ordo Sorcery”, `SorceryRiteDefinition.PoolDefinitionJson`
+
+**Source:** V:tR 2e Ordo Dracul rites; Requiem Nexus models them analogously to other blood sorcery tracks.
+
+---
+
+### Temporary Coils/Scales granted by rituals
+
+**Decision:** Ordo (or other) rituals that would temporarily alter Coils, Scales, or sheet modifiers are **not** automated. The Storyteller resolves duration and effect at the table; a future phase may add timed `PassiveModifier` rows tied to a rite activation id.
+
+**Subsystem:** Blood Sorcery activation (out of scope for Phase 9.6 delivery)
+
+**Source:** V:tR 2e narrative flexibility; Requiem Nexus avoids implicit modifier TTL without explicit persistence design.

@@ -7,6 +7,8 @@
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Domain.Services
 @using RequiemNexus.Application.RealTime
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
@@ -361,8 +363,8 @@ else
                             }
                         </section>
 
-                        <!-- BLOOD SORCERY (visible only when in approved Circle of the Crone or Lancea et Sanctum) -->
-                        @if (IsInSorceryCovenant)
+                        <!-- BLOOD SORCERY: Crúac/Theban covenants, Ordo rituals, or characters with Necromancy -->
+                        @if (ShowBloodSorcerySection)
                         {
                             <section class="cs-section cs-blood-sorcery">
                                 <h2>Blood Sorcery</h2>
@@ -379,7 +381,11 @@ else
                                             {
                                                 <li class="trait-item">
                                                     <span>@cr.SorceryRiteDefinition.Name</span>
-                                                    <span style="font-size:0.85em; color:#808080;">Lv.@cr.SorceryRiteDefinition.Level (@(cr.SorceryRiteDefinition.SorceryType == Domain.Enums.SorceryType.Cruac ? "Crúac" : "Theban"))</span>
+                                                    <span style="font-size:0.85em; color:#808080;">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType))</span>
+                                                    @if (!string.IsNullOrWhiteSpace(cr.SorceryRiteDefinition.ActivationCostDescription))
+                                                    {
+                                                        <span style="font-size:0.8em; color:var(--text-secondary); margin-left:6px;">@cr.SorceryRiteDefinition.ActivationCostDescription</span>
+                                                    }
                                                     @if (!string.IsNullOrEmpty(cr.SorceryRiteDefinition.PoolDefinitionJson))
                                                     {
                                                         <button class="btn-ghost" style="padding: 2px 8px; font-size: 0.85em;" @onclick="() => OpenRiteRoller(cr)">Roll</button>
@@ -400,7 +406,7 @@ else
                                 }
                                 else
                                 {
-                                    <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">No rites yet. Purchase Crúac or Theban Sorcery dots via Advancement, then request to learn rites.</p>
+                                    <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">No rites yet. Purchase Crúac, Theban Sorcery, Necromancy, or Ordo Sorcery dots via Advancement where appropriate, then request to learn rites.</p>
                                     <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
                                 }
                             </section>
@@ -600,11 +606,14 @@ else
 
     private readonly HashSet<int> _expandedDisciplines = new HashSet<int>();
 
-    /// <summary>True when character has joined an approved covenant that supports Blood Sorcery (Crúac or Theban).</summary>
-    private bool IsInSorceryCovenant =>
-        _character?.Covenant != null
+    /// <summary>True when the character may use the Blood Sorcery sheet section (Crúac/Theban covenant, Ordo rituals, or Necromancy dots).</summary>
+    private bool ShowBloodSorcerySection =>
+        _character != null
         && _character.CovenantJoinStatus == null
-        && _character.Covenant.SupportsBloodSorcery;
+        && (
+            (_character.Covenant?.SupportsBloodSorcery == true)
+            || (_character.Covenant?.SupportsOrdoRituals == true)
+            || _character.GetDisciplineRating("Necromancy") > 0);
 
     private bool IsOrdoDraculMember =>
         _character?.Covenant?.Name == "The Ordo Dracul"
@@ -1206,7 +1215,17 @@ else
         }
     }
 
-    private async void OpenRiteRoller(CharacterRite cr)
+    private static string TraditionLabel(Domain.Enums.SorceryType t) =>
+        t switch
+        {
+            Domain.Enums.SorceryType.Cruac => "Crúac",
+            Domain.Enums.SorceryType.Theban => "Theban",
+            Domain.Enums.SorceryType.Necromancy => "Necromancy",
+            Domain.Enums.SorceryType.OrdoDraculRitual => "Ordo ritual",
+            _ => t.ToString(),
+        };
+
+    private async Task OpenRiteRoller(CharacterRite cr)
     {
         if (_character == null || string.IsNullOrEmpty(_currentUserId))
         {
@@ -1215,16 +1234,38 @@ else
 
         try
         {
-            var dice = await SorceryService.ResolveRiteActivationPoolAsync(_character.Id, cr.Id, _currentUserId);
+            var def = cr.SorceryRiteDefinition;
+            Result<IReadOnlyList<RiteRequirement>> parsed =
+                RiteRequirementValidator.ParseRequirements(def?.RequirementsJson);
+            IReadOnlyList<RiteRequirement> reqs = parsed.IsSuccess ? parsed.Value! : [];
+
+            var request = new BeginRiteActivationRequest();
+            if (RiteRequirementValidator.RequiresExternalAcknowledgment(reqs))
+            {
+                bool ok = await JS.InvokeAsync<bool>(
+                    "confirm",
+                    "This rite requires narrative sacrifices (focus, sacrament, offering, etc.) you must have completed at the table. Confirm to apply Vitae/Willpower/stain costs and roll.");
+                if (!ok)
+                {
+                    return;
+                }
+
+                request = new BeginRiteActivationRequest(
+                    AcknowledgePhysicalSacrament: true,
+                    AcknowledgeHeart: true,
+                    AcknowledgeMaterialOffering: true,
+                    AcknowledgeMaterialFocus: true);
+            }
+
+            int dice = await SorceryService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
             _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
             _rollerBaseDice = dice;
             _isRollerOpen = true;
         }
-        catch
+        catch (Exception ex)
         {
-            _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
-            _rollerBaseDice = 0;
-            _isRollerOpen = true;
+            ToastService.Show("Rite activation", ex.Message, ToastType.Error);
         }
     }
 }

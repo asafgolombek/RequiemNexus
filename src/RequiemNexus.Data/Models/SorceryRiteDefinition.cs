@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Data.Models;
 
@@ -37,11 +38,21 @@ public class SorceryRiteDefinition
     [MaxLength(100)]
     public string? ActivationCostDescription { get; set; }
 
-    /// <summary>Covenant required to learn. Crúac → Circle of the Crone; Theban → Lancea et Sanctum.</summary>
-    public int RequiredCovenantId { get; set; }
+    /// <summary>Covenant required to learn. Null when only clan/discipline gates apply (e.g. Necromancy for Mekhet).</summary>
+    public int? RequiredCovenantId { get; set; }
 
     [ForeignKey(nameof(RequiredCovenantId))]
     public virtual CovenantDefinition? RequiredCovenant { get; set; }
+
+    /// <summary>When set, only characters of this clan may learn the rite (e.g. Mekhet for Necromancy).</summary>
+    public int? RequiredClanId { get; set; }
+
+    [ForeignKey(nameof(RequiredClanId))]
+    public virtual Clan? RequiredClan { get; set; }
+
+    /// <summary>Structured activation costs and sacrifices (JSON array of <see cref="RiteRequirement"/>).</summary>
+    [Column(TypeName = "text")]
+    public string? RequirementsJson { get; set; }
 
     /// <summary>Prerequisites text from source material (e.g., "Target must be within a mile.").</summary>
     [MaxLength(500)]

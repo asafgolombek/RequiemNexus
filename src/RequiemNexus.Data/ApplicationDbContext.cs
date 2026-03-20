@@ -655,6 +655,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<SorceryRiteDefinition>()
             .HasIndex(s => s.RequiredCovenantId);
 
+        builder.Entity<SorceryRiteDefinition>()
+            .HasOne(s => s.RequiredClan)
+            .WithMany()
+            .HasForeignKey(s => s.RequiredClanId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<SorceryRiteDefinition>()
+            .HasIndex(s => s.RequiredClanId);
+
         // CharacterRite >- Character, SorceryRiteDefinition
         builder.Entity<CharacterRite>()
             .HasOne(cr => cr.Character)

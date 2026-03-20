@@ -1,0 +1,25 @@
+In Blood Sorcery, **the ritual sacrifice must always be made at the outset**, before the ritualist harnesses the power of the Discipline. If the ritual fails, the sacrifice is still permanently lost. While many ritualists add elaborate performances, props, or assistants to their casting, these flourishes have no mechanical effect and simply serve to help the caster psychologically muster their Willpower.
+
+The exact sacrifice mechanics depend entirely on the type of blood sorcery being practiced:
+
+**Crúac (Circle of the Crone)** 
+*   **Cost:** Crúac rites cost **one Vitae per dot of the rite**. 
+*   **The Sacrifice:** The caster spends the first point of Vitae internally to fuel the Discipline, but any remaining Vitae required by the dot rating must be physically spilled during the casting. 
+*   **Blood Source:** The spilled Vitae does not have to come from the caster, but mortal blood cannot be used—it must first be consumed by a vampire and turned into Vitae to be an acceptable sacrifice. Once spilled for a ritual, Kindred Vitae becomes inert and cannot be fed upon. 
+*   **Sethite Variant:** The Followers of Typhon Seth practice a variant where the first Vitae is spent normally, but any subsequent blood cost *must* come from a living being. Rites of 2 to 3 dots can use animal or human blood, while higher-level rites require sacrificing a living, sapient mortal.
+
+**Theban Sorcery (Lancea et Sanctum)**
+*   **Cost & Sacrifice:** Theban miracles require the caster to spend **one Willpower point** to mentally prepare, alongside a specific physical **sacrament** offered to saints or angelic forces. 
+*   **Destruction:** Regardless of whether the ritual succeeds or fails, the physical sacrament crumbles to dust at the end of the attempt.
+
+**Kindred Necromancy**
+*   **Cost & Sacrifice:** Casting a necromantic ritual costs **1 Vitae** plus a specific item dictated by the ritual. This item is either a **material focus** (which the necromancer gets to keep afterward) or a **sacrifice** (which is permanently lost during the casting).
+
+**Sons of Phobos Sorcery**
+*   **Cost & Sacrifice:** This ancient combat sorcery bypasses Vitae costs entirely. Instead, the caster must spend a **single Willpower point** and make the physical **ritual sacrifice of a heart**, which can be harvested from either a mortal or a vampire. 
+
+**Kimiya and Suikast (Jaliniyya / Azerkatil)**
+*   **Cost & Sacrifice:** These alchemical formulae are powered by sacrificial bloodletting and sympathetic magic. The ritualist treats the sacrificial blood (or specific components) and then physically paints it on or injects it into the intended subject. 
+
+**Zagovny (Vedma Bloodline)**
+*   **Cost & Sacrifice:** Warlocks empower their magical lies by accepting **ritual offerings** from clients or supplicants. The offering must have a Resources Availability rating equal to the dots of the Discipline they wish to access, or be a recently dead creature of a matching Size. The vampire must then spend a point of Vitae to burn the offering and ritually use its ashes.

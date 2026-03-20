@@ -285,6 +285,12 @@ public class CoilService(
         bool isChosenMystery = character.ChosenMysteryScaleId.HasValue && coil.ScaleId == character.ChosenMysteryScaleId.Value;
         int xpCost = CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
 
+        _logger.LogInformation(
+            "Deducting {XpCost} XP for Coil '{CoilName}' on character {CharacterId}",
+            xpCost,
+            coil.Name,
+            character.Id);
+
         // Atomic XP deduction: prevents race condition from concurrent approvals
         int rowsAffected = await _dbContext.Characters
             .Where(c => c.Id == character.Id && c.ExperiencePoints >= xpCost)

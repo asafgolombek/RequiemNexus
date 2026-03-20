@@ -8,9 +8,9 @@ namespace RequiemNexus.Application.DTOs;
 /// <param name="Id">Primary key of <see cref="Data.Models.SorceryRiteDefinition"/>.</param>
 /// <param name="Name">Rite name.</param>
 /// <param name="Level">Rite level (1–5).</param>
-/// <param name="SorceryType">Cruac or Theban.</param>
+/// <param name="SorceryType">Tradition (Crúac, Theban, Necromancy, Ordo ritual).</param>
 /// <param name="XpCost">XP cost to learn.</param>
-/// <param name="CovenantName">Required covenant name.</param>
+/// <param name="CovenantName">Covenant name, clan gate summary, or "—" when not covenant-gated.</param>
 public record SorceryRiteSummaryDto(
     int Id,
     string Name,

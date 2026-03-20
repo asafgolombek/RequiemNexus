@@ -88,6 +88,9 @@ public class Character
     // Core specific stats for the Neonate Phase
     public int Humanity { get; set; } = 7;
 
+    /// <summary>Accumulated Humanity stains (Phase 9.5). Degeneration rolls remain at the Storyteller's discretion.</summary>
+    public int HumanityStains { get; set; }
+
     public int Size { get; set; } = 5;
 
     public int ExperiencePoints { get; set; }

@@ -23,15 +23,15 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 7 | Realtime Play (The Blood Communion) | ✅ Complete |
 | 8 | The Hidden Blood (Bloodlines & Devotions) | ✅ Complete |
 | 9 | The Accord of Power (Covenants & Blood Sorcery) | ✅ Complete |
-| 9.5 | Sacrifice Mechanics (Blood Sorcery) | ⬜ Planned |
-| 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ⬜ Planned |
+| 9.5 | Sacrifice Mechanics (Blood Sorcery) | ✅ Complete |
+| 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ✅ Complete |
 | 10 | The Social Graces (Social Maneuvering) | ⬜ Planned |
 | 11 | Assets & Armory (Equipment & Services) | ⬜ Planned |
 | 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → [Phase 9.5](#-phase-95-sacrifice-mechanics-blood-sorcery)**
+> **Currently Active → Phase 10 — The Social Graces (Social Maneuvering)** (Phases 9.5–9.6 delivered; see phase table above).
 
 ---
 
@@ -316,12 +316,12 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ### Scope
 
-- [ ] **Sacrifice Types** — Define data model for sacrifice requirements (e.g., Vitae, Willpower, Humanity stain, material sacrifice) that some rites require for activation or enhanced effect.
-- [ ] **Rite-Sacrifice Linking** — Link `SorceryRiteDefinition` to optional sacrifice requirements (which rites demand what, and under what conditions).
-- [ ] **Sin/Stain Integration** — Logic for rites that require or inflict "Sins" (Humanity-related mechanics); integrate with existing Humanity/Stain tracking.
-- [ ] **Activation Cost Extension** — Extend `ActivationCost` on rites to support sacrifice costs alongside Vitae/Willpower.
-- [ ] **UI for Sacrifice** — Surface sacrifice requirements in the Blood Sorcery UI; prompt for/confirm sacrifice when activating a rite that requires it.
-- [ ] **Rules Interpretation Log** — Document V:tR 2e sacrifice and sin mechanics in `docs/rules-interpretations.md`.
+- [x] **Sacrifice Types** — `SacrificeType` enum and `RiteRequirement` (JSON in `SorceryRiteDefinition.RequirementsJson`).
+- [x] **Rite-Sacrifice Linking** — Per-rite `RequirementsJson` interpreted by `RiteRequirementValidator` and `SorceryService.BeginRiteActivationAsync`.
+- [x] **Sin/Stain Integration** — `HumanityStain` requirements update `Character.HumanityStains`; degeneration rolls remain ST/table (documented in `rules-interpretations.md`).
+- [x] **Activation Cost Extension** — Structured costs alongside display `ActivationCostDescription`; paid activation before pool resolution.
+- [x] **UI for Sacrifice** — Activation cost text on the sheet; browser `confirm` when narrative acknowledgments are required; `BeginRiteActivationAsync` applies costs then opens the roller.
+- [x] **Rules Interpretation Log** — Phase 9.5/9.6 entries in `docs/rules-interpretations.md`.
 
 ### Non-Goals (Phase 9.5)
 
@@ -340,11 +340,13 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ### Scope
 
-- [ ] **Necromancy** — Add Necromancy as a covenant-gated Discipline (Mekhet-associated or open). Seed rituals from source material (corpse manipulation, ghost binding, Avernian Gates, etc.).
-- [ ] **Ordo Dracul Rituals** — Add Ordo Dracul–specific blood sorcery rituals (e.g., Dragon's Own Fire, Taste of the Dragon, Pasha's Vision, Kale-Kob, Intikam, Burn the Dragon's Blood).
-- [ ] **Data model extension** — Extend `SorceryRiteDefinition` / seeding pipeline to support additional `SorceryType` values and covenant gating.
-- [ ] **UI** — Surface Necromancy and Ordo rituals in the Blood Sorcery UI for eligible characters.
-- [ ] **Rules Interpretation Log** — Document Necromancy and Ordo ritual mechanics in `docs/rules-interpretations.md`.
+- [x] **Necromancy** — `Necromancy` discipline; `SorceryType.Necromancy`; Mekhet clan gate via `RequiredClanId`; sample rite `Corrupting the Corpse` in `DbInitializer.EnsureBloodSorceryPhaseExtensionsAsync` (catalog can grow from seed/JSON).
+- [x] **Ordo Dracul Rituals** — `SorceryType.OrdoDraculRitual`, `CovenantDefinition.SupportsOrdoRituals`, `Ordo Sorcery` discipline track for pools; sample rite `Dragon's Own Fire` (further rites: same pipeline).
+- [ ] **Expanded ritual catalog** — Full rulebook/supplement list (e.g. Taste of the Dragon, Pasha's Vision, …) deferred to content passes; structure is in place.
+- [x] **Data model extension** — `SorceryType` values, nullable `RequiredCovenantId`, `RequiredClanId`, `RequirementsJson`, migration `Phase95Phase96BloodSorceryExtensions`.
+- [x] **UI** — Blood Sorcery section for Crúac/Theban, Ordo (`SupportsOrdoRituals`), or any character with Necromancy dots; learn modal labels all traditions.
+- [x] **Rules Interpretation Log** — Necromancy/Ordo pool and gating decisions in `docs/rules-interpretations.md`.
+- [ ] **Temporary ritual-granted Coils/Scales** — Deferred; no timed `PassiveModifier` from rites yet—Storyteller applies table-side or via existing tools.
 
 ### Non-Goals (Phase 9.6)
 
