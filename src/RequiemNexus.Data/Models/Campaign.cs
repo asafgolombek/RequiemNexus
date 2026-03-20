@@ -31,4 +31,6 @@ public class Campaign
     public virtual ICollection<FeedingTerritory> Territories { get; set; } = [];
 
     public virtual ICollection<FactionRelationship> FactionRelationships { get; set; } = [];
+
+    public virtual ICollection<SocialManeuver> SocialManeuvers { get; set; } = [];
 }

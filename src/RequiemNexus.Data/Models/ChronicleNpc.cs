@@ -51,4 +51,6 @@ public class ChronicleNpc
 
     /// <summary>JSON object mapping skill names to dot values (0–5). Defaults all to 2.</summary>
     public string SkillsJson { get; set; } = "{}";
+
+    public virtual ICollection<SocialManeuver> SocialManeuversTargeted { get; set; } = new List<SocialManeuver>();
 }

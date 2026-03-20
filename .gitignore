@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Copyrighted rulebook — local copy only; do not commit
+/Vampire The Requiem 2e.pdf
+
 # User-specific files
 *.rsuser
 *.suo

@@ -156,6 +156,8 @@ public class Character
 
     public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
 
+    public virtual ICollection<SocialManeuver> InitiatedSocialManeuvers { get; set; } = new List<SocialManeuver>();
+
     /// <summary>Gets or sets a value indicating whether the character is retired from campaign play.
     /// Retired characters stay on the campaign roster for historical reference.</summary>
     public bool IsRetired { get; set; }

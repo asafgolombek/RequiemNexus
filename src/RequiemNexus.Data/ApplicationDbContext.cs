@@ -104,6 +104,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<CharacterCoil> CharacterCoils { get; set; } = default!;
 
+    public DbSet<SocialManeuver> SocialManeuvers { get; set; } = default!;
+
+    public DbSet<ManeuverClue> ManeuverClues { get; set; } = default!;
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {
