@@ -1,15 +1,15 @@
 $ErrorActionPreference = "Stop"
 
-$ScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-$RootDir = Split-Path -Parent -Path $ScriptRoot
-$SlnPath = Join-Path -Path $RootDir -ChildPath "tests\RequiemNexus.Tests.slnx"
+. "$PSScriptRoot\_common.ps1"
 
 Write-Host "========================================" -ForegroundColor Yellow
 Write-Host "Cleaning Requiem Nexus Build Products" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Yellow
 
-Write-Host "Running dotnet clean..." -ForegroundColor Cyan
+Write-Host "Running dotnet clean (test solution)..." -ForegroundColor Cyan
 dotnet clean $SlnPath
+Write-Host "Running dotnet clean (src solution)..." -ForegroundColor Cyan
+dotnet clean $SrcSlnPath
 
 Write-Host "`nRemoving build and coverage artifacts..." -ForegroundColor Cyan
 

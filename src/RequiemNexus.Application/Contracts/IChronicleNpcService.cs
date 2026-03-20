@@ -23,8 +23,9 @@ public interface IChronicleNpcService
     /// <param name="primaryFactionId">Optional faction the NPC belongs to.</param>
     /// <param name="roleInFaction">Optional description of the NPC's role.</param>
     /// <param name="publicDescription">Text visible to players.</param>
+    /// <param name="creatureType">Vampire, Ghoul, or Mortal. ST may pick any type.</param>
     /// <param name="stUserId">The Storyteller's user ID.</param>
-    Task<ChronicleNpc> CreateNpcAsync(int campaignId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, string stUserId);
+    Task<ChronicleNpc> CreateNpcAsync(int campaignId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, Data.Models.Enums.CreatureType creatureType, string stUserId);
 
     /// <summary>Updates all editable fields on the NPC. ST-only.</summary>
     /// <param name="npcId">The NPC to update.</param>
@@ -35,11 +36,11 @@ public interface IChronicleNpcService
     /// <param name="publicDescription">New player-visible description.</param>
     /// <param name="storytellerNotes">ST-only notes.</param>
     /// <param name="linkedStatBlockId">Optional stat block link.</param>
-    /// <param name="isVampire">Whether the NPC is a vampire.</param>
+    /// <param name="creatureType">Vampire, Ghoul, or Mortal. ST may pick any type.</param>
     /// <param name="attributesJson">Serialized attribute values.</param>
     /// <param name="skillsJson">Serialized skill values.</param>
     /// <param name="stUserId">The Storyteller's user ID.</param>
-    Task UpdateNpcAsync(int npcId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, string storytellerNotes, int? linkedStatBlockId, bool isVampire, string attributesJson, string skillsJson, string stUserId);
+    Task UpdateNpcAsync(int npcId, string name, string? title, int? primaryFactionId, string? roleInFaction, string publicDescription, string storytellerNotes, int? linkedStatBlockId, Data.Models.Enums.CreatureType creatureType, string attributesJson, string skillsJson, string stUserId);
 
     /// <summary>Sets the NPC's alive/deceased state. ST-only.</summary>
     /// <param name="npcId">The NPC to update.</param>

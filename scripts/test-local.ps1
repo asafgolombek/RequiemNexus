@@ -2,6 +2,10 @@
 <#
 .SYNOPSIS
     Run all unit and integration tests locally with optional code coverage.
+
+.NOTES
+    Performance/load tests (NBomber) are a separate console app — not run here.
+    With the app reachable: .\scripts\run-performance.ps1
 #>
 param(
     [switch]$Coverage,
@@ -18,6 +22,7 @@ $CoverageDir = Join-Path $RootDir "coverage"
 $TestProjects = @(
     @{ Name = "Domain Unit"; Path = $DomainTests },
     @{ Name = "Data Integration"; Path = $DataTests },
+    @{ Name = "Application Integration"; Path = $ApplicationTests },
     @{ Name = "Web Integration"; Path = $WebTests }
 )
 
@@ -113,4 +118,4 @@ if ($GlobalFail) {
     exit 1 
 }
 
-Write-Host "`n  All tests passed! 🚀" -ForegroundColor Green
+Write-Host "`n  All tests passed!" -ForegroundColor Green

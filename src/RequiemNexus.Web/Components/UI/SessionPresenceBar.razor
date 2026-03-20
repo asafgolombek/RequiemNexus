@@ -6,7 +6,7 @@
 @if (_players.Any())
 {
     <div class="presence-bar-container">
-        <div class="presence-header">🩸 Players Online</div>
+        <div class="presence-header" title="@(SessionActive ? "Players in the live session." : "Players who have this campaign or a campaign character open.")">@(SessionActive ? "🩸 In Session" : "Who's Here")</div>
         <div class="presence-bar">
             @foreach (var player in _players)
             {
@@ -22,6 +22,12 @@
 }
 
 @code {
+    /// <summary>
+    /// When true, a live session is active (ST has started it). When false, this shows lobby presence only.
+    /// </summary>
+    [Parameter]
+    public bool SessionActive { get; set; }
+
     private List<PlayerPresenceDto> _players = new();
 
     protected override void OnInitialized()

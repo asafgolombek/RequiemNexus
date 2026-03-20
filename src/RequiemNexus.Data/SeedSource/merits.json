@@ -1,0 +1,1100 @@
+[
+  {
+    "name": "Acute Senses",
+    "rating": "1",
+    "description": "The vampire can see, smell, and hear at twice the distance and accuracy of a mortal, and can perfectly identify any sensory stimulus experienced before.",
+    "prerequisites": "None",
+    "roll info": "Add her Blood Potency to any roll to use her senses. This includes any rolls to remember and identify sensory details.",
+    "drawback": "Her senses sometimes overwhelm her. Any time you roll an exceptional success on a roll relating to her senses, she gains the Obsession Condition for the stimulus for a number of nights equal to your successes.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Eidetic Memory",
+    "rating": "2",
+    "description": "Your character has a photographic memory, allowing them to recall information and sensory details perfectly.",
+    "prerequisites": "None",
+    "roll info": "None",
+    "drawback": "None",
+    "source book": "Chronicles of Darkness Rulebook"
+  },
+  {
+    "name": "Resources",
+    "rating": "1 to 5",
+    "description": "Reflects your character's disposable income, ranging from a little spending money to filthy rich.",
+    "prerequisites": "None",
+    "roll info": "Once per chapter, your character can procure an item at her Resources level or lower without issue. An item one Availability level above reduces her effective Resources by one dot for a month.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Trained Observer",
+    "rating": "1 or 3",
+    "description": "Your character has spent years in the field, catching tiny details and digging for secrets. She has a better chance of finding important things.",
+    "prerequisites": "Wits 3 or Composure 3",
+    "roll info": "Any time you make a Perception roll (usually Wits + Composure), you benefit from the 9-again quality. With the three-dot version, you get 8-again.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Group Touchstone",
+    "rating": "varies",
+    "description": "Every member of the coterie gains a communal Touchstone.",
+    "prerequisites": "Each member must acquire at least one dot in this Merit.",
+    "roll info": "Conveys three additional dice on detachment rolls and regains Willpower when defended.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Beneath Notice",
+    "rating": "1",
+    "description": "The character appears lowly born and passes among the powerful without notice.",
+    "prerequisites": "None",
+    "roll info": "+3 bonus dice to Wits + Composure rolls to eavesdrop on social betters.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Blood Station",
+    "rating": "1 to 5",
+    "description": "The quality of a vampire's mortal blood gives them standing in the All Night Society.",
+    "prerequisites": "None",
+    "roll info": "Adds its rating in dice to Ego rolls during Lingua Bellum.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Divine Scion",
+    "rating": "1 or 3",
+    "description": "The true divinity of her bloodline shines through, granting access to elite places.",
+    "prerequisites": "None",
+    "roll info": "Adds +1 die to all Social rolls involving interactions with those beneath her. At 3 dots, grants access to elite places as Status once per story.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "The Superior Beast",
+    "rating": "1",
+    "description": "The Beast demonstrates the superiority of its bloodline during social encounters.",
+    "prerequisites": "None",
+    "roll info": "Add Blood Potency rating in bonus dice to any Maneuver roll once per scene.",
+    "drawback": "After taking advantage of the superior Beast, she must test for frenzy at the end of the social encounter.",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Adapted Feeding",
+    "rating": "2",
+    "description": "The Beast adapts to scarcity, allowing animals to sustain the vampire even at higher Blood Potencies.",
+    "prerequisites": "None",
+    "roll info": "None",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Hidden Cache",
+    "rating": "1 to 5",
+    "description": "The character has stashed away essential supplies in hidden places.",
+    "prerequisites": "None",
+    "roll info": "Grants equivalent Resources in medicine or weapons once per chapter.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Strain Resistant",
+    "rating": "2",
+    "description": "The character is resistant to contracting illnesses from tainted blood.",
+    "prerequisites": "None",
+    "roll info": "Ignores first failure for blood illness and takes one fewer level of lethal damage on a dramatic failure.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Unassuming Guise",
+    "rating": "2",
+    "description": "The character fades into the background and passes as merely human.",
+    "prerequisites": "None",
+    "roll info": "+3 bonus dice to Social rolls to present as unassuming.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Friends in Low Places",
+    "rating": "1 to 5",
+    "description": "Connected to the dregs of society, providing safe havens and information without formal authority.",
+    "prerequisites": "None",
+    "roll info": "Can be used to block another character's Merit usage.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Moonlighting",
+    "rating": "2",
+    "description": "The character makes a little scratch on the side, often illegally.",
+    "prerequisites": "None",
+    "roll info": "Gains two dots of Resources once per story from a side hustle.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Impatient Blood",
+    "rating": "2 or 4",
+    "description": "The vampire's blood yearns to spread, reducing the time required for serum to take hold.",
+    "prerequisites": "None",
+    "roll info": "None",
+    "drawback": "Characters with this Merit feel compelled to procreate, regardless of with whom they may be sharing their gifts.",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Money Talks",
+    "rating": "1",
+    "description": "The vampire leverages economic might over an opponent during Lingua Bellum.",
+    "prerequisites": "Wealth Immeasurable.",
+    "roll info": "Add dots of Wealth Immeasurable to any Maneuver roll once per scene.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Wealth Immeasurable",
+    "rating": "1 to 5",
+    "description": "Planetary scale wealth affording items up to weapons of mass destruction.",
+    "prerequisites": "None",
+    "roll info": "None",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Beating the Drum",
+    "rating": "2",
+    "description": "Stokes the Beast to bolster the might of social attacks.",
+    "prerequisites": "None",
+    "roll info": "Gain Danse Macabre or The Edge Conditions until end of clash.",
+    "drawback": "Must test for frenzy at the end of the scene after gaining the benefits.",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Night Guardian",
+    "rating": "1 to 5",
+    "description": "A community has claimed the vampire as their personal monster and protector.",
+    "prerequisites": "None",
+    "roll info": "Use dots as equivalent in Contacts, Resources, or Status with the community once per story.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Flawless Timing",
+    "rating": "2",
+    "description": "Leaps into Lingua Bellum with perfectly timed statements.",
+    "prerequisites": "None",
+    "roll info": "Set Timing to one above the highest rolled value once per chapter.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Tutelage",
+    "rating": "2",
+    "description": "Allows experience sharing between a student and a teacher.",
+    "prerequisites": "None",
+    "roll info": "Gain 1 Experience or reduce next Experience purchase by 1 once per story.",
+    "drawback": "None",
+    "source book": "Guide to the Night"
+  },
+  {
+    "name": "Alley Cat",
+    "rating": "1 to 3",
+    "description": "The Carthian moves through city streets unimpeded.",
+    "prerequisites": "Athletics 2, Stealth 2, Streetwise 2, Carthian Movement Status.",
+    "roll info": "Three or four successes trigger an exceptional success on navigating or hiding rolls in the home city.",
+    "drawback": "None",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Army of One",
+    "rating": "1 to 5",
+    "description": "A ranking member of the Carthian Movement can summon allied backup.",
+    "prerequisites": "Carthian Status.",
+    "roll info": "Roll Presence + Politics + Carthian Status to summon one backup per dot.",
+    "drawback": "For each Carthian Backup that meets torpor or Final Death, the character loses a dot of Army of One.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Fucking Thief",
+    "rating": "2",
+    "description": "Steals the secrets and mystical advantages of other organizations.",
+    "prerequisites": "Subterfuge 3, Carthian Status.",
+    "roll info": "Any failures with the stolen covenant knowledge are automatically dramatic failures.",
+    "drawback": "This Merit functionally adds one Experience to the cost. The dot of covenant advantage cannot be used as a prerequisite for another purchased Merit or ability.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Jack-Booted Thug",
+    "rating": "3",
+    "description": "A loose cannon whose menace diffuses political action.",
+    "prerequisites": "Carthian Status 2, City Status 2, Intimidation 2.",
+    "roll info": "Presence + Intimidation + City Status; opponents suffer City Status as a penalty to act against them.",
+    "drawback": "Physical violence from the Thug or any of her protected Carthians ends its effects immediately.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Chorister",
+    "rating": "2",
+    "description": "Allowed into Circle of the Crone rituals without being a formal member.",
+    "prerequisites": "Not a member of the Circle of the Crone.",
+    "roll info": "+1 bonus to Social interactions with Circle of the Crone members.",
+    "drawback": "None",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Mandragora Garden",
+    "rating": "1 to 5",
+    "description": "Maintains a garden of ghouled plants that vector the vampire's Cruac.",
+    "prerequisites": "Safe Place (same level), Cruac, Circle of the Crone Status.",
+    "roll info": "None",
+    "drawback": "None",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Crowdsourcing",
+    "rating": "1 to 5",
+    "description": "Acts as a hub to transfer Invictus resources between members.",
+    "prerequisites": "Contacts 2, Resources 2, Invictus Status.",
+    "roll info": "Manipulation + Academics roll; each success transfers one Merit dot.",
+    "drawback": "None",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Prestigious Sire",
+    "rating": "2",
+    "description": "Speaks with the weight of an iconic sire's reputation.",
+    "prerequisites": "Mentor 4, Invictus Status.",
+    "roll info": "Add sire's Status Merit dots to Social dice pool instead of own.",
+    "drawback": "If she fails in the action, she loses this Merit and may not repurchase it during the same story.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Sorcerous Eunuch",
+    "rating": "3",
+    "description": "Subject to terrifying rituals granting near-immunity to blood sorcery.",
+    "prerequisites": "Resolve 2, Lancea et Sanctum Status.",
+    "roll info": "Dice pools for magical effects targeting the character suffer his Resolve as a penalty.",
+    "drawback": "Can never learn Theban Sorcery, Cruac, or any other blood sorceries.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Stigmata",
+    "rating": "2 to 5",
+    "description": "Bleeds holy, fiery blood from Christ-like wounds.",
+    "prerequisites": "Humanity 3+ higher than Merit or mortal, Lancea et Sanctum Status.",
+    "roll info": "Receives the 8-again quality on next Theban Sorcery ritual; imparts Raptured to feeders.",
+    "drawback": "Loses one Vitae per dot each week, accompanied by a single level of lethal damage.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Automatic Writing",
+    "rating": "2",
+    "description": "Trance state allowing ghosts to write clues through the mortal.",
+    "prerequisites": "Mortal only.",
+    "roll info": "Wits + Composure to enter trance; successes equal clues written.",
+    "drawback": "If the roll fails, or no personal item is used, haunted for a week (failures are dramatic).",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Laying on Hands",
+    "rating": "3",
+    "description": "A wholesome force that heals the sick and mends injuries.",
+    "prerequisites": "Mortal only.",
+    "roll info": "Spend a Willpower and roll Presence + Empathy. Each success heals 2 bashing or 1 lethal damage.",
+    "drawback": "For every two points of damage healed (rounded up), your character suffers a single point of the same type of damage.",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Numbing Touch",
+    "rating": "1 to 5",
+    "description": "Psychically shuts down neurons to render subjects sluggish.",
+    "prerequisites": "Mortal only.",
+    "roll info": "Intelligence + Empathy + Merit vs Stamina + Blood Potency; inflicts penalty to dexterity/sensory pools.",
+    "drawback": "None",
+    "source book": "Secrets of the Covenants"
+  },
+  {
+    "name": "Around the Block",
+    "rating": "3",
+    "description": "The elder considers nothing completely out of her experience.",
+    "prerequisites": "At least one Skill at 5 or higher, Elder.",
+    "roll info": "Negates the untrained penalty for all Skills.",
+    "drawback": "None",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Beloved",
+    "rating": "2",
+    "description": "A mortal Touchstone keeps the elder grounded in reality.",
+    "prerequisites": "Mortal or ghoul Touchstone.",
+    "roll info": "Gain an extra bonus die on detachment rolls if an hour was spent with them.",
+    "drawback": "Should her beloved die, you must immediately make a detachment roll to avoid Humanity loss.",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Heart of Stone",
+    "rating": "3",
+    "description": "Invests emotions into a lasting institution instead of a person.",
+    "prerequisites": "Feeding Grounds 3.",
+    "roll info": "Detachment penalty for losing all Touchstones is only -1, maximum bonus is +2.",
+    "drawback": "Does not exempt your character from the Languid Condition if applicable.",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Majordomo",
+    "rating": "4",
+    "description": "Owns an establishment where Kindred meet safely.",
+    "prerequisites": "None",
+    "roll info": "+2 bonus die on Persuasion, Intimidation, and Socialize vs Kindred.",
+    "drawback": "Suffers a -2 penalty on aforementioned rolls if any Kindred gets hurt under her watch until reparations are made.",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Mentor in Immortality",
+    "rating": "1 to 5",
+    "description": "Guides younger Kindred and calls in favors.",
+    "prerequisites": "Elder.",
+    "roll info": "None",
+    "drawback": "Your student is a weakness for your enemies to exploit; the Storyteller can put them in danger.",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Prima Donna",
+    "rating": "3",
+    "description": "Turns back on covenants to revel in personal power.",
+    "prerequisites": "Elder.",
+    "roll info": "Spend Willpower to treat Status one dot higher, end conditions, or ignore soft leverage.",
+    "drawback": "If you purchase any Covenant Status, you lose Prima Donna.",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Oath of Dynasty",
+    "rating": "3",
+    "description": "Mystical bond sharing social resources among a cyclical dynasty.",
+    "prerequisites": "Covenant Status 1, Dynasty Membership 1.",
+    "roll info": "Share Social Merits. Rouse torpid members with a Blood Potency roll.",
+    "drawback": "Revoking the Oath loses this Merit, and all involved characters gain the Spooked Condition.",
+    "source book": "Thousand Years of Night"
+  },
+  {
+    "name": "Psychognosis",
+    "rating": "1 to 5",
+    "description": "Devours human dreams to boost disciplines via pseudo-science.",
+    "prerequisites": "Icelus, Psychology Specialty in Medicine, Auspex, Dominate.",
+    "roll info": "Enhances Auspex and Dominate.",
+    "drawback": "Used too many times in a row, the victim will suffer hallucinations and lost time, or even death.",
+    "source book": "Night Horrors: Spilled Blood"
+  },
+  {
+    "name": "Blood Chymistry",
+    "rating": "1 to 5",
+    "description": "Prepares alchemical potions using Vitae and Pyros.",
+    "prerequisites": "Resources 3, Safe Place 2, Alchemy Specialty in Science.",
+    "roll info": "Roll Intelligence + Science minus rating to prepare procedures.",
+    "drawback": "Subjects make others uneasy, suffering a -2 penalty on Social actions. Hypatian users treat Humanity as one dot lower for their clan bane.",
+    "source book": "Night Horrors: Spilled Blood"
+  },
+  {
+    "name": "Swimmer's Skin",
+    "rating": "2 or 3",
+    "description": "Moves at full speed in the water without movement penalties.",
+    "prerequisites": "None",
+    "roll info": "Reflexive Dexterity + Athletics roll to triple swim speed.",
+    "drawback": "None",
+    "source book": "Night Horrors: Spilled Blood"
+  },
+  {
+    "name": "Recruitment Tactics",
+    "rating": "3",
+    "description": "Sways others with deep, unshakeable belief in being correct.",
+    "prerequisites": "Parliamentarians.",
+    "roll info": "Add Blood Potency as successes to a single live, interactive social roll.",
+    "drawback": "Inflicts -2 on Social rolls with the specified group for a week.",
+    "source book": "Night Horrors: Spilled Blood"
+  },
+  {
+    "name": "The Spanos Method",
+    "rating": "2",
+    "description": "Helps Kindred self-actualize by teaching them to avoid banes.",
+    "prerequisites": "Deucalion or Carthian Status, Kindred Banes Specialty in Occult or Medicine.",
+    "roll info": "Presence + Expression to give a pep talk; subject gains WP for avoiding their bane.",
+    "drawback": "Succeed or fail, your character cannot attempt this speech more than once per night on the same vampire.",
+    "source book": "[Fanmade] Bloodlines - The Devoted"
+  },
+  {
+    "name": "Zagovny",
+    "rating": "1 to 5",
+    "description": "Backs up witchy mystique with ritual offerings to boost powers.",
+    "prerequisites": "Vedma, Magic Specialty in Subterfuge, Auspex, Obfuscate.",
+    "roll info": "Gain exceptional success on 3 successes for Social cold reading; summon an illusory familiar.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Al-Bahth",
+    "rating": "1 to 5",
+    "description": "Extends senses through the land to steal secrets.",
+    "prerequisites": "Dunia, Investigation 2, Protean 1.",
+    "roll info": "Add Merit dots to actions aiding Aspirations via the environment. Gain rumors or specific intel.",
+    "drawback": "Disrespect the land and it will punish you. A failure on this action is a dramatic failure.",
+    "source book": "[Fanmade] Bloodlines - The Devoted"
+  },
+  {
+    "name": "Vinification",
+    "rating": "1 to 3",
+    "description": "Bottles and stores Vitae past its usual expiration date.",
+    "prerequisites": "Brasseur Status 2, Resources 1, Medicine 2.",
+    "roll info": "None",
+    "drawback": "Requires Status 4 or higher in the family business, otherwise costs a full dot of Resources per month.",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Blood of the Land",
+    "rating": "2",
+    "description": "Instinct for tracking down intruders on protected family land.",
+    "prerequisites": "Ghoul, Asmundarson.",
+    "roll info": "None",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Double Vision",
+    "rating": "2",
+    "description": "Uses the Ka as an extra set of eyes.",
+    "prerequisites": "Hollow Mekhet, Occult 2.",
+    "roll info": "Perception and Defense suffer a -2 modifier while sharing senses.",
+    "drawback": "Perception and Defense suffer a -2 modifier while sharing senses. Furthermore, the Ka will always ask for a favor in return.",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Featherweight",
+    "rating": "2",
+    "description": "Leaves no footprints or fingerprints, slipping through the world.",
+    "prerequisites": "Hollow Mekhet.",
+    "roll info": "Actions to track or investigate via indirect clues suffer a 3-die penalty.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Twisted Shadow",
+    "rating": "4",
+    "description": "Swaps Celerity or Obfuscate for a different physical Discipline.",
+    "prerequisites": "Mekhet, not part of a bloodline.",
+    "roll info": "Taste of Blood rolls to identify clan suffer a -2 modifier.",
+    "drawback": "When she spends Vitae to use this Discipline, treat your character's Humanity as one dot lower for the Tenebrous Curse for the rest of the scene.",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Unobtrusive",
+    "rating": "3",
+    "description": "The character stays beneath people's notice.",
+    "prerequisites": "Mekhet or ghoul with Mekhet regnant.",
+    "roll info": "Use a task-appropriate Skill instead of Stealth to remain unnoticed.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Speed of Thought",
+    "rating": "1 to 5",
+    "description": "Applies supernatural speed to thought processes.",
+    "prerequisites": "Mekhet, Intelligence 3.",
+    "roll info": "Reduce required successes on extended Mental actions by Merit dots.",
+    "drawback": "Treat any failure on any action benefiting from this Merit as a dramatic failure.",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Masquer",
+    "rating": "3",
+    "description": "Adopts an additional Mask to stave off boredom or blend in.",
+    "prerequisites": "Mekhet, Subterfuge 4.",
+    "roll info": "None",
+    "drawback": "With age, your character loses the qualities that make her unique, suffering half Blood Potency (round up) as a penalty on establishing lasting impressions with strangers.",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Holistic Detective",
+    "rating": "2",
+    "description": "Draws on wide breadth of knowledge to aid investigations.",
+    "prerequisites": "Investigation 2, a Mental Skill Specialty.",
+    "roll info": "Treat successful Investigation rolls related to the Specialty as exceptional successes.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Haven Occultation",
+    "rating": "2",
+    "description": "Extends tenebrous nature to hiding the haven.",
+    "prerequisites": "Mekhet or Shadow Cult, Safe Place 1.",
+    "roll info": "Intruders suffer a penalty equal to Stealth dots to locate or navigate the haven.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Doll Face",
+    "rating": "1 or 3",
+    "description": "Leaves an immaculate, fresh corpse that is unnervingly beautiful.",
+    "prerequisites": "Mekhet.",
+    "roll info": "+2 or +3 on Socialize rolls with mortals; heals bashing damage for free in sleep.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Conspiracy Savant",
+    "rating": "3",
+    "description": "Discerns patterns in random info to extrapolate evidence.",
+    "prerequisites": "Wits 2.",
+    "roll info": "Apply the Advanced Action quality on an Uncover the Clue roll.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Aporia",
+    "rating": "2",
+    "description": "Feigns doubt to lower a mark's defenses.",
+    "prerequisites": "Fast Talking 3.",
+    "roll info": "Ignore failure on Social maneuver roll and take no penalty on the next.",
+    "drawback": "If the maneuver is successful, this tactic won't work on the same person again.",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "All-Seeing",
+    "rating": "3",
+    "description": "Concentrates on surroundings to visualize what cannot be directly observed.",
+    "prerequisites": "Mekhet, Wits 3.",
+    "roll info": "Instant Perception roll; imposes Wits as a penalty on surprise attacks/Stealth against her.",
+    "drawback": "None",
+    "source book": "[Fanmade] Strange Shades: Mekhet"
+  },
+  {
+    "name": "Altar",
+    "rating": "3",
+    "description": "Attuned to a bloody altar enabling group rituals.",
+    "prerequisites": "Circle of the Crone Status 1.",
+    "roll info": "Allows teamwork rules for Cruac rituals.",
+    "drawback": "Three or more characters must purchase this Merit to gain its benefits.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Anointed",
+    "rating": "2",
+    "description": "Wields Longinus' word like a firebrand to rapture listeners.",
+    "prerequisites": "Lancea et Sanctum Status 1.",
+    "roll info": "Presence + Expression when preaching; listeners gain the Raptured Condition.",
+    "drawback": "The character may not use this Merit on herself.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Atrocious",
+    "rating": "2",
+    "description": "The monstrous Beast dominates the personality, making threats ring true.",
+    "prerequisites": "Cannot have the Cutthroat or Enticing Merits.",
+    "roll info": "Rolls to invoke the monstrous Beast gain the 8-again quality.",
+    "drawback": "Your character does not get the 10-again quality on any rolls to invoke or resist the seductive or competitive Beasts.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Attaché",
+    "rating": "2",
+    "description": "Loyal retainers granting access to specific social Merits.",
+    "prerequisites": "Invictus Status.",
+    "roll info": "Retainer gains Contacts, Resources, or Safe Place equal to Invictus Status.",
+    "drawback": "Must access these Merits through an intermediary, taking time or navigating red tape.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Bloodhound",
+    "rating": "2",
+    "description": "Discerns the intricacies of blood merely by smelling it.",
+    "prerequisites": "Wits 3.",
+    "roll info": "None.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Cacophony Savvy",
+    "rating": "1 to 3",
+    "description": "Adept with the codes and cants of the Kindred underground.",
+    "prerequisites": "City Status 1.",
+    "roll info": "Intelligence + Streetwise to read signs; Wits + Politics to ask Storyteller questions about the city.",
+    "drawback": "If your character does not regularly contribute news and gossip, she falls out of touch and must add something of value to reactivate it.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Carthian Pull",
+    "rating": "1",
+    "description": "Leverages connections to gain temporary advantages.",
+    "prerequisites": "Carthian Status 1.",
+    "roll info": "Access dots of Allies, Contacts, Haven, and Herd equal to Status.",
+    "drawback": "These Merits are temporary. Each use is a favor, and the Movement expects members to repay their favors.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Claws of the Unholy",
+    "rating": "2",
+    "description": "Unnatural Protean claws ignore armor and deal aggravated damage.",
+    "prerequisites": "Protean 2.",
+    "roll info": "Weapon modifier becomes +0 aggravated, ignores armor.",
+    "drawback": "May only use Claws of the Unholy while in frenzy or riding the wave. Once purchased, this modification is not optional.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Close Family",
+    "rating": "2",
+    "description": "Maintains deep connections to mortal blood relatives.",
+    "prerequisites": "Wits 3, Survival 2.",
+    "roll info": "Intelligence + Composure (with blood sympathy bonus) to sense relative's mood and distance.",
+    "drawback": "Any time you succeed on a blood sympathy roll, your character loses the ability to spend Willpower for bonus dice for the remainder of the scene.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Cutthroat",
+    "rating": "2",
+    "description": "The competitive Beast dominates, forcing submission.",
+    "prerequisites": "Cannot have the Atrocious or Enticing Merits.",
+    "roll info": "Rolls to invoke the competitive Beast gain the 8-again quality.",
+    "drawback": "Your character does not get the 10-again quality on any rolls to invoke or resist the monstrous or seductive Beasts.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Distinguished Palate",
+    "rating": "2",
+    "description": "Discerns subtle nuances in blood easily.",
+    "prerequisites": "None.",
+    "roll info": "Taste of Blood roll is an exceptional success on a single success.",
+    "drawback": "Must choose a preferred feature comprising no more than one-tenth of the population. Ignore the first point of Vitae ingested from other sources in a scene.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Dream Visions",
+    "rating": "2",
+    "description": "Mekhet blood touches a universal interconnectedness for prophetic dreams.",
+    "prerequisites": "Must be Mekhet.",
+    "roll info": "Blood Potency roll to ask a yes/no/maybe question once per night.",
+    "drawback": "May only be used once per person (on first meeting) and once per night.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Dynasty Membership",
+    "rating": "1 to 5",
+    "description": "Claims membership to a long-standing dynasty of Kindred.",
+    "prerequisites": "Clan Status 1.",
+    "roll info": "Add senior member's Clan Status to Social dice pools; command tasks from dynasty members.",
+    "drawback": "You must make your association known to take advantage of this Merit. The dynasty must have at least three members.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Enticing",
+    "rating": "2",
+    "description": "The seductive Beast oozes ease and tantalizes imaginations.",
+    "prerequisites": "Cannot have the Atrocious or Cutthroat Merits.",
+    "roll info": "Rolls to invoke the seductive Beast gain the 8-again quality.",
+    "drawback": "Your character does not get the 10-again quality on any rolls to invoke or resist the monstrous or competitive Beasts.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Feeding Grounds",
+    "rating": "1 to 5",
+    "description": "Reflects the ease of hunting in a claimed territory.",
+    "prerequisites": "None.",
+    "roll info": "Add rating to hunting rolls, starting Vitae rolls, and predatory aura conflicts in territory.",
+    "drawback": "Territory doesn't maintain itself. Trespassers must not go uncontested, or your hold on the area falters.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Friends in High Places",
+    "rating": "2",
+    "description": "Leverages the connections of other Invictus members.",
+    "prerequisites": "Invictus Status.",
+    "roll info": "Automatically open a number of Doors equal to status dots each month.",
+    "drawback": "Your character now owes a favor to the Invictus member whose influence was drawn upon.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Haven",
+    "rating": "1 to 5",
+    "description": "A safe home that protects against the sun's intrusion.",
+    "prerequisites": "Safe Place 1.",
+    "roll info": "Add dots to Humanity to notice danger asleep, or Stamina + Resolve to stay awake.",
+    "drawback": "Losing a Haven is a breaking point at Humanity 8, minus its dot rating. A Haven must be tied to a Safe Place Merit.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Herd",
+    "rating": "1 to 5",
+    "description": "Cultivates cliques of mortals willing and eager for the Kiss.",
+    "prerequisites": "None.",
+    "roll info": "Draw Vitae equal to twice the rating each week without rolling.",
+    "drawback": "Your character must have at least minor interactions with her Herd before they'll give blood freely.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Honey Trap",
+    "rating": "2",
+    "description": "The vampire's blood invigorates those who taste it.",
+    "prerequisites": "None.",
+    "roll info": "Victim regains a point of Willpower.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Invested",
+    "rating": "2",
+    "description": "Rewards from the Invictus in the form of distributed Merits.",
+    "prerequisites": "Invictus Status 1.",
+    "roll info": "Divide dots equal to Invictus status in Herd, Mentor, Resources, and Retainers.",
+    "drawback": "These advantages are a matter of covenant scrutiny. Rivals may call whether your character deserves them into question.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Kindred Status",
+    "rating": "1 to 5",
+    "description": "Standing, membership, and authority in City, Clan, or Covenant.",
+    "prerequisites": "None.",
+    "roll info": "Apply to Social rolls with subjects over whom you have authority.",
+    "drawback": "Status requires upkeep and often regular duties. If these duties are not upheld, Status may be lost.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Kiss of the Succubus",
+    "rating": "2",
+    "description": "The Daeva's bite is addicting, creating lustful devotion.",
+    "prerequisites": "Must be Daeva.",
+    "roll info": "Causes Addicted and Swooning Conditions in mortals.",
+    "drawback": "This gift is a double-edged sword. Blood dolls won't stay away.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Lineage",
+    "rating": "2",
+    "description": "Calls upon an iconic sire's reputation.",
+    "prerequisites": "Clan Status 1.",
+    "roll info": "Substitute one dot of Allies, Contacts, Mentor, Resources, or Status of the sire.",
+    "drawback": "Calling on your sire's reputation taxes his social capital. He may ask for repayment.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Lorekeeper",
+    "rating": "2",
+    "description": "Attracts mortals interested in ancient secrets to the Sanctified library.",
+    "prerequisites": "Lancea et Sanctum Status 1.",
+    "roll info": "Grants Retainers and Herd dots when buying the Library Merit.",
+    "drawback": "The vampire must be willing to let slip at least some forbidden information to her mortal retinue to maintain these advantages.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "The Mother-Daughter Bond",
+    "rating": "2",
+    "description": "Strong tribulation ties forming mentorships in the Circle of the Crone.",
+    "prerequisites": "Circle of the Crone Status 1.",
+    "roll info": "The Mentor Merit is protected by True Friend.",
+    "drawback": "The mentor is likely to have stronger requirements, take substantial time, and demand loyalty.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Night Doctor Surgery",
+    "rating": "3",
+    "description": "Morbid reconstruction techniques to heal Kindred.",
+    "prerequisites": "Carthian Status 2.",
+    "roll info": "Intelligence + Medicine to convert damage types.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Speaker for the Silent",
+    "rating": "2",
+    "description": "Channels the minds of torpid dynasty members.",
+    "prerequisites": "Dynasty Membership, Invictus Status 2.",
+    "roll info": "Acts as a medium; torpid mind controls body but retains no Disciplines.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Swarm Form",
+    "rating": "2",
+    "description": "Transforms into a swarm of creatures using Protean.",
+    "prerequisites": "Protean 4.",
+    "roll info": "None.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Unnatural Affinity",
+    "rating": "1 to 5",
+    "description": "Allows the vampire to take nourishment from strange supernatural creatures.",
+    "prerequisites": "None.",
+    "roll info": "None.",
+    "drawback": "Does not inherently mean the character is (more) able to feed from the chosen subject; they can be difficult or dangerous.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Secret Society Junkie",
+    "rating": "2",
+    "description": "Draws members of mortal secret societies towards the Dragon.",
+    "prerequisites": "Ordo Dracul Status 1.",
+    "roll info": "Gain Herd dots when taking Status or Mystery Cult Initiation in non-Kindred organizations.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Sworn",
+    "rating": "2",
+    "description": "Sworn to serve one of the branches of the Ordo Dracul.",
+    "prerequisites": "Ordo Dracul Status 1.",
+    "roll info": "Gain dots equal to Status to split between Mentor and Retainer.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "I Know a Guy",
+    "rating": "1",
+    "description": "The Carthian covenant acts as a support network for Allies.",
+    "prerequisites": "Carthian Status 1.",
+    "roll info": "Access temporary Retainer dots equal to Allies once per story.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Touchstone",
+    "rating": "1 to 5",
+    "description": "Allows the vampire to maintain multiple mortal Touchstones.",
+    "prerequisites": "None.",
+    "roll info": "None.",
+    "drawback": "Losing attachment with Touchstones will speed the loss of Humanity. If your character's last Touchstone dies, your character will feel the call of torpor.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Undead Menses",
+    "rating": "2",
+    "description": "Produces viscous, dark blood with mystical significance.",
+    "prerequisites": "None.",
+    "roll info": "Grants 8-again on Cruac rituals; inflicts Blood Potency penalty to target's Resistance against Disciplines.",
+    "drawback": "The character must identify as female. Drawing forth multiple times in an evening causes aggravated damage. Rolls to identify by menstrual blood gain +5.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Lex Terrae",
+    "rating": "2",
+    "description": "Makes blood poached from territory tainted.",
+    "prerequisites": "Carthian Status 1, Feeding Grounds 1.",
+    "roll info": "Poacher violently retches, taking bashing damage per Vitae lost.",
+    "drawback": "This Merit requires a clearly-defined and publicly announced feeding ground.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Mandate from the Masses",
+    "rating": "5",
+    "description": "Harnesses populism to crush an elite's blood potency.",
+    "prerequisites": "Carthian Status 3.",
+    "roll info": "Manipulation + Expression vs Resolve + Blood Potency; success strips Blood Potency and caps Vitae.",
+    "drawback": "The Willpower dot and Blood Potency only come back if the victim flees the city or meets Final Death.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Right of Return",
+    "rating": "2",
+    "description": "Allows a Carthian to work within another covenant.",
+    "prerequisites": "Carthian Status 2, City Status 1.",
+    "roll info": "Treat impressions as one step better in Social Maneuvering.",
+    "drawback": "Your character loses the 10-again quality on rolls to hide suspicious behavior from members of her other covenants.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Strength of Resolution",
+    "rating": "2",
+    "description": "Stands resolute against coercion that violates the law.",
+    "prerequisites": "Carthian Status 1.",
+    "roll info": "Add Carthian Status to contest powers coaxing violation of city law.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Plausible Deniability",
+    "rating": "4",
+    "description": "Throws law to the wind and laughs it off.",
+    "prerequisites": "Carthian Status 3.",
+    "roll info": "Supernatural powers fail to prove guilt; mundane detection suffers Carthian Status as penalty.",
+    "drawback": "You lose the ability to use your City Status and Carthian Status dots in any Social rolls against anyone who knows for certain of your character's guilt.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Notary",
+    "rating": "2",
+    "description": "Officiates Oaths as a scholar of Invictus agreements.",
+    "prerequisites": "Invictus Status 3.",
+    "roll info": "Invictus cannot use Status in rolls against the Notary.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Oath of Action",
+    "rating": "1 to 5",
+    "description": "Swears to perform a difficult task for a liege in exchange for a Discipline.",
+    "prerequisites": "None",
+    "roll info": "None.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Oath of Fealty",
+    "rating": "1 to 5",
+    "description": "A basic oath establishing trust and Vitae sharing over distance.",
+    "prerequisites": "Invictus Status 1.",
+    "roll info": "None.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Oath of Penance",
+    "rating": "1 to 5",
+    "description": "Apologizes by granting the liege every tenth Vitae ingested.",
+    "prerequisites": "None",
+    "roll info": "None.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Oath of Serfdom",
+    "rating": "1 to 5",
+    "description": "Contract granting territory and physical Disciplines to a vassal.",
+    "prerequisites": "None",
+    "roll info": "Vassal instinctively detects trespassing predators.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Kindred Dueling",
+    "rating": "1 to 5",
+    "description": "Specific tricks to kill or disable vampires efficiently.",
+    "prerequisites": "Composure 3, Weaponry 2.",
+    "roll info": "Hamstring denies Physical Intensity; Taunt trades attack dice to force a frenzy check.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Riding the Wave",
+    "rating": "2",
+    "description": "Maintains peak efficiency while surfing the Beast.",
+    "prerequisites": "Resolve 3, Composure 3.",
+    "roll info": "8-again to ride the wave, +3 bonus to actions in the zone.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Animal Grace",
+    "rating": "2",
+    "description": "Dodges and strikes fluidly as an animal.",
+    "prerequisites": "None",
+    "roll info": "When spending Willpower, gain +2 to Defense and +3 to attack.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Taste of Shadow",
+    "rating": "2",
+    "description": "Hears the shadow whispering secrets of the Blood.",
+    "prerequisites": "Ghoul, Mekhet Regnant.",
+    "roll info": "Wits + Occult to learn secrets or suffer perception penalty.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Taste of the Serpent",
+    "rating": "2",
+    "description": "A living vessel of indulgence enabling others.",
+    "prerequisites": "Ghoul, Daeva Regnant.",
+    "roll info": "Helping a human fulfill their Vice inflicts Swooning towards the ghoul.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Taste of the Wild",
+    "rating": "2",
+    "description": "Grooms an animal pack using Vitae.",
+    "prerequisites": "Ghoul.",
+    "roll info": "Creates bound ghoul animals after three tastes.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Taste of Gold",
+    "rating": "2",
+    "description": "The best of the best, constantly proving worth.",
+    "prerequisites": "Ghoul, Ventrue Regnant.",
+    "roll info": "Beating someone in competition acts as a second Vice.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Producer",
+    "rating": "2",
+    "description": "Produces extra blood volume when fed upon.",
+    "prerequisites": "Human.",
+    "roll info": "Kindred gain two Vitae for every point of lethal damage.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Weakened Bond",
+    "rating": "3",
+    "description": "Hard to bond due to strong will or purity.",
+    "prerequisites": "Ghoul or Human.",
+    "roll info": "Treat blood bond as one step lower for Willpower expenditures and social rolls.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Clear-Sighted",
+    "rating": "3",
+    "description": "Sees through supernatural lies and illusions.",
+    "prerequisites": "Human.",
+    "roll info": "Spend a Willpower point to ignore Obfuscate and Nightmare for a scene.",
+    "drawback": "Seeing the truth in a way no other person does may lead to breaking points. If you are ghouled or embraced, the gift vanishes.",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Source Sympathy",
+    "rating": "2",
+    "description": "Feels bonds of blood akin to a Kindred.",
+    "prerequisites": "Ghoul.",
+    "roll info": "Experiences blood sympathy as if thrice removed from regnant.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Protected",
+    "rating": "2",
+    "description": "The regnant senses danger to the ghoul and arrives quickly.",
+    "prerequisites": "Ghoul or Human.",
+    "roll info": "Regnant spends a Willpower to coincidentally arrive and save the character.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Empowered to Speak",
+    "rating": "2",
+    "description": "Acts as an official mouthpiece for a regnant.",
+    "prerequisites": "None",
+    "roll info": "Act with the regnant's City Status when speaking on their behalf.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Vitae Hound",
+    "rating": "2",
+    "description": "Can hunt Vitae by scent much like a vampire.",
+    "prerequisites": "Ghoul.",
+    "roll info": "Add one half of Regnant's Blood Potency to tracking rolls by smell.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  },
+  {
+    "name": "Beast Whispers",
+    "rating": "2",
+    "description": "Soothes a vampire lost to frenzy, or borrows their Auspex.",
+    "prerequisites": "Ghoul, Regnant has Auspex.",
+    "roll info": "Borrow Regnant's Auspex during the day.",
+    "drawback": "None",
+    "source book": "Vampire: The Requiem Second Edition"
+  }
+]

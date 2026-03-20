@@ -22,7 +22,9 @@ public static class DisciplineSeedData
         CreateObfuscate(),
         CreateProtean(),
         CreateResilience(),
-        CreateVigor()
+        CreateVigor(),
+        CreateCrúac(),
+        CreateThebanSorcery(),
     ];
 
     private static Discipline CreateAnimalism()
@@ -133,5 +135,23 @@ public static class DisciplineSeedData
         d.Powers.Add(new DisciplinePower { Name = "Vigor 4", Level = 4, Description = "Leap incredible distances.", Cost = _costOneVitae });
         d.Powers.Add(new DisciplinePower { Name = "Vigor 5", Level = 5, Description = "Strike with earth-shattering force.", Cost = _costOneVitae });
         return d;
+    }
+
+    private static Discipline CreateCrúac()
+    {
+        return new Discipline
+        {
+            Name = "Crúac",
+            Description = "Blood rites of the Circle of the Crone. Rituals draw on pagan power.",
+        };
+    }
+
+    private static Discipline CreateThebanSorcery()
+    {
+        return new Discipline
+        {
+            Name = "Theban Sorcery",
+            Description = "Sacraments of the Lancea et Sanctum. Miracles channel divine condemnation.",
+        };
     }
 }

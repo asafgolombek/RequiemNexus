@@ -21,16 +21,19 @@ public class CharacterMeritService(
     public async Task<List<Merit>> GetAvailableMeritsAsync(Character character)
     {
         var covenantGatedMeritIds = await _dbContext.CovenantDefinitionMerits
+            .AsNoTracking()
             .Select(cdm => cdm.MeritId)
             .Distinct()
             .ToListAsync();
 
         var covenantMeritIdsByCovenant = await _dbContext.CovenantDefinitionMerits
+            .AsNoTracking()
             .Where(cdm => character.CovenantId != null && cdm.CovenantDefinitionId == character.CovenantId)
             .Select(cdm => cdm.MeritId)
             .ToListAsync();
 
         var allMerits = await _dbContext.Merits
+            .Include(m => m.Prerequisites)
             .OrderBy(m => m.Name)
             .AsNoTracking()
             .ToListAsync();
@@ -40,13 +43,13 @@ public class CharacterMeritService(
             {
                 if (!covenantGatedMeritIds.Contains(m.Id))
                 {
-                    return true;
+                    return MeetsPrerequisites(character, m);
                 }
 
                 // null or Approved = active member; Pending = awaiting Storyteller approval
                 var isApprovedMember = character.CovenantId.HasValue
                     && character.CovenantJoinStatus != Data.Models.Enums.CovenantJoinStatus.Pending;
-                return isApprovedMember && covenantMeritIdsByCovenant.Contains(m.Id);
+                return isApprovedMember && covenantMeritIdsByCovenant.Contains(m.Id) && MeetsPrerequisites(character, m);
             })
             .ToList();
     }
@@ -54,8 +57,17 @@ public class CharacterMeritService(
     /// <inheritdoc />
     public async Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost)
     {
-        var merit = await _dbContext.Merits.AsNoTracking().FirstOrDefaultAsync(m => m.Id == meritId)
+        var merit = await _dbContext.Merits
+            .Include(m => m.Prerequisites)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == meritId)
             ?? throw new InvalidOperationException($"Merit with Id {meritId} not found.");
+
+        if (!MeritPrerequisiteEngine.MeetsPrerequisites(character, merit.Prerequisites.ToList()))
+        {
+            throw new InvalidOperationException(
+                "Your character does not meet the prerequisites for this merit.");
+        }
 
         var covenantLink = await _dbContext.CovenantDefinitionMerits
             .AsNoTracking()
@@ -117,6 +129,9 @@ public class CharacterMeritService(
         await _dbContext.SaveChangesAsync();
         return cm;
     }
+
+    private static bool MeetsPrerequisites(Character character, Merit merit) =>
+        MeritPrerequisiteEngine.MeetsPrerequisites(character, merit.Prerequisites.ToList());
 
     private static bool IsStatusMerit(string meritName) =>
         meritName.StartsWith("Status (", StringComparison.OrdinalIgnoreCase);

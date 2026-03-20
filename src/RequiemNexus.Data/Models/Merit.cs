@@ -28,4 +28,7 @@ public class Merit
 
     /// <summary>Gets or sets the user ID of the homebrew author, or null for official Merits.</summary>
     public string? HombrewAuthorUserId { get; set; }
+
+    /// <summary>Structured prerequisites for validation. Empty when no structured prereqs (display-only from Description).</summary>
+    public virtual ICollection<MeritPrerequisite> Prerequisites { get; set; } = new List<MeritPrerequisite>();
 }

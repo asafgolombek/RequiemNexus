@@ -45,6 +45,7 @@ public class ChronicleNpcService(
         int? primaryFactionId,
         string? roleInFaction,
         string publicDescription,
+        Data.Models.Enums.CreatureType creatureType,
         string stUserId)
     {
         await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "modify the Danse Macabre");
@@ -57,6 +58,8 @@ public class ChronicleNpcService(
             PrimaryFactionId = primaryFactionId,
             RoleInFaction = roleInFaction,
             PublicDescription = publicDescription,
+            CreatureType = creatureType,
+            IsVampire = creatureType == Data.Models.Enums.CreatureType.Vampire,
         };
 
         _dbContext.ChronicleNpcs.Add(npc);
@@ -82,7 +85,7 @@ public class ChronicleNpcService(
         string publicDescription,
         string storytellerNotes,
         int? linkedStatBlockId,
-        bool isVampire,
+        Data.Models.Enums.CreatureType creatureType,
         string attributesJson,
         string skillsJson,
         string stUserId)
@@ -99,7 +102,8 @@ public class ChronicleNpcService(
         npc.PublicDescription = publicDescription;
         npc.StorytellerNotes = storytellerNotes;
         npc.LinkedStatBlockId = linkedStatBlockId;
-        npc.IsVampire = isVampire;
+        npc.CreatureType = creatureType;
+        npc.IsVampire = creatureType == Data.Models.Enums.CreatureType.Vampire;
         npc.AttributesJson = attributesJson;
         npc.SkillsJson = skillsJson;
 

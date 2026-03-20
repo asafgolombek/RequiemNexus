@@ -40,8 +40,11 @@ public class ChronicleNpc
     /// <summary>Optional link to an <see cref="NpcStatBlock"/> for encounter use.</summary>
     public int? LinkedStatBlockId { get; set; }
 
-    /// <summary>Whether this NPC is a vampire (<c>true</c>) or a mortal (<c>false</c>).</summary>
+    /// <summary>Whether this NPC is a vampire (<c>true</c>) or a mortal (<c>false</c>). Kept for backward compatibility; prefer <see cref="CreatureType"/>.</summary>
     public bool IsVampire { get; set; } = false;
+
+    /// <summary>The creature type. ST can set any type when creating or editing NPCs.</summary>
+    public Data.Models.Enums.CreatureType CreatureType { get; set; } = Data.Models.Enums.CreatureType.Mortal;
 
     /// <summary>JSON object mapping attribute names to dot values (1–5). Defaults all to 2.</summary>
     public string AttributesJson { get; set; } = "{}";

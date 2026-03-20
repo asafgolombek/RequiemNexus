@@ -7,7 +7,10 @@
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models.Enums
 @inject ICharacterService CharacterService
+@inject ISorceryService SorceryService
 @inject IAdvancementService AdvancementService
 @inject IClanService ClanService
 @inject IMeritService MeritService
@@ -133,6 +136,17 @@ else
 
                         <button class="btn-primary-rn" @onclick="AddNewMerit" disabled="@(_selectedMeritId == 0)">Add</button>
                     </div>
+                    @if (_selectedMeritId != 0)
+                    {
+                        var selectedMerit = _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId);
+                        if (selectedMerit != null)
+                        {
+                            <div style="margin-top: 10px; font-size: 0.9em; color: #d0d0d0; background: #1a1a1a; padding: 10px; border-radius: 4px; border-left: 3px solid #550000;">
+                                <strong>@selectedMerit.Name</strong>
+                                <p style="margin: 5px 0; white-space: pre-wrap;">@selectedMerit.Description</p>
+                            </div>
+                        }
+                    }
                 </section>
 
                 <!-- ADD NEW DISCIPLINE -->
@@ -195,8 +209,37 @@ else
                         <p style="color: #808080; font-size: 0.9em;">No new devotions eligible for purchase at this time.</p>
                     }
                 </section>
+
+                @if (ShowBloodSorcerySection)
+                {
+                    <section class="cs-section cs-blood-sorcery">
+                        <h2>Blood Sorcery Rites</h2>
+                        @{
+                            var pendingRiteAdv = _character.Rites?.FirstOrDefault(r => r.Status == RiteLearnStatus.Pending);
+                        }
+                        @if (pendingRiteAdv?.SorceryRiteDefinition != null)
+                        {
+                            <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingRiteAdv.SorceryRiteDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                            <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                            @if (_character.CampaignId.HasValue)
+                            {
+                                <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+                            }
+                        }
+                        else
+                        {
+                            <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, Necromancy, or Ordo rituals you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
+                            <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Request rite</button>
+                        }
+                    </section>
+                }
             </div>
         </CascadingValue>
+
+        <ApplyLearnRiteModal IsOpen="_isApplyLearnRiteModalOpen"
+                             IsOpenChanged="HandleApplyLearnRiteModalClosed"
+                             EligibleRites="_eligibleRites"
+                             OnApplyRequested="HandleApplyLearnRiteRequested" />
     </div>
 }
 
@@ -219,6 +262,19 @@ else
 
     private List<DevotionDefinition> _eligibleDevotions = new();
     private int _selectedDevotionId = 0;
+
+    private bool _isApplyLearnRiteModalOpen;
+    private bool _openingRiteModal;
+    private List<SorceryRiteSummaryDto> _eligibleRites = [];
+
+    /// <summary>Same visibility as the character sheet Blood Sorcery section.</summary>
+    private bool ShowBloodSorcerySection =>
+        _character != null
+        && _character.CovenantJoinStatus == null
+        && (
+            (_character.Covenant?.SupportsBloodSorcery == true)
+            || (_character.Covenant?.SupportsOrdoRituals == true)
+            || _character.GetDisciplineRating("Necromancy") > 0);
 
     private bool SelectedMeritRequiresSpec => 
         _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId)?.RequiresSpecification ?? false;
@@ -260,7 +316,7 @@ else
                 if (id is AttributeId.Stamina or AttributeId.Resolve or AttributeId.Composure)
                     AdvancementService.RecalculateDerivedStats(_character);
                 await CharacterService.SaveAsync(_character);
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
             else
             {
@@ -281,7 +337,7 @@ else
             if (success)
             {
                 await CharacterService.SaveAsync(_character);
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
             else
             {
@@ -302,7 +358,7 @@ else
             // Re-check eligible devotions after discipline upgrade
             _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
             await CharacterService.SaveAsync(_character);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
         else
         {
@@ -327,7 +383,7 @@ else
             _selectedMeritId = 0;
             _newMeritRating = 1;
             _newMeritSpecification = string.Empty;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
         else
         {
@@ -353,7 +409,7 @@ else
 
             _selectedDisciplineId = 0;
             _newDisciplineRating = 1;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
@@ -376,7 +432,68 @@ else
 
             _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
             _selectedDevotionId = 0;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+
+    private void HandleApplyLearnRiteModalClosed(bool isOpen)
+    {
+        _isApplyLearnRiteModalOpen = isOpen;
+    }
+
+    private async Task OpenLearnRiteModal()
+    {
+        if (_character == null || string.IsNullOrEmpty(_userId))
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        _openingRiteModal = true;
+        try
+        {
+            _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _userId);
+            if (_eligibleRites.Count == 0)
+            {
+                _errorMessage = "No eligible rites. Raise Crúac, Theban Sorcery, Necromancy, or Ordo Sorcery to the required level, meet covenant/clan gates, or you may already have a pending request.";
+                return;
+            }
+
+            _isApplyLearnRiteModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _openingRiteModal = false;
+        }
+    }
+
+    private async Task HandleApplyLearnRiteRequested(int sorceryRiteDefinitionId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_userId))
+        {
+            return;
+        }
+
+        _errorMessage = null;
+        try
+        {
+            await SorceryService.RequestLearnRiteAsync(_character.Id, sorceryRiteDefinitionId, _userId);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _userId);
+            if (_character != null)
+            {
+                _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync(_character);
+                _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {

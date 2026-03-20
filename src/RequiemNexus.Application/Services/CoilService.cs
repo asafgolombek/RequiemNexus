@@ -21,7 +21,7 @@ public class CoilService(
     ISessionService sessionService,
     ILogger<CoilService> logger) : ICoilService
 {
-    private const string OrdoDraculName = "The Ordo Dracul";
+    private const string _ordoDraculName = "The Ordo Dracul";
 
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
@@ -240,6 +240,25 @@ public class CoilService(
     }
 
     /// <inheritdoc />
+    public async Task<List<ChosenMysteryApplicationDto>> GetPendingChosenMysteryApplicationsAsync(
+        int campaignId,
+        string storyTellerUserId)
+    {
+        await _authHelper.RequireStorytellerAsync(campaignId, storyTellerUserId, "view pending chosen mystery applications");
+
+        return await _dbContext.Characters
+            .AsNoTracking()
+            .Where(c => c.CampaignId == campaignId && c.PendingChosenMysteryScaleId != null)
+            .OrderBy(c => c.Name)
+            .Select(c => new ChosenMysteryApplicationDto(
+                c.Id,
+                c.Name,
+                c.PendingChosenMysteryScaleId!.Value,
+                c.PendingChosenMysteryScale!.Name))
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task ApproveCoilLearnAsync(int characterCoilId, string? note, string storyTellerUserId)
     {
         var cc = await _dbContext.CharacterCoils
@@ -265,6 +284,12 @@ public class CoilService(
 
         bool isChosenMystery = character.ChosenMysteryScaleId.HasValue && coil.ScaleId == character.ChosenMysteryScaleId.Value;
         int xpCost = CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
+
+        _logger.LogInformation(
+            "Deducting {XpCost} XP for Coil '{CoilName}' on character {CharacterId}",
+            xpCost,
+            coil.Name,
+            character.Id);
 
         // Atomic XP deduction: prevents race condition from concurrent approvals
         int rowsAffected = await _dbContext.Characters
@@ -492,7 +517,7 @@ public class CoilService(
 
     private static bool IsOrdoDraculMember(Character character)
     {
-        return character.Covenant?.Name == OrdoDraculName
+        return character.Covenant?.Name == _ordoDraculName
             && character.CovenantJoinStatus != Data.Models.Enums.CovenantJoinStatus.Pending;
     }
 

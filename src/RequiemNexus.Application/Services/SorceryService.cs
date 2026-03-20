@@ -9,6 +9,7 @@ using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
+using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
 
@@ -40,6 +41,7 @@ public class SorceryService(
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Rites)
             .Include(c => c.Covenant)
+            .Include(c => c.Clan)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
@@ -47,9 +49,6 @@ public class SorceryService(
         {
             return [];
         }
-
-        int cruacRating = character.GetDisciplineRating("Crúac");
-        int thebanRating = character.GetDisciplineRating("Theban Sorcery");
 
         var learnedOrPendingIds = character.Rites
             .Where(r => r.Status == RiteLearnStatus.Approved || r.Status == RiteLearnStatus.Pending)
@@ -59,16 +58,24 @@ public class SorceryService(
         var query = await _dbContext.SorceryRiteDefinitions
             .AsNoTracking()
             .Include(s => s.RequiredCovenant)
-            .Where(r => r.RequiredCovenantId == character.CovenantId
+            .Include(s => s.RequiredClan)
+            .Where(r => (r.RequiredCovenantId == null || r.RequiredCovenantId == character.CovenantId)
+                && (r.RequiredClanId == null || r.RequiredClanId == character.ClanId)
                 && !learnedOrPendingIds.Contains(r.Id)
-                && ((r.SorceryType == SorceryType.Cruac && cruacRating >= r.Level)
-                    || (r.SorceryType == SorceryType.Theban && thebanRating >= r.Level)))
+                && GetSorceryDisciplineRating(character, r.SorceryType) >= r.Level
+                && IsTraditionAllowedForCharacter(character, r.SorceryType))
             .OrderBy(r => r.SorceryType)
             .ThenBy(r => r.Level)
             .ThenBy(r => r.Name)
             .ToListAsync();
 
-        return query.Select(r => new SorceryRiteSummaryDto(r.Id, r.Name, r.Level, r.SorceryType, r.XpCost, r.RequiredCovenant?.Name ?? string.Empty)).ToList();
+        return query.Select(r => new SorceryRiteSummaryDto(
+            r.Id,
+            r.Name,
+            r.Level,
+            r.SorceryType,
+            r.XpCost,
+            SummarizeRiteGate(r))).ToList();
     }
 
     /// <inheritdoc />
@@ -80,6 +87,7 @@ public class SorceryService(
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Rites)
             .Include(c => c.Covenant)
+            .Include(c => c.Clan)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
@@ -98,18 +106,25 @@ public class SorceryService(
             .FirstOrDefaultAsync(r => r.Id == sorceryRiteDefinitionId)
             ?? throw new InvalidOperationException($"Rite {sorceryRiteDefinitionId} not found.");
 
-        if (rite.RequiredCovenantId != character.CovenantId)
+        if (rite.RequiredCovenantId.HasValue && rite.RequiredCovenantId.Value != character.CovenantId)
         {
             throw new InvalidOperationException("Character's covenant does not match the rite's required covenant.");
         }
 
-        int disciplineRating = rite.SorceryType == SorceryType.Cruac
-            ? character.GetDisciplineRating("Crúac")
-            : character.GetDisciplineRating("Theban Sorcery");
+        if (rite.RequiredClanId.HasValue && rite.RequiredClanId.Value != character.ClanId)
+        {
+            throw new InvalidOperationException("Character's clan does not match the rite's required clan.");
+        }
 
+        if (!IsTraditionAllowedForCharacter(character, rite.SorceryType))
+        {
+            throw new InvalidOperationException("Character's covenant does not support this sorcery tradition.");
+        }
+
+        int disciplineRating = GetSorceryDisciplineRating(character, rite.SorceryType);
         if (disciplineRating < rite.Level)
         {
-            throw new InvalidOperationException($"Character needs {rite.SorceryType} {rite.Level} to learn this rite.");
+            throw new InvalidOperationException($"Character needs sufficient discipline dots ({rite.SorceryType} level {rite.Level}) to learn this rite.");
         }
 
         if (character.Rites.Any(r => r.SorceryRiteDefinitionId == sorceryRiteDefinitionId && r.Status == RiteLearnStatus.Pending))
@@ -195,6 +210,12 @@ public class SorceryService(
 
         var rite = cr.SorceryRiteDefinition!;
         var character = cr.Character!;
+
+        _logger.LogInformation(
+            "Deducting {XpCost} XP for rite '{RiteName}' on character {CharacterId}",
+            rite.XpCost,
+            rite.Name,
+            character.Id);
 
         int rowsAffected = await _dbContext.Characters
             .Where(c => c.Id == character.Id && c.ExperiencePoints >= rite.XpCost)
@@ -304,5 +325,162 @@ public class SorceryService(
                 cr.SorceryRiteDefinition.PoolDefinitionJson);
             return 0;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<int> BeginRiteActivationAsync(
+        int characterId,
+        int characterRiteId,
+        string userId,
+        BeginRiteActivationRequest request)
+    {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "begin rite activation");
+
+        Character? character = await _dbContext.Characters
+            .Include(c => c.Disciplines)
+            .Include(c => c.Attributes)
+            .Include(c => c.Skills)
+            .Include(c => c.Rites)
+            .FirstOrDefaultAsync(c => c.Id == characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        CharacterRite? cr = character.Rites.FirstOrDefault(r => r.Id == characterRiteId && r.Status == RiteLearnStatus.Approved);
+        if (cr == null)
+        {
+            cr = await _dbContext.CharacterRites
+                .Include(r => r.SorceryRiteDefinition)
+                .FirstOrDefaultAsync(r => r.Id == characterRiteId && r.CharacterId == characterId && r.Status == RiteLearnStatus.Approved);
+        }
+
+        if (cr?.SorceryRiteDefinition == null)
+        {
+            throw new InvalidOperationException("Approved character rite not found.");
+        }
+
+        SorceryRiteDefinition def = cr.SorceryRiteDefinition;
+        Result<IReadOnlyList<RiteRequirement>> parsed = RiteRequirementValidator.ParseRequirements(def.RequirementsJson);
+        if (!parsed.IsSuccess)
+        {
+            throw new InvalidOperationException(parsed.Error);
+        }
+
+        IReadOnlyList<RiteRequirement> requirements = parsed.Value ?? [];
+
+        var ack = new RiteActivationAcknowledgment(
+            request.AcknowledgePhysicalSacrament,
+            request.AcknowledgeHeart,
+            request.AcknowledgeMaterialOffering,
+            request.AcknowledgeMaterialFocus);
+
+        Result<bool> ackResult = RiteRequirementValidator.ValidateAcknowledgments(requirements, ack);
+        if (!ackResult.IsSuccess)
+        {
+            throw new InvalidOperationException(ackResult.Error);
+        }
+
+        var resources = new RiteActivationResourceSnapshot(
+            character.CurrentVitae,
+            character.CurrentWillpower,
+            character.HumanityStains);
+
+        Result<bool> resOk = RiteRequirementValidator.ValidateResources(requirements, resources);
+        if (!resOk.IsSuccess)
+        {
+            throw new InvalidOperationException(resOk.Error);
+        }
+
+        (int vitaeCost, int wpCost, int stainGain) = RiteRequirementValidator.AggregateInternalCosts(requirements);
+
+        if (vitaeCost > 0 || wpCost > 0 || stainGain > 0)
+        {
+            int rows = await _dbContext.Characters
+                .Where(c => c.Id == characterId
+                    && c.CurrentVitae >= vitaeCost
+                    && c.CurrentWillpower >= wpCost)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(c => c.CurrentVitae, c => c.CurrentVitae - vitaeCost)
+                    .SetProperty(c => c.CurrentWillpower, c => c.CurrentWillpower - wpCost)
+                    .SetProperty(c => c.HumanityStains, c => c.HumanityStains + stainGain));
+
+            if (rows == 0)
+            {
+                throw new InvalidOperationException(
+                    "Could not apply rite costs (insufficient Vitae or Willpower, or concurrent update).");
+            }
+        }
+
+        _logger.LogInformation(
+            "Rite activation costs applied: Character {CharacterId}, CharacterRite {CharacterRiteId}, Rite {RiteName}, Vitae {VitaeCost}, Willpower {WillpowerCost}, Stains {StainGain}, Requirements {RequirementSummary}",
+            characterId,
+            characterRiteId,
+            def.Name,
+            vitaeCost,
+            wpCost,
+            stainGain,
+            string.Join(';', requirements.Select(r => $"{r.Type}:{r.Value}")));
+
+        character = await _dbContext.Characters
+            .Include(c => c.Disciplines)
+            .Include(c => c.Attributes)
+            .Include(c => c.Skills)
+            .FirstAsync(c => c.Id == characterId);
+
+        int poolSize = 0;
+        if (!string.IsNullOrEmpty(def.PoolDefinitionJson))
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(def.PoolDefinitionJson, options);
+                poolSize = pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to resolve pool after activation for rite {RiteId} on character {CharacterId}",
+                    def.Id,
+                    characterId);
+                poolSize = 0;
+            }
+        }
+
+        await _sessionService.BroadcastCharacterUpdateAsync(characterId);
+        return poolSize;
+    }
+
+    private static int GetSorceryDisciplineRating(Character character, SorceryType sorceryType) =>
+        sorceryType switch
+        {
+            SorceryType.Cruac => character.GetDisciplineRating("Crúac"),
+            SorceryType.Theban => character.GetDisciplineRating("Theban Sorcery"),
+            SorceryType.Necromancy => character.GetDisciplineRating("Necromancy"),
+            SorceryType.OrdoDraculRitual => character.GetDisciplineRating("Ordo Sorcery"),
+            _ => 0,
+        };
+
+    private static bool IsTraditionAllowedForCharacter(Character character, SorceryType type) =>
+        type switch
+        {
+            SorceryType.Cruac or SorceryType.Theban => character.Covenant?.SupportsBloodSorcery == true,
+            SorceryType.OrdoDraculRitual => character.Covenant?.SupportsOrdoRituals == true,
+            SorceryType.Necromancy => true,
+            _ => false,
+        };
+
+    private static string SummarizeRiteGate(SorceryRiteDefinition r)
+    {
+        if (r.RequiredCovenant != null)
+        {
+            return r.RequiredCovenant.Name;
+        }
+
+        if (r.RequiredClan != null)
+        {
+            return $"{r.RequiredClan.Name} (clan)";
+        }
+
+        return "—";
     }
 }

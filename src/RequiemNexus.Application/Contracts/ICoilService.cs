@@ -27,6 +27,13 @@ public interface ICoilService
     /// <summary>Returns pending Coil purchase requests for characters in the campaign.</summary>
     Task<List<CoilApplicationDto>> GetPendingCoilApplicationsAsync(int campaignId, string storyTellerUserId);
 
+    /// <summary>
+    /// Returns characters in the campaign with a pending Chosen Mystery (Scale) selection awaiting approval.
+    /// </summary>
+    /// <param name="campaignId">Campaign to inspect.</param>
+    /// <param name="storyTellerUserId">Must match <c>Campaign.StoryTellerId</c>.</param>
+    Task<List<ChosenMysteryApplicationDto>> GetPendingChosenMysteryApplicationsAsync(int campaignId, string storyTellerUserId);
+
     /// <summary>Approves a Coil purchase request. Deducts XP and sets Status to Approved.</summary>
     Task ApproveCoilLearnAsync(int characterCoilId, string? note, string storyTellerUserId);
 

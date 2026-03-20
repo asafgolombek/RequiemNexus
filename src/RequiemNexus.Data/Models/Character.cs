@@ -47,6 +47,9 @@ public class Character
     [ForeignKey(nameof(ClanId))]
     public virtual Clan? Clan { get; set; }
 
+    /// <summary>Type of creature. Player-created characters default to Vampire. ST can set any type for NPCs.</summary>
+    public Data.Models.Enums.CreatureType CreatureType { get; set; } = Data.Models.Enums.CreatureType.Vampire;
+
     /// <summary>Covenant membership. Null = Unaligned. Blocked for VII (antagonist covenant).</summary>
     public int? CovenantId { get; set; }
 
@@ -84,6 +87,9 @@ public class Character
 
     // Core specific stats for the Neonate Phase
     public int Humanity { get; set; } = 7;
+
+    /// <summary>Accumulated Humanity stains (Phase 9.5). Degeneration rolls remain at the Storyteller's discretion.</summary>
+    public int HumanityStains { get; set; }
 
     public int Size { get; set; } = 5;
 

@@ -13,7 +13,7 @@
                 <p class="apply-bloodline-hint">Select a rite to request. Requires covenant membership, matching discipline dots, and sufficient XP. Storyteller approval required.</p>
                 @if (EligibleRites.Count == 0)
                 {
-                    <p class="apply-bloodline-empty">No eligible rites. Ensure you have Crúac or Theban Sorcery dots and covenant membership.</p>
+                    <p class="apply-bloodline-empty">No eligible rites. Check covenant/clan gates and matching discipline dots (Crúac, Theban Sorcery, Necromancy, Ordo Sorcery).</p>
                 }
                 else
                 {
@@ -25,7 +25,7 @@
                                  role="button"
                                  tabindex="0"
                                  @onkeydown="(e) => HandleKeydown(e, rite.Id)">
-                                <div class="bloodline-name">@rite.Name — Level @rite.Level @(rite.SorceryType == SorceryType.Cruac ? "Crúac" : "Theban") (@rite.XpCost XP)</div>
+                                <div class="bloodline-name">@rite.Name — Level @rite.Level @TraditionLabel(rite.SorceryType) (@rite.XpCost XP)</div>
                                 <div class="bloodline-desc">@rite.CovenantName</div>
                             </div>
                         }
@@ -60,6 +60,16 @@
 
     private int? SelectedRiteId { get; set; }
     private bool _requesting;
+
+    private static string TraditionLabel(SorceryType t) =>
+        t switch
+        {
+            SorceryType.Cruac => "Crúac",
+            SorceryType.Theban => "Theban",
+            SorceryType.Necromancy => "Necromancy",
+            SorceryType.OrdoDraculRitual => "Ordo ritual",
+            _ => t.ToString(),
+        };
 
     private void SelectRite(int id)
     {

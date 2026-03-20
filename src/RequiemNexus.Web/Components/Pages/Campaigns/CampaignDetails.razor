@@ -6,6 +6,7 @@
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
 @using System.Security.Claims
+@using System.Threading
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ICampaignService CampaignService
 @inject ICharacterService CharacterService
@@ -67,7 +68,7 @@
                 </div>
             </div>
             
-            <SessionPresenceBar />
+            <SessionPresenceBar SessionActive="_sessionActive" />
 
             <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
@@ -297,6 +298,7 @@
     private bool _sessionActive = false;
     private string? _cookieHeader;
     private PersistingComponentStateSubscription _persistingSubscription;
+    private Timer? _heartbeatTimer;
 
     private readonly AddCharacterModel _addModel = new();
 
@@ -322,6 +324,11 @@
         }
 
         await LoadData();
+
+        if (_sessionActive && _campaign != null && !string.IsNullOrEmpty(_currentUserId) && CampaignService.IsStoryteller(_campaign, _currentUserId))
+        {
+            StartHeartbeatTimerIfStoryteller();
+        }
     }
 
     private Task PersistCookieHeader()
@@ -349,6 +356,13 @@
                 // We don't specify characterId here as we might have multiple or none
                 await SessionClient.StartAsync(Id, null, _currentUserId, _cookieHeader);
             }
+
+            // Hydrate initial presence from REST API so we show existing players before hub broadcasts
+            var state = await SessionService.GetSessionStateAsync(Id);
+            if (state?.Presence != null)
+            {
+                SessionClient.SetPresence(state.Presence);
+            }
         }
         catch (HttpRequestException)
         {
@@ -360,13 +374,42 @@
     private void HandleSessionStarted()
     {
         _sessionActive = true;
+        StartHeartbeatTimerIfStoryteller();
         InvokeAsync(StateHasChanged);
     }
 
     private void HandleSessionEnded(string reason)
     {
         _sessionActive = false;
+        StopHeartbeatTimer();
         InvokeAsync(StateHasChanged);
+    }
+
+    private void StartHeartbeatTimerIfStoryteller()
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId) || !CampaignService.IsStoryteller(_campaign, _currentUserId))
+        {
+            return;
+        }
+
+        StopHeartbeatTimer();
+        _heartbeatTimer = new Timer(
+            _ =>
+            {
+                if (_sessionActive && _campaign != null)
+                {
+                    _ = SessionClient.SendHeartbeatAsync();
+                }
+            },
+            null,
+            TimeSpan.FromMinutes(5),
+            TimeSpan.FromMinutes(5));
+    }
+
+    private void StopHeartbeatTimer()
+    {
+        _heartbeatTimer?.Dispose();
+        _heartbeatTimer = null;
     }
 
     private async Task StartSession()
@@ -577,6 +620,7 @@
 
     public void Dispose()
     {
+        StopHeartbeatTimer();
         _persistingSubscription.Dispose();
         SessionClient.SessionStarted -= HandleSessionStarted;
         SessionClient.SessionEnded -= HandleSessionEnded;

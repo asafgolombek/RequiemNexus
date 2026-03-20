@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models.Enums;
@@ -11,7 +12,7 @@ namespace RequiemNexus.Application.Services;
 /// Aggregates passive modifiers from all active sources (Coils, Devotions, Covenant benefits).
 /// Modifiers are never applied permanently; derived values are computed on demand.
 /// </summary>
-public class ModifierService(ApplicationDbContext dbContext) : IModifierService
+public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierService> logger) : IModifierService
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -46,9 +47,12 @@ public class ModifierService(ApplicationDbContext dbContext) : IModifierService
                     modifiers.AddRange(coilModifiers);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Malformed ModifiersJson — skip silently; individual coil definition issue, not runtime error
+                logger.LogWarning(
+                    ex,
+                    "Malformed ModifiersJson on CoilDefinition {CoilId}; modifier skipped.",
+                    cc.CoilDefinition.Id);
             }
         }
 

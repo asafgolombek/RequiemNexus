@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Data.Models;
 
@@ -22,6 +23,9 @@ public class CovenantDefinition
 
     /// <summary>When true, this covenant grants access to Blood Sorcery (Crúac or Theban Sorcery).</summary>
     public bool SupportsBloodSorcery { get; set; }
+
+    /// <summary>When true, members may learn Ordo Dracul ritual definitions (<see cref="SorceryType.OrdoDraculRitual"/>).</summary>
+    public bool SupportsOrdoRituals { get; set; }
 
     /// <summary>Merits gated by this covenant (e.g., Covenant Status).</summary>
     public virtual ICollection<CovenantDefinitionMerit> CovenantSpecificMerits { get; set; } = new List<CovenantDefinitionMerit>();

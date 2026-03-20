@@ -55,9 +55,14 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 2rem;
     width: 100%;
+    padding: 2rem 1rem;
 }
 
 .sheet .skeleton-block {
     height: 10rem;
     border-radius: 8px;
+    border: 1px solid var(--muted-gray);
+    background: linear-gradient(90deg, var(--ash-gray) 25%, var(--muted-gray) 50%, var(--ash-gray) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite linear;
 }

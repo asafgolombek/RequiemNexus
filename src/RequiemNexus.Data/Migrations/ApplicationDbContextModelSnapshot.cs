@@ -504,6 +504,9 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<DateTime?>("CovenantLeaveRequestedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("CreatureType")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CurrentHealth")
                         .HasColumnType("integer");
 
@@ -545,6 +548,9 @@ namespace RequiemNexus.Data.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<int>("Humanity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HumanityStains")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsArchived")
@@ -1081,6 +1087,9 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<int>("CampaignId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("CreatureType")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsAlive")
                         .HasColumnType("boolean");
 
@@ -1356,6 +1365,9 @@ namespace RequiemNexus.Data.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<bool>("SupportsBloodSorcery")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportsOrdoRituals")
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");
@@ -1789,6 +1801,36 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("Merits");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.MeritPrerequisite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MeritId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinimumRating")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OrGroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PrerequisiteType")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReferenceId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeritId");
+
+                    b.ToTable("MeritPrerequisites");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.NpcStatBlock", b =>
                 {
                     b.Property<int>("Id")
@@ -1995,8 +2037,14 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<int>("RequiredCovenantId")
+                    b.Property<int?>("RequiredClanId")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("RequiredCovenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RequirementsJson")
+                        .HasColumnType("text");
 
                     b.Property<int>("SorceryType")
                         .HasColumnType("integer");
@@ -2005,6 +2053,8 @@ namespace RequiemNexus.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RequiredClanId");
 
                     b.HasIndex("RequiredCovenantId");
 
@@ -2724,6 +2774,17 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Encounter");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.MeritPrerequisite", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.Merit", "Merit")
+                        .WithMany("Prerequisites")
+                        .HasForeignKey("MeritId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Merit");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.NpcStatBlock", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
@@ -2764,11 +2825,17 @@ namespace RequiemNexus.Data.Migrations
 
             modelBuilder.Entity("RequiemNexus.Data.Models.SorceryRiteDefinition", b =>
                 {
+                    b.HasOne("RequiemNexus.Data.Models.Clan", "RequiredClan")
+                        .WithMany()
+                        .HasForeignKey("RequiredClanId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("RequiemNexus.Data.Models.CovenantDefinition", "RequiredCovenant")
                         .WithMany()
                         .HasForeignKey("RequiredCovenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("RequiredClan");
 
                     b.Navigation("RequiredCovenant");
                 });
@@ -2887,6 +2954,11 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>
                 {
                     b.Navigation("Powers");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.Merit", b =>
+                {
+                    b.Navigation("Prerequisites");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.ScaleDefinition", b =>

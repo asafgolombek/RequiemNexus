@@ -1,0 +1,58 @@
+/* ============================================================
+   REQUIEM NEXUS — Global Design System
+   Modern Gothic Aesthetic: Dark backgrounds, crimson accents,
+   bone-white text, immersive TTRPG atmosphere.
+   ============================================================ */
+
+/* ---------- Design Tokens ---------- */
+:root {
+  --bone-white: #F5F0E8;
+  --crimson: #8B0000;
+  --crimson-glow: #C41E3A;
+  --charcoal: #1A1A1A;
+  --deep-black: #0D0D0D;
+  --ash-gray: #2A2A2A;
+  --muted-gray: #4A4A4A;
+  --warning-amber: #B8860B;
+  --success-emerald: #2E5A3A;
+
+  /* Text Tiers */
+  --text-secondary: #B8B3A8;
+  --text-tertiary: #9D9892;
+  --text-hint: #8A8580;
+
+  /* Typography */
+  --font-primary: 'Raleway', sans-serif;
+  --font-heading: 'Cinzel', serif;
+
+  /* Preserved Blazor Variables */
+  --bs-secondary-color: #6c757d;
+  
+  /* Semantic aliases */
+  --gothic-muted: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
+  --color-surface-2: var(--ash-gray);
+
+  /* Additional values matching gothic theme */
+  --bg-color: var(--deep-black);
+  --text-color: var(--bone-white);
+  --accent-color: var(--crimson);
+  --accent-hover: var(--crimson-glow);
+  --danger-color: var(--crimson-glow);
+  --success-color: var(--success-emerald);
+
+  /* Semantic UI variables (panels, text, borders, transitions) */
+  --bg-panel: var(--charcoal);
+  --bg-surface: var(--ash-gray);
+  --bg-input: var(--ash-gray);
+  --text-bright: var(--bone-white);
+  --text-muted: var(--text-secondary);
+  --accent-light: var(--crimson-glow);
+  --accent-glow: rgba(196, 30, 58, 0.4);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --border-accent: var(--muted-gray);
+  --border-subtle: rgba(74, 74, 74, 0.5);
+  --radius-md: 8px;
+  --transition-fast: 0.2s ease;
+  --brand-crimson: var(--crimson);
+}

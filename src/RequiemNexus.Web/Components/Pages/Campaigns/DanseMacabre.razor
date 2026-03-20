@@ -1,6 +1,7 @@
 @page "/campaigns/{CampaignId:int}/danse-macabre"
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Domain.Enums
 @using System.Security.Claims
@@ -171,9 +172,17 @@
 
                 <div class="add-form card-rn" style="margin-bottom:1.5rem;">
                     <h4>Add NPC</h4>
-                    <div class="form-row">
-                        <input class="form-control" placeholder="Name" @bind="_newNpcName" />
-                        <input class="form-control" placeholder="Title (optional)" @bind="_newNpcTitle" />
+                    <div class="form-row" style="align-items:flex-end;flex-wrap:wrap;gap:0.5rem;">
+                        <input class="form-control" placeholder="Name" @bind="_newNpcName" style="min-width:150px;" />
+                        <input class="form-control" placeholder="Title (optional)" @bind="_newNpcTitle" style="min-width:120px;" />
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Type
+                            <select class="form-control" @bind="_newNpcCreatureType" style="min-width:100px;">
+                                <option value="@CreatureType.Mortal">Mortal</option>
+                                <option value="@CreatureType.Vampire">Vampire</option>
+                                <option value="@CreatureType.Ghoul">Ghoul</option>
+                            </select>
+                        </label>
                         <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newNpcName) || _busy)" @onclick="AddNpc">Add</button>
                     </div>
                 </div>
@@ -250,6 +259,7 @@
     // New NPC form
     private string _newNpcName = string.Empty;
     private string _newNpcTitle = string.Empty;
+    private CreatureType _newNpcCreatureType = CreatureType.Mortal;
     private bool _showDeceased = false;
 
     protected override async Task OnInitializedAsync()
@@ -385,7 +395,7 @@
         _busy = true;
         try
         {
-            await NpcService.CreateNpcAsync(CampaignId, _newNpcName, string.IsNullOrWhiteSpace(_newNpcTitle) ? null : _newNpcTitle, null, null, string.Empty, _currentUserId);
+            await NpcService.CreateNpcAsync(CampaignId, _newNpcName, string.IsNullOrWhiteSpace(_newNpcTitle) ? null : _newNpcTitle, null, null, string.Empty, _newNpcCreatureType, _currentUserId);
             _newNpcName = string.Empty;
             _newNpcTitle = string.Empty;
             await LoadNpcs();

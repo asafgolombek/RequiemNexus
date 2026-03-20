@@ -6,6 +6,11 @@
     <ProjectReference Include="..\RequiemNexus.Domain\RequiemNexus.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Coil / sorcery JSON seeds: Data copies to its output; Web host needs SeedSource next to the running app for DbInitializer. -->
+  <ItemGroup>
+    <Content Include="..\RequiemNexus.Data\SeedSource\**\*" LinkBase="SeedSource" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Fido2.AspNet" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
