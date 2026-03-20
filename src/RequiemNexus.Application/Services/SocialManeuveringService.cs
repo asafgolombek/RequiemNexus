@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
@@ -17,11 +19,13 @@ public class SocialManeuveringService(
     ApplicationDbContext dbContext,
     IAuthorizationHelper authHelper,
     IDiceService diceService,
+    ISessionPublisher sessionPublisher,
     ILogger<SocialManeuveringService> logger) : ISocialManeuveringService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IDiceService _diceService = diceService;
+    private readonly ISessionPublisher _sessionPublisher = sessionPublisher;
     private readonly ILogger<SocialManeuveringService> _logger = logger;
 
     /// <inheritdoc />
@@ -105,6 +109,8 @@ public class SocialManeuveringService(
             initialDoors,
             storytellerUserId);
 
+        await PublishManeuverUpdateAsync(maneuver.Id);
+
         return maneuver;
     }
 
@@ -115,6 +121,8 @@ public class SocialManeuveringService(
 
         return await _dbContext.SocialManeuvers
             .AsNoTracking()
+            .Include(m => m.InitiatorCharacter)
+            .Include(m => m.TargetNpc)
             .Where(m => m.CampaignId == campaignId)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -127,6 +135,8 @@ public class SocialManeuveringService(
 
         return await _dbContext.SocialManeuvers
             .AsNoTracking()
+            .Include(m => m.InitiatorCharacter)
+            .Include(m => m.TargetNpc)
             .Where(m => m.InitiatorCharacterId == characterId)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -187,6 +197,8 @@ public class SocialManeuveringService(
             doorsOpened,
             maneuver.RemainingDoors,
             userId);
+
+        await PublishManeuverUpdateAsync(maneuver.Id);
 
         return (maneuver, roll, doorsOpened);
     }
@@ -254,6 +266,8 @@ public class SocialManeuveringService(
             maneuver.Status,
             userId);
 
+        await PublishManeuverUpdateAsync(maneuver.Id);
+
         return (maneuver, roll, forcedSuccess);
     }
 
@@ -281,6 +295,8 @@ public class SocialManeuveringService(
             maneuverId,
             impression,
             storytellerUserId);
+
+        await PublishManeuverUpdateAsync(maneuver.Id);
     }
 
     /// <inheritdoc />
@@ -309,6 +325,39 @@ public class SocialManeuveringService(
             maneuverId,
             remainingDoors,
             storytellerUserId);
+
+        await PublishManeuverUpdateAsync(maneuver.Id);
+    }
+
+    private async Task PublishManeuverUpdateAsync(int maneuverId)
+    {
+        SocialManeuver? row = await _dbContext.SocialManeuvers
+            .AsNoTracking()
+            .Include(m => m.InitiatorCharacter)
+            .Include(m => m.TargetNpc)
+            .FirstOrDefaultAsync(m => m.Id == maneuverId);
+
+        if (row == null)
+        {
+            return;
+        }
+
+        var dto = new SocialManeuverUpdateDto(
+            row.CampaignId,
+            row.Id,
+            row.InitiatorCharacterId,
+            row.InitiatorCharacter?.Name ?? "?",
+            row.TargetChronicleNpcId,
+            row.TargetNpc?.Name ?? "?",
+            row.RemainingDoors,
+            row.InitialDoors,
+            row.CurrentImpression,
+            row.Status,
+            row.CumulativePenaltyDice,
+            row.LastRollAt,
+            row.GoalDescription);
+
+        await _sessionPublisher.Group(row.CampaignId).ReceiveSocialManeuverUpdate(dto);
     }
 
     private async Task<SocialManeuver> LoadManeuverForMutationAsync(int maneuverId)
@@ -339,6 +388,7 @@ public class SocialManeuveringService(
             maneuver.Id);
 
         await _dbContext.SaveChangesAsync();
+        await PublishManeuverUpdateAsync(maneuver.Id);
     }
 
     private async Task RequireInitiatorOrStorytellerAsync(SocialManeuver maneuver, string userId, string operationName)

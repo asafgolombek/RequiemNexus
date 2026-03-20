@@ -357,9 +357,9 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 **The Objective:** Automate the formal systems of social dominance, investigation, and manipulation.
 
 - [x] **Core persistence & engine** — `SocialManeuver` / `ManeuverClue` (EF), `SocialManeuveringEngine` + `ISocialManeuveringService` (NPC-only targets, Masquerade, server-side open/force rolls, hard leverage, hostile-week failure). See `docs/PHASE_10_SOCIAL_GRACES.md`.
-- [ ] **Doors Tracker** — Real-time visualization of "Doors" for Social Maneuvering (Chapter 4)
-- [ ] **Impression Management** — Tracking the current Impression level (Hostile to Perfect) and its effect on Door resolution
-- [ ] **Leverage UI** — A specialized interface for players to present "Leverage" (Hard or Soft) to the Storyteller to force Door openings
+- [x] **Doors Tracker** — Glimpse + character sheet show remaining/total Doors; SignalR `ReceiveSocialManeuverUpdate` refreshes connected clients (`docs/PHASE_10_SOCIAL_GRACES.md`).
+- [x] **Impression Management** — Impression shown on sheet and ST dropdown on Glimpse; open-Door timing enforced server-side and reflected in sheet copy/countdown.
+- [x] **Leverage UI** — Hard leverage (breaking-point severity + door removal before force) on Glimpse and character sheet; soft/narrative leverage remains ST/table roleplay per book.
 - [ ] **Investigation Support** — Automated tracking of Clues and "Interception" of social maneuvers
 - [ ] **Social Condition Integration** — Automatic application of *Inspired*, *Shaken*, or *Swooned* based on maneuver outcomes
 

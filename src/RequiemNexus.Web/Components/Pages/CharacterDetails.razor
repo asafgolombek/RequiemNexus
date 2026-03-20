@@ -336,6 +336,11 @@ else
                             }
                         </section>
 
+                        @if (_character.CampaignId.HasValue && !string.IsNullOrEmpty(_currentUserId))
+                        {
+                            <SocialManeuversSection CharacterId="Id" CurrentUserId="@_currentUserId" />
+                        }
+
                         <!-- DEVOTIONS -->
                         <section class="cs-section cs-devotions">
                             <h2>Devotions</h2>

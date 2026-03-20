@@ -73,4 +73,10 @@ public interface ISessionClient
     /// </summary>
     /// <param name="patch">The delta update.</param>
     Task ReceiveChronicleUpdate(ChronicleUpdateDto patch);
+
+    /// <summary>
+    /// Broadcasts an update to Social maneuvering state for the chronicle group.
+    /// </summary>
+    /// <param name="update">Current maneuver summary.</param>
+    Task ReceiveSocialManeuverUpdate(SocialManeuverUpdateDto update);
 }

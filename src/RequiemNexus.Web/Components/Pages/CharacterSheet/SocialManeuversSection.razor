@@ -1,0 +1,320 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.RealTime
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Domain.Services
+@using RequiemNexus.Web.Services
+@inject ISocialManeuveringService SocialManeuveringService
+@inject SessionClientService SessionClient
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<section class="cs-section cs-social-maneuvers">
+    <h2>Social Maneuvering</h2>
+    @if (_loading)
+    {
+        <p style="color:var(--text-secondary);font-size:0.9em;"><em>Loading maneuvers…</em></p>
+    }
+    else if (!_maneuvers.Any())
+    {
+        <p style="color:var(--text-secondary);font-size:0.9em;">No active Social maneuvers. Your Storyteller creates these from the Glimpse dashboard.</p>
+    }
+    else
+    {
+        <ul class="trait-list" style="list-style:none;padding:0;">
+            @foreach (var m in _maneuvers)
+            {
+                <li class="trait-item" style="flex-direction:column;align-items:stretch;margin-bottom:1rem;">
+                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+                        <strong>@m.TargetNpc?.Name</strong>
+                        <span class="condition-badge" style="font-size:0.75em;">@m.Status</span>
+                    </div>
+                    <p style="font-size:0.85em;color:var(--text-secondary);margin:0.35rem 0;">@m.GoalDescription</p>
+                    <div style="font-size:0.85em;margin-bottom:0.35rem;">
+                        <strong>Doors:</strong> @m.RemainingDoors / @m.InitialDoors ·
+                        <strong>Impression:</strong> @m.CurrentImpression ·
+                        <strong>Penalty dice:</strong> @m.CumulativePenaltyDice
+                    </div>
+                    <p style="font-size:0.82em;color:var(--accent-warm);margin:0;">@GetTimingMessage(m)</p>
+                    @if (m.Status == ManeuverStatus.Active)
+                    {
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.08);">
+                            <span style="font-size:0.8em;">Open Door pool</span>
+                            <input type="number" class="form-control" style="width:52px;" min="0" max="50"
+                                   value="@GetOpenPool(m.Id)"
+                                   @onchange="e => SetOpenPool(m.Id, e)" />
+                            <button type="button" class="btn-primary-rn" style="font-size:0.8em;" disabled="@_busy"
+                                    @onclick="() => RollOpenAsync(m.Id)">Roll open</button>
+                            <span style="font-size:0.8em;margin-left:0.35rem;">Force pool</span>
+                            <input type="number" class="form-control" style="width:52px;" min="0" max="50"
+                                   value="@GetForcePool(m.Id)"
+                                   @onchange="e => SetForcePool(m.Id, e)" />
+                            <label style="font-size:0.78em;">
+                                <input type="checkbox" checked="@GetForceHard(m.Id)" @onchange="e => SetForceHard(m.Id, e)" /> Hard leverage
+                            </label>
+                            @if (GetForceHard(m.Id))
+                            {
+                                <label style="font-size:0.78em;">BP sev.
+                                    <input type="number" class="form-control" style="display:inline-block;width:48px;" min="0" max="10"
+                                           value="@GetForceBp(m.Id)"
+                                           @onchange="e => SetForceBp(m.Id, e)" />
+                                </label>
+                            }
+                            <button type="button" class="btn-danger-rn" style="font-size:0.8em;" disabled="@_busy"
+                                    @onclick="() => RollForceAsync(m.Id)">Roll force</button>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CharacterId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string CurrentUserId { get; set; } = string.Empty;
+
+    private List<SocialManeuver> _maneuvers = [];
+    private bool _loading = true;
+    private bool _busy;
+    private readonly Dictionary<int, int> _openDoorPoolByManeuverId = [];
+    private readonly Dictionary<int, int> _forceDoorPoolByManeuverId = [];
+    private readonly Dictionary<int, bool> _forceHardLeverageByManeuverId = [];
+    private readonly Dictionary<int, int> _forceBpSeverityByManeuverId = [];
+    private System.Timers.Timer? _countdownTimer;
+    private bool _subscribed;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(CurrentUserId))
+        {
+            _loading = false;
+            return;
+        }
+
+        await LoadManeuversAsync();
+    }
+
+    /// <inheritdoc />
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && !_subscribed)
+        {
+            SessionClient.SocialManeuverUpdated += OnSocialManeuverUpdated;
+            _subscribed = true;
+            _countdownTimer = new System.Timers.Timer(1000);
+            _countdownTimer.Elapsed += (_, _) => _ = InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+            _countdownTimer.AutoReset = true;
+            _countdownTimer.Start();
+        }
+    }
+
+    private void OnSocialManeuverUpdated(SocialManeuverUpdateDto dto)
+    {
+        if (dto.InitiatorCharacterId != CharacterId)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            await LoadManeuversAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadManeuversAsync()
+    {
+        if (string.IsNullOrEmpty(CurrentUserId))
+        {
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _maneuvers = (await SocialManeuveringService.ListForInitiatorAsync(CharacterId, CurrentUserId)).ToList();
+            foreach (SocialManeuver m in _maneuvers)
+            {
+                _openDoorPoolByManeuverId.TryAdd(m.Id, 5);
+                _forceDoorPoolByManeuverId.TryAdd(m.Id, 5);
+                _forceHardLeverageByManeuverId.TryAdd(m.Id, false);
+                _forceBpSeverityByManeuverId.TryAdd(m.Id, 7);
+            }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _maneuvers = [];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetTimingMessage(SocialManeuver m)
+    {
+        if (m.Status != ManeuverStatus.Active)
+        {
+            return string.Empty;
+        }
+
+        TimeSpan? interval = SocialManeuveringEngine.GetMinimumIntervalBetweenOpenDoorRolls(m.CurrentImpression);
+        if (interval is null)
+        {
+            return "Hostile impression — you cannot roll to open Doors.";
+        }
+
+        if (m.LastRollAt is null)
+        {
+            return "You may attempt to open a Door now.";
+        }
+
+        DateTimeOffset next = m.LastRollAt.Value + interval.Value;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        if (now >= next)
+        {
+            return "You may attempt to open a Door now.";
+        }
+
+        TimeSpan remain = next - now;
+        return $"Next open-Door roll in {FormatDuration(remain)} (after {next:yyyy-MM-dd HH:mm} UTC).";
+    }
+
+    private static string FormatDuration(TimeSpan t)
+    {
+        if (t.TotalDays >= 1)
+        {
+            return $"{(int)t.TotalDays}d {t.Hours}h {t.Minutes}m";
+        }
+
+        if (t.TotalHours >= 1)
+        {
+            return $"{(int)t.TotalHours}h {t.Minutes}m {t.Seconds}s";
+        }
+
+        return $"{t.Minutes}m {t.Seconds}s";
+    }
+
+    private int GetOpenPool(int id) => _openDoorPoolByManeuverId.GetValueOrDefault(id, 5);
+
+    private void SetOpenPool(int id, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            _openDoorPoolByManeuverId[id] = v;
+        }
+    }
+
+    private int GetForcePool(int id) => _forceDoorPoolByManeuverId.GetValueOrDefault(id, 5);
+
+    private void SetForcePool(int id, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            _forceDoorPoolByManeuverId[id] = v;
+        }
+    }
+
+    private bool GetForceHard(int id) => _forceHardLeverageByManeuverId.GetValueOrDefault(id);
+
+    private void SetForceHard(int id, ChangeEventArgs e)
+    {
+        _forceHardLeverageByManeuverId[id] = e.Value switch
+        {
+            bool b => b,
+            string s when bool.TryParse(s, out bool p) => p,
+            _ => false,
+        };
+    }
+
+    private int GetForceBp(int id) => _forceBpSeverityByManeuverId.GetValueOrDefault(id, 7);
+
+    private void SetForceBp(int id, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            _forceBpSeverityByManeuverId[id] = v;
+        }
+    }
+
+    private async Task RollOpenAsync(int maneuverId)
+    {
+        _busy = true;
+        try
+        {
+            int pool = GetOpenPool(maneuverId);
+            (_, RollResult roll, int opened) = await SocialManeuveringService.RollOpenDoorAsync(maneuverId, pool, CurrentUserId);
+            ToastService.Show(
+                "Open Door",
+                $"{opened} door(s). Successes: {roll.Successes}",
+                ToastType.Info);
+            await LoadManeuversAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Open Door", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RollForceAsync(int maneuverId)
+    {
+        bool ok = await JSRuntime.InvokeAsync<bool>(
+            "rnConfirm",
+            "Force Doors: on failure you can never use Social maneuvering against this NPC again (Burnt). Continue?");
+        if (!ok)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            int pool = GetForcePool(maneuverId);
+            (_, RollResult roll, bool forcedOk) = await SocialManeuveringService.RollForceDoorsAsync(
+                maneuverId,
+                pool,
+                GetForceHard(maneuverId),
+                GetForceBp(maneuverId),
+                CurrentUserId);
+            ToastService.Show(
+                "Force Doors",
+                forcedOk ? $"Success. Successes: {roll.Successes}" : $"Failed — Burnt. Successes: {roll.Successes}",
+                forcedOk ? ToastType.Success : ToastType.Warning);
+            await LoadManeuversAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Force Doors", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (_subscribed)
+        {
+            SessionClient.SocialManeuverUpdated -= OnSocialManeuverUpdated;
+        }
+
+        _countdownTimer?.Stop();
+        _countdownTimer?.Dispose();
+    }
+}

@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
@@ -30,12 +32,24 @@ public class SocialManeuveringServiceTests
     private static SocialManeuveringService CreateService(
         ApplicationDbContext ctx,
         IAuthorizationHelper? authHelper = null,
-        IDiceService? diceService = null)
+        IDiceService? diceService = null,
+        ISessionPublisher? sessionPublisher = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var dice = diceService ?? CreateDiceMock(1).Object;
         var logger = new Mock<ILogger<SocialManeuveringService>>().Object;
-        return new SocialManeuveringService(ctx, auth, dice, logger);
+        var publisher = sessionPublisher ?? CreateSessionPublisherMock().Object;
+        return new SocialManeuveringService(ctx, auth, dice, publisher, logger);
+    }
+
+    private static Mock<ISessionPublisher> CreateSessionPublisherMock()
+    {
+        var client = new Mock<ISessionClient>();
+        client.Setup(c => c.ReceiveSocialManeuverUpdate(It.IsAny<SocialManeuverUpdateDto>()))
+            .Returns(Task.CompletedTask);
+        var pub = new Mock<ISessionPublisher>();
+        pub.Setup(p => p.Group(It.IsAny<int>())).Returns(client.Object);
+        return pub;
     }
 
     private static Mock<IAuthorizationHelper> CreatePermissiveAuthMock()
@@ -205,5 +219,48 @@ public class SocialManeuveringServiceTests
 
         SocialManeuver? reloaded = await ctx.SocialManeuvers.AsNoTracking().FirstAsync(m => m.Id == created.Id);
         Assert.Equal(ManeuverStatus.Failed, reloaded.Status);
+    }
+
+    [Fact]
+    public async Task CreateAsync_PublishesSocialManeuverUpdate()
+    {
+        using var ctx = CreateContext(nameof(CreateAsync_PublishesSocialManeuverUpdate));
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var client = new Mock<ISessionClient>();
+        client.Setup(c => c.ReceiveSocialManeuverUpdate(It.IsAny<SocialManeuverUpdateDto>()))
+            .Returns(Task.CompletedTask);
+        var pub = new Mock<ISessionPublisher>();
+        pub.Setup(p => p.Group(It.IsAny<int>())).Returns(client.Object);
+
+        SocialManeuveringService service = CreateService(ctx, sessionPublisher: pub.Object);
+
+        SocialManeuver m = await service.CreateAsync(
+            1,
+            1,
+            1,
+            "goal",
+            false,
+            false,
+            false,
+            "st-user");
+
+        client.Verify(
+            c => c.ReceiveSocialManeuverUpdate(It.Is<SocialManeuverUpdateDto>(d => d.ManeuverId == m.Id && d.CampaignId == 1)),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForCampaignAsync_IncludesInitiatorAndTargetNpcNames()
+    {
+        using var ctx = CreateContext(nameof(ListForCampaignAsync_IncludesInitiatorAndTargetNpcNames));
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var service = CreateService(ctx);
+        await service.CreateAsync(1, 1, 1, "goal", false, false, false, "st-user");
+
+        IReadOnlyList<SocialManeuver> list = await service.ListForCampaignAsync(1, "st-user");
+
+        Assert.Single(list);
+        Assert.Equal("PC", list[0].InitiatorCharacter?.Name);
+        Assert.Equal("NPC", list[0].TargetNpc?.Name);
     }
 }

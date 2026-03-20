@@ -1,6 +1,6 @@
 # Phase 10 Plan: The Social Graces (Social Maneuvering)
 
-**Status:** In progress (10.1–10.2 delivered in code; UI and extensions pending)  
+**Status:** In progress (10.1–10.2 engine/data; **10.3–10.4 UI** + **SignalR `ReceiveSocialManeuverUpdate`** delivered; 10.5–10.6 and interception pending)  
 **Goal:** Automate the formal **Social maneuvering** system from *Vampire: The Requiem 2nd Edition* (Doors, impressions, forcing Doors, hard leverage), with optional **Nexus extensions** for investigation clues and real-time play. See also [mission.md](./mission.md) Phase 10.
 
 ---
@@ -161,8 +161,8 @@ Against a **thrall**, regnant’s impression is treated as **one, two, or perfec
 
 ## 4. Real-time integration (SignalR)
 
-- **`BroadcastManeuverUpdateAsync` (or equivalent):** doors remaining, impression, status — for campaign/session participants per product rules.
-- **`ImpressionShift` notification:** when ST changes impression for narrative reasons.
+- **`ReceiveSocialManeuverUpdate`:** `SocialManeuverUpdateDto` broadcast to the chronicle SignalR group after create, open/force rolls, impression change, narrative doors, and hostile-week auto-failure. Client: `SessionClientService.SocialManeuverUpdated`.
+- **`ImpressionShift` notification:** covered by the same payload when ST sets impression (no separate hub method).
 - Hub stays a **thin relay**; business logic and auth in Application services.
 
 ---
@@ -201,8 +201,8 @@ Against a **thrall**, regnant’s impression is treated as **one, two, or perfec
 
 - **Phase 10.1 (Data):** EF migration for `SocialManeuver` (+ `ManeuverClue` if clues ship with core). Omit `ManeuverDoor` unless audit requirement is confirmed. **Implemented:** `SocialManeuver` targets `ChronicleNpc` via `TargetChronicleNpcId` (initiator: `Character`); migration `Phase10SocialManeuvering`.
 - **Phase 10.2 (Engine):** **`SocialManeuveringEngine`** (Domain) + **`SocialManeuveringService`** (Application) — initial Doors, impression intervals, open-Door rolls (cumulative failure dice, exceptional opens two), force + hard leverage, hostile-week auto-failure on mutation load. Aspiration “free Door” / dramatic-trust end remain ST/UI judgment (manual door edits).
-- **Phase 10.3 (UI — ST):** Glimpse maneuver management.
-- **Phase 10.4 (UI — player):** Character sheet widget + countdown.
+- **Phase 10.3 (UI — ST):** Glimpse maneuver management. **Delivered:** `StorytellerGlimpse` Social Maneuvering card (create, list, impression, narrative doors, open/force rolls, `rnConfirm` for force).
+- **Phase 10.4 (UI — player):** Character sheet widget + countdown. **Delivered:** `SocialManeuversSection` on character sheet; next open-Door timing via `SocialManeuveringEngine` + 1s UI refresh; rolls + hard leverage + confirm.
 - **Phase 10.5 (Investigation extension):** Clue discovery thresholds and spend workflow (configurable **N**).
 - **Phase 10.6 (Conditions):** *Inspired*, *Shaken*, *Swooned* where mission and ST judgment align with outcomes.
 
