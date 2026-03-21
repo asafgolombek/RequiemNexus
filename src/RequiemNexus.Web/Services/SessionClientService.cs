@@ -83,10 +83,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         {
             _isSessionActiveCache = true;
             SessionStarted?.Invoke();
-            if (_currentChronicleId.HasValue)
-            {
-                await SafeInvokeAsync("JoinSession", _currentChronicleId.Value, _currentCharacterId ?? (object?)null);
-            }
+            await RejoinCurrentSessionAsync();
         });
 
         _hubConnection.On<string>("SessionEnded", reason =>
@@ -118,6 +115,17 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         _hubConnection.On<ConditionNotificationDto>("ReceiveConditionNotification", n => ConditionNotificationReceived?.Invoke(n));
         _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
         _hubConnection.On<SocialManeuverUpdateDto>("ReceiveSocialManeuverUpdate", update => SocialManeuverUpdated?.Invoke(update));
+
+        _hubConnection.Reconnected += async _ =>
+        {
+            await RejoinCurrentSessionAsync();
+        };
+
+        _hubConnection.Closed += async _ =>
+        {
+            _isSessionActiveCache = null;
+            await Task.CompletedTask;
+        };
 
         try
         {
@@ -251,6 +259,19 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Re-adds this client to the chronicle group and Redis presence after reconnect or session start.
+    /// </summary>
+    private async Task RejoinCurrentSessionAsync()
+    {
+        if (!_currentChronicleId.HasValue)
+        {
+            return;
+        }
+
+        await SafeInvokeAsync("JoinSession", _currentChronicleId.Value, _currentCharacterId ?? (object?)null);
     }
 
     private async Task SafeInvokeAsync(string methodName, params object?[] args)

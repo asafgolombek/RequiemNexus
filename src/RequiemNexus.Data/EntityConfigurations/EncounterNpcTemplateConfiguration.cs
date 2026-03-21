@@ -18,6 +18,17 @@ public sealed class EncounterNpcTemplateConfiguration : IEntityTypeConfiguration
             .HasForeignKey(t => t.EncounterId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder
+            .HasOne(t => t.ChronicleNpc)
+            .WithMany()
+            .HasForeignKey(t => t.ChronicleNpcId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(t => t.EncounterId);
+
+        builder
+            .HasIndex(t => new { t.EncounterId, t.ChronicleNpcId })
+            .IsUnique()
+            .HasFilter("\"ChronicleNpcId\" IS NOT NULL");
     }
 }

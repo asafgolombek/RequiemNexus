@@ -26,6 +26,17 @@ public sealed class InitiativeEntryConfiguration : IEntityTypeConfiguration<Init
             .HasForeignKey(i => i.CharacterId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder
+            .HasOne(i => i.ChronicleNpc)
+            .WithMany()
+            .HasForeignKey(i => i.ChronicleNpcId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(i => i.CharacterId);
+
+        builder
+            .HasIndex(i => new { i.EncounterId, i.ChronicleNpcId })
+            .IsUnique()
+            .HasFilter("\"ChronicleNpcId\" IS NOT NULL");
     }
 }

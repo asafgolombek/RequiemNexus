@@ -400,6 +400,8 @@
             {
                 SessionClient.SetPresence(state.Presence);
             }
+
+            await InvokeAsync(StateHasChanged);
         }
         catch (HttpRequestException)
         {
@@ -452,11 +454,13 @@
     private async Task StartSession()
     {
         await SessionClient.StartSessionAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task EndSession()
     {
         await SessionClient.EndSessionAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task JoinSession()
@@ -464,11 +468,13 @@
         // Try to find the player's character in this campaign to join with it
         var characterId = _campaign?.Characters.FirstOrDefault(c => c.ApplicationUserId == _currentUserId)?.Id;
         await SessionClient.StartAsync(Id, characterId, _currentUserId!, _cookieHeader);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LeaveSession()
     {
         await SessionClient.StopAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void NavigateToCharacter(int characterId, bool isOwner)

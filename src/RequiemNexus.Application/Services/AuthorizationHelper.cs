@@ -31,17 +31,24 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
     /// <inheritdoc />
     public async Task RequireCharacterAccessAsync(int characterId, string userId, string operationName = "perform this action")
     {
-        Character character = await dbContext.Characters
+        // Single SQL round-trip (correlated subquery) so one scoped DbContext never runs overlapping operations here.
+        var access = await dbContext.Characters
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+            .Where(c => c.Id == characterId)
+            .Select(c => new
+            {
+                IsOwner = c.ApplicationUserId == userId,
+                IsStoryteller = c.CampaignId != null && dbContext.Campaigns.Any(camp =>
+                    camp.Id == c.CampaignId && camp.StoryTellerId == userId),
+            })
+            .FirstOrDefaultAsync();
 
-        bool isOwner = character.ApplicationUserId == userId;
-        bool isStoryteller = character.CampaignId.HasValue
-            && await dbContext.Campaigns.AnyAsync(
-                c => c.Id == character.CampaignId && c.StoryTellerId == userId);
+        if (access is null)
+        {
+            throw new InvalidOperationException($"Character {characterId} not found.");
+        }
 
-        if (!isOwner && !isStoryteller)
+        if (!access.IsOwner && !access.IsStoryteller)
         {
             logger.LogWarning(
                 "Unauthorized attempt to {OperationName} on character {CharacterId} by user {UserId}",

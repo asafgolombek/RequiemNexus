@@ -49,6 +49,7 @@ public class EncounterTemplateService(
         string name,
         int initiativeMod,
         int healthBoxes,
+        int maxWillpower,
         bool isRevealedByDefault,
         string? defaultMaskedName,
         string storyTellerUserId)
@@ -56,12 +57,14 @@ public class EncounterTemplateService(
         EncounterTemplate template = await LoadTemplateAsync(templateId);
         await _authHelper.RequireStorytellerAsync(template.CampaignId, storyTellerUserId, "manage encounter templates");
 
+        int will = Math.Clamp(maxWillpower, 1, 20);
         EncounterTemplateNpc npc = new()
         {
             TemplateId = templateId,
             Name = name,
             InitiativeMod = initiativeMod,
             HealthBoxes = healthBoxes,
+            MaxWillpower = will,
             IsRevealedByDefault = isRevealedByDefault,
             DefaultMaskedName = defaultMaskedName,
         };
@@ -108,6 +111,7 @@ public class EncounterTemplateService(
                 npc.Name,
                 npc.InitiativeMod,
                 npc.HealthBoxes,
+                npc.MaxWillpower < 1 ? 4 : npc.MaxWillpower,
                 notes: null,
                 isRevealed: npc.IsRevealedByDefault,
                 defaultMaskedName: npc.DefaultMaskedName,

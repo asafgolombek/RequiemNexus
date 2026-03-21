@@ -24,6 +24,9 @@ public class EncounterTemplateNpc
 
     public int HealthBoxes { get; set; } = 7;
 
+    /// <summary>Maximum willpower dots when this template line is copied to a draft encounter.</summary>
+    public int MaxWillpower { get; set; } = 4;
+
     public bool IsRevealedByDefault { get; set; } = true;
 
     [MaxLength(200)]

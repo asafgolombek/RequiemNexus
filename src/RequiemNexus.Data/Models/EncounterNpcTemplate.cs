@@ -16,6 +16,12 @@ public class EncounterNpcTemplate
     [ForeignKey(nameof(EncounterId))]
     public virtual CombatEncounter? Encounter { get; set; }
 
+    /// <summary>When set, this row was added from Danse Macabre; at most one per encounter.</summary>
+    public int? ChronicleNpcId { get; set; }
+
+    [ForeignKey(nameof(ChronicleNpcId))]
+    public virtual ChronicleNpc? ChronicleNpc { get; set; }
+
     [Required]
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
@@ -23,6 +29,12 @@ public class EncounterNpcTemplate
     public int InitiativeMod { get; set; }
 
     public int HealthBoxes { get; set; } = 7;
+
+    /// <summary>Maximum willpower dots for this NPC at encounter launch.</summary>
+    public int MaxWillpower { get; set; } = 4;
+
+    /// <summary>Maximum vitae for Kindred NPCs at launch; 0 when not applicable.</summary>
+    public int MaxVitae { get; set; }
 
     /// <summary>ST-only reference notes.</summary>
     [MaxLength(2000)]

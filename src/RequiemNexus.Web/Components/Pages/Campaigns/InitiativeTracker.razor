@@ -1,5 +1,6 @@
 @page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
 @rendermode InteractiveServer
+@using System.Globalization
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.RealTime
 @using RequiemNexus.Data.Models
@@ -7,8 +8,10 @@
 @using RequiemNexus.Domain.Enums
 @using RequiemNexus.Web.Services
 @using System.Security.Claims
+@using System.Threading
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IEncounterService EncounterService
+@inject IChronicleNpcService ChronicleNpcService
 @inject ICampaignService CampaignService
 @inject IConditionService ConditionService
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -78,9 +81,10 @@
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
                     <div>
                         <label style="font-size:0.8em;color:var(--gothic-muted);">Type</label>
-                        <select class="form-control" @bind="_addType" style="min-width:110px;">
+                        <select class="form-control" @bind="_addType" @bind:after="OnAddTypeChanged" style="min-width:140px;">
                             <option value="character">Character</option>
-                            <option value="npc">NPC</option>
+                            <option value="npc">NPC (name)</option>
+                            <option value="chronicle">Danse Macabre NPC</option>
                         </select>
                     </div>
 
@@ -97,11 +101,35 @@
                             </select>
                         </div>
                     }
-                    else
+                    else if (_addType == "npc")
                     {
                         <div style="flex:1;min-width:160px;">
-                            <label style="font-size:0.8em;color:var(--gothic-muted);">NPC Name</label>
-                            <input class="form-control" placeholder="NPC name…" @bind="_addNpcName" />
+                            <label style="font-size:0.8em;color:var(--gothic-muted);">NPC name <span aria-hidden="true">(required)</span></label>
+                            <input class="form-control" placeholder="NPC name…" required @bind="_addNpcName" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="flex:1;min-width:200px;">
+                            <label style="font-size:0.8em;color:var(--gothic-muted);">Chronicle NPC</label>
+                            @if (_chronicleNpcs.Count == 0)
+                            {
+                                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">None yet — add NPCs in <a href="/campaigns/@CampaignId/danse-macabre">Danse Macabre</a>.</p>
+                            }
+                            else if (!ChronicleNpcsAvailableForEncounter.Any())
+                            {
+                                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">All Danse Macabre NPCs for this chronicle are already in this encounter.</p>
+                            }
+                            else
+                            {
+                                <select class="form-control" value="@_addChronicleNpcId" @onchange="OnTrackerChronicleSelectChanged">
+                                    <option value="0">-- Select NPC --</option>
+                                    @foreach (ChronicleNpc npc in ChronicleNpcsAvailableForEncounter)
+                                    {
+                                        <option value="@npc.Id">@npc.Name@(string.IsNullOrEmpty(npc.Title) ? "" : $", {npc.Title}")</option>
+                                    }
+                                </select>
+                            }
                         </div>
                     }
 
@@ -109,6 +137,24 @@
                         <label style="font-size:0.8em;color:var(--gothic-muted);">Init Mod</label>
                         <input type="number" class="form-control" style="width:80px;" @bind="_addInitMod" />
                     </div>
+                    @if (_addType == "npc" || _addType == "chronicle")
+                    {
+                        <div>
+                            <label style="font-size:0.8em;color:var(--gothic-muted);">Health boxes</label>
+                            <input type="number" class="form-control" style="width:80px;" min="1" max="50" @bind="_addNpcHealthBoxes" />
+                        </div>
+                        <div>
+                            <label style="font-size:0.8em;color:var(--gothic-muted);">Willpower (max)</label>
+                            <input type="number" class="form-control" style="width:80px;" min="1" max="20" @bind="_addNpcMaxWillpower" />
+                        </div>
+                        @if (_addType == "chronicle" && _addChronicleTracksVitae)
+                        {
+                            <div>
+                                <label style="font-size:0.8em;color:var(--gothic-muted);">Vitae (max)</label>
+                                <input type="number" class="form-control" style="width:80px;" min="0" max="100" @bind="_addNpcMaxVitae" />
+                            </div>
+                        }
+                    }
                     <div>
                         <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1–10)</label>
                         <input type="number" class="form-control" style="width:80px;" min="1" max="10" @bind="_addRoll" />
@@ -213,6 +259,26 @@
                                     <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '*')">+A</button>
                                     <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcHeal(entry.Id)">Heal</button>
                                 </div>
+                                @if (entry.NpcMaxWillpower > 0)
+                                {
+                                    <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
+                                        Willpower: <strong>@entry.NpcCurrentWillpower</strong> / @entry.NpcMaxWillpower
+                                    </div>
+                                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
+                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendWill(entry.Id)">Spend</button>
+                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreWill(entry.Id)">Restore</button>
+                                    </div>
+                                }
+                                @if (entry.NpcMaxVitae > 0)
+                                {
+                                    <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
+                                        Vitae: <strong>@entry.NpcCurrentVitae</strong> / @entry.NpcMaxVitae
+                                    </div>
+                                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
+                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendVitae(entry.Id)">Spend vitae</button>
+                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreVitae(entry.Id)">Restore vitae</button>
+                                    </div>
+                                }
                             }
 
                             <span class="initiative-total">
@@ -271,12 +337,32 @@
                                 {
                                     <button type="button" class="btn-primary-rn" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ReleaseHeld(entry.Id)">Release</button>
                                 }
-                                <button class="btn-ghost"
-                                        style="font-size:0.75em;align-self:flex-start;"
-                                        disabled="@_busy"
-                                        @onclick="() => RemoveEntry(entry.Id)">
-                                    Remove
-                                </button>
+                                @if (isNpc)
+                                {
+                                    @if (_defeatConfirmEntryId == entry.Id)
+                                    {
+                                        <div style="display:flex;flex-direction:column;gap:0.35rem;align-items:flex-start;max-width:18rem;">
+                                            <span style="font-size:0.72em;color:var(--gothic-muted);">Remove from initiative only. This does not remove the NPC from the chronicle (Danse Macabre).</span>
+                                            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                                                <button type="button" class="btn-primary-rn" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ConfirmDefeatNpc(entry.Id)">Confirm</button>
+                                                <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="CancelDefeatConfirm">Cancel</button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => _defeatConfirmEntryId = entry.Id">Defeated / out of fight</button>
+                                    }
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn-ghost"
+                                            style="font-size:0.75em;align-self:flex-start;"
+                                            disabled="@_busy"
+                                            @onclick="() => RemoveEntry(entry.Id)">
+                                        Remove
+                                    </button>
+                                }
                             }
                         </div>
                     </div>
@@ -310,8 +396,32 @@
     private string _addType = "character";
     private int _addCharacterId;
     private string _addNpcName = string.Empty;
+    private int _addChronicleNpcId;
     private int _addInitMod;
     private int _addRoll = 1;
+    private int _addNpcHealthBoxes = 7;
+    private int _addNpcMaxWillpower = 4;
+    private int _addNpcMaxVitae;
+    private bool _addChronicleTracksVitae;
+    private List<ChronicleNpc> _chronicleNpcs = [];
+
+    private IEnumerable<ChronicleNpc> ChronicleNpcsAvailableForEncounter
+    {
+        get
+        {
+            if (_encounter?.InitiativeEntries == null)
+            {
+                return _chronicleNpcs;
+            }
+
+            HashSet<int> taken = _encounter.InitiativeEntries
+                .Where(i => i.ChronicleNpcId.HasValue)
+                .Select(i => i.ChronicleNpcId!.Value)
+                .ToHashSet();
+            return _chronicleNpcs.Where(n => !taken.Contains(n.Id));
+        }
+    }
+    private int? _defeatConfirmEntryId;
     private string _addError = string.Empty;
     private string _actionFeedback = string.Empty;
     private string? _cookieHeader;
@@ -319,6 +429,7 @@
     private int _lastLoadedEncounterId = int.MinValue;
     private int _lastLoadedCampaignId = int.MinValue;
     private int? _hubConnectedCampaignId;
+    private readonly SemaphoreSlim _loadEncounterLock = new(1, 1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -341,7 +452,7 @@
         SessionClient.InitiativeUpdated += HandleInitiativeUpdated;
         SessionClient.CharacterUpdated += HandleCharacterUpdated;
 
-        await LoadEncounter();
+        await LoadEncounter(showFullPageSpinner: true);
     }
 
     /// <inheritdoc />
@@ -359,7 +470,7 @@
             return;
         }
 
-        await LoadEncounter();
+        await LoadEncounter(showFullPageSpinner: true);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -387,18 +498,24 @@
 
     private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)
     {
-        InvokeAsync(LoadEncounter);
+        _ = InvokeAsync(() => LoadEncounter(showFullPageSpinner: false));
     }
 
     private void HandleCharacterUpdated(CharacterUpdateDto patch)
     {
         // Vitals might have changed, reload to see mini-health-track updates
-        InvokeAsync(LoadEncounter);
+        _ = InvokeAsync(() => LoadEncounter(showFullPageSpinner: false));
     }
 
-    private async Task LoadEncounter()
+    /// <param name="showFullPageSpinner">When false, refreshes data without replacing the UI with the loading message (used for SignalR and in-place actions).</param>
+    private async Task LoadEncounter(bool showFullPageSpinner = false)
     {
-        _loading = true;
+        await _loadEncounterLock.WaitAsync();
+        if (showFullPageSpinner)
+        {
+            _loading = true;
+        }
+
         try
         {
             _accessDenied = false;
@@ -424,6 +541,11 @@
             if (_isSt && campaign != null)
             {
                 _campaignCharacters = campaign.Characters.ToList();
+                _chronicleNpcs = await ChronicleNpcService.GetNpcsAsync(CampaignId, includeDeceased: false);
+            }
+            else
+            {
+                _chronicleNpcs = [];
             }
 
             await LoadActiveTiltsAsync();
@@ -431,9 +553,14 @@
         }
         finally
         {
-            _loading = false;
+            if (showFullPageSpinner)
+            {
+                _loading = false;
+            }
+
             _lastLoadedEncounterId = EncounterId;
             _lastLoadedCampaignId = CampaignId;
+            _loadEncounterLock.Release();
         }
     }
 
@@ -455,7 +582,49 @@
         }
     }
 
-    private bool CanAddParticipant() => _addType == "character" ? _addCharacterId > 0 : !string.IsNullOrWhiteSpace(_addNpcName);
+    private bool CanAddParticipant()
+    {
+        return _addType switch
+        {
+            "character" => _addCharacterId > 0,
+            "npc" => !string.IsNullOrWhiteSpace(_addNpcName),
+            "chronicle" => _addChronicleNpcId > 0 && ChronicleNpcsAvailableForEncounter.Any(),
+            _ => false,
+        };
+    }
+
+    private void OnAddTypeChanged()
+    {
+        _addError = string.Empty;
+        _addChronicleNpcId = 0;
+        _addNpcMaxVitae = 0;
+        _addChronicleTracksVitae = false;
+    }
+
+    private async Task OnTrackerChronicleSelectChanged(ChangeEventArgs e)
+    {
+        _addError = string.Empty;
+        string? raw = e.Value?.ToString();
+        _addChronicleNpcId = int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+            ? id
+            : 0;
+
+        if (_addChronicleNpcId == 0 || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        ChronicleNpcEncounterPrepDto? prep =
+            await EncounterService.GetChronicleNpcEncounterPrepAsync(_addChronicleNpcId, _currentUserId);
+        if (prep != null)
+        {
+            _addInitMod = prep.SuggestedInitiativeMod;
+            _addNpcHealthBoxes = prep.SuggestedHealthBoxes;
+            _addNpcMaxWillpower = prep.SuggestedMaxWillpower;
+            _addChronicleTracksVitae = prep.TracksVitae;
+            _addNpcMaxVitae = prep.TracksVitae ? prep.SuggestedMaxVitae : 0;
+        }
+    }
 
     private async Task AddParticipant()
     {
@@ -469,15 +638,39 @@
             {
                 await EncounterService.AddCharacterToEncounterAsync(EncounterId, _addCharacterId, _addInitMod, _addRoll, _currentUserId!);
             }
+            else if (_addType == "npc")
+            {
+                await EncounterService.AddNpcToEncounterAsync(
+                    EncounterId,
+                    _addNpcName.Trim(),
+                    _addInitMod,
+                    _addRoll,
+                    _currentUserId!,
+                    _addNpcHealthBoxes,
+                    _addNpcMaxWillpower);
+            }
             else
             {
-                await EncounterService.AddNpcToEncounterAsync(EncounterId, _addNpcName.Trim(), _addInitMod, _addRoll, _currentUserId!);
+                await EncounterService.AddNpcToEncounterFromChronicleNpcAsync(
+                    EncounterId,
+                    _addChronicleNpcId,
+                    _addInitMod,
+                    _addRoll,
+                    _addNpcHealthBoxes,
+                    _addNpcMaxWillpower,
+                    _addNpcMaxVitae,
+                    _currentUserId!);
             }
 
             _addCharacterId = 0;
             _addNpcName = string.Empty;
+            _addChronicleNpcId = 0;
             _addInitMod = 0;
             _addRoll = 1;
+            _addNpcHealthBoxes = 7;
+            _addNpcMaxWillpower = 4;
+            _addNpcMaxVitae = 0;
+            _addChronicleTracksVitae = false;
 
             await LoadEncounter();
         }
@@ -489,6 +682,14 @@
         {
             _busy = false;
         }
+    }
+
+    private void CancelDefeatConfirm() => _defeatConfirmEntryId = null;
+
+    private async Task ConfirmDefeatNpc(int entryId)
+    {
+        _defeatConfirmEntryId = null;
+        await RemoveEntry(entryId);
     }
 
     private async Task AdvanceTurn()
@@ -569,6 +770,76 @@
         try
         {
             await EncounterService.HealNpcDamageAsync(entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task NpcSpendWill(int entryId)
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.SpendNpcWillpowerAsync(entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task NpcRestoreWill(int entryId)
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await EncounterService.RestoreNpcWillpowerAsync(entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task NpcSpendVitae(int entryId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.SpendNpcVitaeAsync(entryId, _currentUserId!);
+            await LoadEncounter();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task NpcRestoreVitae(int entryId)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await EncounterService.RestoreNpcVitaeAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -727,5 +998,6 @@
         SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
         await SessionClient.StopAsync();
+        _loadEncounterLock.Dispose();
     }
 }

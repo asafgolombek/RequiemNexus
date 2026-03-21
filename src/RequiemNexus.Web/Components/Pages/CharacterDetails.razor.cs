@@ -36,6 +36,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private Character? _character;
     private string? _currentUserId;
     private string? _cookieHeader;
+    private PersistingComponentStateSubscription _persistingSubscription;
     private List<Equipment> _availableEquipment = new List<Equipment>();
     private int _selectedEquipmentId = 0;
     private int _selectedEquipmentQuantity = 1;
@@ -207,7 +208,13 @@ public partial class CharacterDetails : IAsyncDisposable
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistCookieHeader);
+
+        if (!ApplicationState.TryTakeFromJson<string>("rnCookieHeader", out _cookieHeader))
+        {
+            _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        }
+
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -240,12 +247,19 @@ public partial class CharacterDetails : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
+    private Task PersistCookieHeader()
+    {
+        ApplicationState.PersistAsJson("rnCookieHeader", _cookieHeader);
+        return Task.CompletedTask;
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
         SessionClient.BloodlineApproved -= HandleBloodlineApproved;
         await SessionClient.StopAsync();
+        _persistingSubscription.Dispose();
     }
 
     /// <summary>

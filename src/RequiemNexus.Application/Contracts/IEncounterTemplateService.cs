@@ -20,6 +20,7 @@ public interface IEncounterTemplateService
         string name,
         int initiativeMod,
         int healthBoxes,
+        int maxWillpower,
         bool isRevealedByDefault,
         string? defaultMaskedName,
         string storyTellerUserId);

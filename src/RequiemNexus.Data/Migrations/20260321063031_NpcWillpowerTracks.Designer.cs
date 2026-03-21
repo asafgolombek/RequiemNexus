@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RequiemNexus.Data;
@@ -11,9 +12,11 @@ using RequiemNexus.Data;
 namespace RequiemNexus.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321063031_NpcWillpowerTracks")]
+    partial class NpcWillpowerTracks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1592,9 +1595,6 @@ namespace RequiemNexus.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ChronicleNpcId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("DefaultMaskedName")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -1611,9 +1611,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<bool>("IsRevealed")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("MaxVitae")
-                        .HasColumnType("integer");
-
                     b.Property<int>("MaxWillpower")
                         .HasColumnType("integer");
 
@@ -1628,13 +1625,7 @@ namespace RequiemNexus.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChronicleNpcId");
-
                     b.HasIndex("EncounterId");
-
-                    b.HasIndex("EncounterId", "ChronicleNpcId")
-                        .IsUnique()
-                        .HasFilter("[ChronicleNpcId] IS NOT NULL");
 
                     b.ToTable("EncounterNpcTemplates");
                 });
@@ -1857,9 +1848,6 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<int?>("CharacterId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ChronicleNpcId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("EncounterId")
                         .HasColumnType("integer");
 
@@ -1879,9 +1867,6 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<int>("NpcCurrentVitae")
-                        .HasColumnType("integer");
-
                     b.Property<int>("NpcCurrentWillpower")
                         .HasColumnType("integer");
 
@@ -1892,9 +1877,6 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<int>("NpcMaxVitae")
-                        .HasColumnType("integer");
 
                     b.Property<int>("NpcMaxWillpower")
                         .HasColumnType("integer");
@@ -1916,13 +1898,7 @@ namespace RequiemNexus.Data.Migrations
 
                     b.HasIndex("CharacterId");
 
-                    b.HasIndex("ChronicleNpcId");
-
                     b.HasIndex("EncounterId");
-
-                    b.HasIndex("EncounterId", "ChronicleNpcId")
-                        .IsUnique()
-                        .HasFilter("[ChronicleNpcId] IS NOT NULL");
 
                     b.ToTable("InitiativeEntries");
                 });
@@ -2966,18 +2942,11 @@ namespace RequiemNexus.Data.Migrations
 
             modelBuilder.Entity("RequiemNexus.Data.Models.EncounterNpcTemplate", b =>
                 {
-                    b.HasOne("RequiemNexus.Data.Models.ChronicleNpc", "ChronicleNpc")
-                        .WithMany()
-                        .HasForeignKey("ChronicleNpcId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("RequiemNexus.Data.Models.CombatEncounter", "Encounter")
                         .WithMany("NpcTemplates")
                         .HasForeignKey("EncounterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ChronicleNpc");
 
                     b.Navigation("Encounter");
                 });
@@ -3067,11 +3036,6 @@ namespace RequiemNexus.Data.Migrations
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RequiemNexus.Data.Models.ChronicleNpc", "ChronicleNpc")
-                        .WithMany()
-                        .HasForeignKey("ChronicleNpcId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("RequiemNexus.Data.Models.CombatEncounter", "Encounter")
                         .WithMany("InitiativeEntries")
                         .HasForeignKey("EncounterId")
@@ -3079,8 +3043,6 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
-
-                    b.Navigation("ChronicleNpc");
 
                     b.Navigation("Encounter");
                 });
