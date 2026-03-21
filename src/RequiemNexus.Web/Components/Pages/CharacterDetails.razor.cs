@@ -36,6 +36,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private Character? _character;
     private string? _currentUserId;
     private string? _cookieHeader;
+    private PersistingComponentStateSubscription _persistingSubscription;
     private List<Equipment> _availableEquipment = new List<Equipment>();
     private int _selectedEquipmentId = 0;
     private int _selectedEquipmentQuantity = 1;
@@ -207,7 +208,13 @@ public partial class CharacterDetails : IAsyncDisposable
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistCookieHeader);
+
+        if (!ApplicationState.TryTakeFromJson<string>("rnCookieHeader", out _cookieHeader))
+        {
+            _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        }
+
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -228,8 +235,21 @@ public partial class CharacterDetails : IAsyncDisposable
 
         if (_character.CampaignId != null)
         {
+            RefreshCookieFromHttpContext();
             _ = await SessionClient.GetSessionActiveAsync(_character.CampaignId.Value, SessionService);
-            await SessionClient.StartAsync(_character.CampaignId.Value, _character.Id, _currentUserId, _cookieHeader);
+            SessionHubConnectResult hubResult = await SessionClient.StartAsync(
+                _character.CampaignId.Value,
+                _character.Id,
+                _currentUserId,
+                _cookieHeader);
+
+            if (hubResult != SessionHubConnectResult.Connected)
+            {
+                ToastService.Show(
+                    "Live session",
+                    SessionHubConnectMessages.Format(hubResult),
+                    ToastType.Warning);
+            }
 
             SessionClient.CharacterUpdated += HandleCharacterUpdated;
             SessionClient.BloodlineApproved += HandleBloodlineApproved;
@@ -240,12 +260,32 @@ public partial class CharacterDetails : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
+    private void RefreshCookieFromHttpContext()
+    {
+        string? fromCtx = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        if (!string.IsNullOrWhiteSpace(fromCtx))
+        {
+            _cookieHeader = fromCtx;
+        }
+    }
+
+    private Task PersistCookieHeader()
+    {
+        ApplicationState.PersistAsJson("rnCookieHeader", _cookieHeader);
+        return Task.CompletedTask;
+    }
+
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
         SessionClient.BloodlineApproved -= HandleBloodlineApproved;
-        await SessionClient.StopAsync();
+
+        // Do not call SessionClient.StopAsync() here: Blazor may dispose this page after the campaign
+        // page has already reconnected; a delayed stop would tear down presence. Hub teardown is via
+        // Leave Session on the campaign or circuit dispose when the browser session ends.
+        _persistingSubscription.Dispose();
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>

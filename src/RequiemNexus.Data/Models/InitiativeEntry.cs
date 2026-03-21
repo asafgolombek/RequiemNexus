@@ -17,6 +17,12 @@ public class InitiativeEntry
     [ForeignKey(nameof(EncounterId))]
     public virtual CombatEncounter? Encounter { get; set; }
 
+    /// <summary>When set, links this NPC row to Danse Macabre (copied from template or set when added mid-fight).</summary>
+    public int? ChronicleNpcId { get; set; }
+
+    [ForeignKey(nameof(ChronicleNpcId))]
+    public virtual ChronicleNpc? ChronicleNpc { get; set; }
+
     /// <summary>Set when this entry represents a player character. Null for NPCs.</summary>
     public int? CharacterId { get; set; }
 
@@ -38,6 +44,35 @@ public class InitiativeEntry
 
     /// <summary>True once this participant has taken their action this round.</summary>
     public bool HasActed { get; set; }
+
+    /// <summary>True when this combatant is holding their action until released by the ST.</summary>
+    public bool IsHeld { get; set; }
+
+    /// <summary>When false, players see <see cref="MaskedDisplayName"/> or a generic label instead of <see cref="NpcName"/>.</summary>
+    public bool IsRevealed { get; set; } = true;
+
+    /// <summary>Optional label shown to players when <see cref="IsRevealed"/> is false (template default or ST override).</summary>
+    [MaxLength(200)]
+    public string? MaskedDisplayName { get; set; }
+
+    /// <summary>ST-only: size of the NPC health track.</summary>
+    public int NpcHealthBoxes { get; set; } = 7;
+
+    /// <summary>ST-only: damage string (same convention as <see cref="Character.HealthDamage"/>).</summary>
+    [MaxLength(200)]
+    public string NpcHealthDamage { get; set; } = string.Empty;
+
+    /// <summary>ST-only: NPC maximum willpower dots (0 when row is a player character).</summary>
+    public int NpcMaxWillpower { get; set; }
+
+    /// <summary>ST-only: NPC remaining willpower (launch starts at max).</summary>
+    public int NpcCurrentWillpower { get; set; }
+
+    /// <summary>ST-only: NPC maximum vitae; 0 when not a Kindred combatant.</summary>
+    public int NpcMaxVitae { get; set; }
+
+    /// <summary>ST-only: NPC remaining vitae (launch starts at max).</summary>
+    public int NpcCurrentVitae { get; set; }
 
     /// <summary>Position in turn order (1-indexed, lower = acts sooner).</summary>
     public int Order { get; set; }

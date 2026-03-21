@@ -1,0 +1,221 @@
+@using System.Globalization
+@using System.Security.Claims
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Application.Services
+@using RequiemNexus.Domain
+@using RequiemNexus.Domain.Enums
+@inject IEncounterService EncounterService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="npc-roll-panel" style="margin:0.5rem 0 0;padding:0.75rem;border:1px solid var(--gothic-border, #333);border-radius:6px;background:var(--gothic-surface-alt, rgba(0,0,0,0.2));">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <strong style="font-size:0.9em;">NPC roll</strong>
+        <button type="button" class="btn-ghost" style="font-size:0.75em;" @onclick="CloseAsync">Close</button>
+    </div>
+
+    @if (HasChronicleNpc)
+    {
+        <p style="font-size:0.78em;color:var(--gothic-muted);margin:0 0 0.5rem;">
+            Choose two traits, or set a manual dice pool to override.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;margin-bottom:0.5rem;">
+            <div>
+                <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Trait 1</label>
+                <select class="form-control" style="min-width:10rem;font-size:0.85em;" @bind="_trait1" disabled="@_rollBusy">
+                    <option value="">—</option>
+                    @foreach (AttributeId a in TraitMetadata.AllAttributes)
+                    {
+                        <option value="@a.ToString()">@TraitMetadata.GetDisplayName(a) (Attribute)</option>
+                    }
+                    @foreach (SkillId s in TraitMetadata.AllSkills)
+                    {
+                        <option value="@s.ToString()">@TraitMetadata.GetDisplayName(s)</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Trait 2</label>
+                <select class="form-control" style="min-width:10rem;font-size:0.85em;" @bind="_trait2" disabled="@_rollBusy">
+                    <option value="">—</option>
+                    @foreach (AttributeId a in TraitMetadata.AllAttributes)
+                    {
+                        <option value="@a.ToString()">@TraitMetadata.GetDisplayName(a) (Attribute)</option>
+                    }
+                    @foreach (SkillId s in TraitMetadata.AllSkills)
+                    {
+                        <option value="@s.ToString()">@TraitMetadata.GetDisplayName(s)</option>
+                    }
+                </select>
+            </div>
+        </div>
+        @if (ComputedTraitPool is int ct && ParsedManualPool is null)
+        {
+            <p style="font-size:0.8em;margin:0 0 0.5rem;">Pool from sheet: <strong>@ct</strong> dice</p>
+        }
+    }
+    else
+    {
+        <p style="font-size:0.78em;color:var(--gothic-muted);margin:0 0 0.5rem;">
+            This NPC has no Danse Macabre sheet — enter the dice pool manually.
+        </p>
+    }
+
+    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;margin-bottom:0.5rem;">
+        <div>
+            <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">@(HasChronicleNpc ? "Manual pool (optional)" : "Dice pool")</label>
+            <input type="number" class="form-control" style="width:6rem;font-size:0.85em;" min="0" max="50"
+                   @bind="_manualPoolText" disabled="@_rollBusy" placeholder="@(HasChronicleNpc ? "override" : "0+")" />
+        </div>
+        <button type="button" class="btn-primary-rn" style="font-size:0.85em;" disabled="@(_rollBusy || !CanRoll)" @onclick="RollAsync">Roll</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_rollError))
+    {
+        <p class="text-danger" style="font-size:0.85em;margin:0.35rem 0 0;">@_rollError</p>
+    }
+
+    @if (_result != null)
+    {
+        <div style="margin-top:0.65rem;padding-top:0.5rem;border-top:1px solid var(--gothic-border, #333);font-size:0.85em;">
+            <div><strong>@_result.PoolDescription</strong></div>
+            <div>Successes: <strong>@_result.Successes</strong></div>
+            @if (_result.IsExceptionalSuccess)
+            {
+                <div style="color:var(--gothic-accent, #c9a227);">Exceptional success</div>
+            }
+            @if (_result.IsDramaticFailure)
+            {
+                <div class="text-danger">Dramatic failure</div>
+            }
+            <details style="margin-top:0.35rem;">
+                <summary style="cursor:pointer;font-size:0.8em;">Dice</summary>
+                <span style="font-size:0.8em;">@string.Join(", ", _result.DiceRolled)</span>
+            </details>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public int InitiativeEntryId { get; set; }
+
+    [Parameter] public bool HasChronicleNpc { get; set; }
+
+    [Parameter] public string AttributesJson { get; set; } = "{}";
+
+    [Parameter] public string SkillsJson { get; set; } = "{}";
+
+    [Parameter] public EventCallback OnClosed { get; set; }
+
+    private string _trait1 = string.Empty;
+    private string _trait2 = string.Empty;
+    private string _manualPoolText = string.Empty;
+    private bool _rollBusy;
+    private string _rollError = string.Empty;
+    private NpcEncounterRollResultDto? _result;
+
+    private int? ParsedManualPool =>
+        int.TryParse(_manualPoolText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int v) ? v : null;
+
+    private int? ComputedTraitPool
+    {
+        get
+        {
+            if (!HasChronicleNpc || string.IsNullOrEmpty(_trait1) || string.IsNullOrEmpty(_trait2))
+            {
+                return null;
+            }
+
+            if (!TryParseTraitKind(_trait1, out bool a1) || !TryParseTraitKind(_trait2, out bool a2))
+            {
+                return null;
+            }
+
+            int v1 = ChronicleNpcTraitJsonReader.ReadTraitRating(_trait1, a1, AttributesJson, SkillsJson);
+            int v2 = ChronicleNpcTraitJsonReader.ReadTraitRating(_trait2, a2, AttributesJson, SkillsJson);
+            return v1 + v2;
+        }
+    }
+
+    private bool CanRoll
+    {
+        get
+        {
+            if (ParsedManualPool is int pm)
+            {
+                return pm >= 0;
+            }
+
+            return HasChronicleNpc
+                && !string.IsNullOrEmpty(_trait1)
+                && !string.IsNullOrEmpty(_trait2)
+                && TryParseTraitKind(_trait1, out _)
+                && TryParseTraitKind(_trait2, out _);
+        }
+    }
+
+    private static bool TryParseTraitKind(string name, out bool isAttribute)
+    {
+        isAttribute = false;
+        if (Enum.TryParse(name, out AttributeId _))
+        {
+            isAttribute = true;
+            return true;
+        }
+
+        return Enum.TryParse(name, out SkillId _);
+    }
+
+    private async Task RollAsync()
+    {
+        _rollError = string.Empty;
+        _result = null;
+
+        AuthenticationState auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string? userId = auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            _rollError = "Not signed in.";
+            return;
+        }
+
+        int? manual = ParsedManualPool;
+        if (!HasChronicleNpc)
+        {
+            if (manual is not int mPlain || mPlain < 0)
+            {
+                _rollError = "Enter a dice pool (0 or more).";
+                return;
+            }
+        }
+        else if (manual is null && (string.IsNullOrEmpty(_trait1) || string.IsNullOrEmpty(_trait2)))
+        {
+            _rollError = "Select two traits or enter a manual pool.";
+            return;
+        }
+
+        _rollBusy = true;
+        try
+        {
+            _result = await EncounterService.RollNpcEncounterPoolAsync(
+                InitiativeEntryId,
+                string.IsNullOrEmpty(_trait1) ? null : _trait1,
+                string.IsNullOrEmpty(_trait2) ? null : _trait2,
+                manual,
+                userId);
+        }
+        catch (Exception ex)
+        {
+            _rollError = ex.Message;
+        }
+        finally
+        {
+            _rollBusy = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        await OnClosed.InvokeAsync();
+    }
+}

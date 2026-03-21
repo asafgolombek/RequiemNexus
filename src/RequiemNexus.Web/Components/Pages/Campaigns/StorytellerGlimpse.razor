@@ -10,9 +10,17 @@
 @inject ISorceryService SorceryService
 @inject ICoilService CoilService
 @inject ICampaignService CampaignService
+@inject ISocialManeuveringService SocialManeuveringService
+@inject IChronicleNpcService ChronicleNpcService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject RequiemNexus.Web.Services.ToastService ToastService
+@inject IJSRuntime JSRuntime
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
+@using RequiemNexus.Domain.Enums
+@using Microsoft.JSInterop
+@using System.Linq
 
 <PageTitle>Storyteller Glimpse - Requiem Nexus</PageTitle>
 
@@ -51,6 +59,203 @@
             @if (!string.IsNullOrEmpty(_coteMessage))
             {
                 <p class="feedback-ok" style="margin-top:0.5rem;">@_coteMessage</p>
+            }
+        </div>
+
+        @* ── Social maneuvering (VtR 2e Doors) ───────────────────────────────── *@
+        <div class="card-rn" style="margin-bottom:1.5rem;">
+            <h3 style="margin-bottom:0.75rem;">Social Maneuvering</h3>
+            <p style="color:var(--text-secondary);font-size:0.9em;margin-bottom:1rem;">
+                Targets must be chronicle NPCs only. On <strong>Force Doors</strong>, failure marks the relationship <strong>Burnt</strong> — no further Social maneuvering against that NPC by this PC.
+            </p>
+
+            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;margin-bottom:1rem;padding:0.65rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">
+                <label style="font-size:0.85em;display:flex;flex-direction:column;gap:0.25rem;">
+                    Investigation successes per clue (chronicle)
+                    <input type="number" class="form-control" style="width:72px;" min="1" max="50"
+                           @bind="_investigationThresholdDraft" />
+                </label>
+                <button type="button" class="btn-ghost" style="font-size:0.85em;" disabled="@_socialBusy"
+                        @onclick="SaveInvestigationThresholdAsync">Save threshold</button>
+            </div>
+
+            <div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;padding:0.75rem;border:1px solid rgba(255,255,255,0.12);border-radius:8px;">
+                <strong style="font-size:0.95em;">New maneuver</strong>
+                <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;">
+                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.85em;">
+                        Initiator (PC)
+                        <select class="form-control" style="min-width:160px;" @bind="_newManeuverInitiatorId">
+                            <option value="0">— Select —</option>
+                            @foreach (var v in _vitals)
+                            {
+                                <option value="@v.CharacterId">@v.Name</option>
+                            }
+                        </select>
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.85em;">
+                        Target (NPC)
+                        <select class="form-control" style="min-width:160px;" @bind="_newManeuverTargetNpcId">
+                            <option value="0">— Select —</option>
+                            @foreach (var n in _npcs)
+                            {
+                                <option value="@n.Id">@n.Name</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+                <textarea class="form-control" rows="2" placeholder="Goal description…" @bind="_newManeuverGoal"></textarea>
+                <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:0.85em;">
+                    <label><input type="checkbox" @bind="_newManeuverBreakingPoint" /> Goal would be a breaking point (+2 Doors)</label>
+                    <label><input type="checkbox" @bind="_newManeuverAspiration" /> Prevents victim Aspiration (+1)</label>
+                    <label><input type="checkbox" @bind="_newManeuverVirtueMask" /> Against Virtue / Mask (+1)</label>
+                </div>
+                <button class="btn-primary-rn"
+                        style="align-self:flex-start;"
+                        disabled="@(_socialBusy || _newManeuverInitiatorId == 0 || _newManeuverTargetNpcId == 0 || string.IsNullOrWhiteSpace(_newManeuverGoal))"
+                        @onclick="CreateSocialManeuverAsync">
+                    Create maneuver
+                </button>
+            </div>
+
+            @if (!_socialManeuvers.Any())
+            {
+                <p style="color:var(--text-secondary);font-size:0.9em;">No maneuvers yet.</p>
+            }
+            else
+            {
+                <ul style="list-style:none;padding:0;margin:0;">
+                    @foreach (var m in _socialManeuvers)
+                    {
+                        <li style="padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:baseline;margin-bottom:0.35rem;">
+                                <strong>@m.InitiatorCharacter?.Name</strong>
+                                <span style="color:var(--text-secondary);">→</span>
+                                <strong>@m.TargetNpc?.Name</strong>
+                                <span class="condition-badge" style="font-size:0.75em;">@m.Status</span>
+                            </div>
+                            <p style="font-size:0.88em;margin:0.25rem 0 0.5rem;color:var(--text-secondary);">@(m.GoalDescription.Length > 120 ? m.GoalDescription[..120] + "…" : m.GoalDescription)</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.85em;margin-bottom:0.5rem;">
+                                <span><strong>Doors:</strong> @m.RemainingDoors / @m.InitialDoors</span>
+                                <span><strong>Impression:</strong> @m.CurrentImpression</span>
+                                <span><strong>Penalty dice:</strong> @m.CumulativePenaltyDice</span>
+                                @if (m.LastRollAt.HasValue)
+                                {
+                                    <span><strong>Last roll:</strong> @m.LastRollAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") UTC</span>
+                                }
+                            </div>
+                            <div style="font-size:0.82em;margin:0.45rem 0;padding:0.5rem;border:1px solid rgba(255,255,255,0.08);border-radius:6px;">
+                                <strong>Clues</strong>
+                                <span style="color:var(--text-secondary);margin-left:0.35rem;">Progress @m.InvestigationProgressTowardNextClue / @GetClueThreshold(m)</span>
+                                @if (m.Status == ManeuverStatus.Active)
+                                {
+                                    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.4rem;">
+                                        <input type="number" class="form-control" style="width:52px;" min="1" max="30"
+                                               value="@GetBankSuccesses(m.Id)"
+                                               @onchange="e => SetBankSuccesses(m.Id, e)" />
+                                        <button type="button" class="btn-ghost" style="font-size:0.8em;" disabled="@_socialBusy"
+                                                @onclick="() => BankInvestigationAsync(m.Id)">Bank Investigation</button>
+                                    </div>
+                                }
+                                <div style="margin-top:0.45rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;">
+                                    <label style="font-size:0.78em;flex:1;min-width:140px;">
+                                        Manual clue (ST)
+                                        <input class="form-control" style="margin-top:0.2rem;font-size:0.9em;"
+                                               placeholder="Source / discovery…"
+                                               value="@GetManualClueSource(m.Id)"
+                                               @onchange="e => SetManualClueSource(m.Id, e)" />
+                                    </label>
+                                    <label style="font-size:0.78em;">
+                                        Leverage
+                                        <select class="form-control" style="margin-top:0.2rem;min-width:100px;"
+                                                value="@((int)GetManualClueLeverage(m.Id))"
+                                                @onchange="e => SetManualClueLeverage(m.Id, e)">
+                                            <option value="@((int)ClueLeverageKind.Soft)">Soft</option>
+                                            <option value="@((int)ClueLeverageKind.Hard)">Hard</option>
+                                        </select>
+                                    </label>
+                                    <button type="button" class="btn-ghost" style="font-size:0.8em;" disabled="@_socialBusy"
+                                            @onclick="() => AddManualClueAsync(m.Id)">Add clue</button>
+                                </div>
+                                @if (m.Clues.Any())
+                                {
+                                    <ul style="list-style:none;padding:0;margin:0.45rem 0 0;font-size:0.8em;">
+                                        @foreach (var clue in m.Clues.OrderByDescending(c => c.Id))
+                                        {
+                                            <li style="padding:0.25rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+                                                @if (clue.IsSpent)
+                                                {
+                                                    <span style="color:var(--text-secondary);">Spent:</span>
+                                                    <span>@clue.SourceDescription — @clue.Benefit</span>
+                                                }
+                                                else
+                                                {
+                                                    <div><strong>Unspent</strong> · @clue.SourceDescription <span style="color:var(--text-secondary);">(@clue.LeverageKind)</span></div>
+                                                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.25rem;">
+                                                        <input class="form-control" style="flex:1;min-width:120px;font-size:0.9em;"
+                                                               placeholder="Recorded benefit…"
+                                                               value="@GetSpendBenefit(clue.Id)"
+                                                               @onchange="e => SetSpendBenefit(clue.Id, e)" />
+                                                        <button type="button" class="btn-primary-rn" style="font-size:0.78em;" disabled="@_socialBusy"
+                                                                @onclick="() => SpendClueAsync(clue.Id)">Spend</button>
+                                                    </div>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin-bottom:0.5rem;">
+                                <label style="font-size:0.85em;">Impression
+                                    <select class="form-control" style="display:inline-block;width:auto;min-width:120px;margin-left:0.35rem;"
+                                            value="@((int)m.CurrentImpression)"
+                                            @onchange="e => OnSocialImpressionChangeAsync(m.Id, e)">
+                                        @foreach (ImpressionLevel il in Enum.GetValues<ImpressionLevel>())
+                                        {
+                                            <option value="@((int)il)">@il</option>
+                                        }
+                                    </select>
+                                </label>
+                                <label style="font-size:0.85em;">Narrative doors
+                                    <input type="number" class="form-control" style="display:inline-block;width:64px;margin-left:0.35rem;"
+                                           min="0" max="@m.InitialDoors"
+                                           value="@GetNarrativeDoorsDraft(m.Id, m.RemainingDoors)"
+                                           @onchange="e => SetNarrativeDoorsDraft(m.Id, e)" />
+                                    <button type="button" class="btn-ghost" style="font-size:0.8em;margin-left:0.25rem;" disabled="@_socialBusy"
+                                            @onclick="() => ApplyNarrativeDoorsAsync(m.Id)">Apply</button>
+                                </label>
+                            </div>
+                            @if (m.Status == ManeuverStatus.Active)
+                            {
+                                <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;border-top:1px solid rgba(255,255,255,0.06);padding-top:0.5rem;margin-top:0.35rem;">
+                                    <span style="font-size:0.85em;"><strong>Open Door</strong></span>
+                                    <input type="number" class="form-control" style="width:56px;" min="0" max="50"
+                                           value="@GetOpenPool(m.Id)"
+                                           @onchange="e => SetOpenPool(m.Id, e)" />
+                                    <span style="font-size:0.8em;color:var(--text-secondary);">pool</span>
+                                    <button type="button" class="btn-primary-rn" style="font-size:0.85em;" disabled="@_socialBusy"
+                                            @onclick="() => RollOpenDoorAsync(m.Id)">Roll open</button>
+                                    <span style="font-size:0.85em;margin-left:0.5rem;"><strong>Force Doors</strong></span>
+                                    <input type="number" class="form-control" style="width:56px;" min="0" max="50"
+                                           value="@GetForcePool(m.Id)"
+                                           @onchange="e => SetForcePool(m.Id, e)" />
+                                    <label style="font-size:0.8em;">
+                                        <input type="checkbox" checked="@GetForceHard(m.Id)" @onchange="e => SetForceHard(m.Id, e)" /> Hard leverage
+                                    </label>
+                                    @if (GetForceHard(m.Id))
+                                    {
+                                        <label style="font-size:0.8em;">BP severity
+                                            <input type="number" class="form-control" style="display:inline-block;width:52px;margin-left:0.25rem;" min="0" max="10"
+                                                   value="@GetForceBp(m.Id)"
+                                                   @onchange="e => SetForceBp(m.Id, e)" />
+                                        </label>
+                                    }
+                                    <button type="button" class="btn-danger-rn" style="font-size:0.85em;" disabled="@_socialBusy"
+                                            @onclick="() => RollForceDoorsAsync(m.Id)">Roll force</button>
+                                </div>
+                            }
+                        </li>
+                    }
+                </ul>
             }
         </div>
 

@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.SeedData;
-using RequiemNexus.Domain;
-using RequiemNexus.Domain.Enums;
-using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Data;
 

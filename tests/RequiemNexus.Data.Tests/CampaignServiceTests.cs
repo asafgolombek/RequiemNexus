@@ -13,14 +13,20 @@ namespace RequiemNexus.Data.Tests;
 
 public class CampaignServiceTests
 {
-    private static CampaignService CreateCampaignService(ApplicationDbContext ctx)
+    private sealed class MatchingDbContextFactory(DbContextOptions<ApplicationDbContext> options) : IDbContextFactory<ApplicationDbContext>
+    {
+        public ApplicationDbContext CreateDbContext() => new(options);
+    }
+
+    /// <summary>
+    /// Uses the same <see cref="DbContextOptions{ApplicationDbContext}"/> instance for <paramref name="ctx"/> and the factory
+    /// so in-memory stores are shared (a new options builder per call creates an isolated store).
+    /// </summary>
+    private static CampaignService CreateCampaignService(ApplicationDbContext ctx, DbContextOptions<ApplicationDbContext> options)
     {
         var logger = new Mock<ILogger<CampaignService>>().Object;
         var authHelper = new Mock<IAuthorizationHelper>().Object;
-
-        ServiceCollection services = new();
-        services.AddDbContextFactory<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        var factory = services.BuildServiceProvider().GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        var factory = new MatchingDbContextFactory(options);
 
         return new CampaignService(ctx, factory, logger, authHelper, new Mock<ISessionService>().Object);
     }
@@ -33,20 +39,22 @@ public class CampaignServiceTests
         return new(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), new BeatLedgerService(ctx), new Mock<ISessionService>().Object);
     }
 
-    private static ApplicationDbContext CreateContext(string dbName)
-    {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+    private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>
+        new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName)
             .Options;
-        return new ApplicationDbContext(options);
-    }
+
+    private static ApplicationDbContext CreateContext(DbContextOptions<ApplicationDbContext> options) =>
+        new ApplicationDbContext(options);
 
     [Fact]
     public async Task CreateCampaignAsync_SetsFieldsCorrectly()
     {
         // Arrange
-        using var ctx = CreateContext(nameof(CreateCampaignAsync_SetsFieldsCorrectly));
-        var service = CreateCampaignService(ctx);
+        string dbName = nameof(CreateCampaignAsync_SetsFieldsCorrectly);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
 
         // Act
         var campaign = await service.CreateCampaignAsync("New Campaign", "Description", "st-user");
@@ -62,8 +70,10 @@ public class CampaignServiceTests
     public async Task EnrollCharacterAsync_UpdatesCharacter()
     {
         // Arrange
-        using var ctx = CreateContext(nameof(EnrollCharacterAsync_UpdatesCharacter));
-        var service = CreateCampaignService(ctx);
+        string dbName = nameof(EnrollCharacterAsync_UpdatesCharacter);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
 
         var campaign = new Campaign { Name = "Test", StoryTellerId = "st" };
         ctx.Campaigns.Add(campaign);
@@ -83,8 +93,10 @@ public class CampaignServiceTests
     public async Task RemoveCharacterAsync_ClearsCampaignId()
     {
         // Arrange
-        using var ctx = CreateContext(nameof(RemoveCharacterAsync_ClearsCampaignId));
-        var service = CreateCampaignService(ctx);
+        string dbName = nameof(RemoveCharacterAsync_ClearsCampaignId);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
 
         var campaign = new Campaign { Name = "Test", StoryTellerId = "st" };
         ctx.Campaigns.Add(campaign);
@@ -98,5 +110,84 @@ public class CampaignServiceTests
 
         // Assert
         Assert.Null(character.CampaignId);
+    }
+
+    [Fact]
+    public async Task InMemory_store_is_shared_when_options_instance_is_shared()
+    {
+        string dbName = nameof(InMemory_store_is_shared_when_options_instance_is_shared);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var writer = new ApplicationDbContext(options);
+        var factory = new MatchingDbContextFactory(options);
+        writer.Campaigns.Add(new Campaign { Name = "X", StoryTellerId = "st" });
+        await writer.SaveChangesAsync();
+
+        await using ApplicationDbContext reader = factory.CreateDbContext();
+        Assert.Equal(1, await reader.Campaigns.CountAsync());
+    }
+
+    [Fact]
+    public async Task GetCampaignByIdAsync_ReturnsNull_WhenUserIsNotMember()
+    {
+        string dbName = nameof(GetCampaignByIdAsync_ReturnsNull_WhenUserIsNotMember);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Private", StoryTellerId = "st-user" };
+        ctx.Campaigns.Add(campaign);
+        var enrolled = new Character { Name = "PC", ApplicationUserId = "player-a" };
+        ctx.Characters.Add(enrolled);
+        await ctx.SaveChangesAsync();
+
+        await service.AddCharacterToCampaignAsync(campaign.Id, enrolled.Id, "player-a");
+
+        Campaign? memberView = await service.GetCampaignByIdAsync(campaign.Id, "player-a");
+        Assert.NotNull(memberView);
+
+        Campaign? outsider = await service.GetCampaignByIdAsync(campaign.Id, "someone-else");
+        Assert.Null(outsider);
+    }
+
+    [Fact]
+    public async Task GetCampaignByIdAsync_ReturnsCampaign_WhenUserIsStoryteller()
+    {
+        string dbName = nameof(GetCampaignByIdAsync_ReturnsCampaign_WhenUserIsStoryteller);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        var service = CreateCampaignService(new ApplicationDbContext(options), options);
+
+        int campaignId;
+        await using (ApplicationDbContext seed = new(options))
+        {
+            var campaign = new Campaign { Name = "Saga", StoryTellerId = "st-user" };
+            seed.Campaigns.Add(campaign);
+            await seed.SaveChangesAsync();
+            campaignId = campaign.Id;
+        }
+
+        Campaign? loaded = await service.GetCampaignByIdAsync(campaignId, "st-user");
+        Assert.NotNull(loaded);
+        Assert.Equal("Saga", loaded!.Name);
+    }
+
+    [Fact]
+    public async Task GetCampaignByIdAsync_ReturnsCampaign_WhenUserOwnsCharacterInCampaign()
+    {
+        string dbName = nameof(GetCampaignByIdAsync_ReturnsCampaign_WhenUserOwnsCharacterInCampaign);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Shared", StoryTellerId = "st-user" };
+        ctx.Campaigns.Add(campaign);
+        var character = new Character { Name = "PC", ApplicationUserId = "player-a" };
+        ctx.Characters.Add(character);
+        await ctx.SaveChangesAsync();
+
+        await service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "player-a");
+
+        Campaign? loaded = await service.GetCampaignByIdAsync(campaign.Id, "player-a");
+        Assert.NotNull(loaded);
+        Assert.Single(loaded.Characters);
     }
 }

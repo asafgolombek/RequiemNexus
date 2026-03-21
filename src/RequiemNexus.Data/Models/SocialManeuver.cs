@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Data.Models;
 
@@ -52,6 +52,9 @@ public class SocialManeuver
     public DateTimeOffset? HostileSince { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>Successes banked toward the next automatic <see cref="ManeuverClue"/> (Phase 10.5).</summary>
+    public int InvestigationProgressTowardNextClue { get; set; }
 
     public virtual ICollection<ManeuverClue> Clues { get; set; } = new List<ManeuverClue>();
 }

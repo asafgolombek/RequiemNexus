@@ -22,6 +22,11 @@ public class Campaign
 
     public bool IsActive { get; set; } = true;
 
+    /// <summary>
+    /// Phase 10.5: Investigation successes required to grant one <see cref="ManeuverClue"/> when banking successes on a Social maneuver (ST-tunable; default 3).
+    /// </summary>
+    public int SocialManeuverInvestigationSuccessesPerClue { get; set; } = 3;
+
     public virtual ICollection<Character> Characters { get; set; } = new List<Character>();
 
     public virtual ICollection<CityFaction> Factions { get; set; } = [];

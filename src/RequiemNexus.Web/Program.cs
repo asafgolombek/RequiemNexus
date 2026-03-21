@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -154,8 +155,11 @@ builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, Req
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterTemplateService, RequiemNexus.Application.Services.EncounterTemplateService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPerceptionRollService, RequiemNexus.Application.Services.PerceptionRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICityFactionService, RequiemNexus.Application.Services.CityFactionService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IChronicleNpcService, RequiemNexus.Application.Services.ChronicleNpcService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ISocialManeuveringService, RequiemNexus.Application.Services.SocialManeuveringService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IFeedingTerritoryService, RequiemNexus.Application.Services.FeedingTerritoryService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IFactionRelationshipService, RequiemNexus.Application.Services.FactionRelationshipService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcStatBlockService, RequiemNexus.Application.Services.NpcStatBlockService>();
@@ -293,14 +297,20 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueLimit = 0;
     });
 
-    // SignalR Hub: 30 messages per minute per connection
-    options.AddFixedWindowLimiter("signalr", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 30;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
-    });
+    // SignalR Hub: 30 requests per minute per authenticated user (fallback: per client IP for negotiate).
+    options.AddPolicy("signalr", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = 30,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+            }));
 
     // Public Rolls: 10 requests per minute
     options.AddFixedWindowLimiter("public-rolls", opt =>
@@ -355,6 +365,35 @@ app.UseAntiforgery();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/ready");
+
+app.MapPost("/api/characters/{characterId:int}/perception-roll", async (
+        int characterId,
+        bool useAwareness,
+        int penaltyDice,
+        RequiemNexus.Application.Contracts.IPerceptionRollService perceptionService,
+        System.Security.Claims.ClaimsPrincipal user) =>
+    {
+        string? userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var result = await perceptionService.RollPerceptionAsync(characterId, useAwareness, penaltyDice, userId);
+            return Results.Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+    })
+    .RequireAuthorization();
 
 app.MapGet("/api/sessions/{chronicleId:int}/state", async (int chronicleId, ISessionService sessionService, ISessionAuthorizationService authService, System.Security.Claims.ClaimsPrincipal user) =>
 {

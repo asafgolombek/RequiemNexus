@@ -92,4 +92,11 @@ public interface ISessionService
     /// </summary>
     /// <param name="chronicleId">Primary key of the chronicle.</param>
     Task<SessionStateDto?> GetSessionStateAsync(int chronicleId);
+
+    /// <summary>
+    /// Sends a player-safe condition/tilt toast to a specific user (no group broadcast).
+    /// </summary>
+    /// <param name="targetUserId">Character owner's AspNetUsers id.</param>
+    /// <param name="notification">Payload for the client toast.</param>
+    Task NotifyConditionToastAsync(string targetUserId, ConditionNotificationDto notification);
 }

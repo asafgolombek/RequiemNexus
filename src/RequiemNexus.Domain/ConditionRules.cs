@@ -42,6 +42,8 @@ public class ConditionRules : IConditionRules
             "Your Beast is close to the surface. −1 to Composure rolls. Resolve: avoid Beast triggers for a scene.",
         ConditionType.Custom =>
             "A custom Condition defined by the Storyteller.",
+        ConditionType.Inspired =>
+            "You feel energized and capable after a breakthrough. Resolve: relinquish the bonus this Condition grants on a roll.",
         _ => type.ToString(),
     };
 

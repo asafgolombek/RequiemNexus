@@ -23,6 +23,7 @@
 @inject SessionClientService SessionClient
 @inject ISessionService SessionService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject PersistentComponentState ApplicationState
 @inject ToastService ToastService
 @inject IBloodlineService BloodlineService
 @inject ICovenantService CovenantService
@@ -110,6 +111,11 @@ else
             <button type="button" class="tab-btn @(_activeTab == "identity" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "identity")" aria-controls="panel-identity" id="tab-identity" @onclick='() => SelectTab("identity")' @onkeydown="HandleTabKeydown">Identity &amp; Backstory</button>
             <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history")" aria-controls="panel-history" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
         </div>
+
+        @if (_character.CampaignId is int chronicleId)
+        {
+            <EncounterInitiativeEmbed CampaignId="chronicleId" CharacterId="_character.Id" />
+        }
 
         <CascadingValue Value="@(_isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
             @if (_activeTab == "sheet")
@@ -335,6 +341,11 @@ else
                                 <p style="color: #808080; font-size: 0.9em;">Unaligned. Join a campaign to apply for a covenant.</p>
                             }
                         </section>
+
+                        @if (_character.CampaignId.HasValue && !string.IsNullOrEmpty(_currentUserId))
+                        {
+                            <SocialManeuversSection CharacterId="Id" CurrentUserId="@_currentUserId" />
+                        }
 
                         <!-- DEVOTIONS -->
                         <section class="cs-section cs-devotions">

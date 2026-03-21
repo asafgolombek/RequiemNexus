@@ -1,7 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Data.RealTime;
+using RequiemNexus.Domain;
+using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Models;
 using Xunit;
 
 namespace RequiemNexus.Data.Tests;
@@ -12,16 +22,72 @@ namespace RequiemNexus.Data.Tests;
 /// </summary>
 public class EncounterServiceTests
 {
-    private static ApplicationDbContext CreateContext(string dbName)
+    private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName)
     {
-        DbContextOptions<ApplicationDbContext> options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+        var root = new InMemoryDatabaseRoot();
+        return new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(dbName, root)
             .Options;
-        return new ApplicationDbContext(options);
     }
 
-    private static EncounterService CreateService(ApplicationDbContext ctx) =>
-        new(ctx, NullLogger<EncounterService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
+    private static (ApplicationDbContext Ctx, DbContextOptions<ApplicationDbContext> Options) CreateContext(string dbName)
+    {
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        return (new ApplicationDbContext(options), options);
+    }
+
+    private sealed class TestApplicationDbContextFactory : IDbContextFactory<ApplicationDbContext>
+    {
+        private readonly DbContextOptions<ApplicationDbContext> _options;
+
+        public TestApplicationDbContextFactory(DbContextOptions<ApplicationDbContext> options) => _options = options;
+
+        public ApplicationDbContext CreateDbContext() => new(_options);
+
+        public ValueTask<ApplicationDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(new ApplicationDbContext(_options));
+    }
+
+    private static EncounterService CreateService(
+        ApplicationDbContext ctx,
+        DbContextOptions<ApplicationDbContext> options,
+        Mock<ISessionService>? sessionMock = null,
+        IDiceService? diceService = null)
+    {
+        Mock<ISessionService> mock = sessionMock ?? new Mock<ISessionService>();
+        mock
+            .Setup(s => s.UpdateInitiativeAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IEnumerable<InitiativeEntryDto>>()))
+            .Returns(Task.CompletedTask);
+
+        Mock<IDiceService> defaultDice = new();
+        defaultDice
+            .Setup(d => d.Roll(It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<int?>()))
+            .Returns<int, bool, bool, bool, bool, int?>(
+                (pool, _, _, _, _, _) => new RollResult
+                {
+                    Successes = 1,
+                    DiceRolled = pool <= 0 ? [5] : Enumerable.Repeat(6, pool).ToList(),
+                });
+
+        return new EncounterService(
+            ctx,
+            new TestApplicationDbContextFactory(options),
+            NullLogger<EncounterService>.Instance,
+            new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance),
+            mock.Object,
+            new CharacterCreationRules(),
+            diceService ?? defaultDice.Object);
+    }
+
+    /// <summary>
+    /// Creates a draft, launches it (no NPC templates), and returns the encounter id for active-combat operations.
+    /// </summary>
+    private static async Task<int> CreateLaunchedEmptyEncounterAsync(EncounterService service, int campaignId, string stId)
+    {
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaignId, "Fight", stId);
+        await service.LaunchEncounterAsync(draft.Id, stId);
+        return draft.Id;
+    }
 
     private static async Task<Campaign> SeedCampaignAsync(
         ApplicationDbContext ctx,
@@ -50,71 +116,139 @@ public class EncounterServiceTests
         return character;
     }
 
+    private static async Task<NpcStatBlock> SeedNpcStatBlockAsync(
+        ApplicationDbContext ctx,
+        int campaignId,
+        string name,
+        int health)
+    {
+        NpcStatBlock block = new()
+        {
+            CampaignId = campaignId,
+            Name = name,
+            Concept = "Test block",
+            Health = health,
+            Willpower = 4,
+            Size = 5,
+            IsPrebuilt = false,
+        };
+        ctx.NpcStatBlocks.Add(block);
+        await ctx.SaveChangesAsync();
+        return block;
+    }
+
+    private static async Task<ChronicleNpc> SeedChronicleNpcAsync(
+        ApplicationDbContext ctx,
+        int campaignId,
+        string attributesJson,
+        int? linkedStatBlockId = null,
+        string name = "Chronicle NPC",
+        CreatureType creatureType = CreatureType.Mortal,
+        string skillsJson = "{}")
+    {
+        ChronicleNpc npc = new()
+        {
+            CampaignId = campaignId,
+            Name = name,
+            PublicDescription = "Test",
+            AttributesJson = attributesJson,
+            SkillsJson = skillsJson,
+            CreatureType = creatureType,
+            IsVampire = creatureType == CreatureType.Vampire,
+            LinkedStatBlockId = linkedStatBlockId,
+        };
+        ctx.ChronicleNpcs.Add(npc);
+        await ctx.SaveChangesAsync();
+        return npc;
+    }
+
     // ── Authorization ────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task CreateEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
+    public async Task CreateDraftEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(CreateEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
+        var (ctx, options) = CreateContext(nameof(CreateDraftEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
+        EncounterService service = CreateService(ctx, options);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.CreateEncounterAsync(campaign.Id, "Test Encounter", "random-user"));
+            () => service.CreateDraftEncounterAsync(campaign.Id, "Test Encounter", "random-user"));
     }
 
     [Fact]
     public async Task AddCharacterToEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(AddCharacterToEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
+        var (ctx, options) = CreateContext(nameof(AddCharacterToEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
         Character character = await SeedCharacterAsync(ctx, campaign.Id);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.AddCharacterToEncounterAsync(encounter.Id, character.Id, 3, 7, "random-user"));
+            () => service.AddCharacterToEncounterAsync(encounterId, character.Id, 3, 7, "random-user"));
     }
 
     [Fact]
     public async Task AdvanceTurnAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(AdvanceTurnAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
+        var (ctx, options) = CreateContext(nameof(AdvanceTurnAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 3, 5, "st-1");
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.AdvanceTurnAsync(encounter.Id, "random-user"));
+            () => service.AdvanceTurnAsync(encounterId, "random-user"));
     }
 
     [Fact]
     public async Task ResolveEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
+        var (ctx, options) = CreateContext(nameof(ResolveEncounterAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.ResolveEncounterAsync(encounter.Id, "random-user"));
+            () => service.ResolveEncounterAsync(encounterId, "random-user"));
     }
 
-    // ── CreateEncounterAsync ─────────────────────────────────────────────────
+    [Fact]
+    public async Task GetActiveEncounterForCampaignAsync_AllowsConcurrentReads_ForCampaignMember()
+    {
+        var (ctx, options) = CreateContext(nameof(GetActiveEncounterForCampaignAsync_AllowsConcurrentReads_ForCampaignMember));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        await SeedCharacterAsync(ctx, campaign.Id, playerId: "player-1");
+        EncounterService service = CreateService(ctx, options);
+        await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        Task<CombatEncounter?> first = service.GetActiveEncounterForCampaignAsync(campaign.Id, "player-1");
+        Task<CombatEncounter?> second = service.GetActiveEncounterForCampaignAsync(campaign.Id, "player-1");
+
+        CombatEncounter?[] results = await Task.WhenAll(first, second);
+
+        Assert.NotNull(results[0]);
+        Assert.NotNull(results[1]);
+        Assert.Equal(results[0]!.Id, results[1]!.Id);
+    }
+
+    // ── CreateDraftEncounterAsync ────────────────────────────────────────────
 
     [Fact]
-    public async Task CreateEncounterAsync_Persists_WhenCallerIsStoryteller()
+    public async Task CreateDraftEncounterAsync_Persists_WhenCallerIsStoryteller()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(CreateEncounterAsync_Persists_WhenCallerIsStoryteller));
+        var (ctx, options) = CreateContext(nameof(CreateDraftEncounterAsync_Persists_WhenCallerIsStoryteller));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
+        EncounterService service = CreateService(ctx, options);
 
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "The Alley Brawl", "st-1");
+        CombatEncounter encounter = await service.CreateDraftEncounterAsync(campaign.Id, "The Alley Brawl", "st-1");
 
         CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounter.Id);
         Assert.NotNull(stored);
         Assert.Equal("The Alley Brawl", stored.Name);
-        Assert.True(stored.IsActive);
+        Assert.True(stored.IsDraft);
+        Assert.False(stored.IsActive);
+        Assert.False(stored.IsPaused);
         Assert.Null(stored.ResolvedAt);
     }
 
@@ -123,40 +257,36 @@ public class EncounterServiceTests
     [Fact]
     public async Task InitiativeOrder_SortsByTotalDescending()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(InitiativeOrder_SortsByTotalDescending));
+        var (ctx, options) = CreateContext(nameof(InitiativeOrder_SortsByTotalDescending));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
-        // NPC with Total = 3+5 = 8
-        await service.AddNpcToEncounterAsync(encounter.Id, "Guard", 3, 5, "st-1");
-        // NPC with Total = 2+3 = 5
-        await service.AddNpcToEncounterAsync(encounter.Id, "Rat", 2, 3, "st-1");
-        // NPC with Total = 4+8 = 12
-        await service.AddNpcToEncounterAsync(encounter.Id, "Boss", 4, 8, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 3, 5, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Rat", 2, 3, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Boss", 4, 8, "st-1");
 
-        CombatEncounter? loaded = await service.GetEncounterAsync(encounter.Id);
+        CombatEncounter? loaded = await service.GetEncounterAsync(encounterId, "st-1");
         List<InitiativeEntry> entries = loaded!.InitiativeEntries.OrderBy(i => i.Order).ToList();
 
         Assert.Equal(3, entries.Count);
-        Assert.Equal("Boss", entries[0].NpcName);   // Total 12 — first
-        Assert.Equal("Guard", entries[1].NpcName);  // Total 8 — second
-        Assert.Equal("Rat", entries[2].NpcName);    // Total 5 — third
+        Assert.Equal("Boss", entries[0].NpcName);
+        Assert.Equal("Guard", entries[1].NpcName);
+        Assert.Equal("Rat", entries[2].NpcName);
     }
 
     [Fact]
     public async Task InitiativeOrder_TieBreak_HigherModWins()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(InitiativeOrder_TieBreak_HigherModWins));
+        var (ctx, options) = CreateContext(nameof(InitiativeOrder_TieBreak_HigherModWins));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
-        // Both total 10, but "Swift" has higher mod (6 > 4)
-        await service.AddNpcToEncounterAsync(encounter.Id, "Slow", 4, 6, "st-1");   // mod=4, roll=6, total=10
-        await service.AddNpcToEncounterAsync(encounter.Id, "Swift", 6, 4, "st-1");  // mod=6, roll=4, total=10
+        await service.AddNpcToEncounterAsync(encounterId, "Slow", 4, 6, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Swift", 6, 4, "st-1");
 
-        CombatEncounter? loaded = await service.GetEncounterAsync(encounter.Id);
+        CombatEncounter? loaded = await service.GetEncounterAsync(encounterId, "st-1");
         List<InitiativeEntry> entries = loaded!.InitiativeEntries.OrderBy(i => i.Order).ToList();
 
         Assert.Equal("Swift", entries[0].NpcName);
@@ -166,21 +296,20 @@ public class EncounterServiceTests
     [Fact]
     public async Task InitiativeOrder_TieBreak_PlayerCharacterBeforeNpc()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(InitiativeOrder_TieBreak_PlayerCharacterBeforeNpc));
+        var (ctx, options) = CreateContext(nameof(InitiativeOrder_TieBreak_PlayerCharacterBeforeNpc));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
         Character character = await SeedCharacterAsync(ctx, campaign.Id);
 
-        // Both total 10, same mod — PC should come before NPC
-        await service.AddNpcToEncounterAsync(encounter.Id, "Guard", 5, 5, "st-1");              // total=10, NPC
-        await service.AddCharacterToEncounterAsync(encounter.Id, character.Id, 5, 5, "st-1");   // total=10, PC
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 5, 5, "st-1");
+        await service.AddCharacterToEncounterAsync(encounterId, character.Id, 5, 5, "st-1");
 
-        CombatEncounter? loaded = await service.GetEncounterAsync(encounter.Id);
+        CombatEncounter? loaded = await service.GetEncounterAsync(encounterId, "st-1");
         List<InitiativeEntry> entries = loaded!.InitiativeEntries.OrderBy(i => i.Order).ToList();
 
-        Assert.NotNull(entries[0].CharacterId);  // PC first
-        Assert.Null(entries[1].CharacterId);     // NPC second
+        Assert.NotNull(entries[0].CharacterId);
+        Assert.Null(entries[1].CharacterId);
     }
 
     // ── AdvanceTurnAsync ─────────────────────────────────────────────────────
@@ -188,21 +317,20 @@ public class EncounterServiceTests
     [Fact]
     public async Task AdvanceTurnAsync_MarksCurrentActorAsActed()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(AdvanceTurnAsync_MarksCurrentActorAsActed));
+        var (ctx, options) = CreateContext(nameof(AdvanceTurnAsync_MarksCurrentActorAsActed));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "Guard", 3, 5, "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "Boss", 4, 8, "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Guard", 3, 5, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Boss", 4, 8, "st-1");
 
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
 
         List<InitiativeEntry> entries = await ctx.InitiativeEntries
-            .Where(i => i.EncounterId == encounter.Id)
+            .Where(i => i.EncounterId == encounterId)
             .OrderBy(i => i.Order)
             .ToListAsync();
 
-        // First in order (Order=1) should now have acted; second should not.
         Assert.True(entries[0].HasActed);
         Assert.False(entries[1].HasActed);
     }
@@ -210,31 +338,26 @@ public class EncounterServiceTests
     [Fact]
     public async Task AdvanceTurnAsync_ResetsAllEntries_WhenRoundEnds()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(AdvanceTurnAsync_ResetsAllEntries_WhenRoundEnds));
+        var (ctx, options) = CreateContext(nameof(AdvanceTurnAsync_ResetsAllEntries_WhenRoundEnds));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "A", 3, 5, "st-1");
-        await service.AddNpcToEncounterAsync(encounter.Id, "B", 2, 3, "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "A", 3, 5, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "B", 2, 3, "st-1");
 
-        // Advance twice — both participants act, ending the round.
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
-        // Third advance: all have acted, so the round resets (all → HasActed = false).
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
+        await service.AdvanceTurnAsync(encounterId, "st-1");
 
         List<InitiativeEntry> entries = await ctx.InitiativeEntries
-            .Where(i => i.EncounterId == encounter.Id)
+            .Where(i => i.EncounterId == encounterId)
             .ToListAsync();
 
-        // After the reset call: no one has acted yet in the new round.
         Assert.All(entries, e => Assert.False(e.HasActed));
 
-        // Fourth advance: the first participant acts in the new round.
-        await service.AdvanceTurnAsync(encounter.Id, "st-1");
-        // Re-fetch after the fourth advance.
+        await service.AdvanceTurnAsync(encounterId, "st-1");
         entries = await ctx.InitiativeEntries
-            .Where(i => i.EncounterId == encounter.Id)
+            .Where(i => i.EncounterId == encounterId)
             .ToListAsync();
 
         Assert.Equal(1, entries.Count(e => e.HasActed));
@@ -246,14 +369,14 @@ public class EncounterServiceTests
     [Fact]
     public async Task ResolveEncounterAsync_SetsIsActiveFalse()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_SetsIsActiveFalse));
+        var (ctx, options) = CreateContext(nameof(ResolveEncounterAsync_SetsIsActiveFalse));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
 
-        await service.ResolveEncounterAsync(encounter.Id, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
 
-        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounter.Id);
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
         Assert.NotNull(stored);
         Assert.False(stored.IsActive);
         Assert.NotNull(stored.ResolvedAt);
@@ -262,14 +385,14 @@ public class EncounterServiceTests
     [Fact]
     public async Task ResolveEncounterAsync_ThrowsInvalidOperation_WhenAlreadyResolved()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(ResolveEncounterAsync_ThrowsInvalidOperation_WhenAlreadyResolved));
+        var (ctx, options) = CreateContext(nameof(ResolveEncounterAsync_ThrowsInvalidOperation_WhenAlreadyResolved));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
-        CombatEncounter encounter = await service.CreateEncounterAsync(campaign.Id, "Fight", "st-1");
-        await service.ResolveEncounterAsync(encounter.Id, "st-1");
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.ResolveEncounterAsync(encounter.Id, "st-1"));
+            () => service.ResolveEncounterAsync(encounterId, "st-1"));
     }
 
     // ── GetEncountersAsync ───────────────────────────────────────────────────
@@ -277,18 +400,625 @@ public class EncounterServiceTests
     [Fact]
     public async Task GetEncountersAsync_ReturnsActiveFirst()
     {
-        ApplicationDbContext ctx = CreateContext(nameof(GetEncountersAsync_ReturnsActiveFirst));
+        var (ctx, options) = CreateContext(nameof(GetEncountersAsync_ReturnsActiveFirst));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        EncounterService service = CreateService(ctx);
+        EncounterService service = CreateService(ctx, options);
 
-        CombatEncounter first = await service.CreateEncounterAsync(campaign.Id, "Past Fight", "st-1");
-        await service.ResolveEncounterAsync(first.Id, "st-1");
-        await service.CreateEncounterAsync(campaign.Id, "Current Fight", "st-1");
+        CombatEncounter pastDraft = await service.CreateDraftEncounterAsync(campaign.Id, "Past Fight", "st-1");
+        await service.LaunchEncounterAsync(pastDraft.Id, "st-1");
+        await service.ResolveEncounterAsync(pastDraft.Id, "st-1");
 
-        List<CombatEncounter> encounters = await service.GetEncountersAsync(campaign.Id);
+        CombatEncounter currentDraft = await service.CreateDraftEncounterAsync(campaign.Id, "Current Fight", "st-1");
+        await service.LaunchEncounterAsync(currentDraft.Id, "st-1");
+
+        List<CombatEncounter> encounters = await service.GetEncountersAsync(campaign.Id, "st-1");
 
         Assert.Equal(2, encounters.Count);
-        Assert.True(encounters[0].IsActive);   // Active encounter first
-        Assert.False(encounters[1].IsActive);  // Resolved encounter second
+        Assert.True(encounters[0].IsActive && !encounters[0].IsDraft);
+        Assert.False(encounters[1].IsActive);
+    }
+
+    // ── Pause / Resume ─────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task PauseEncounterAsync_SetsPaused_And_ClearsActive()
+    {
+        var (ctx, options) = CreateContext(nameof(PauseEncounterAsync_SetsPaused_And_ClearsActive));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
+        Assert.NotNull(stored);
+        Assert.False(stored.IsActive);
+        Assert.True(stored.IsPaused);
+        Assert.Null(stored.ResolvedAt);
+    }
+
+    [Fact]
+    public async Task ResumeEncounterAsync_RestoresActive_FromPaused()
+    {
+        var (ctx, options) = CreateContext(nameof(ResumeEncounterAsync_RestoresActive_FromPaused));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+        await service.ResumeEncounterAsync(encounterId, "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
+        Assert.NotNull(stored);
+        Assert.True(stored.IsActive);
+        Assert.False(stored.IsPaused);
+    }
+
+    [Fact]
+    public async Task LaunchEncounterAsync_Throws_WhenAnotherEncounterIsPaused()
+    {
+        var (ctx, options) = CreateContext(nameof(LaunchEncounterAsync_Throws_WhenAnotherEncounterIsPaused));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+
+        CombatEncounter first = await service.CreateDraftEncounterAsync(campaign.Id, "First", "st-1");
+        await service.LaunchEncounterAsync(first.Id, "st-1");
+        await service.PauseEncounterAsync(first.Id, "st-1");
+
+        CombatEncounter second = await service.CreateDraftEncounterAsync(campaign.Id, "Second", "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.LaunchEncounterAsync(second.Id, "st-1"));
+    }
+
+    [Fact]
+    public async Task ResolveEncounterAsync_WorksFromPausedState()
+    {
+        var (ctx, options) = CreateContext(nameof(ResolveEncounterAsync_WorksFromPausedState));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounterId);
+        Assert.NotNull(stored);
+        Assert.NotNull(stored.ResolvedAt);
+        Assert.False(stored.IsActive);
+        Assert.False(stored.IsPaused);
+    }
+
+    [Fact]
+    public async Task ResumeEncounterAsync_Throws_WhenAlreadyResolved()
+    {
+        var (ctx, options) = CreateContext(nameof(ResumeEncounterAsync_Throws_WhenAlreadyResolved));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.PauseEncounterAsync(encounterId, "st-1");
+        await service.ResolveEncounterAsync(encounterId, "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ResumeEncounterAsync(encounterId, "st-1"));
+    }
+
+    // ── NPC template / active NPC validation ────────────────────────────────
+
+    [Fact]
+    public async Task AddNpcTemplateAsync_ThrowsArgumentException_WhenNameIsWhitespace()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcTemplateAsync_ThrowsArgumentException_WhenNameIsWhitespace));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Prep", "st-1");
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.AddNpcTemplateAsync(draft.Id, "   ", 0, 7, 4, null, true, null, "st-1"));
+    }
+
+    [Fact]
+    public async Task AddNpcToEncounterAsync_ThrowsArgumentException_WhenNameIsWhitespace()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcToEncounterAsync_ThrowsArgumentException_WhenNameIsWhitespace));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.AddNpcToEncounterAsync(encounterId, "", 2, 5, "st-1"));
+    }
+
+    [Fact]
+    public async Task AddNpcToEncounterAsync_UsesNpcHealthBoxes_WhenProvided()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcToEncounterAsync_UsesNpcHealthBoxes_WhenProvided));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await service.AddNpcToEncounterAsync(encounterId, "Brute", 2, 6, "st-1", npcHealthBoxes: 12);
+
+        InitiativeEntry? row = await ctx.InitiativeEntries.FirstOrDefaultAsync(i => i.EncounterId == encounterId);
+        Assert.NotNull(row);
+        Assert.Equal(12, row.NpcHealthBoxes);
+        Assert.Equal(4, row.NpcMaxWillpower);
+        Assert.Equal(4, row.NpcCurrentWillpower);
+    }
+
+    // ── Draft rename ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateDraftEncounterNameAsync_RenamesEncounter()
+    {
+        var (ctx, options) = CreateContext(nameof(UpdateDraftEncounterNameAsync_RenamesEncounter));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Old", "st-1");
+
+        await service.UpdateDraftEncounterNameAsync(draft.Id, "Warehouse ambush", "st-1");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(draft.Id);
+        Assert.NotNull(stored);
+        Assert.Equal("Warehouse ambush", stored.Name);
+    }
+
+    [Fact]
+    public async Task UpdateDraftEncounterNameAsync_Throws_WhenEncounterLaunched()
+    {
+        var (ctx, options) = CreateContext(nameof(UpdateDraftEncounterNameAsync_Throws_WhenEncounterLaunched));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.UpdateDraftEncounterNameAsync(encounterId, "Nope", "st-1"));
+    }
+
+    [Fact]
+    public async Task UpdateDraftEncounterNameAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller()
+    {
+        var (ctx, options) = CreateContext(nameof(UpdateDraftEncounterNameAsync_ThrowsUnauthorized_WhenCallerIsNotStoryteller));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Prep", "st-1");
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.UpdateDraftEncounterNameAsync(draft.Id, "Hack", "random-user"));
+    }
+
+    // ── Chronicle NPC encounter prep ───────────────────────────────────────
+
+    [Fact]
+    public async Task GetChronicleNpcEncounterPrepAsync_ReturnsWitsPlusComposure()
+    {
+        var (ctx, options) = CreateContext(nameof(GetChronicleNpcEncounterPrepAsync_ReturnsWitsPlusComposure));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":3,\"Composure\":4,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}");
+
+        ChronicleNpcEncounterPrepDto? dto = await service.GetChronicleNpcEncounterPrepAsync(npc.Id, "st-1");
+
+        Assert.NotNull(dto);
+        Assert.Equal("Chronicle NPC", dto.Name);
+        Assert.Equal(7, dto.SuggestedInitiativeMod);
+        Assert.Equal(7, dto.SuggestedHealthBoxes);
+        Assert.Null(dto.LinkedStatBlockName);
+        Assert.Equal(6, dto.SuggestedMaxWillpower);
+        Assert.False(dto.TracksVitae);
+        Assert.Equal(0, dto.SuggestedMaxVitae);
+    }
+
+    [Fact]
+    public async Task GetChronicleNpcEncounterPrepAsync_Vampire_SuggestsVitaeFromBloodPotency()
+    {
+        var (ctx, options) = CreateContext(nameof(GetChronicleNpcEncounterPrepAsync_Vampire_SuggestsVitaeFromBloodPotency));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2,\"BloodPotency\":3}",
+            creatureType: CreatureType.Vampire);
+
+        ChronicleNpcEncounterPrepDto? dto = await service.GetChronicleNpcEncounterPrepAsync(npc.Id, "st-1");
+
+        Assert.NotNull(dto);
+        Assert.True(dto.TracksVitae);
+        Assert.Equal(12, dto.SuggestedMaxVitae);
+    }
+
+    [Fact]
+    public async Task GetChronicleNpcEncounterPrepAsync_UsesLinkedStatBlockHealth()
+    {
+        var (ctx, options) = CreateContext(nameof(GetChronicleNpcEncounterPrepAsync_UsesLinkedStatBlockHealth));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        NpcStatBlock block = await SeedNpcStatBlockAsync(ctx, campaign.Id, "Thug template", health: 11);
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}",
+            linkedStatBlockId: block.Id);
+
+        ChronicleNpcEncounterPrepDto? dto = await service.GetChronicleNpcEncounterPrepAsync(npc.Id, "st-1");
+
+        Assert.NotNull(dto);
+        Assert.Equal(11, dto.SuggestedHealthBoxes);
+        Assert.Equal("Thug template", dto.LinkedStatBlockName);
+        Assert.Equal(4, dto.SuggestedMaxWillpower);
+        Assert.False(dto.TracksVitae);
+        Assert.Equal(0, dto.SuggestedMaxVitae);
+    }
+
+    [Fact]
+    public async Task AddNpcTemplateFromChronicleNpcAsync_Throws_WhenNpcInOtherCampaign()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcTemplateFromChronicleNpcAsync_Throws_WhenNpcInOtherCampaign));
+        Campaign alpha = await SeedCampaignAsync(ctx, "st-1");
+        Campaign beta = new() { Name = "Other city", StoryTellerId = "st-1" };
+        ctx.Campaigns.Add(beta);
+        await ctx.SaveChangesAsync();
+
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(alpha.Id, "Fight", "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            beta.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.AddNpcTemplateFromChronicleNpcAsync(draft.Id, npc.Id, 0, 7, 4, 0, true, null, "st-1"));
+    }
+
+    [Fact]
+    public async Task AddNpcTemplateFromChronicleNpcAsync_Throws_WhenChronicleNpcAlreadyInPrep()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcTemplateFromChronicleNpcAsync_Throws_WhenChronicleNpcAlreadyInPrep));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Prep", "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}");
+
+        await service.AddNpcTemplateFromChronicleNpcAsync(draft.Id, npc.Id, 1, 7, 4, 0, true, null, "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.AddNpcTemplateFromChronicleNpcAsync(draft.Id, npc.Id, 1, 7, 4, 0, true, null, "st-1"));
+    }
+
+    [Fact]
+    public async Task AddNpcTemplateFromChronicleNpcAsync_AddsRow_WithNpcName()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcTemplateFromChronicleNpcAsync_AddsRow_WithNpcName));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Prep", "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}",
+            name: "Elena Vance");
+
+        await service.AddNpcTemplateFromChronicleNpcAsync(draft.Id, npc.Id, initiativeMod: 5, healthBoxes: 8, maxWillpower: 6, maxVitae: 0, true, null, "st-1");
+
+        EncounterNpcTemplate? row = await ctx.Set<EncounterNpcTemplate>().FirstOrDefaultAsync(t => t.EncounterId == draft.Id);
+        Assert.NotNull(row);
+        Assert.Equal("Elena Vance", row.Name);
+        Assert.Equal(5, row.InitiativeMod);
+        Assert.Equal(8, row.HealthBoxes);
+        Assert.Equal(6, row.MaxWillpower);
+        Assert.Equal(npc.Id, row.ChronicleNpcId);
+    }
+
+    [Fact]
+    public async Task AddNpcToEncounterFromChronicleNpcAsync_AddsInitiativeRow()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcToEncounterFromChronicleNpcAsync_AddsInitiativeRow));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        NpcStatBlock block = await SeedNpcStatBlockAsync(ctx, campaign.Id, "Heavy", health: 10);
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}",
+            linkedStatBlockId: block.Id,
+            name: "The Brute");
+
+        InitiativeEntry entry = await service.AddNpcToEncounterFromChronicleNpcAsync(
+            encounterId,
+            npc.Id,
+            initiativeMod: 4,
+            rollResult: 6,
+            healthBoxes: 10,
+            maxWillpower: 4,
+            maxVitae: 0,
+            "st-1");
+
+        Assert.Equal("The Brute", entry.NpcName);
+        Assert.Equal(10, entry.Total);
+        Assert.Equal(10, entry.NpcHealthBoxes);
+        Assert.Equal(4, entry.NpcMaxWillpower);
+        Assert.Equal(4, entry.NpcCurrentWillpower);
+        Assert.Equal(npc.Id, entry.ChronicleNpcId);
+    }
+
+    [Fact]
+    public async Task AddNpcToEncounterFromChronicleNpcAsync_Throws_WhenChronicleNpcAlreadyInFight()
+    {
+        var (ctx, options) = CreateContext(nameof(AddNpcToEncounterFromChronicleNpcAsync_Throws_WhenChronicleNpcAlreadyInFight));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}");
+
+        await service.AddNpcToEncounterFromChronicleNpcAsync(
+            encounterId,
+            npc.Id,
+            initiativeMod: 1,
+            rollResult: 5,
+            healthBoxes: 7,
+            maxWillpower: 4,
+            maxVitae: 0,
+            "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.AddNpcToEncounterFromChronicleNpcAsync(
+                encounterId,
+                npc.Id,
+                initiativeMod: 1,
+                rollResult: 5,
+                healthBoxes: 7,
+                maxWillpower: 4,
+                maxVitae: 0,
+                "st-1"));
+    }
+
+    [Fact]
+    public async Task LaunchEncounterAsync_CopiesTemplateWillpowerToInitiative()
+    {
+        var (ctx, options) = CreateContext(nameof(LaunchEncounterAsync_CopiesTemplateWillpowerToInitiative));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Ambush", "st-1");
+        await service.AddNpcTemplateAsync(draft.Id, "Hunter", 2, 9, 5, null, true, null, "st-1");
+
+        await service.LaunchEncounterAsync(draft.Id, "st-1");
+
+        InitiativeEntry? row = await ctx.InitiativeEntries.FirstOrDefaultAsync(i => i.EncounterId == draft.Id);
+        Assert.NotNull(row);
+        Assert.Equal(9, row.NpcHealthBoxes);
+        Assert.Equal(5, row.NpcMaxWillpower);
+        Assert.Equal(5, row.NpcCurrentWillpower);
+    }
+
+    [Fact]
+    public async Task LaunchEncounterAsync_CopiesChronicleNpcIdAndVitaeFromTemplate()
+    {
+        var (ctx, options) = CreateContext(nameof(LaunchEncounterAsync_CopiesChronicleNpcIdAndVitaeFromTemplate));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        CombatEncounter draft = await service.CreateDraftEncounterAsync(campaign.Id, "Night", "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":2,\"Composure\":2,\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Resolve\":2,\"Presence\":2,\"Manipulation\":2}",
+            creatureType: CreatureType.Vampire);
+
+        await service.AddNpcTemplateFromChronicleNpcAsync(
+            draft.Id,
+            npc.Id,
+            initiativeMod: 3,
+            healthBoxes: 7,
+            maxWillpower: 5,
+            maxVitae: 11,
+            isRevealed: true,
+            defaultMaskedName: null,
+            storyTellerUserId: "st-1");
+
+        await service.LaunchEncounterAsync(draft.Id, "st-1");
+
+        InitiativeEntry? row = await ctx.InitiativeEntries.FirstOrDefaultAsync(i => i.EncounterId == draft.Id);
+        Assert.NotNull(row);
+        Assert.Equal(npc.Id, row.ChronicleNpcId);
+        Assert.Equal(11, row.NpcMaxVitae);
+        Assert.Equal(11, row.NpcCurrentVitae);
+    }
+
+    [Fact]
+    public async Task SpendNpcWillpowerAsync_DecrementsCurrent()
+    {
+        var (ctx, options) = CreateContext(nameof(SpendNpcWillpowerAsync_DecrementsCurrent));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Wolf", 1, 5, "st-1", npcHealthBoxes: 7, npcMaxWillpower: 3);
+
+        InitiativeEntry? before = await ctx.InitiativeEntries.FirstOrDefaultAsync(i => i.EncounterId == encounterId);
+        Assert.NotNull(before);
+        int entryId = before.Id;
+
+        await service.SpendNpcWillpowerAsync(entryId, "st-1");
+
+        InitiativeEntry? after = await ctx.InitiativeEntries.FindAsync(entryId);
+        Assert.NotNull(after);
+        Assert.Equal(2, after.NpcCurrentWillpower);
+    }
+
+    [Fact]
+    public async Task SpendNpcVitaeAsync_DecrementsCurrent()
+    {
+        var (ctx, options) = CreateContext(nameof(SpendNpcVitaeAsync_DecrementsCurrent));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(
+            encounterId,
+            "Kindred",
+            1,
+            5,
+            "st-1",
+            npcHealthBoxes: 7,
+            npcMaxWillpower: 3,
+            chronicleNpcId: null,
+            npcMaxVitae: 4);
+
+        InitiativeEntry? before = await ctx.InitiativeEntries.FirstOrDefaultAsync(i => i.EncounterId == encounterId);
+        Assert.NotNull(before);
+        int entryId = before.Id;
+
+        await service.SpendNpcVitaeAsync(entryId, "st-1");
+
+        InitiativeEntry? after = await ctx.InitiativeEntries.FindAsync(entryId);
+        Assert.NotNull(after);
+        Assert.Equal(3, after.NpcCurrentVitae);
+    }
+
+    [Fact]
+    public async Task RollNpcEncounterPoolAsync_PlainNpc_RequiresManualPool()
+    {
+        var (ctx, options) = CreateContext(nameof(RollNpcEncounterPoolAsync_PlainNpc_RequiresManualPool));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Grunt", 2, 4, "st-1");
+        InitiativeEntry entry = await ctx.InitiativeEntries.FirstAsync(i => i.EncounterId == encounterId);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.RollNpcEncounterPoolAsync(entry.Id, "Wits", "Composure", null, "st-1"));
+
+        NpcEncounterRollResultDto dto = await service.RollNpcEncounterPoolAsync(entry.Id, null, null, 3, "st-1");
+        Assert.Equal(3, dto.DiceRolled.Count);
+        Assert.Contains("Manual pool (3)", dto.PoolDescription);
+    }
+
+    [Fact]
+    public async Task RollNpcEncounterPoolAsync_ChronicleNpc_BuildsPoolFromTraits()
+    {
+        Mock<IDiceService> dice = new();
+        dice.Setup(d => d.Roll(6, true, false, false, false, null)).Returns(
+            new RollResult { Successes = 2, DiceRolled = [5, 5, 5, 5, 5, 5] });
+
+        var (ctx, options) = CreateContext(nameof(RollNpcEncounterPoolAsync_ChronicleNpc_BuildsPoolFromTraits));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options, diceService: dice.Object);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(
+            ctx,
+            campaign.Id,
+            "{\"Wits\":4}",
+            skillsJson: "{\"Stealth\":2}");
+        InitiativeEntry entry = await service.AddNpcToEncounterFromChronicleNpcAsync(
+            encounterId,
+            npc.Id,
+            initiativeMod: 2,
+            rollResult: 5,
+            healthBoxes: 7,
+            maxWillpower: 4,
+            maxVitae: 0,
+            storyTellerUserId: "st-1");
+
+        NpcEncounterRollResultDto dto = await service.RollNpcEncounterPoolAsync(
+            entry.Id,
+            "Wits",
+            "Stealth",
+            null,
+            "st-1");
+
+        dice.Verify(d => d.Roll(6, true, false, false, false, null), Times.Once);
+        Assert.Contains("Wits", dto.PoolDescription);
+        Assert.Contains("Stealth", dto.PoolDescription);
+        Assert.Contains("(6)", dto.PoolDescription);
+    }
+
+    [Fact]
+    public async Task RollNpcEncounterPoolAsync_ManualOverride_IgnoresTraits()
+    {
+        Mock<IDiceService> dice = new();
+        dice.Setup(d => d.Roll(2, true, false, false, false, null)).Returns(
+            new RollResult { Successes = 1, DiceRolled = [5, 5] });
+
+        var (ctx, options) = CreateContext(nameof(RollNpcEncounterPoolAsync_ManualOverride_IgnoresTraits));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options, diceService: dice.Object);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(ctx, campaign.Id, "{\"Wits\":4}");
+        InitiativeEntry entry = await service.AddNpcToEncounterFromChronicleNpcAsync(
+            encounterId,
+            npc.Id,
+            2,
+            5,
+            7,
+            4,
+            0,
+            "st-1");
+
+        NpcEncounterRollResultDto dto = await service.RollNpcEncounterPoolAsync(
+            entry.Id,
+            "Wits",
+            "Strength",
+            2,
+            "st-1");
+
+        dice.Verify(d => d.Roll(2, true, false, false, false, null), Times.Once);
+        Assert.Equal("Manual pool (2)", dto.PoolDescription);
+    }
+
+    [Fact]
+    public async Task RollNpcEncounterPoolAsync_ThrowsUnauthorized_WhenNotStoryteller()
+    {
+        var (ctx, options) = CreateContext(nameof(RollNpcEncounterPoolAsync_ThrowsUnauthorized_WhenNotStoryteller));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        await service.AddNpcToEncounterAsync(encounterId, "Grunt", 2, 4, "st-1");
+        InitiativeEntry entry = await ctx.InitiativeEntries.FirstAsync(i => i.EncounterId == encounterId);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => service.RollNpcEncounterPoolAsync(entry.Id, null, null, 2, "not-st"));
+    }
+
+    [Fact]
+    public async Task RollNpcEncounterPoolAsync_Throws_WhenPlayerCharacterRow()
+    {
+        var (ctx, options) = CreateContext(nameof(RollNpcEncounterPoolAsync_Throws_WhenPlayerCharacterRow));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        Character character = await SeedCharacterAsync(ctx, campaign.Id);
+        InitiativeEntry entry = await service.AddCharacterToEncounterAsync(encounterId, character.Id, 3, 6, "st-1");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.RollNpcEncounterPoolAsync(entry.Id, null, null, 3, "st-1"));
+    }
+
+    [Fact]
+    public async Task RollNpcEncounterPoolAsync_ChronicleNpc_Throws_WhenMissingTraitsAndNoManual()
+    {
+        var (ctx, options) = CreateContext(nameof(RollNpcEncounterPoolAsync_ChronicleNpc_Throws_WhenMissingTraitsAndNoManual));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        EncounterService service = CreateService(ctx, options);
+        int encounterId = await CreateLaunchedEmptyEncounterAsync(service, campaign.Id, "st-1");
+        ChronicleNpc npc = await SeedChronicleNpcAsync(ctx, campaign.Id, "{}");
+        InitiativeEntry entry = await service.AddNpcToEncounterFromChronicleNpcAsync(
+            encounterId,
+            npc.Id,
+            2,
+            5,
+            7,
+            4,
+            0,
+            "st-1");
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => service.RollNpcEncounterPoolAsync(entry.Id, null, null, null, "st-1"));
     }
 }

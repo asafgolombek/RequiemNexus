@@ -3,21 +3,28 @@
 @inject SessionClientService SessionService
 @implements IDisposable
 
-@if (_players.Any())
+@if (_players.Any() || SessionActive)
 {
     <div class="presence-bar-container">
         <div class="presence-header" title="@(SessionActive ? "Players in the live session." : "Players who have this campaign or a campaign character open.")">@(SessionActive ? "🩸 In Session" : "Who's Here")</div>
-        <div class="presence-bar">
-            @foreach (var player in _players)
-            {
-                <div class="player-chip" title="@player.UserName @(player.IsOnline ? "(Online)" : "(Offline)")">
-                    <div class="avatar @(player.IsOnline ? "online" : "offline")">
-                        @GetInitials(player.UserName)
+        @if (_players.Any())
+        {
+            <div class="presence-bar">
+                @foreach (var player in _players)
+                {
+                    <div class="player-chip" title="@player.UserName @(player.IsOnline ? "(Online)" : "(Offline)")">
+                        <div class="avatar @(player.IsOnline ? "online" : "offline")">
+                            @GetInitials(player.UserName)
+                        </div>
+                        <span class="player-name">@player.UserName</span>
                     </div>
-                    <span class="player-name">@player.UserName</span>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
+        else if (SessionActive)
+        {
+            <p class="presence-empty-hint" style="margin: 0.35rem 0 0; font-size: 0.85rem; color: var(--text-muted);">No one listed in session yet—use Join Session if you are not connected.</p>
+        }
     </div>
 }
 

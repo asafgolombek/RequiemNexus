@@ -1,0 +1,62 @@
+@using RequiemNexus.Data.RealTime
+@using RequiemNexus.Web.Services
+@implements IDisposable
+@inject SessionClientService SessionClient
+
+@if (_items.Count > 0)
+{
+    <div class="condition-toast-host">
+        @foreach (ToastItem item in _items)
+        {
+            <div class="condition-toast @item.CssClass" @key="item.Id">
+                <span class="condition-toast-icon">@(item.IsTilt ? "☠" : "⚠")</span>
+                <div>
+                    <div class="condition-toast-title">@(item.IsRemoval ? "Cleared" : item.IsTilt ? "Tilt" : "Condition")</div>
+                    <div class="condition-toast-body">@item.Name</div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private readonly List<ToastItem> _items = [];
+    private int _nextId;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        SessionClient.ConditionNotificationReceived += OnConditionNotification;
+    }
+
+    private void OnConditionNotification(ConditionNotificationDto dto)
+    {
+        _ = InvokeAsync(() =>
+        {
+            string cls = dto.IsRemoval ? "condition-toast-removed" : "condition-toast-applied";
+            int id = ++_nextId;
+            _items.Add(new ToastItem(id, dto.Name, dto.IsTilt, dto.IsRemoval, cls));
+            StateHasChanged();
+
+            _ = DismissAfterDelayAsync(id);
+        });
+    }
+
+    private async Task DismissAfterDelayAsync(int id)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(5));
+        await InvokeAsync(() =>
+        {
+            _items.RemoveAll(t => t.Id == id);
+            StateHasChanged();
+        });
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        SessionClient.ConditionNotificationReceived -= OnConditionNotification;
+    }
+
+    private sealed record ToastItem(int Id, string Name, bool IsTilt, bool IsRemoval, string CssClass);
+}

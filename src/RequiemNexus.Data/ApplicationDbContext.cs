@@ -58,6 +58,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<InitiativeEntry> InitiativeEntries { get; set; } = default!;
 
+    public DbSet<EncounterNpcTemplate> EncounterNpcTemplates { get; set; } = default!;
+
+    public DbSet<EncounterTemplate> EncounterTemplates { get; set; } = default!;
+
+    public DbSet<EncounterTemplateNpc> EncounterTemplateNpcs { get; set; } = default!;
+
     public DbSet<CityFaction> CityFactions { get; set; } = default!;
 
     public DbSet<ChronicleNpc> ChronicleNpcs { get; set; } = default!;

@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -31,7 +32,11 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
     public event Action<IEnumerable<InitiativeEntryDto>>? InitiativeUpdated;
 
+    public event Action<ConditionNotificationDto>? ConditionNotificationReceived;
+
     public event Action<ChronicleUpdateDto>? ChronicleUpdated;
+
+    public event Action<SocialManeuverUpdateDto>? SocialManeuverUpdated;
 
     public event Action? SessionStarted;
 
@@ -39,8 +44,14 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
     public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
 
-    public async Task StartAsync(int chronicleId, int? characterId, string userId, string? cookieHeader = null)
+    /// <summary>
+    /// Connects to the session hub and invokes JoinSession. Returns a structured result so pages can show inline guidance
+    /// (Blazor Server often lacks HttpContext; an empty cookie header usually breaks negotiate).
+    /// </summary>
+    public async Task<SessionHubConnectResult> StartAsync(int chronicleId, int? characterId, string userId, string? cookieHeader = null)
     {
+        bool cookieMissing = string.IsNullOrWhiteSpace(cookieHeader);
+
         // Cancel any pending delayed stop
         if (_stopCts != null)
         {
@@ -52,13 +63,13 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         if (_hubConnection != null && _currentChronicleId == chronicleId && IsConnected)
         {
             _currentCharacterId = characterId;
-            await SafeInvokeAsync("JoinSession", chronicleId, characterId);
-            return;
+            return await TryJoinSessionAsync(chronicleId, characterId);
         }
 
         if (_hubConnection != null)
         {
             await _hubConnection.DisposeAsync();
+            _hubConnection = null;
         }
 
         _currentChronicleId = chronicleId;
@@ -67,62 +78,38 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(navManager.ToAbsoluteUri("/hubs/session"), options =>
             {
-                if (!string.IsNullOrEmpty(cookieHeader))
+                if (!cookieMissing)
                 {
-                    options.Headers["Cookie"] = cookieHeader;
+                    options.Headers["Cookie"] = cookieHeader!;
                 }
             })
             .WithAutomaticReconnect()
             .Build();
 
-        _hubConnection.On("SessionStarted", async () =>
-        {
-            _isSessionActiveCache = true;
-            SessionStarted?.Invoke();
-            if (_currentChronicleId.HasValue)
-            {
-                await SafeInvokeAsync("JoinSession", _currentChronicleId.Value, _currentCharacterId ?? (object?)null);
-            }
-        });
-
-        _hubConnection.On<string>("SessionEnded", reason =>
-        {
-            _isSessionActiveCache = false;
-            SessionEnded?.Invoke(reason);
-        });
-
-        _hubConnection.On<IEnumerable<PlayerPresenceDto>>("ReceivePresenceUpdate", players => PresenceUpdated?.Invoke(players));
-
-        _hubConnection.On<DiceRollResultDto>("ReceiveDiceRoll", roll =>
-        {
-            // Only show toast if it's someone else's roll
-            if (roll.RolledByUserId != _currentUserId)
-            {
-                toastService.Show(
-                    "🩸 Dice Roll",
-                    $"{roll.PlayerName} rolled {roll.Successes} success(es) on {roll.PoolDescription}",
-                    roll.IsDramaticFailure ? ToastType.Error : roll.IsExceptionalSuccess ? ToastType.Success : ToastType.Info);
-            }
-
-            DiceRollReceived?.Invoke(roll);
-        });
-
-        _hubConnection.On<IEnumerable<DiceRollResultDto>>("ReceiveRollHistory", history => RollHistoryReceived?.Invoke(history));
-        _hubConnection.On<CharacterUpdateDto>("ReceiveCharacterUpdate", patch => CharacterUpdated?.Invoke(patch));
-        _hubConnection.On<int, string>("ReceiveBloodlineApproved", (characterId, bloodlineName) => BloodlineApproved?.Invoke(characterId, bloodlineName));
-        _hubConnection.On<IEnumerable<InitiativeEntryDto>>("ReceiveInitiativeUpdate", entries => InitiativeUpdated?.Invoke(entries));
-        _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
+        RegisterHubHandlers();
 
         try
         {
             await _hubConnection.StartAsync();
-            await SafeInvokeAsync("JoinSession", chronicleId, characterId);
         }
         catch (Exception ex)
         {
-            toastService.Show("⚠️ Connection Error", "Unable to establish real-time link.", ToastType.Error);
-            Console.WriteLine($"Hub Start Error: {ex.Message}");
+            await DisposeHubConnectionAsync();
+            if (cookieMissing)
+            {
+                return SessionHubConnectResult.FailedMissingCookie;
+            }
+
+            return MapNegotiateFailure(ex);
         }
+
+        SessionHubConnectResult joinResult = await TryJoinSessionAsync(chronicleId, characterId);
+        if (joinResult != SessionHubConnectResult.Connected)
+        {
+            await DisposeHubConnectionAsync();
+        }
+
+        return joinResult;
     }
 
     /// <summary>
@@ -151,6 +138,8 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
     /// <summary>
     /// Triggers a delayed stop (2 minutes) to allow for internal navigation.
+    /// Prefer explicit use from "Leave Session" on the campaign; avoid pairing with page disposal in Blazor —
+    /// dispose order vs. the next page's <c>StartAsync</c> can schedule a teardown after reconnect.
     /// </summary>
     public async Task StopAsync()
     {
@@ -247,6 +236,170 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Re-adds this client to the chronicle group and Redis presence after reconnect or session start.
+    /// </summary>
+    private async Task RejoinCurrentSessionAsync()
+    {
+        if (!_currentChronicleId.HasValue)
+        {
+            return;
+        }
+
+        await SafeInvokeAsync("JoinSession", _currentChronicleId.Value, _currentCharacterId ?? (object?)null);
+    }
+
+    private void RegisterHubHandlers()
+    {
+        if (_hubConnection == null)
+        {
+            return;
+        }
+
+        _hubConnection.On("SessionStarted", async () =>
+        {
+            _isSessionActiveCache = true;
+            SessionStarted?.Invoke();
+            await RejoinCurrentSessionAsync();
+        });
+
+        _hubConnection.On<string>("SessionEnded", reason =>
+        {
+            _isSessionActiveCache = false;
+            SessionEnded?.Invoke(reason);
+        });
+
+        _hubConnection.On<IEnumerable<PlayerPresenceDto>>("ReceivePresenceUpdate", players => PresenceUpdated?.Invoke(players));
+
+        _hubConnection.On<DiceRollResultDto>("ReceiveDiceRoll", roll =>
+        {
+            // Only show toast if it's someone else's roll
+            if (roll.RolledByUserId != _currentUserId)
+            {
+                toastService.Show(
+                    "🩸 Dice Roll",
+                    $"{roll.PlayerName} rolled {roll.Successes} success(es) on {roll.PoolDescription}",
+                    roll.IsDramaticFailure ? ToastType.Error : roll.IsExceptionalSuccess ? ToastType.Success : ToastType.Info);
+            }
+
+            DiceRollReceived?.Invoke(roll);
+        });
+
+        _hubConnection.On<IEnumerable<DiceRollResultDto>>("ReceiveRollHistory", history => RollHistoryReceived?.Invoke(history));
+        _hubConnection.On<CharacterUpdateDto>("ReceiveCharacterUpdate", patch => CharacterUpdated?.Invoke(patch));
+        _hubConnection.On<int, string>("ReceiveBloodlineApproved", (characterId, bloodlineName) => BloodlineApproved?.Invoke(characterId, bloodlineName));
+        _hubConnection.On<IEnumerable<InitiativeEntryDto>>("ReceiveInitiativeUpdate", entries => InitiativeUpdated?.Invoke(entries));
+        _hubConnection.On<ConditionNotificationDto>("ReceiveConditionNotification", n => ConditionNotificationReceived?.Invoke(n));
+        _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
+        _hubConnection.On<SocialManeuverUpdateDto>("ReceiveSocialManeuverUpdate", update => SocialManeuverUpdated?.Invoke(update));
+
+        _hubConnection.Reconnected += async _ =>
+        {
+            await RejoinCurrentSessionAsync();
+        };
+
+        _hubConnection.Closed += async _ =>
+        {
+            _isSessionActiveCache = null;
+            await Task.CompletedTask;
+        };
+    }
+
+    private async Task<SessionHubConnectResult> TryJoinSessionAsync(int chronicleId, int? characterId)
+    {
+        if (!IsConnected || _hubConnection == null)
+        {
+            return SessionHubConnectResult.FailedOther;
+        }
+
+        try
+        {
+            await _hubConnection.InvokeCoreAsync("JoinSession", [chronicleId, characterId]);
+            return SessionHubConnectResult.Connected;
+        }
+        catch (Exception ex)
+        {
+            return MapJoinFailure(ex);
+        }
+    }
+
+    private SessionHubConnectResult MapJoinFailure(Exception ex)
+    {
+        if (IsRateLimited(ex))
+        {
+            return SessionHubConnectResult.RateLimited;
+        }
+
+        if (ex is HubException hx)
+        {
+            if (hx.Message.Contains("Not a member", StringComparison.OrdinalIgnoreCase))
+            {
+                return SessionHubConnectResult.ForbiddenNotMember;
+            }
+
+            return SessionHubConnectResult.FailedOther;
+        }
+
+        return SessionHubConnectResult.FailedOther;
+    }
+
+    private SessionHubConnectResult MapNegotiateFailure(Exception ex)
+    {
+        if (IsRateLimited(ex))
+        {
+            return SessionHubConnectResult.RateLimited;
+        }
+
+        HttpStatusCode? status = GetHttpStatusCode(ex);
+        if (status is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+        {
+            return SessionHubConnectResult.FailedNegotiate;
+        }
+
+        return SessionHubConnectResult.FailedOther;
+    }
+
+    private HttpStatusCode? GetHttpStatusCode(Exception ex)
+    {
+        for (Exception? walk = ex; walk != null; walk = walk.InnerException)
+        {
+            if (walk is HttpRequestException hre && hre.StatusCode.HasValue)
+            {
+                return hre.StatusCode.Value;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsRateLimited(Exception ex)
+    {
+        for (Exception? walk = ex; walk != null; walk = walk.InnerException)
+        {
+            if (walk is HttpRequestException hre && hre.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                return true;
+            }
+
+            if (walk.Message.Contains("429", StringComparison.OrdinalIgnoreCase)
+                || walk.Message.Contains("Too Many Requests", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async Task DisposeHubConnectionAsync()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.DisposeAsync();
+            _hubConnection = null;
+        }
+    }
+
     private async Task SafeInvokeAsync(string methodName, params object?[] args)
     {
         if (!IsConnected || _hubConnection == null)
@@ -260,7 +413,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         }
         catch (Exception ex)
         {
-            if (ex.Message.Contains("429") || ex.Message.Contains("Too Many Requests"))
+            if (IsRateLimited(ex))
             {
                 toastService.Show("⏳ Slow Down", "You are sending messages too quickly. The Masquerade requires patience.", ToastType.Warning);
             }

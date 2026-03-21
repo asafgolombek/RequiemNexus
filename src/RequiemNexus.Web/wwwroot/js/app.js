@@ -29,6 +29,11 @@ window.sessionStorageSet = function (key, value) {
     sessionStorage.setItem(key, value);
 };
 
+// Native confirm dialog for high-risk actions (e.g. Social maneuver Force Doors).
+window.rnConfirm = function (message) {
+    return confirm(message);
+};
+
 window.registerCommandPaletteShortcut = function (dotNetRef) {
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {

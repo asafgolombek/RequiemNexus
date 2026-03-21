@@ -404,6 +404,9 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("SocialManeuverInvestigationSuccessesPerClue")
+                        .HasColumnType("integer");
+
                     b.Property<string>("StoryTellerId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1290,7 +1293,16 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("CurrentRound")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDraft")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPaused")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
@@ -1572,6 +1584,123 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("DisciplinePowers");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterNpcTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ChronicleNpcId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DefaultMaskedName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("EncounterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HealthBoxes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InitiativeMod")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsRevealed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxVitae")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxWillpower")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChronicleNpcId");
+
+                    b.HasIndex("EncounterId");
+
+                    b.HasIndex("EncounterId", "ChronicleNpcId")
+                        .IsUnique()
+                        .HasFilter("[ChronicleNpcId] IS NOT NULL");
+
+                    b.ToTable("EncounterNpcTemplates");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CampaignId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.ToTable("EncounterTemplates");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterTemplateNpc", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DefaultMaskedName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("HealthBoxes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InitiativeMod")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsRevealedByDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxWillpower")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("EncounterTemplateNpcs");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Equipment", b =>
                 {
                     b.Property<int>("Id")
@@ -1728,6 +1857,9 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<int?>("CharacterId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ChronicleNpcId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("EncounterId")
                         .HasColumnType("integer");
 
@@ -1735,6 +1867,36 @@ namespace RequiemNexus.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<int>("InitiativeMod")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsHeld")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRevealed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MaskedDisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("NpcCurrentVitae")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NpcCurrentWillpower")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NpcHealthBoxes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NpcHealthDamage")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("NpcMaxVitae")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NpcMaxWillpower")
                         .HasColumnType("integer");
 
                     b.Property<string>("NpcName")
@@ -1754,7 +1916,13 @@ namespace RequiemNexus.Data.Migrations
 
                     b.HasIndex("CharacterId");
 
+                    b.HasIndex("ChronicleNpcId");
+
                     b.HasIndex("EncounterId");
+
+                    b.HasIndex("EncounterId", "ChronicleNpcId")
+                        .IsUnique()
+                        .HasFilter("[ChronicleNpcId] IS NOT NULL");
 
                     b.ToTable("InitiativeEntries");
                 });
@@ -2068,6 +2236,9 @@ namespace RequiemNexus.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("InitiatorCharacterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InvestigationProgressTowardNextClue")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("LastRollAt")
@@ -2793,6 +2964,46 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Discipline");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterNpcTemplate", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.ChronicleNpc", "ChronicleNpc")
+                        .WithMany()
+                        .HasForeignKey("ChronicleNpcId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("RequiemNexus.Data.Models.CombatEncounter", "Encounter")
+                        .WithMany("NpcTemplates")
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChronicleNpc");
+
+                    b.Navigation("Encounter");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterTemplate", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Campaign");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterTemplateNpc", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.EncounterTemplate", "Template")
+                        .WithMany("Npcs")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.FactionRelationship", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.Campaign", "Campaign")
@@ -2856,6 +3067,11 @@ namespace RequiemNexus.Data.Migrations
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("RequiemNexus.Data.Models.ChronicleNpc", "ChronicleNpc")
+                        .WithMany()
+                        .HasForeignKey("ChronicleNpcId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("RequiemNexus.Data.Models.CombatEncounter", "Encounter")
                         .WithMany("InitiativeEntries")
                         .HasForeignKey("EncounterId")
@@ -2863,6 +3079,8 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+
+                    b.Navigation("ChronicleNpc");
 
                     b.Navigation("Encounter");
                 });
@@ -3079,6 +3297,8 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.CombatEncounter", b =>
                 {
                     b.Navigation("InitiativeEntries");
+
+                    b.Navigation("NpcTemplates");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CovenantDefinition", b =>
@@ -3094,6 +3314,11 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.Discipline", b =>
                 {
                     b.Navigation("Powers");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterTemplate", b =>
+                {
+                    b.Navigation("Npcs");
                 });
 
             modelBuilder.Entity("RequiemNexus.Data.Models.Merit", b =>
