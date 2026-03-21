@@ -61,7 +61,7 @@ public class PerceptionRollService(
         _logger.LogInformation(
             "Hidden perception roll for character {CharacterId} by ST {UserId}: pool={Pool} ({Description}), successes={Successes}",
             characterId,
-            storyTellerUserId,
+            LogSanitizer.ForLog(storyTellerUserId),
             dice,
             poolDescription,
             result.Successes);
