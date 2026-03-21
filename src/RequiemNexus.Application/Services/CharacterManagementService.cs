@@ -31,7 +31,7 @@ public class CharacterManagementService(
     {
         // Factory creates a fresh context per call so Blazor Server's concurrent prerender
         // and interactive renders do not share a single DbContext instance.
-        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
         return await ctx.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId && !c.IsArchived)
@@ -42,7 +42,7 @@ public class CharacterManagementService(
     /// <summary>Returns the archived characters owned by the given user.</summary>
     public async Task<List<Character>> GetArchivedCharactersAsync(string userId)
     {
-        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
         return await ctx.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId && c.IsArchived)

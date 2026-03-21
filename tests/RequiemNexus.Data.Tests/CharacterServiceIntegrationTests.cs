@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
+using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 using RequiemNexus.Web.Helpers;
@@ -18,18 +18,10 @@ namespace RequiemNexus.Data.Tests;
 /// </summary>
 public class CharacterServiceIntegrationTests
 {
-    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
+    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx, string databaseName)
     {
-        // These tests never call GetCharactersByUserIdAsync / GetArchivedCharactersAsync,
-        // so the factory is only needed to satisfy the constructor. It uses a throwaway
-        // database name that is never accessed.
-        ServiceCollection services = new();
-        services.AddDbContextFactory<ApplicationDbContext>(
-            o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
-            .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-
-        var auth = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
+        IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
+        var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
 
         return new CharacterManagementService(
             ctx,
@@ -73,7 +65,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(EmbraceCharacterAsync_CalculatesDerivedStats));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(EmbraceCharacterAsync_CalculatesDerivedStats));
         var character = BuildNewCharacter();
 
         // Act
@@ -94,7 +86,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(DeleteCharacterAsync_RemovesFromDatabase));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(DeleteCharacterAsync_RemovesFromDatabase));
         var character = BuildNewCharacter();
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
@@ -111,7 +103,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(SaveAsync_PersistsChanges));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(SaveAsync_PersistsChanges));
         var character = BuildNewCharacter();
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
@@ -130,7 +122,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(AddBeatAsync_IncrementsBeatsAndConvertsToXp));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(AddBeatAsync_IncrementsBeatsAndConvertsToXp));
         var character = BuildNewCharacter();
         character.Beats = 4;
         ctx.Characters.Add(character);
@@ -154,7 +146,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(AddXPAsync_IncrementsExperience));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(AddXPAsync_IncrementsExperience));
         var character = BuildNewCharacter();
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
@@ -175,7 +167,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(GetCharacterWithAccessCheckAsync_ReturnsCharacter_ForOwner));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(GetCharacterWithAccessCheckAsync_ReturnsCharacter_ForOwner));
         var character = BuildNewCharacter("owner-id");
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
@@ -194,7 +186,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(GetCharacterWithAccessCheckAsync_ReturnsReadOnly_ForCampaignMember));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(GetCharacterWithAccessCheckAsync_ReturnsReadOnly_ForCampaignMember));
 
         var campaign = new Campaign { Name = "Test Campaign", StoryTellerId = "st-id" };
         ctx.Campaigns.Add(campaign);
@@ -219,7 +211,7 @@ public class CharacterServiceIntegrationTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(GetCharacterWithAccessCheckAsync_ReturnsNull_ForNonMember));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(GetCharacterWithAccessCheckAsync_ReturnsNull_ForNonMember));
         var character = BuildNewCharacter("owner-id");
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();

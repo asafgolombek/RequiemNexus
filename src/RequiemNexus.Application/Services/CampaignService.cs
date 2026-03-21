@@ -172,6 +172,21 @@ public class CampaignService(
             character.CampaignId = null;
         }
 
+        // Optional CampaignId FKs are not configured with database SetNull/Cascade; SQLite/PostgreSQL keep RESTRICT
+        // and block campaign deletion until these rows are cleared.
+        await _dbContext.BeatLedger
+            .Where(e => e.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.CampaignId, (int?)null));
+        await _dbContext.XpLedger
+            .Where(e => e.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.CampaignId, (int?)null));
+        await _dbContext.PublicRolls
+            .Where(r => r.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.CampaignId, (int?)null));
+        await _dbContext.CharacterNotes
+            .Where(n => n.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.CampaignId, (int?)null));
+
         _dbContext.Campaigns.Remove(campaign);
         await _dbContext.SaveChangesAsync();
 

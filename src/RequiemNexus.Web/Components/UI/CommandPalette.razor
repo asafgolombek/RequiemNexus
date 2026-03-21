@@ -55,22 +55,15 @@
 
     private PaletteItem? _activeItem;
     private string? _userId;
+    private bool _paletteIndexLoaded;
+    private bool _paletteIndexLoading;
 
     protected override async Task OnInitializedAsync()
     {
         PaletteService.OnStateChanged += HandleStateChanged;
-        
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!string.IsNullOrEmpty(_userId))
-        {
-            var chars = await CharacterService.GetCharactersByUserIdAsync(_userId);
-            _characters = chars.Select(c => new PaletteItem(c.Name, $"/character/{c.Id}", "🩸")).ToList();
-
-            var camps = await CampaignService.GetCampaignsByUserIdAsync(_userId);
-            _campaigns = camps.Select(c => new PaletteItem(c.Name, $"/campaigns/{c.Id}", "📜")).ToList();
-        }
     }
 
     private void HandleStateChanged()
@@ -78,9 +71,46 @@
         if (PaletteService.IsOpen)
         {
             _query = string.Empty;
-            _activeItem = FilteredResults().FirstOrDefault()?.Items.FirstOrDefault();
+            _ = OnPaletteOpenedAsync();
         }
-        InvokeAsync(StateHasChanged);
+        else
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    /// <summary>
+    /// Loads character/campaign index only when the palette opens so every page navigation
+    /// does not run duplicate DB queries alongside page-level loads (same scoped services/circuit).
+    /// </summary>
+    private async Task OnPaletteOpenedAsync()
+    {
+        await EnsurePaletteIndexAsync();
+        _activeItem = FilteredResults().FirstOrDefault()?.Items.FirstOrDefault();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task EnsurePaletteIndexAsync()
+    {
+        if (_paletteIndexLoaded || _paletteIndexLoading || string.IsNullOrEmpty(_userId))
+        {
+            return;
+        }
+
+        _paletteIndexLoading = true;
+        try
+        {
+            List<Character> chars = await CharacterService.GetCharactersByUserIdAsync(_userId);
+            _characters = chars.Select(c => new PaletteItem(c.Name, $"/character/{c.Id}", "🩸")).ToList();
+
+            List<Campaign> camps = await CampaignService.GetCampaignsByUserIdAsync(_userId);
+            _campaigns = camps.Select(c => new PaletteItem(c.Name, $"/campaigns/{c.Id}", "📜")).ToList();
+            _paletteIndexLoaded = true;
+        }
+        finally
+        {
+            _paletteIndexLoading = false;
+        }
     }
 
     private IEnumerable<PaletteSection> FilteredResults()

@@ -28,18 +28,16 @@ public class CampaignServiceTests
     private static CampaignService CreateCampaignService(ApplicationDbContext ctx, DbContextOptions<ApplicationDbContext> options)
     {
         var logger = new Mock<ILogger<CampaignService>>().Object;
-        var authHelper = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
         var factory = new MatchingDbContextFactory(options);
+        var authHelper = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
 
         return new CampaignService(ctx, factory, logger, authHelper, new Mock<ISessionService>().Object);
     }
 
-    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
+    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx, string databaseName)
     {
-        ServiceCollection services = new();
-        services.AddDbContextFactory<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        var factory = services.BuildServiceProvider().GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-        var auth = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
+        IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
+        var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
         return new CharacterManagementService(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), new BeatLedgerService(ctx), auth, new Mock<ISessionService>().Object);
     }
 

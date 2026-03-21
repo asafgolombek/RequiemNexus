@@ -9,6 +9,7 @@
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.DTOs
 @using RequiemNexus.Data.Models.Enums
+@using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject ISorceryService SorceryService
 @inject IAdvancementService AdvancementService
@@ -21,6 +22,7 @@
 @inject RequiemNexus.Domain.Contracts.IExperienceCostRules ExperienceCostRules
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Advancement: @(_character?.Name ?? "Loading...") - Requiem Nexus</PageTitle>
 
@@ -41,13 +43,14 @@ else
                     <strong class="xp-counter-label">Experiences</strong>
                     <span class="xp-counter-value">@_character.ExperiencePoints</span>
                 </div>
-                @if (!string.IsNullOrEmpty(_errorMessage))
-                {
-                    <div style="color: #ff6666; margin-top: 10px; font-size: 0.9em;">@_errorMessage</div>
-                }
                 <button class="btn-ghost" @onclick="GoBackToSheet" style="margin-top: 10px;">Return to Character Sheet</button>
             </div>
         </header>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div @ref="_errorAlertRef" class="alert alert-danger mb-3" role="alert" aria-live="polite">@_errorMessage</div>
+        }
 
         <CascadingValue Value="true" Name="IsEditable">
             <div class="cs-grid">
@@ -250,6 +253,9 @@ else
     private Character? _character;
     private string? _userId;
     private string? _errorMessage;
+    private ElementReference _errorAlertRef;
+    private int _errorAlertNonce;
+    private int _lastScrolledErrorNonce;
 
     private List<Merit> _availableMerits = new();
     private int _selectedMeritId = 0;
@@ -297,6 +303,29 @@ else
         }
     }
 
+    /// <summary>Sets the visible advancement error and bumps the nonce so <see cref="OnAfterRenderAsync"/> can scroll the alert into view.</summary>
+    private void SetAdvancementError(string message)
+    {
+        _errorMessage = message;
+        _errorAlertNonce++;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_errorAlertNonce > _lastScrolledErrorNonce && !string.IsNullOrEmpty(_errorMessage))
+        {
+            _lastScrolledErrorNonce = _errorAlertNonce;
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("scrollElementIntoView", _errorAlertRef);
+            }
+            catch (JSException)
+            {
+                // Prerender or disconnected circuit — no DOM to scroll.
+            }
+        }
+    }
+
     private void GoBackToSheet()
     {
         NavigationManager.NavigateTo($"/character/{Id}");
@@ -320,7 +349,7 @@ else
             }
             else
             {
-                _errorMessage = "Not enough Experiences to upgrade that attribute.";
+                SetAdvancementError("Not enough Experiences to upgrade that attribute.");
             }
         }
     }
@@ -341,7 +370,7 @@ else
             }
             else
             {
-                _errorMessage = "Not enough Experiences to upgrade that skill.";
+                SetAdvancementError("Not enough Experiences to upgrade that skill.");
             }
         }
     }
@@ -362,32 +391,61 @@ else
         }
         else
         {
-            _errorMessage = "Not enough Experiences to upgrade that discipline.";
+            SetAdvancementError("Not enough Experiences to upgrade that discipline.");
         }
     }
 
     private async Task AddNewMerit()
     {
-        if (_character == null || _selectedMeritId == 0) return;
+        if (_character == null || _selectedMeritId == 0)
+        {
+            return;
+        }
 
         _errorMessage = null;
-        int xpCost = ExperienceCostRules.CalculateMeritCost(0, _newMeritRating);
 
-        if (_character.ExperiencePoints >= xpCost)
+        if (SelectedMeritRequiresSpec && string.IsNullOrWhiteSpace(_newMeritSpecification))
         {
-            var merit = _availableMerits.First(m => m.Id == _selectedMeritId);
-            var cm = await CharacterMeritService.AddMeritAsync(_character, _selectedMeritId, SelectedMeritRequiresSpec ? _newMeritSpecification : null, _newMeritRating, xpCost);
-            cm.Merit = merit;
-            _character.Merits.Add(cm);
+            SetAdvancementError("This merit requires a specification.");
+            return;
+        }
 
+        int xpCost = ExperienceCostRules.CalculateMeritCost(0, _newMeritRating);
+        if (_character.ExperiencePoints < xpCost)
+        {
+            SetAdvancementError($"Not enough Experiences to add that merit. Cost is {xpCost} XP.");
+            return;
+        }
+
+        try
+        {
+            Merit merit = _availableMerits.First(m => m.Id == _selectedMeritId);
+            string? specForPurchase = SelectedMeritRequiresSpec
+                ? (_newMeritSpecification ?? string.Empty).Trim()
+                : null;
+            CharacterMerit cm = await CharacterMeritService.AddMeritAsync(
+                _character,
+                _selectedMeritId,
+                specForPurchase,
+                _newMeritRating,
+                xpCost);
+            cm.Merit = merit;
+
+            // EF usually fix-ups the tracked Character.Merits collection; avoid duplicate entries.
+            if (!_character.Merits.Contains(cm))
+            {
+                _character.Merits.Add(cm);
+            }
+
+            _availableMerits = await CharacterMeritService.GetAvailableMeritsAsync(_character);
             _selectedMeritId = 0;
             _newMeritRating = 1;
             _newMeritSpecification = string.Empty;
             await InvokeAsync(StateHasChanged);
         }
-        else
+        catch (Exception ex)
         {
-            _errorMessage = $"Not enough Experiences to add that merit. Cost is {xpCost} XP.";
+            SetAdvancementError(ex.Message);
         }
     }
 
@@ -413,7 +471,7 @@ else
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            SetAdvancementError(ex.Message);
         }
     }
 
@@ -436,7 +494,7 @@ else
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            SetAdvancementError(ex.Message);
         }
     }
 
@@ -459,7 +517,7 @@ else
             _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _userId);
             if (_eligibleRites.Count == 0)
             {
-                _errorMessage = "No eligible rites. Raise Crúac, Theban Sorcery, Necromancy, or Ordo Sorcery to the required level, meet covenant/clan gates, or you may already have a pending request.";
+                SetAdvancementError("No eligible rites. Raise Crúac, Theban Sorcery, Necromancy, or Ordo Sorcery to the required level, meet covenant/clan gates, or you may already have a pending request.");
                 return;
             }
 
@@ -467,7 +525,7 @@ else
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            SetAdvancementError(ex.Message);
         }
         finally
         {
@@ -497,7 +555,7 @@ else
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            SetAdvancementError(ex.Message);
         }
     }
 }

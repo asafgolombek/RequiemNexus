@@ -32,9 +32,27 @@
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
-@if (_character == null)
+@if (_isSheetLoading)
 {
     <SkeletonLoader Variant="sheet" />
+}
+else if (_sheetLoadError != null)
+{
+    <div class="page-container fade-in">
+        <div class="alert alert-danger" role="alert">
+            <strong>Could not load character.</strong> @_sheetLoadError
+        </div>
+        <a href="/characters" class="btn-primary-rn mt-3">Back to My Characters</a>
+    </div>
+}
+else if (_character == null)
+{
+    <div class="page-container fade-in">
+        <div class="empty-state-rn">
+            <p>@(string.IsNullOrEmpty(_currentUserId) ? "You must be signed in to view this character." : "Character not found or you do not have access.")</p>
+            <a href="/characters" class="btn-primary-rn">Back to My Characters</a>
+        </div>
+    </div>
 }
 else
 {
@@ -69,39 +87,42 @@ else
                     }
                 </div>
                 <div class="char-xp">
-                    <div class="xp-counter">
-                        <strong class="xp-counter-label">Beats</strong>
-                        <button class="xp-counter-btn" @onclick="RemoveBeat"
-                            disabled="@(_character.Beats <= 0)">-</button>
-                        <span class="xp-counter-value">@_character.Beats</span>
-                        <button class="xp-counter-btn" @onclick="AddBeat">+</button>
+                    <div class="char-xp-trackers">
+                        <div class="xp-counter">
+                            <strong class="xp-counter-label">Beats</strong>
+                            <button class="xp-counter-btn" @onclick="RemoveBeat"
+                                disabled="@(_character.Beats <= 0)">-</button>
+                            <span class="xp-counter-value">@_character.Beats</span>
+                            <button class="xp-counter-btn" @onclick="AddBeat">+</button>
+                        </div>
+                        <div class="xp-counter">
+                            <strong class="xp-counter-label">Experiences</strong>
+                            <button class="xp-counter-btn" @onclick="RemoveXP"
+                                disabled="@(_character.ExperiencePoints <= 0)">-</button>
+                            <span class="xp-counter-value">@_character.ExperiencePoints</span>
+                            <button class="xp-counter-btn" @onclick="AddXP">+</button>
+                        </div>
+                        <div class="xp-total">
+                            <strong class="xp-counter-label">Total XP</strong>
+                            <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
+                        </div>
                     </div>
-                    <div class="xp-counter">
-                        <strong class="xp-counter-label">Experiences</strong>
-                        <button class="xp-counter-btn" @onclick="RemoveXP"
-                            disabled="@(_character.ExperiencePoints <= 0)">-</button>
-                        <span class="xp-counter-value">@_character.ExperiencePoints</span>
-                        <button class="xp-counter-btn" @onclick="AddXP">+</button>
+                    <div class="char-xp-actions">
+                        <button class="btn-ghost mode-toggle-btn"
+                        @onclick="GoToAdvancement">
+                            Enter Advancement
+                        </button>
+                        <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
+                        @onclick="ToggleFreeEditMode">
+                            @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
+                        </button>
+                        <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
+                            @(_isExporting ? "Exporting…" : "Export JSON")
+                        </button>
+                        <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
+                            @(_isExporting ? "Exporting…" : "Export PDF")
+                        </button>
                     </div>
-                    <div class="xp-total">
-                        <strong class="xp-counter-label">Total XP</strong>
-                        <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
-                    </div>
-
-                    <button class="btn-ghost mode-toggle-btn"
-                    @onclick="GoToAdvancement">
-                        Enter Advancement
-                    </button>
-                    <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
-                    @onclick="ToggleFreeEditMode">
-                        @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
-                    </button>
-                    <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
-                        @(_isExporting ? "Exporting…" : "Export JSON")
-                    </button>
-                    <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
-                        @(_isExporting ? "Exporting…" : "Export PDF")
-                    </button>
                 </div>
             </div>
         </header>

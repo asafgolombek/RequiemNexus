@@ -30,8 +30,8 @@ public interface ICampaignService
     Task RemoveCharacterFromCampaignAsync(int campaignId, int characterId, string userId);
 
     /// <summary>
-    /// Deletes the campaign. ST-only. Before deletion, nulls out <c>CampaignId</c> on all enrolled characters
-    /// so they return to the player's unassigned pool.
+    /// Deletes the campaign. ST-only. Before deletion, nulls out <c>CampaignId</c> on enrolled characters,
+    /// beat/XP ledger rows, public rolls, and scoped character notes so FK constraints allow removal.
     /// </summary>
     Task DeleteCampaignAsync(int campaignId, string storyTellerUserId);
 

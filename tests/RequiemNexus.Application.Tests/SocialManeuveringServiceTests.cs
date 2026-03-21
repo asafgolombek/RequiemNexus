@@ -217,8 +217,7 @@ public class SocialManeuveringServiceTests
         var options = CreateOptions(nameof(RollOpenDoorAsync_NonOwnerNonSt_Throws));
         using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        using var authCtx = new ApplicationDbContext(options);
-        var realAuth = new AuthorizationHelper(authCtx, NullLogger<AuthorizationHelper>.Instance);
+        var realAuth = new AuthorizationHelper(new TestApplicationDbContextFactory(options), NullLogger<AuthorizationHelper>.Instance);
 
         var service = CreateService(options, authHelper: realAuth, diceService: CreateDiceMock(1).Object);
 

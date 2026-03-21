@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
@@ -29,11 +30,16 @@ public partial class CharacterDetails : IAsyncDisposable
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
 
+    [Inject]
+    private ILogger<CharacterDetails> Logger { get; set; } = default!;
+
     /// <summary>Route parameter: character id.</summary>
     [Parameter]
     public int Id { get; set; }
 
     private Character? _character;
+    private bool _isSheetLoading = true;
+    private string? _sheetLoadError;
     private string? _currentUserId;
     private string? _cookieHeader;
     private PersistingComponentStateSubscription _persistingSubscription;
@@ -215,13 +221,28 @@ public partial class CharacterDetails : IAsyncDisposable
             _cookieHeader = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
         }
 
-        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!string.IsNullOrEmpty(_currentUserId))
+        try
         {
-            _character = await CharacterService.GetCharacterByIdAsync(Id, _currentUserId);
-            _availableEquipment = await EquipmentService.GetAvailableEquipmentAsync();
+            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(_currentUserId))
+            {
+                // Detach any tracked instance from this scoped DbContext (e.g. after visiting Advancement)
+                // before loading the full include graph again.
+                _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+                _availableEquipment = await EquipmentService.GetAvailableEquipmentAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load character sheet for character {CharacterId}", Id);
+            _sheetLoadError = "Unable to load this character. Try refreshing the page or signing in again.";
+            _character = null;
+        }
+        finally
+        {
+            _isSheetLoading = false;
         }
     }
 

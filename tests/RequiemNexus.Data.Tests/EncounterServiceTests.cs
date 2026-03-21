@@ -70,7 +70,7 @@ public class EncounterServiceTests
                 });
 
         var rules = new CharacterCreationRules();
-        var auth = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
+        var auth = new AuthorizationHelper(new TestApplicationDbContextFactory(options), NullLogger<AuthorizationHelper>.Instance);
         var dice = diceService ?? defaultDice.Object;
 
         var prep = new EncounterPrepService(ctx, NullLogger<EncounterPrepService>.Instance, auth, rules);
