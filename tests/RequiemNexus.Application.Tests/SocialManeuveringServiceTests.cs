@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RequiemNexus.Application.Contracts;
@@ -22,16 +23,30 @@ public class SocialManeuveringServiceTests
 {
     private const string _defaultAttributes = "{\"Strength\":2,\"Dexterity\":2,\"Stamina\":2,\"Intelligence\":2,\"Wits\":2,\"Resolve\":3,\"Presence\":2,\"Manipulation\":2,\"Composure\":2}";
 
-    private static ApplicationDbContext CreateContext(string dbName)
+    private sealed class TestApplicationDbContextFactory : IDbContextFactory<ApplicationDbContext>
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+        private readonly DbContextOptions<ApplicationDbContext> _options;
+
+        public TestApplicationDbContextFactory(DbContextOptions<ApplicationDbContext> options) => _options = options;
+
+        public ApplicationDbContext CreateDbContext() => new(_options);
+
+        public ValueTask<ApplicationDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(new ApplicationDbContext(_options));
+    }
+
+    private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName)
+    {
+        // Shared root so disposing a factory-created context does not tear down the in-memory store
+        // for other contexts using the same options (matches production IDbContextFactory behavior).
+        var root = new InMemoryDatabaseRoot();
+        return new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(dbName, root)
             .Options;
-        return new ApplicationDbContext(options);
     }
 
     private static SocialManeuveringService CreateService(
-        ApplicationDbContext ctx,
+        DbContextOptions<ApplicationDbContext> options,
         IAuthorizationHelper? authHelper = null,
         IDiceService? diceService = null,
         ISessionPublisher? sessionPublisher = null,
@@ -42,7 +57,13 @@ public class SocialManeuveringServiceTests
         var logger = new Mock<ILogger<SocialManeuveringService>>().Object;
         var publisher = sessionPublisher ?? CreateSessionPublisherMock().Object;
         var conditions = conditionService ?? CreateConditionNoOpMock().Object;
-        return new SocialManeuveringService(ctx, auth, dice, publisher, conditions, logger);
+        return new SocialManeuveringService(
+            new TestApplicationDbContextFactory(options),
+            auth,
+            dice,
+            publisher,
+            conditions,
+            logger);
     }
 
     private static Mock<IConditionService> CreateConditionNoOpMock()
@@ -120,9 +141,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task CreateAsync_ComputesInitialDoors_FromNpcAttributes()
     {
-        using var ctx = CreateContext(nameof(CreateAsync_ComputesInitialDoors_FromNpcAttributes));
+        var options = CreateOptions(nameof(CreateAsync_ComputesInitialDoors_FromNpcAttributes));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx);
+        var service = CreateService(options);
 
         SocialManeuver m = await service.CreateAsync(
             1,
@@ -142,7 +164,8 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task CreateAsync_AfterBurnt_Throws()
     {
-        using var ctx = CreateContext(nameof(CreateAsync_AfterBurnt_Throws));
+        var options = CreateOptions(nameof(CreateAsync_AfterBurnt_Throws));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
         ctx.SocialManeuvers.Add(new SocialManeuver
         {
@@ -156,7 +179,7 @@ public class SocialManeuveringServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = CreateService(options);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(
             1,
@@ -172,9 +195,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task RollOpenDoorAsync_ReducesRemainingDoors_OnSuccess()
     {
-        using var ctx = CreateContext(nameof(RollOpenDoorAsync_ReducesRemainingDoors_OnSuccess));
+        var options = CreateOptions(nameof(RollOpenDoorAsync_ReducesRemainingDoors_OnSuccess));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx, diceService: CreateDiceMock(3).Object);
+        var service = CreateService(options, diceService: CreateDiceMock(3).Object);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
@@ -189,7 +213,8 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task RollOpenDoorAsync_NonOwnerNonSt_Throws()
     {
-        using var ctx = CreateContext(nameof(RollOpenDoorAsync_NonOwnerNonSt_Throws));
+        var options = CreateOptions(nameof(RollOpenDoorAsync_NonOwnerNonSt_Throws));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
         var auth = new Mock<IAuthorizationHelper>();
         auth.Setup(a => a.RequireStorytellerAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -197,7 +222,7 @@ public class SocialManeuveringServiceTests
         auth.Setup(a => a.RequireCharacterAccessAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
 
-        var service = CreateService(ctx, authHelper: auth.Object, diceService: CreateDiceMock(1).Object);
+        var service = CreateService(options, authHelper: auth.Object, diceService: CreateDiceMock(1).Object);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
@@ -209,9 +234,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task SetImpressionAsync_Hostile_SetsHostileSince()
     {
-        using var ctx = CreateContext(nameof(SetImpressionAsync_Hostile_SetsHostileSince));
+        var options = CreateOptions(nameof(SetImpressionAsync_Hostile_SetsHostileSince));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx);
+        var service = CreateService(options);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
@@ -227,9 +253,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task LoadManeuver_HostileWeek_FailsManeuver()
     {
-        using var ctx = CreateContext(nameof(LoadManeuver_HostileWeek_FailsManeuver));
+        var options = CreateOptions(nameof(LoadManeuver_HostileWeek_FailsManeuver));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx);
+        var service = CreateService(options);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
@@ -248,7 +275,8 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task CreateAsync_PublishesSocialManeuverUpdate()
     {
-        using var ctx = CreateContext(nameof(CreateAsync_PublishesSocialManeuverUpdate));
+        var options = CreateOptions(nameof(CreateAsync_PublishesSocialManeuverUpdate));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
         var client = new Mock<ISessionClient>();
         client.Setup(c => c.ReceiveSocialManeuverUpdate(It.IsAny<SocialManeuverUpdateDto>()))
@@ -256,7 +284,7 @@ public class SocialManeuveringServiceTests
         var pub = new Mock<ISessionPublisher>();
         pub.Setup(p => p.Group(It.IsAny<int>())).Returns(client.Object);
 
-        SocialManeuveringService service = CreateService(ctx, sessionPublisher: pub.Object);
+        SocialManeuveringService service = CreateService(options, sessionPublisher: pub.Object);
 
         SocialManeuver m = await service.CreateAsync(
             1,
@@ -276,9 +304,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task ListForCampaignAsync_IncludesInitiatorAndTargetNpcNames()
     {
-        using var ctx = CreateContext(nameof(ListForCampaignAsync_IncludesInitiatorAndTargetNpcNames));
+        var options = CreateOptions(nameof(ListForCampaignAsync_IncludesInitiatorAndTargetNpcNames));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx);
+        var service = CreateService(options);
         await service.CreateAsync(1, 1, 1, "goal", false, false, false, "st-user");
 
         IReadOnlyList<SocialManeuver> list = await service.ListForCampaignAsync(1, "st-user");
@@ -291,9 +320,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task BankInvestigationSuccessesAsync_AtThreshold_CreatesClue()
     {
-        using var ctx = CreateContext(nameof(BankInvestigationSuccessesAsync_AtThreshold_CreatesClue));
+        var options = CreateOptions(nameof(BankInvestigationSuccessesAsync_AtThreshold_CreatesClue));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx);
+        var service = CreateService(options);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
@@ -311,9 +341,10 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task SpendManeuverClueAsync_SetsBenefitAndSpent()
     {
-        using var ctx = CreateContext(nameof(SpendManeuverClueAsync_SetsBenefitAndSpent));
+        var options = CreateOptions(nameof(SpendManeuverClueAsync_SetsBenefitAndSpent));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(ctx);
+        var service = CreateService(options);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
@@ -338,10 +369,11 @@ public class SocialManeuveringServiceTests
     [Fact]
     public async Task RollOpenDoorAsync_ExceptionalSuccess_CallsConditionService()
     {
-        using var ctx = CreateContext(nameof(RollOpenDoorAsync_ExceptionalSuccess_CallsConditionService));
+        var options = CreateOptions(nameof(RollOpenDoorAsync_ExceptionalSuccess_CallsConditionService));
+        using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
         var conditions = CreateConditionNoOpMock();
-        var service = CreateService(ctx, diceService: CreateDiceMock(5).Object, conditionService: conditions.Object);
+        var service = CreateService(options, diceService: CreateDiceMock(5).Object, conditionService: conditions.Object);
 
         SocialManeuver created = await service.CreateAsync(
             1,

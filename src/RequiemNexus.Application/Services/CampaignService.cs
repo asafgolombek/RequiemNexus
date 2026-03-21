@@ -40,14 +40,58 @@ public class CampaignService(
     /// <inheritdoc />
     public async Task<Campaign?> GetCampaignByIdAsync(int id, string userId)
     {
-        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
-        return await ctx.Campaigns
-            .Include(c => c.StoryTeller)
-            .Include(c => c.Characters).ThenInclude(ch => ch.User)
+        using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+
+        // Two-step membership: (StoryTeller OR enrolled character). A single Campaign query with
+        // `StoryTellerId == userId || Characters.Any(...)` has mis-translated on the in-memory provider in tests.
+        bool isStoryteller = await ctx.Campaigns.AsNoTracking()
+            .AnyAsync(c => c.Id == id && c.StoryTellerId == userId);
+
+        if (!isStoryteller)
+        {
+            bool isPlayer = await ctx.Characters.AsNoTracking()
+                .AnyAsync(ch => ch.CampaignId == id && ch.ApplicationUserId == userId);
+
+            if (!isPlayer)
+            {
+                return null;
+            }
+        }
+
+        // Do not Include StoryTeller or Character.User in the main graph query. With AsSplitQuery(),
+        // missing AspNetUsers rows behave like inner joins and can drop the entire campaign row.
+        Campaign? campaign = await ctx.Campaigns
             .Include(c => c.Characters).ThenInclude(ch => ch.Clan)
             .AsSplitQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (campaign is null)
+        {
+            return null;
+        }
+
+        HashSet<string> userIds = new(
+            campaign.Characters.Select(ch => ch.ApplicationUserId).Append(campaign.StoryTellerId));
+
+        Dictionary<string, ApplicationUser> users = await ctx.Users.AsNoTracking()
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id);
+
+        if (users.TryGetValue(campaign.StoryTellerId, out ApplicationUser? storyteller))
+        {
+            campaign.StoryTeller = storyteller;
+        }
+
+        foreach (Character character in campaign.Characters)
+        {
+            if (users.TryGetValue(character.ApplicationUserId, out ApplicationUser? player))
+            {
+                character.User = player;
+            }
+        }
+
+        return campaign;
     }
 
     /// <inheritdoc />

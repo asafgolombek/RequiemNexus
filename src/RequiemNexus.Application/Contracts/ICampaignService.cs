@@ -12,8 +12,9 @@ public interface ICampaignService
     Task<List<Campaign>> GetCampaignsByUserIdAsync(string userId);
 
     /// <summary>
-    /// Returns the campaign with its Storyteller and character roster, or <c>null</c> if not found.
-    /// Any authenticated user who is a member may call this.
+    /// Returns the campaign with its Storyteller and character roster, or <c>null</c> if the campaign does not exist
+    /// or <paramref name="userId"/> is neither the Storyteller nor the owner of a character in the campaign
+    /// (aligned with live-session hub membership).
     /// </summary>
     Task<Campaign?> GetCampaignByIdAsync(int id, string userId);
 

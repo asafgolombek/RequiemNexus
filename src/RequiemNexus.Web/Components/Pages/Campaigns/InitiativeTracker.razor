@@ -486,8 +486,18 @@
         }
 
         _hubConnectedCampaignId = CampaignId;
+        RefreshCookieFromHttpContext();
         _ = await SessionClient.GetSessionActiveAsync(CampaignId, SessionService);
-        await SessionClient.StartAsync(CampaignId, null, _currentUserId, _cookieHeader);
+        _ = await SessionClient.StartAsync(CampaignId, null, _currentUserId, _cookieHeader);
+    }
+
+    private void RefreshCookieFromHttpContext()
+    {
+        string? fromCtx = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        if (!string.IsNullOrWhiteSpace(fromCtx))
+        {
+            _cookieHeader = fromCtx;
+        }
     }
 
     private Task PersistCookieHeader()
@@ -992,12 +1002,15 @@
         };
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         _persistingSubscription.Dispose();
         SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
-        await SessionClient.StopAsync();
+
+        // Same as CharacterDetails: avoid StopAsync on dispose so returning to the campaign cannot
+        // schedule a delayed hub teardown after the campaign page has reconnected.
         _loadEncounterLock.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

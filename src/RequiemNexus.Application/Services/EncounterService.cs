@@ -684,6 +684,7 @@ public class EncounterService(
     {
         CombatEncounter? encounter = await _dbContext.CombatEncounters
             .AsNoTracking()
+            .Include(e => e.Campaign)
             .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
                 .ThenInclude(i => i.Character)!
                     .ThenInclude(c => c!.Attributes)
@@ -697,7 +698,7 @@ public class EncounterService(
 
         await _authHelper.RequireCampaignMemberAsync(encounter.CampaignId, userId, "view this encounter");
 
-        bool isSt = await IsCampaignStorytellerAsync(encounter.CampaignId, userId);
+        bool isSt = encounter.Campaign?.StoryTellerId == userId;
         if (isSt)
         {
             return encounter;
@@ -713,6 +714,7 @@ public class EncounterService(
 
         CombatEncounter? encounter = await _dbContext.CombatEncounters
             .AsNoTracking()
+            .Include(e => e.Campaign)
             .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
                 .ThenInclude(i => i.Character)!
                     .ThenInclude(c => c!.Attributes)
@@ -724,7 +726,7 @@ public class EncounterService(
             return null;
         }
 
-        bool isSt = await IsCampaignStorytellerAsync(campaignId, userId);
+        bool isSt = encounter.Campaign?.StoryTellerId == userId;
         return isSt ? encounter : RedactEncounterForPlayer(encounter, userId);
     }
 
@@ -1208,9 +1210,6 @@ public class EncounterService(
         IReadOnlyList<InitiativeEntryDto> dtos = EncounterInitiativeBroadcastMapper.Map(enc);
         await _sessionService.UpdateInitiativeAsync(storyTellerUserId, enc.CampaignId, dtos);
     }
-
-    private async Task<bool> IsCampaignStorytellerAsync(int campaignId, string userId) =>
-        await _dbContext.Campaigns.AnyAsync(c => c.Id == campaignId && c.StoryTellerId == userId);
 
     private async Task<CombatEncounter> LoadDraftEncounterAsync(int encounterId)
     {
