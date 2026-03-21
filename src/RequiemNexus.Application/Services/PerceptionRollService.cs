@@ -59,9 +59,9 @@ public class PerceptionRollService(
         Domain.Models.RollResult result = _diceService.Roll(dice, tenAgain: true);
 
         _logger.LogInformation(
-            "Hidden perception roll for character {CharacterId} by ST {UserId}: pool={Pool} ({Description}), successes={Successes}",
+            "Hidden perception roll for character {CharacterId} in campaign {CampaignId}: pool={Pool} ({Description}), successes={Successes}",
             characterId,
-            LogSanitizer.ForLog(storyTellerUserId),
+            campaignId,
             dice,
             poolDescription,
             result.Successes);

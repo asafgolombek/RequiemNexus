@@ -18,10 +18,9 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
         if (!isSt)
         {
             logger.LogWarning(
-                "Unauthorized attempt to {OperationName} on campaign {CampaignId} by user {UserId}",
+                "Unauthorized attempt to {OperationName} on campaign {CampaignId}",
                 LogSanitizer.ForLog(operationName),
-                campaignId,
-                LogSanitizer.ForLog(userId));
+                campaignId);
 
             throw new UnauthorizedAccessException(
                 $"Only the campaign Storyteller may {operationName}.");
@@ -51,10 +50,9 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
         if (!access.IsOwner && !access.IsStoryteller)
         {
             logger.LogWarning(
-                "Unauthorized attempt to {OperationName} on character {CharacterId} by user {UserId}",
+                "Unauthorized attempt to {OperationName} on character {CharacterId}",
                 LogSanitizer.ForLog(operationName),
-                characterId,
-                LogSanitizer.ForLog(userId));
+                characterId);
 
             throw new UnauthorizedAccessException(
                 $"Only the character's owner or the campaign Storyteller may {operationName}.");
@@ -72,10 +70,9 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
         if (character.ApplicationUserId != userId)
         {
             logger.LogWarning(
-                "Unauthorized attempt to {OperationName} on character {CharacterId} by user {UserId}",
+                "Unauthorized attempt to {OperationName} on character {CharacterId}",
                 LogSanitizer.ForLog(operationName),
-                characterId,
-                LogSanitizer.ForLog(userId));
+                characterId);
 
             throw new UnauthorizedAccessException(
                 $"Only the character's owner may {operationName}.");
@@ -97,10 +94,9 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
         if (!allowed)
         {
             logger.LogWarning(
-                "Unauthorized attempt to {OperationName} on campaign {CampaignId} by user {UserId}",
+                "Unauthorized attempt to {OperationName} on campaign {CampaignId}",
                 LogSanitizer.ForLog(operationName),
-                campaignId,
-                LogSanitizer.ForLog(userId));
+                campaignId);
 
             throw new UnauthorizedAccessException(
                 $"You must be the Storyteller or a player in this campaign to {operationName}.");
