@@ -7,11 +7,14 @@ using RequiemNexus.Data.Models;
 namespace RequiemNexus.Application.Services;
 
 /// <inheritdoc />
-public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<AuthorizationHelper> logger) : IAuthorizationHelper
+public class AuthorizationHelper(
+    IDbContextFactory<ApplicationDbContext> dbContextFactory,
+    ILogger<AuthorizationHelper> logger) : IAuthorizationHelper
 {
     /// <inheritdoc />
     public async Task RequireStorytellerAsync(int campaignId, string userId, string operationName = "perform this action")
     {
+        await using ApplicationDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
         bool isSt = await dbContext.Campaigns
             .AnyAsync(c => c.Id == campaignId && c.StoryTellerId == userId);
 
@@ -30,15 +33,18 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
     /// <inheritdoc />
     public async Task RequireCharacterAccessAsync(int characterId, string userId, string operationName = "perform this action")
     {
-        // Single SQL round-trip (correlated subquery) so one scoped DbContext never runs overlapping operations here.
+        await using ApplicationDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
+
+        // Use navigation in the projection so EF generates one SQL statement (join). A separate
+        // IQueryable inside Select (e.g. dbContext.Campaigns.Any(...)) can trigger a second active
+        // operation on this DbContext and throw InvalidOperationException during execution.
         var access = await dbContext.Characters
             .AsNoTracking()
             .Where(c => c.Id == characterId)
             .Select(c => new
             {
                 IsOwner = c.ApplicationUserId == userId,
-                IsStoryteller = c.CampaignId != null && dbContext.Campaigns.Any(camp =>
-                    camp.Id == c.CampaignId && camp.StoryTellerId == userId),
+                IsStoryteller = c.Campaign != null && c.Campaign.StoryTellerId == userId,
             })
             .FirstOrDefaultAsync();
 
@@ -62,6 +68,7 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
     /// <inheritdoc />
     public async Task RequireCharacterOwnerAsync(int characterId, string userId, string operationName = "perform this action")
     {
+        await using ApplicationDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
         Character character = await dbContext.Characters
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == characterId)
@@ -80,8 +87,11 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
     }
 
     /// <inheritdoc />
-    public Task RequireCampaignMemberAsync(int campaignId, string userId, string operationName = "access this campaign") =>
-        RequireCampaignMemberAsync(dbContext, campaignId, userId, operationName);
+    public async Task RequireCampaignMemberAsync(int campaignId, string userId, string operationName = "access this campaign")
+    {
+        await using ApplicationDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await RequireCampaignMemberAsync(dbContext, campaignId, userId, operationName);
+    }
 
     /// <inheritdoc />
     public async Task RequireCampaignMemberAsync(ApplicationDbContext context, int campaignId, string userId, string operationName = "access this campaign")

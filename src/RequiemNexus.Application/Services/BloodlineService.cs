@@ -65,7 +65,12 @@ public class BloodlineService(
 
             if (validation.IsSuccess)
             {
-                result.Add(new BloodlineSummaryDto(b.Id, b.Name, b.Description));
+                result.Add(new BloodlineSummaryDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                });
             }
         }
 

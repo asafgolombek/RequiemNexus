@@ -32,9 +32,27 @@
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
 
-@if (_character == null)
+@if (_isSheetLoading)
 {
     <SkeletonLoader Variant="sheet" />
+}
+else if (_sheetLoadError != null)
+{
+    <div class="page-container fade-in">
+        <div class="alert alert-danger" role="alert">
+            <strong>Could not load character.</strong> @_sheetLoadError
+        </div>
+        <a href="/characters" class="btn-primary-rn mt-3">Back to My Characters</a>
+    </div>
+}
+else if (_character == null)
+{
+    <div class="page-container fade-in">
+        <div class="empty-state-rn">
+            <p>@(string.IsNullOrEmpty(_currentUserId) ? "You must be signed in to view this character." : "Character not found or you do not have access.")</p>
+            <a href="/characters" class="btn-primary-rn">Back to My Characters</a>
+        </div>
+    </div>
 }
 else
 {
@@ -50,7 +68,7 @@ else
                 }
                 else
                 {
-                    <h1 @onclick="() => _isEditingName = true" style="cursor: pointer;" title="Click to edit name">@_character.Name <i class="edit-icon">✎</i></h1>
+                    <h1 @onclick="() => _isEditingName = true" class="edit-name-trigger" title="Click to edit name">@_character.Name <i class="edit-icon">✎</i></h1>
                 }
                 <div class="char-meta">
                     <span><strong>Concept:</strong> @(string.IsNullOrEmpty(_character.Concept) ? "???" : _character.Concept)</span>
@@ -69,39 +87,42 @@ else
                     }
                 </div>
                 <div class="char-xp">
-                    <div class="xp-counter">
-                        <strong class="xp-counter-label">Beats</strong>
-                        <button class="xp-counter-btn" @onclick="RemoveBeat"
-                            disabled="@(_character.Beats <= 0)">-</button>
-                        <span class="xp-counter-value">@_character.Beats</span>
-                        <button class="xp-counter-btn" @onclick="AddBeat">+</button>
+                    <div class="char-xp-trackers">
+                        <div class="xp-counter">
+                            <strong class="xp-counter-label">Beats</strong>
+                            <button class="xp-counter-btn" @onclick="RemoveBeat"
+                                disabled="@(_character.Beats <= 0)">-</button>
+                            <span class="xp-counter-value">@_character.Beats</span>
+                            <button class="xp-counter-btn" @onclick="AddBeat">+</button>
+                        </div>
+                        <div class="xp-counter">
+                            <strong class="xp-counter-label">Experiences</strong>
+                            <button class="xp-counter-btn" @onclick="RemoveXP"
+                                disabled="@(_character.ExperiencePoints <= 0)">-</button>
+                            <span class="xp-counter-value">@_character.ExperiencePoints</span>
+                            <button class="xp-counter-btn" @onclick="AddXP">+</button>
+                        </div>
+                        <div class="xp-total">
+                            <strong class="xp-counter-label">Total XP</strong>
+                            <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
+                        </div>
                     </div>
-                    <div class="xp-counter">
-                        <strong class="xp-counter-label">Experiences</strong>
-                        <button class="xp-counter-btn" @onclick="RemoveXP"
-                            disabled="@(_character.ExperiencePoints <= 0)">-</button>
-                        <span class="xp-counter-value">@_character.ExperiencePoints</span>
-                        <button class="xp-counter-btn" @onclick="AddXP">+</button>
+                    <div class="char-xp-actions">
+                        <button class="btn-ghost mode-toggle-btn"
+                        @onclick="GoToAdvancement">
+                            Enter Advancement
+                        </button>
+                        <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
+                        @onclick="ToggleFreeEditMode">
+                            @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
+                        </button>
+                        <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
+                            @(_isExporting ? "Exporting…" : "Export JSON")
+                        </button>
+                        <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
+                            @(_isExporting ? "Exporting…" : "Export PDF")
+                        </button>
                     </div>
-                    <div class="xp-total">
-                        <strong class="xp-counter-label">Total XP</strong>
-                        <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
-                    </div>
-
-                    <button class="btn-ghost mode-toggle-btn"
-                    @onclick="GoToAdvancement">
-                        Enter Advancement
-                    </button>
-                    <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
-                    @onclick="ToggleFreeEditMode">
-                        @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
-                    </button>
-                    <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
-                        @(_isExporting ? "Exporting…" : "Export JSON")
-                    </button>
-                    <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
-                        @(_isExporting ? "Exporting…" : "Export PDF")
-                    </button>
                 </div>
             </div>
         </header>
@@ -209,16 +230,16 @@ else
                             <ul class="trait-list disciplines-list">
                                 @foreach (var disc in _character.Disciplines)
                                 {
-                                    <li class="trait-item discipline-item" style="flex-direction: column; align-items: stretch;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer;" @onclick="() => ToggleDiscipline(disc.DisciplineId)">
+                                    <li class="trait-item discipline-item flex-col-stretch">
+                                        <div class="discipline-item-header" @onclick="() => ToggleDiscipline(disc.DisciplineId)">
                                             <span>
                                                 @if (_expandedDisciplines.Contains(disc.DisciplineId))
                                                 {
-                                                    <i class="oi oi-chevron-bottom" style="font-size: 0.8em; margin-right: 5px;"></i>
+                                                    <i class="oi oi-chevron-bottom expand-icon"></i>
                                                 }
                                                 else
                                                 {
-                                                    <i class="oi oi-chevron-right" style="font-size: 0.8em; margin-right: 5px;"></i>
+                                                    <i class="oi oi-chevron-right expand-icon"></i>
                                                 }
                                                 @disc.Discipline?.Name
                                             </span>
@@ -227,15 +248,15 @@ else
                                         
                                         @if (_expandedDisciplines.Contains(disc.DisciplineId) && disc.Discipline?.Powers != null)
                                         {
-                                            <div class="discipline-powers" style="margin-top: 10px; padding-left: 15px; border-left: 2px solid #550000; font-size: 0.9em; color: #d0d0d0;">
+                                            <div class="discipline-powers">
                                                 @foreach (var power in disc.Discipline.Powers.Where(p => p.Level <= disc.Rating).OrderBy(p => p.Level))
                                                 {
-                                                    <div class="power-item" style="margin-bottom: 8px;">
+                                                    <div class="power-item">
                                                         <strong>Level @power.Level - @power.Name:</strong>
-                                                        <p style="margin: 2px 0 0 0; font-size: 0.85em; color: #a0a0a0;">@power.Description</p>
+                                                        <p class="power-desc">@power.Description</p>
                                                         @if (!string.IsNullOrEmpty(power.DicePool) || !string.IsNullOrEmpty(power.Cost))
                                                         {
-                                                            <div style="font-size: 0.8em; color: #808080; margin-top: 2px;">
+                                                            <div class="power-meta">
                                                                 @(string.IsNullOrEmpty(power.DicePool) ? "" : $"Pool: {power.DicePool}")
                                                                 @(string.IsNullOrEmpty(power.DicePool) || string.IsNullOrEmpty(power.Cost) ? "" : " | ")
                                                                 @(string.IsNullOrEmpty(power.Cost) ? "" : $"Cost: {power.Cost}")
@@ -259,24 +280,24 @@ else
                             }
                             @if (activeBloodline?.BloodlineDefinition != null)
                             {
-                                <div class="bloodline-info" style="margin-bottom: 10px;">
+                                <div class="bloodline-info">
                                     <strong>@activeBloodline.BloodlineDefinition.Name</strong>
-                                    <p style="font-size: 0.9em; color: #a0a0a0; margin: 4px 0 0 0;">@activeBloodline.BloodlineDefinition.Description</p>
-                                    <div style="margin-top: 8px;">
+                                    <p class="bloodline-desc">@activeBloodline.BloodlineDefinition.Description</p>
+                                    <div class="bloodline-detail-row">
                                         <span class="trait-subheading">Lineage:</span> @(_character.Clan?.Name ?? "—") → @activeBloodline.BloodlineDefinition.Name
                                     </div>
                                     @if (_character.Banes?.Any() == true)
                                     {
-                                        <div style="margin-top: 6px;">
+                                        <div class="bloodline-bane-row">
                                             <span class="trait-subheading">Clan Bane:</span> @_character.Banes.First().Description
                                         </div>
                                     }
-                                    <div style="margin-top: 6px;">
+                                    <div class="bloodline-bane-row">
                                         <span class="trait-subheading">Bloodline Bane:</span> @activeBloodline.BloodlineDefinition.BaneOverride
                                     </div>
                                     @if (_isFreeEditMode)
                                     {
-                                        <button class="btn-ghost" style="font-size: 0.85em; margin-top: 8px;" @onclick="() => RemoveBloodline(activeBloodline.Id)" disabled="@_removingBloodline">
+                                        <button class="btn-ghost btn-roll-small bloodline-detail-row" @onclick="() => RemoveBloodline(activeBloodline.Id)" disabled="@_removingBloodline">
                                             @(_removingBloodline ? "Removing…" : "Remove Bloodline")
                                         </button>
                                     }
@@ -284,21 +305,21 @@ else
                             }
                             else if (pendingBloodline?.BloodlineDefinition != null)
                             {
-                                <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingBloodline.BloodlineDefinition.Name</strong> — awaiting Storyteller approval.</p>
-                                <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                                <p class="pending-status">Pending: <strong>@pendingBloodline.BloodlineDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                                <p class="pending-note">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <a href="/campaigns/@_character.CampaignId" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">View Campaign</a>
+                                    <a href="/campaigns/@_character.CampaignId" class="btn-ghost btn-roll-small bloodline-detail-row">View Campaign</a>
                                 }
                             }
                             else if (_character.BloodPotency >= 2 && _character.ClanId.HasValue && _character.CampaignId.HasValue)
                             {
-                                <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">None. Apply when Blood Potency 2+.</p>
-                                <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
+                                <p class="unaligned-note">None. Apply when Blood Potency 2+.</p>
+                                <button class="btn-primary-rn text-small" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
                             }
                             else
                             {
-                                <p style="color: #808080; font-size: 0.9em;">None. Apply for a bloodline when Blood Potency 2+.</p>
+                                <p class="none-note">None. Apply for a bloodline when Blood Potency 2+.</p>
                             }
                         </section>
 
@@ -307,16 +328,16 @@ else
                             <h2>Covenant</h2>
                             @if (_character.Covenant != null && _character.CovenantJoinStatus != Data.Models.Enums.CovenantJoinStatus.Pending)
                             {
-                                <div class="bloodline-info" style="margin-bottom: 10px;">
+                                <div class="bloodline-info">
                                     <strong>@_character.Covenant.Name</strong>
-                                    <p style="font-size: 0.9em; color: #a0a0a0; margin: 4px 0 0 0;">@_character.Covenant.Description</p>
+                                    <p class="bloodline-desc">@_character.Covenant.Description</p>
                                     @if (_character.CovenantLeaveRequestedAt.HasValue)
                                     {
-                                        <p style="color: #a0a0a0; font-size: 0.85em; margin-top: 6px;">Leave requested — awaiting Storyteller approval.</p>
+                                        <p class="pending-status bloodline-detail-row">Leave requested — awaiting Storyteller approval.</p>
                                     }
                                     else if (_character.CampaignId.HasValue && !_character.CovenantLeaveRequestedAt.HasValue)
                                     {
-                                        <button class="btn-ghost" style="font-size: 0.85em; margin-top: 8px;" @onclick="RequestLeaveCovenant" disabled="@_requestingLeave">
+                                        <button class="btn-ghost btn-roll-small bloodline-detail-row" @onclick="RequestLeaveCovenant" disabled="@_requestingLeave">
                                             @(_requestingLeave ? "Requesting…" : "Request to Leave")
                                         </button>
                                     }
@@ -324,21 +345,21 @@ else
                             }
                             else if (_character.CovenantJoinStatus == Data.Models.Enums.CovenantJoinStatus.Pending && _character.Covenant != null)
                             {
-                                <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@_character.Covenant.Name</strong> — awaiting Storyteller approval.</p>
-                                <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                                <p class="pending-status">Pending: <strong>@_character.Covenant.Name</strong> — awaiting Storyteller approval.</p>
+                                <p class="pending-note">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost btn-roll-small bloodline-detail-row">Storyteller Glimpse</a>
                                 }
                             }
                             else if (_character.CampaignId.HasValue)
                             {
-                                <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">Unaligned. Apply to join a covenant.</p>
-                                <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenApplyCovenantModal">Apply for Covenant</button>
+                                <p class="unaligned-note">Unaligned. Apply to join a covenant.</p>
+                                <button class="btn-primary-rn text-small" @onclick="OpenApplyCovenantModal">Apply for Covenant</button>
                             }
                             else
                             {
-                                <p style="color: #808080; font-size: 0.9em;">Unaligned. Join a campaign to apply for a covenant.</p>
+                                <p class="none-note">Unaligned. Join a campaign to apply for a covenant.</p>
                             }
                         </section>
 
@@ -361,7 +382,7 @@ else
                                                 <span>@cd.DevotionDefinition.Name</span>
                                                 @if (!cd.DevotionDefinition.IsPassive && !string.IsNullOrEmpty(cd.DevotionDefinition.PoolDefinitionJson))
                                                 {
-                                                    <button class="btn-ghost" style="padding: 2px 8px; font-size: 0.85em;" @onclick="() => OpenDevotionRoller(cd)">Roll</button>
+                                                    <button class="btn-ghost btn-roll-small" @onclick="() => OpenDevotionRoller(cd)">Roll</button>
                                                 }
                                             </li>
                                         }
@@ -370,7 +391,7 @@ else
                             }
                             else
                             {
-                                <p style="color: #808080; font-size: 0.9em;">None yet. Purchase devotions via Advancement.</p>
+                                <p class="none-note">None yet. Purchase devotions via Advancement.</p>
                             }
                         </section>
 
@@ -392,14 +413,14 @@ else
                                             {
                                                 <li class="trait-item">
                                                     <span>@cr.SorceryRiteDefinition.Name</span>
-                                                    <span style="font-size:0.85em; color:#808080;">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType))</span>
+                                                    <span class="tradition-label">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType))</span>
                                                     @if (!string.IsNullOrWhiteSpace(cr.SorceryRiteDefinition.ActivationCostDescription))
                                                     {
-                                                        <span style="font-size:0.8em; color:var(--text-secondary); margin-left:6px;">@cr.SorceryRiteDefinition.ActivationCostDescription</span>
+                                                        <span class="activation-cost">@cr.SorceryRiteDefinition.ActivationCostDescription</span>
                                                     }
                                                     @if (!string.IsNullOrEmpty(cr.SorceryRiteDefinition.PoolDefinitionJson))
                                                     {
-                                                        <button class="btn-ghost" style="padding: 2px 8px; font-size: 0.85em;" @onclick="() => OpenRiteRoller(cr)">Roll</button>
+                                                        <button class="btn-ghost btn-roll-small" @onclick="() => OpenRiteRoller(cr)">Roll</button>
                                                     }
                                                 </li>
                                             }
@@ -408,17 +429,17 @@ else
                                 }
                                 else if (pendingRite?.SorceryRiteDefinition != null)
                                 {
-                                    <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingRite.SorceryRiteDefinition.Name</strong> — awaiting Storyteller approval.</p>
-                                    <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+                                    <p class="pending-status">Pending: <strong>@pendingRite.SorceryRiteDefinition.Name</strong> — awaiting Storyteller approval.</p>
+                                    <p class="pending-note">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                     @if (_character.CampaignId.HasValue)
                                     {
-                                        <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+                                        <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost btn-roll-small bloodline-detail-row">Storyteller Glimpse</a>
                                     }
                                 }
                                 else
                                 {
-                                    <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">No rites yet. Purchase Cr├║ac, Theban Sorcery, Necromancy, or Ordo Sorcery dots via Advancement where appropriate, then request to learn rites.</p>
-                                    <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
+                                    <p class="unaligned-note">No rites yet. Purchase Cr├║ac, Theban Sorcery, Necromancy, or Ordo Sorcery dots via Advancement where appropriate, then request to learn rites.</p>
+                                    <button class="btn-primary-rn text-small" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
                                 }
                             </section>
                         }
@@ -430,20 +451,20 @@ else
                                 <h2>Mysteries of the Dragon</h2>
                                 @if (_character.ChosenMysteryScaleId.HasValue)
                                 {
-                                    <p style="font-size:0.9em; color:#a0a0a0; margin-bottom:8px;">
+                                    <p class="mystery-info">
                                         <strong>Chosen Mystery:</strong> @(_character.ChosenMysteryScale?.Name ?? "Unknown")
                                     </p>
                                 }
                                 else if (_character.PendingChosenMysteryScaleId.HasValue)
                                 {
-                                    <p style="color:#a0a0a0; font-size:0.9em;">
+                                    <p class="pending-status">
                                         Chosen Mystery pending: <strong>@(_character.PendingChosenMysteryScale?.Name ?? "Unknown")</strong> — awaiting Storyteller approval.
                                     </p>
                                 }
                                 else if (_character.CampaignId.HasValue)
                                 {
-                                    <p style="color:#808080; font-size:0.9em; margin-bottom:8px;">No Chosen Mystery selected.</p>
-                                    <button class="btn-primary-rn" style="font-size:0.9em;" @onclick="OpenChosenMysteryModal">Select Chosen Mystery</button>
+                                    <p class="unaligned-note">No Chosen Mystery selected.</p>
+                                    <button class="btn-primary-rn text-small" @onclick="OpenChosenMysteryModal">Select Chosen Mystery</button>
                                 }
                                 @{
                                     var approvedCoils = _character.Coils?.Where(cc => cc.Status == Data.Models.Enums.CoilLearnStatus.Approved && cc.CoilDefinition != null).ToList();
@@ -451,29 +472,29 @@ else
                                 }
                                 @if (approvedCoils?.Any() == true)
                                 {
-                                    <ul class="trait-list" style="margin-top:8px;">
+                                    <ul class="trait-list coil-list">
                                         @foreach (var cc in approvedCoils.OrderBy(c => c.CoilDefinition!.ScaleId).ThenBy(c => c.CoilDefinition!.Level))
                                         {
                                             <li class="trait-item">
                                                 <span>@cc.CoilDefinition!.Name</span>
-                                                <span style="font-size:0.85em; color:#808080;">@cc.CoilDefinition.Scale?.Name — Tier @cc.CoilDefinition.Level</span>
+                                                <span class="coil-tier-label">@cc.CoilDefinition.Scale?.Name — Tier @cc.CoilDefinition.Level</span>
                                             </li>
                                         }
                                     </ul>
                                 }
                                 else if (pendingCoil?.CoilDefinition != null)
                                 {
-                                    <p style="color:#a0a0a0; font-size:0.9em; margin-top:6px;">
+                                    <p class="pending-status bloodline-detail-row">
                                         Pending: <strong>@pendingCoil.CoilDefinition.Name</strong> — awaiting Storyteller approval.
                                     </p>
                                 }
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <button class="btn-ghost" style="font-size:0.9em; margin-top:8px;" @onclick="OpenLearnCoilModal">Purchase Coil</button>
+                                    <button class="btn-ghost btn-roll-small bloodline-detail-row" @onclick="OpenLearnCoilModal">Purchase Coil</button>
                                 }
                                 @if (_character.HasCrucibleRitualAccess)
                                 {
-                                    <p style="font-size:0.8em; color:#808080; margin-top:4px;">Crucible Ritual active — reduced XP costs apply.</p>
+                                    <p class="ritual-active-note">Crucible Ritual active — reduced XP costs apply.</p>
                                 }
                             </section>
                         }

@@ -119,6 +119,8 @@ public class CampaignService(
     /// <inheritdoc />
     public async Task AddCharacterToCampaignAsync(int campaignId, int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add it to a campaign");
+
         Campaign campaign = await _dbContext.Campaigns
             .Include(c => c.Characters)
             .FirstOrDefaultAsync(c => c.Id == campaignId)
@@ -126,20 +128,6 @@ public class CampaignService(
 
         Character character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        // Only the character's own player may self-enrol.
-        // The Storyteller manages the roster by sharing the campaign URL; they do not add characters on behalf of players.
-        bool isOwner = character.ApplicationUserId == userId;
-
-        if (!isOwner)
-        {
-            _logger.LogWarning(
-                "Unauthorized attempt to add character {CharacterId} to campaign {CampaignId} by user {UserId}",
-                characterId,
-                campaignId,
-                userId);
-            throw new UnauthorizedAccessException("Only the character's owner may add it to a campaign.");
-        }
 
         character.CampaignId = campaignId;
         await _dbContext.SaveChangesAsync();
@@ -154,24 +142,10 @@ public class CampaignService(
     /// <inheritdoc />
     public async Task RemoveCharacterFromCampaignAsync(int campaignId, int characterId, string userId)
     {
-        Campaign campaign = await _dbContext.Campaigns.FindAsync(campaignId)
-            ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
+        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "remove a character from this campaign");
 
         Character character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        bool isStoryteller = campaign.StoryTellerId == userId;
-        bool isOwner = character.ApplicationUserId == userId;
-
-        if (!isStoryteller && !isOwner)
-        {
-            _logger.LogWarning(
-                "Unauthorized attempt to remove character {CharacterId} from campaign {CampaignId} by user {UserId}",
-                characterId,
-                campaignId,
-                userId);
-            throw new UnauthorizedAccessException("Only the Storyteller or the character owner may remove a character from this campaign.");
-        }
 
         character.CampaignId = null;
         await _dbContext.SaveChangesAsync();
@@ -186,24 +160,32 @@ public class CampaignService(
     /// <inheritdoc />
     public async Task DeleteCampaignAsync(int campaignId, string storyTellerUserId)
     {
+        await _authHelper.RequireStorytellerAsync(campaignId, storyTellerUserId, "delete this campaign");
+
         Campaign campaign = await _dbContext.Campaigns
             .Include(c => c.Characters)
             .FirstOrDefaultAsync(c => c.Id == campaignId)
             ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
 
-        if (campaign.StoryTellerId != storyTellerUserId)
-        {
-            _logger.LogWarning(
-                "Unauthorized attempt to delete campaign {CampaignId} by user {UserId}",
-                campaignId,
-                storyTellerUserId);
-            throw new UnauthorizedAccessException("Only the Storyteller may delete this campaign.");
-        }
-
         foreach (Character character in campaign.Characters)
         {
             character.CampaignId = null;
         }
+
+        // Optional CampaignId FKs are not configured with database SetNull/Cascade; SQLite/PostgreSQL keep RESTRICT
+        // and block campaign deletion until these rows are cleared.
+        await _dbContext.BeatLedger
+            .Where(e => e.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.CampaignId, (int?)null));
+        await _dbContext.XpLedger
+            .Where(e => e.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.CampaignId, (int?)null));
+        await _dbContext.PublicRolls
+            .Where(r => r.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.CampaignId, (int?)null));
+        await _dbContext.CharacterNotes
+            .Where(n => n.CampaignId == campaignId)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.CampaignId, (int?)null));
 
         _dbContext.Campaigns.Remove(campaign);
         await _dbContext.SaveChangesAsync();

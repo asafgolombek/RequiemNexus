@@ -13,11 +13,13 @@ public class EncounterTemplateService(
     ApplicationDbContext dbContext,
     ILogger<EncounterTemplateService> logger,
     IAuthorizationHelper authHelper,
+    IEncounterPrepService prepService,
     IEncounterService encounterService) : IEncounterTemplateService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ILogger<EncounterTemplateService> _logger = logger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
+    private readonly IEncounterPrepService _prepService = prepService;
     private readonly IEncounterService _encounterService = encounterService;
 
     /// <inheritdoc />
@@ -99,14 +101,14 @@ public class EncounterTemplateService(
 
         await _authHelper.RequireStorytellerAsync(template.CampaignId, storyTellerUserId, "manage encounter templates");
 
-        CombatEncounter draft = await _encounterService.CreateDraftEncounterAsync(
+        CombatEncounter draft = await _prepService.CreateDraftEncounterAsync(
             template.CampaignId,
             encounterName,
             storyTellerUserId);
 
         foreach (EncounterTemplateNpc npc in template.Npcs)
         {
-            await _encounterService.AddNpcTemplateAsync(
+            await _prepService.AddNpcTemplateAsync(
                 draft.Id,
                 npc.Name,
                 npc.InitiativeMod,

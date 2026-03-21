@@ -1,0 +1,213 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Web.Services
+@inject IBloodlineService BloodlineService
+@inject ICovenantService CovenantService
+@inject ISorceryService SorceryService
+@inject ICoilService CoilService
+@inject ToastService ToastService
+
+<div class="pending-requests-container">
+    @* ── Bloodlines ── *@
+    @if (Bloodlines.Any())
+    {
+        <div class="card-rn glimpse-card">
+            <h3 class="section-header">Pending Bloodline Requests</h3>
+            <ul class="maneuver-list">
+                @foreach (var app in Bloodlines)
+                {
+                    <li class="pending-request-item">
+                        <span><strong>@app.CharacterName</strong> → @app.BloodlineName</span>
+                        <span class="request-meta">@app.AppliedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                        <div class="request-actions">
+                            @if (_rejectingId == app.CharacterBloodlineId)
+                            {
+                                <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
+                            }
+                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveBloodline(app.CharacterBloodlineId)">Approve</button>
+                            @if (_rejectingId == app.CharacterBloodlineId)
+                            {
+                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectBloodline(app.CharacterBloodlineId)">Confirm Reject</button>
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                            }
+                            else
+                            {
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartReject(app.CharacterBloodlineId)">Reject</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @* ── Covenants ── *@
+    @if (Covenants.Any())
+    {
+        <div class="card-rn glimpse-card">
+            <h3 class="section-header">Pending Covenant Requests</h3>
+            <ul class="maneuver-list">
+                @foreach (var app in Covenants)
+                {
+                    <li class="pending-request-item">
+                        <span><strong>@app.CharacterName</strong> → @app.CovenantName</span>
+                        <span class="request-meta">@app.AppliedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                        <div class="request-actions">
+                            @if (_rejectingCovenantId == app.CharacterId)
+                            {
+                                <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
+                            }
+                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveCovenant(app.CharacterId)">Approve</button>
+                            @if (_rejectingCovenantId == app.CharacterId)
+                            {
+                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectCovenant(app.CharacterId)">Confirm Reject</button>
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                            }
+                            else
+                            {
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectCovenant(app.CharacterId)">Reject</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @* ── Rites ── *@
+    @if (Rites.Any())
+    {
+        <div class="card-rn glimpse-card">
+            <h3 class="section-header">Pending Rite Learning Requests</h3>
+            <ul class="maneuver-list">
+                @foreach (var app in Rites)
+                {
+                    <li class="pending-request-item">
+                        <span><strong>@app.CharacterName</strong> → @app.RiteName</span>
+                        <span class="request-meta">@app.SorceryType Lv.@app.Level — @app.XpCost XP</span>
+                        <div class="request-actions">
+                            @if (_rejectingRiteId == app.CharacterRiteId)
+                            {
+                                <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
+                            }
+                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveRite(app.CharacterRiteId)">Approve</button>
+                            @if (_rejectingRiteId == app.CharacterRiteId)
+                            {
+                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectRite(app.CharacterRiteId)">Confirm Reject</button>
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                            }
+                            else
+                            {
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectRite(app.CharacterRiteId)">Reject</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @* ── Chosen Mysteries (Ordo) ── *@
+    @if (ChosenMysteries.Any())
+    {
+        <div class="card-rn glimpse-card">
+            <h3 class="section-header">Pending Chosen Mystery Requests</h3>
+            <ul class="maneuver-list">
+                @foreach (var app in ChosenMysteries)
+                {
+                    <li class="pending-request-item">
+                        <span><strong>@app.CharacterName</strong> → @app.ScaleName</span>
+                        <div class="request-actions">
+                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveChosenMystery(app.CharacterId)">Approve</button>
+                            <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => RejectChosenMystery(app.CharacterId)">Reject</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @* ── Coils (Ordo) ── *@
+    @if (Coils.Any())
+    {
+        <div class="card-rn glimpse-card">
+            <h3 class="section-header">Pending Coil Purchase Requests</h3>
+            <ul class="maneuver-list">
+                @foreach (var app in Coils)
+                {
+                    <li class="pending-request-item">
+                        <span><strong>@app.CharacterName</strong> → @app.CoilName (@app.ScaleName, dot @app.Level)</span>
+                        <span class="request-meta">@app.XpCost XP</span>
+                        <div class="request-actions">
+                            @if (_rejectingCoilId == app.CharacterCoilId)
+                            {
+                                <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
+                            }
+                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveCoil(app.CharacterCoilId)">Approve</button>
+                            @if (_rejectingCoilId == app.CharacterCoilId)
+                            {
+                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectCoil(app.CharacterCoilId)">Confirm Reject</button>
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                            }
+                            else
+                            {
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectCoil(app.CharacterCoilId)">Reject</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string StorytellerId { get; set; } = string.Empty;
+    [Parameter] public List<BloodlineApplicationDto> Bloodlines { get; set; } = [];
+    [Parameter] public List<CovenantApplicationDto> Covenants { get; set; } = [];
+    [Parameter] public List<RiteApplicationDto> Rites { get; set; } = [];
+    [Parameter] public List<ChosenMysteryApplicationDto> ChosenMysteries { get; set; } = [];
+    [Parameter] public List<CoilApplicationDto> Coils { get; set; } = [];
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private bool _busy;
+    private string _rejectNote = string.Empty;
+    private int? _rejectingId;
+    private int? _rejectingCovenantId;
+    private int? _rejectingRiteId;
+    private int? _rejectingCoilId;
+
+    private void CancelReject() { _rejectingId = _rejectingCovenantId = _rejectingRiteId = _rejectingCoilId = null; _rejectNote = ""; }
+
+    private void StartReject(int id) { CancelReject(); _rejectingId = id; }
+    private void StartRejectCovenant(int id) { CancelReject(); _rejectingCovenantId = id; }
+    private void StartRejectRite(int id) { CancelReject(); _rejectingRiteId = id; }
+    private void StartRejectCoil(int id) { CancelReject(); _rejectingCoilId = id; }
+
+    private async Task ApproveBloodline(int id) { await Execute(() => BloodlineService.ApproveBloodlineAsync(id, null, StorytellerId), "Approved"); }
+    private async Task ConfirmRejectBloodline(int id) { await Execute(() => BloodlineService.RejectBloodlineAsync(id, _rejectNote, StorytellerId), "Rejected"); CancelReject(); }
+
+    private async Task ApproveCovenant(int id) { await Execute(() => CovenantService.ApproveCovenantAsync(id, null, StorytellerId), "Approved"); }
+    private async Task ConfirmRejectCovenant(int id) { await Execute(() => CovenantService.RejectCovenantAsync(id, _rejectNote, StorytellerId), "Rejected"); CancelReject(); }
+
+    private async Task ApproveRite(int id) { await Execute(() => SorceryService.ApproveRiteLearnAsync(id, null, StorytellerId), "Approved"); }
+    private async Task ConfirmRejectRite(int id) { await Execute(() => SorceryService.RejectRiteLearnAsync(id, _rejectNote, StorytellerId), "Rejected"); CancelReject(); }
+
+    private async Task ApproveChosenMystery(int id) { await Execute(() => CoilService.ApproveChosenMysteryAsync(id, StorytellerId), "Approved"); }
+    private async Task RejectChosenMystery(int id) { await Execute(() => CoilService.RejectChosenMysteryAsync(id, StorytellerId), "Rejected"); }
+
+    private async Task ApproveCoil(int id) { await Execute(() => CoilService.ApproveCoilLearnAsync(id, null, StorytellerId), "Approved"); }
+    private async Task ConfirmRejectCoil(int id) { await Execute(() => CoilService.RejectCoilLearnAsync(id, _rejectNote, StorytellerId), "Rejected"); CancelReject(); }
+
+    private async Task Execute(Func<Task> action, string msg)
+    {
+        _busy = true;
+        try {
+            await action();
+            ToastService.Show(msg, "The request was processed.", ToastType.Success);
+            await OnChanged.InvokeAsync();
+        } catch (Exception ex) {
+            ToastService.Show("Error", ex.Message, ToastType.Error);
+        } finally { _busy = false; }
+    }
+}

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Application.Services;
+using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using Xunit;
 
@@ -20,8 +21,11 @@ public class NpcStatBlockServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private static NpcStatBlockService CreateService(ApplicationDbContext ctx) =>
-        new(ctx, NullLogger<NpcStatBlockService>.Instance, new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance));
+    private static NpcStatBlockService CreateService(ApplicationDbContext ctx, string databaseName)
+    {
+        IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
+        return new(ctx, NullLogger<NpcStatBlockService>.Instance, new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance));
+    }
 
     private static async Task<Campaign> SeedCampaignAsync(ApplicationDbContext ctx, string stId = "st-1")
     {
@@ -54,7 +58,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(GetPrebuiltBlocks_ReturnsOnlyPrebuilt));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(GetPrebuiltBlocks_ReturnsOnlyPrebuilt));
 
         await SeedPrebuiltAsync(ctx, "Mortal");
         await service.CreateBlockAsync(campaign.Id, "Custom", "C", 5, 7, 3, 0, 0, "{}", "{}", "{}", string.Empty, "st-1");
@@ -69,7 +73,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(GetCampaignBlocks_ReturnsOnlyCustomForCampaign));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(GetCampaignBlocks_ReturnsOnlyCustomForCampaign));
 
         await SeedPrebuiltAsync(ctx);
         await service.CreateBlockAsync(campaign.Id, "Custom", "C", 5, 7, 3, 0, 0, "{}", "{}", "{}", string.Empty, "st-1");
@@ -84,7 +88,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(GetAvailableBlocks_ReturnsBothPrebuiltAndCustom));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(GetAvailableBlocks_ReturnsBothPrebuiltAndCustom));
 
         await SeedPrebuiltAsync(ctx, "Mortal");
         await service.CreateBlockAsync(campaign.Id, "Custom NPC", "C", 5, 7, 3, 0, 0, "{}", "{}", "{}", string.Empty, "st-1");
@@ -100,7 +104,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(CreateBlock_BySt_Persists));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(CreateBlock_BySt_Persists));
 
         NpcStatBlock block = await service.CreateBlockAsync(
             campaign.Id, "Enforcer", "Street thug", 5, 7, 3, 0, 0, "{}", "{\"Brawl\":2}", "{}", string.Empty, "st-1");
@@ -117,7 +121,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(CreateBlock_NonSt_ThrowsUnauthorized));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(CreateBlock_NonSt_ThrowsUnauthorized));
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => service.CreateBlockAsync(campaign.Id, "NPC", "C", 5, 7, 3, 0, 0, "{}", "{}", "{}", string.Empty, "not-the-st"));
@@ -128,7 +132,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(DeleteBlock_Prebuilt_ThrowsUnauthorized));
         await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(DeleteBlock_Prebuilt_ThrowsUnauthorized));
 
         NpcStatBlock prebuilt = await SeedPrebuiltAsync(ctx);
 
@@ -141,7 +145,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(UpdateBlock_Prebuilt_ThrowsUnauthorized));
         await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(UpdateBlock_Prebuilt_ThrowsUnauthorized));
 
         NpcStatBlock prebuilt = await SeedPrebuiltAsync(ctx);
 
@@ -154,7 +158,7 @@ public class NpcStatBlockServiceTests
     {
         ApplicationDbContext ctx = CreateContext(nameof(DeleteBlock_CustomBySt_RemovesBlock));
         Campaign campaign = await SeedCampaignAsync(ctx);
-        NpcStatBlockService service = CreateService(ctx);
+        NpcStatBlockService service = CreateService(ctx, nameof(DeleteBlock_CustomBySt_RemovesBlock));
 
         NpcStatBlock block = await service.CreateBlockAsync(
             campaign.Id, "Custom", "C", 5, 7, 3, 0, 0, "{}", "{}", "{}", string.Empty, "st-1");

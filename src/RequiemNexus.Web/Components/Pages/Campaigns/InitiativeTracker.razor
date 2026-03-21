@@ -11,6 +11,8 @@
 @using System.Threading
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IEncounterService EncounterService
+@inject IEncounterPrepService EncounterPrepService
+@inject INpcCombatService NpcCombatService
 @inject IChronicleNpcService ChronicleNpcService
 @inject ICampaignService CampaignService
 @inject IConditionService ConditionService
@@ -637,7 +639,7 @@
         }
 
         ChronicleNpcEncounterPrepDto? prep =
-            await EncounterService.GetChronicleNpcEncounterPrepAsync(_addChronicleNpcId, _currentUserId);
+            await EncounterPrepService.GetChronicleNpcEncounterPrepAsync(_addChronicleNpcId, _currentUserId);
         if (prep != null)
         {
             _addInitMod = prep.SuggestedInitiativeMod;
@@ -775,7 +777,7 @@
         _busy = true;
         try
         {
-            await EncounterService.ApplyNpcDamageAsync(entryId, type, _currentUserId!);
+            await NpcCombatService.ApplyNpcDamageAsync(entryId, type, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -791,7 +793,7 @@
         _busy = true;
         try
         {
-            await EncounterService.HealNpcDamageAsync(entryId, _currentUserId!);
+            await NpcCombatService.HealNpcDamageAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -807,7 +809,7 @@
         _busy = true;
         try
         {
-            await EncounterService.SpendNpcWillpowerAsync(entryId, _currentUserId!);
+            await NpcCombatService.SpendNpcWillpowerAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -823,7 +825,7 @@
         _busy = true;
         try
         {
-            await EncounterService.RestoreNpcWillpowerAsync(entryId, _currentUserId!);
+            await NpcCombatService.RestoreNpcWillpowerAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -842,7 +844,7 @@
         _busy = true;
         try
         {
-            await EncounterService.SpendNpcVitaeAsync(entryId, _currentUserId!);
+            await NpcCombatService.SpendNpcVitaeAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -861,7 +863,7 @@
         _busy = true;
         try
         {
-            await EncounterService.RestoreNpcVitaeAsync(entryId, _currentUserId!);
+            await NpcCombatService.RestoreNpcVitaeAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally
@@ -888,7 +890,7 @@
         _busy = true;
         try
         {
-            await EncounterService.SetNpcEntryRevealAsync(entry.Id, !entry.IsRevealed, entry.MaskedDisplayName, _currentUserId!);
+            await NpcCombatService.SetNpcEntryRevealAsync(entry.Id, !entry.IsRevealed, entry.MaskedDisplayName, _currentUserId!);
             await LoadEncounter();
         }
         finally

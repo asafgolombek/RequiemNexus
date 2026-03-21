@@ -16,19 +16,22 @@ public class CharacterManagementService(
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ICharacterCreationRules creationRules,
     IBeatLedgerService beatLedger,
+    IAuthorizationHelper authHelper,
     ISessionService sessionService) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly ICharacterCreationRules _creationRules = creationRules;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
+    private readonly ISessionService _sessionService = sessionService;
 
     /// <inheritdoc />
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
     {
         // Factory creates a fresh context per call so Blazor Server's concurrent prerender
         // and interactive renders do not share a single DbContext instance.
-        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
         return await ctx.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId && !c.IsArchived)
@@ -39,7 +42,7 @@ public class CharacterManagementService(
     /// <summary>Returns the archived characters owned by the given user.</summary>
     public async Task<List<Character>> GetArchivedCharactersAsync(string userId)
     {
-        await using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
         return await ctx.Characters
             .Include(c => c.Clan)
             .Where(c => c.ApplicationUserId == userId && c.IsArchived)
@@ -85,14 +88,11 @@ public class CharacterManagementService(
 
     public async Task DeleteCharacterAsync(int id, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(id, userId, "delete this character");
+
         Character? entity = await _dbContext.Characters.FindAsync(id);
         if (entity != null)
         {
-            if (entity.ApplicationUserId != userId)
-            {
-                throw new UnauthorizedAccessException("Only the character owner may delete this character.");
-            }
-
             // Null out CampaignId first so the campaign roster stays consistent.
             entity.CampaignId = null;
             _dbContext.Characters.Remove(entity);
@@ -132,11 +132,16 @@ public class CharacterManagementService(
     public async Task SaveAsync(Character character)
     {
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
-    public async Task AddBeatAsync(Character character)
+    public async Task AddBeatAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add Beats");
+
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
         character.Beats++;
 
         await _beatLedger.RecordBeatAsync(
@@ -144,7 +149,7 @@ public class CharacterManagementService(
             character.CampaignId,
             BeatSource.ManualAdjustment,
             "Beat added",
-            null);
+            userId);
 
         if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
         {
@@ -162,21 +167,31 @@ public class CharacterManagementService(
         }
 
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
-    public async Task RemoveBeatAsync(Character character)
+    public async Task RemoveBeatAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "remove Beats");
+
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
         if (character.Beats > 0)
         {
             character.Beats--;
             await _dbContext.SaveChangesAsync();
-            await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+            await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
     }
 
-    public async Task AddXPAsync(Character character)
+    public async Task AddXPAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add XP");
+
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
         character.ExperiencePoints++;
         character.TotalExperiencePoints++;
 
@@ -186,14 +201,19 @@ public class CharacterManagementService(
             1,
             XpSource.ManualAdjustment,
             "XP added manually",
-            null);
+            userId);
 
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
-    public async Task RemoveXPAsync(Character character)
+    public async Task RemoveXPAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "remove XP");
+
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
         if (character.ExperiencePoints > 0)
         {
             character.ExperiencePoints--;
@@ -208,10 +228,10 @@ public class CharacterManagementService(
                 1,
                 XpExpense.ManualAdjustment,
                 "XP removed manually",
-                null);
+                userId);
 
             await _dbContext.SaveChangesAsync();
-            await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+            await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
     }
 
@@ -263,78 +283,58 @@ public class CharacterManagementService(
     /// <inheritdoc />
     public async Task RetireCharacterAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "retire a character");
+
         Character character = await _dbContext.Characters
-            .Include(c => c.Campaign)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        bool isOwner = character.ApplicationUserId == userId;
-        bool isCampaignSt = character.Campaign?.StoryTellerId == userId;
-
-        if (!isOwner && !isCampaignSt)
-        {
-            throw new UnauthorizedAccessException("Only the character owner or campaign Storyteller may retire a character.");
-        }
 
         character.IsRetired = true;
         character.RetiredAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     /// <inheritdoc />
     public async Task UnretireCharacterAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "un-retire a character");
+
         Character character = await _dbContext.Characters
-            .Include(c => c.Campaign)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        bool isOwner = character.ApplicationUserId == userId;
-        bool isCampaignSt = character.Campaign?.StoryTellerId == userId;
-
-        if (!isOwner && !isCampaignSt)
-        {
-            throw new UnauthorizedAccessException("Only the character owner or campaign Storyteller may un-retire a character.");
-        }
 
         character.IsRetired = false;
         character.RetiredAt = null;
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     /// <inheritdoc />
     public async Task ArchiveCharacterAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "archive a character");
+
         Character character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        if (character.ApplicationUserId != userId)
-        {
-            throw new UnauthorizedAccessException("Only the character owner may archive a character.");
-        }
 
         character.IsArchived = true;
         character.ArchivedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
     /// <inheritdoc />
     public async Task UnarchiveCharacterAsync(int characterId, string userId)
     {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "un-archive a character");
+
         Character character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        if (character.ApplicationUserId != userId)
-        {
-            throw new UnauthorizedAccessException("Only the character owner may un-archive a character.");
-        }
 
         character.IsArchived = false;
         character.ArchivedAt = null;
         await _dbContext.SaveChangesAsync();
-        await sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 }

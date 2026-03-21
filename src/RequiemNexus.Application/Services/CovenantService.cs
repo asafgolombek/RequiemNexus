@@ -49,7 +49,12 @@ public class CovenantService(
             .OrderBy(c => c.Name)
             .ToListAsync();
 
-        return candidates.Select(c => new CovenantSummaryDto(c.Id, c.Name, c.Description)).ToList();
+        return candidates.Select(c => new CovenantSummaryDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Description = c.Description,
+        }).ToList();
     }
 
     /// <inheritdoc />

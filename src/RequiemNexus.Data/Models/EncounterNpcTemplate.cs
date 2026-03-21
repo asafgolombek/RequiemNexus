@@ -46,4 +46,8 @@ public class EncounterNpcTemplate
     /// <summary>Default mask when <see cref="IsRevealed"/> is false (e.g. &quot;Unknown assailant&quot;).</summary>
     [MaxLength(200)]
     public string? DefaultMaskedName { get; set; }
+
+    /// <summary>Equivalent to <see cref="DefaultMaskedName"/>; matches <see cref="InitiativeEntry.MaskedDisplayName"/>.</summary>
+    [MaxLength(200)]
+    public string? MaskedDisplayName { get; set; }
 }

@@ -58,6 +58,13 @@ window.countUp = function (elementId, target, duration) {
     requestAnimationFrame(step);
 };
 
+window.scrollElementIntoView = function (element) {
+    if (!element || typeof element.scrollIntoView !== 'function') {
+        return;
+    }
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 window.scrollToBottom = function (element) {
     if (!element) return;
     

@@ -1,47 +1,41 @@
-/* ============================================================
-   Character Sheet Styles
-   ============================================================ */
-
-.character-sheet {
-    max-width: 1200px;
-    margin: 0;
-    padding: 2rem 1rem;
-    font-family: var(--font-primary);
-    color: var(--text-color);
-}
+/* Character Details Scoped Styles */
 
 .character-sheet-layout {
     display: flex;
-    width: 100%;
-    min-height: calc(100vh - 60px);
+    gap: 2rem;
+    align-items: flex-start;
 }
 
-.character-sheet-layout.with-sidebar .character-sheet {
+.character-sheet-layout.with-sidebar {
+    /* Layout with SignalR sidefeed */
+}
+
+.character-sheet {
     flex: 1;
+    min-width: 0;
 }
 
 .character-sidebar {
     width: 320px;
-    background: rgba(0, 0, 0, 0.2);
-    border-left: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 2rem;
+    height: calc(100vh - 4rem);
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 0;
-    height: calc(100vh - 60px);
+    background: var(--ash-gray);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
 }
 
 .sidebar-header {
     padding: 1rem;
     border-bottom: 1px solid var(--border-subtle);
-    background: rgba(139, 0, 0, 0.05);
 }
 
 .sidebar-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: var(--brand-crimson);
-    font-family: var(--font-heading);
+    color: var(--crimson);
 }
 
 .sidebar-content {
@@ -50,411 +44,146 @@
     padding: 1rem;
 }
 
-/* --- Header --- */
-.cs-header {
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
-    background-color: var(--bg-panel);
-    padding: 2rem;
-    border-radius: var(--radius-md);
-    border-top: 4px solid var(--accent-color);
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-card);
+/* Header & Meta */
+.edit-name-trigger {
+    cursor: pointer;
 }
 
-.char-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #333, #222);
-    border: 2px solid var(--accent-color);
-    flex-shrink: 0;
-}
-
-.char-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.char-info h1 {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-    color: var(--text-bright);
-    letter-spacing: 1px;
-    font-size: 1.8rem;
-}
-
-.char-name-input {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-    color: var(--text-bright);
-    letter-spacing: 1px;
-    font-size: 1.8rem;
+.char-meta-input {
     background: transparent;
     border: none;
-    border-bottom: 2px dashed var(--accent-light);
-    outline: none;
-    width: 100%;
-}
-
-.edit-icon {
-    font-size: 1.2rem;
-    color: var(--text-muted);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    font-style: normal;
-    margin-left: 0.5rem;
-}
-
-.char-info h1:hover .edit-icon {
-    opacity: 1;
-}
-
-.char-meta {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.char-meta strong {
-    color: var(--text-color);
-}
-
-/* --- XP / Beats Tracker --- */
-.char-xp {
-    margin-top: 1rem;
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.xp-counter {
-    background: var(--bg-input);
-    padding: 5px 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-accent);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.xp-counter-label {
-    color: var(--accent-color);
-    margin-right: 4px;
-    font-size: 0.85rem;
-}
-
-.xp-counter-btn {
-    background: none;
-    border: 1px solid var(--border-subtle);
-    color: var(--text-color);
-    padding: 2px 8px;
-    font-size: 0.8em;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-}
-
-.xp-counter-btn:hover:not(:disabled) {
-    border-color: var(--accent-color);
-    color: var(--accent-light);
-}
-
-.xp-counter-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
-}
-
-.xp-counter-value {
-    display: inline-block;
-    width: 20px;
-    text-align: center;
-    font-weight: bold;
-    font-variant-numeric: tabular-nums;
-}
-
-.xp-total {
-    background: var(--bg-input);
-    padding: 5px 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-accent);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-}
-
-.mode-toggle-btn {
-    padding: 5px 15px !important;
-    font-size: 0.8rem !important;
-}
-
-/* --- Tabs --- */
-.tab-bar {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-subtle);
-    padding-bottom: 4px;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    transition: all var(--transition-fast);
-    position: relative;
-}
-
-.tab-btn:hover {
-    color: var(--text-color);
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.tab-btn.active {
-    color: var(--text-bright);
-}
-
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--accent-color);
-}
-
-/* --- Grid Layout --- */
-.cs-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-
-
-.stat-col h3 {
-    font-family: var(--font-heading);
-    font-size: 1rem;
-    color: var(--accent-light);
-    margin-top: 0;
-    margin-bottom: 1rem;
-    text-align: center;
-    border-bottom: 1px solid var(--border-subtle);
-    padding-bottom: 0.25rem;
-}
-
-/* --- Trait Lists (Merits, Disciplines) --- */
-.trait-subheading {
-    margin-top: 1.5rem;
-    font-size: 1rem;
-    color: var(--accent-light);
-    font-family: var(--font-heading);
-}
-
-.trait-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.trait-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    padding: 4px 0;
-}
-
-.trait-dots {
-    color: var(--accent-color);
-    font-size: 1.2rem;
-    letter-spacing: 2px;
-}
-
-/* --- Expandable Merits --- */
-.merit-item {
-    cursor: pointer;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    transition: background var(--transition-fast);
-}
-
-.merit-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.merit-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.merit-chevron {
-    font-size: 0.75em;
-    color: var(--text-muted);
-}
-
-.merit-description {
+    border-bottom: 1px solid var(--crimson);
+    color: var(--bone-white);
     font-size: 0.9em;
-    color: var(--text-muted);
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    line-height: 1.4;
+    padding: 2px 4px;
 }
 
-/* --- Equipment --- */
-.cs-equipment {
-    grid-column: 1 / -1;
+.mode-toggle-btn.active {
+    background: rgba(196, 30, 58, 0.15);
+    border-color: var(--crimson);
 }
 
-.equipment-form {
-    margin-bottom: 1rem;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.equipment-select {
-    background: var(--bg-input);
-    color: var(--text-color);
-    border: 1px solid var(--border-accent);
-    padding: 6px 10px;
-    flex-grow: 1;
-    border-radius: var(--radius-sm);
-}
-
-.equipment-quantity {
-    width: 60px;
-    background: var(--bg-input);
-    color: var(--text-color);
-    border: 1px solid var(--border-accent);
-    padding: 6px;
-    border-radius: var(--radius-sm);
-}
-
-.equipment-grid {
-    list-style: none;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 0.75rem;
-}
-
-.equipment-item {
+/* Disciplines & Powers */
+.discipline-item-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding: 0.75rem;
-    background: var(--bg-input);
-    border: 1px solid var(--border-accent);
-    border-radius: var(--radius-sm);
-    transition: border-color var(--transition-fast);
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
 }
 
-.equipment-item:hover {
-    border-color: var(--border-subtle);
+.expand-icon {
+    font-size: 0.8em;
+    margin-right: 5px;
 }
 
-.equipment-info {
-    flex: 1;
-    min-width: 0;
+.discipline-powers {
+    margin-top: 10px;
+    padding-left: 15px;
+    border-left: 2px solid var(--crimson-dark, #550000);
+    font-size: 0.9em;
+    color: var(--text-secondary);
 }
 
-.equipment-name {
-    color: var(--text-color);
-    font-size: 0.95rem;
+.power-item {
+    margin-bottom: 8px;
 }
 
-.equipment-meta {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+.power-desc {
+    margin: 2px 0 0 0;
+    font-size: 0.85em;
+    color: var(--text-tertiary);
+}
+
+.power-meta {
+    font-size: 0.8em;
+    color: var(--text-hint);
     margin-top: 2px;
 }
 
-.equipment-meta span {
-    margin-right: 4px;
+/* Bloodlines & Covenants */
+.bloodline-info {
+    margin-bottom: 10px;
 }
 
-.equipment-desc {
-    font-size: 0.8em;
+.bloodline-desc {
+    font-size: 0.9em;
+    color: var(--text-tertiary);
     margin: 4px 0 0 0;
-    color: var(--text-dim);
 }
 
-.equipment-remove-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 68, 68, 0.3);
-    color: var(--danger-color);
-    padding: 2px 8px;
+.bloodline-detail-row {
+    margin-top: 8px;
+}
+
+.bloodline-bane-row {
+    margin-top: 6px;
+}
+
+.pending-status {
+    color: var(--text-tertiary);
+    font-size: 0.9em;
+}
+
+.pending-note {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin: 4px 0 0 0;
+}
+
+.unaligned-note {
+    color: var(--text-hint);
+    font-size: 0.9em;
+    margin-bottom: 8px;
+}
+
+.none-note {
+    color: var(--text-hint);
+    font-size: 0.9em;
+}
+
+/* Blood Sorcery */
+.tradition-label {
+    font-size: 0.85em;
+    color: var(--text-hint);
+}
+
+.activation-cost {
     font-size: 0.8em;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    flex-shrink: 0;
-    margin-left: 0.5rem;
+    color: var(--text-secondary);
+    margin-left: 6px;
 }
 
-.equipment-remove-btn:hover {
-    background: rgba(255, 68, 68, 0.1);
-    border-color: var(--danger-color);
+/* Mysteries & Coils */
+.mystery-info {
+    font-size: 0.9em;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
 }
 
+.coil-list {
+    margin-top: 8px;
+}
 
+.coil-tier-label {
+    font-size: 0.85em;
+    color: var(--text-hint);
+}
 
-/* --- Responsive --- */
-@media (max-width: 768px) {
-    .cs-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-    }
+.ritual-active-note {
+    font-size: 0.8em;
+    color: var(--text-hint);
+    margin-top: 4px;
+}
 
-    .char-avatar {
-        width: 60px;
-        height: 60px;
-        align-self: center;
-    }
+/* Utilities */
+.flex-col-stretch {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
 
-    .char-xp {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .xp-total {
-        margin-left: 0;
-    }
-
-    .mode-toggle-btn {
-        width: 100%;
-    }
-
-    .tab-bar {
-        overflow-x: auto;
-    }
-
-
-    .equipment-form {
-        flex-direction: column;
-    }
-
-    .equipment-select {
-        width: 100%;
-    }
+.btn-roll-small {
+    padding: 2px 8px;
+    font-size: 0.85em;
 }

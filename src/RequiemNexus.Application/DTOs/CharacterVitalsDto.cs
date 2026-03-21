@@ -4,30 +4,44 @@ namespace RequiemNexus.Application.DTOs;
 /// Snapshot of a character's vital stats for the Storyteller Glimpse dashboard.
 /// Contains only the fields needed for the overview cards; no PII beyond the character name.
 /// </summary>
-/// <param name="CharacterId">Primary key of the <c>Character</c> row.</param>
-/// <param name="Name">Character's in-game name.</param>
-/// <param name="PlayerUserId">AspNetUsers Id of the player who owns this character.</param>
-/// <param name="CurrentHealth">Current undamaged Health boxes.</param>
-/// <param name="MaxHealth">Total Health track length.</param>
-/// <param name="CurrentWillpower">Current Willpower.</param>
-/// <param name="MaxWillpower">Maximum Willpower.</param>
-/// <param name="CurrentVitae">Current Vitae in the blood pool.</param>
-/// <param name="MaxVitae">Maximum blood pool capacity.</param>
-/// <param name="Humanity">Current Humanity rating.</param>
-/// <param name="Beats">Current Beat count.</param>
-/// <param name="ExperiencePoints">Current unspent XP.</param>
-/// <param name="ActiveConditionCount">Number of unresolved Conditions.</param>
-public record CharacterVitalsDto(
-    int CharacterId,
-    string Name,
-    string PlayerUserId,
-    int CurrentHealth,
-    int MaxHealth,
-    int CurrentWillpower,
-    int MaxWillpower,
-    int CurrentVitae,
-    int MaxVitae,
-    int Humanity,
-    int Beats,
-    int ExperiencePoints,
-    int ActiveConditionCount);
+public record CharacterVitalsDto
+{
+    /// <summary>Primary key of the <c>Character</c> row.</summary>
+    public required int CharacterId { get; init; }
+
+    /// <summary>Character's in-game name.</summary>
+    public required string Name { get; init; }
+
+    /// <summary>AspNetUsers Id of the player who owns this character.</summary>
+    public required string PlayerUserId { get; init; }
+
+    /// <summary>Current undamaged Health boxes.</summary>
+    public required int CurrentHealth { get; init; }
+
+    /// <summary>Total Health track length.</summary>
+    public required int MaxHealth { get; init; }
+
+    /// <summary>Current Willpower.</summary>
+    public required int CurrentWillpower { get; init; }
+
+    /// <summary>Maximum Willpower.</summary>
+    public required int MaxWillpower { get; init; }
+
+    /// <summary>Current Vitae in the blood pool.</summary>
+    public required int CurrentVitae { get; init; }
+
+    /// <summary>Maximum blood pool capacity.</summary>
+    public required int MaxVitae { get; init; }
+
+    /// <summary>Current Humanity rating.</summary>
+    public required int Humanity { get; init; }
+
+    /// <summary>Current Beat count.</summary>
+    public required int Beats { get; init; }
+
+    /// <summary>Current unspent XP.</summary>
+    public required int ExperiencePoints { get; init; }
+
+    /// <summary>Number of unresolved Conditions.</summary>
+    public required int ActiveConditionCount { get; init; }
+}

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
@@ -216,13 +217,9 @@ public class SocialManeuveringServiceTests
         var options = CreateOptions(nameof(RollOpenDoorAsync_NonOwnerNonSt_Throws));
         using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var auth = new Mock<IAuthorizationHelper>();
-        auth.Setup(a => a.RequireStorytellerAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(Task.CompletedTask);
-        auth.Setup(a => a.RequireCharacterAccessAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(Task.CompletedTask);
+        var realAuth = new AuthorizationHelper(new TestApplicationDbContextFactory(options), NullLogger<AuthorizationHelper>.Instance);
 
-        var service = CreateService(options, authHelper: auth.Object, diceService: CreateDiceMock(1).Object);
+        var service = CreateService(options, authHelper: realAuth, diceService: CreateDiceMock(1).Object);
 
         SocialManeuver created = await service.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");

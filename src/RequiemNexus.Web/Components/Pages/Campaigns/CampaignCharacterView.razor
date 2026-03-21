@@ -52,17 +52,19 @@ else
                     <span><strong>Touchstone:</strong> @(string.IsNullOrEmpty(_character.Touchstone) ? "???" : _character.Touchstone)</span>
                 </div>
                 <div class="char-xp">
-                    <div class="xp-counter">
-                        <strong class="xp-counter-label">Beats</strong>
-                        <span class="xp-counter-value">@_character.Beats</span>
-                    </div>
-                    <div class="xp-counter">
-                        <strong class="xp-counter-label">Experiences</strong>
-                        <span class="xp-counter-value">@_character.ExperiencePoints</span>
-                    </div>
-                    <div class="xp-total">
-                        <strong class="xp-counter-label">Total XP</strong>
-                        <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
+                    <div class="char-xp-trackers">
+                        <div class="xp-counter">
+                            <strong class="xp-counter-label">Beats</strong>
+                            <span class="xp-counter-value">@_character.Beats</span>
+                        </div>
+                        <div class="xp-counter">
+                            <strong class="xp-counter-label">Experiences</strong>
+                            <span class="xp-counter-value">@_character.ExperiencePoints</span>
+                        </div>
+                        <div class="xp-total">
+                            <strong class="xp-counter-label">Total XP</strong>
+                            <span class="xp-counter-value">@_character.TotalExperiencePoints</span>
+                        </div>
                     </div>
                 </div>
             </div>

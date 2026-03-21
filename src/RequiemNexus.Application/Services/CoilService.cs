@@ -35,7 +35,14 @@ public class CoilService(
         return await _dbContext.ScaleDefinitions
             .AsNoTracking()
             .OrderBy(s => s.Name)
-            .Select(s => new ScaleSummaryDto(s.Id, s.Name, s.Description, s.MysteryName, s.MaxLevel))
+            .Select(s => new ScaleSummaryDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Description = s.Description,
+                MysteryName = s.MysteryName,
+                MaxLevel = s.MaxLevel,
+            })
             .ToListAsync();
     }
 

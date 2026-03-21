@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
+using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 using Xunit;
@@ -11,12 +12,18 @@ namespace RequiemNexus.Data.Tests;
 
 public class CharacterArchivingTests
 {
-    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx)
+    private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx, string databaseName)
     {
-        ServiceCollection services = new();
-        services.AddDbContextFactory<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        var factory = services.BuildServiceProvider().GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-        return new(ctx, factory, new CharacterCreationRules(), new BeatLedgerService(ctx), new Mock<ISessionService>().Object);
+        IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
+        var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
+
+        return new CharacterManagementService(
+            ctx,
+            factory,
+            new CharacterCreationRules(),
+            new BeatLedgerService(ctx),
+            auth,
+            new Mock<ISessionService>().Object);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
@@ -32,7 +39,7 @@ public class CharacterArchivingTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(ArchiveCharacterAsync_SetsFlagAndDate));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(ArchiveCharacterAsync_SetsFlagAndDate));
         var character = new Character { ApplicationUserId = "user", Name = "Test" };
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
@@ -50,7 +57,7 @@ public class CharacterArchivingTests
     {
         // Arrange
         using var ctx = CreateContext(nameof(UnarchiveCharacterAsync_ClearsFlagAndDate));
-        var service = CreateCharacterService(ctx);
+        var service = CreateCharacterService(ctx, nameof(UnarchiveCharacterAsync_ClearsFlagAndDate));
         var character = new Character { ApplicationUserId = "user", Name = "Test", IsArchived = true, ArchivedAt = DateTime.UtcNow };
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();

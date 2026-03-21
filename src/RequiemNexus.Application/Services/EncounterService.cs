@@ -7,260 +7,23 @@ using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
-using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
-using RequiemNexus.Domain.Enums;
-using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.Services;
 
 /// <summary>
-/// Application service for combat encounters and initiative tracking.
-/// Mutating operations verify the caller is the campaign Storyteller (except read APIs for members).
-/// Publishes initiative to Redis/SignalR after successful writes when the encounter is active.
+/// Implements <see cref="IEncounterService"/>: focused on active encounter execution and initiative.
 /// </summary>
 public class EncounterService(
     ApplicationDbContext dbContext,
-    IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ILogger<EncounterService> logger,
     IAuthorizationHelper authHelper,
-    ISessionService sessionService,
-    ICharacterCreationRules creationRules,
-    IDiceService diceService) : IEncounterService
+    ISessionService sessionService) : IEncounterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
-    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly ILogger<EncounterService> _logger = logger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
-    private readonly ICharacterCreationRules _creationRules = creationRules;
-    private readonly IDiceService _diceService = diceService;
-
-    /// <inheritdoc />
-    public async Task<CombatEncounter> CreateDraftEncounterAsync(int campaignId, string name, string storyTellerUserId)
-    {
-        await _authHelper.RequireStorytellerAsync(campaignId, storyTellerUserId, "manage encounters");
-
-        CombatEncounter encounter = new()
-        {
-            CampaignId = campaignId,
-            Name = name,
-            IsDraft = true,
-            IsActive = false,
-            IsPaused = false,
-            CurrentRound = 1,
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        _dbContext.CombatEncounters.Add(encounter);
-        await _dbContext.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Draft encounter {EncounterName} (Id={EncounterId}) created in campaign {CampaignId} by ST {UserId}",
-            name,
-            encounter.Id,
-            campaignId,
-            storyTellerUserId);
-
-        return encounter;
-    }
-
-    /// <inheritdoc />
-    public async Task UpdateDraftEncounterNameAsync(int encounterId, string name, string storyTellerUserId)
-    {
-        CombatEncounter encounter = await _dbContext.CombatEncounters
-            .FirstOrDefaultAsync(e => e.Id == encounterId)
-            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
-
-        if (!encounter.IsDraft)
-        {
-            throw new InvalidOperationException("Only draft encounters can be renamed.");
-        }
-
-        if (encounter.ResolvedAt != null)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
-        }
-
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        string trimmed = (name ?? string.Empty).Trim();
-        if (string.IsNullOrEmpty(trimmed))
-        {
-            throw new ArgumentException("Encounter name is required.", nameof(name));
-        }
-
-        if (trimmed.Length > 200)
-        {
-            throw new ArgumentException("Encounter name must be at most 200 characters.", nameof(name));
-        }
-
-        encounter.Name = trimmed;
-        await _dbContext.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Draft encounter {EncounterId} renamed to '{Name}' by ST {UserId}",
-            encounterId,
-            trimmed,
-            storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task<ChronicleNpcEncounterPrepDto?> GetChronicleNpcEncounterPrepAsync(
-        int chronicleNpcId,
-        string storyTellerUserId)
-    {
-        ChronicleNpc? npc = await _dbContext.ChronicleNpcs
-            .AsNoTracking()
-            .FirstOrDefaultAsync(n => n.Id == chronicleNpcId);
-
-        if (npc == null)
-        {
-            return null;
-        }
-
-        await _authHelper.RequireStorytellerAsync(npc.CampaignId, storyTellerUserId, "manage encounters");
-
-        (int wits, int composure) = SocialManeuveringAttributeParser.ReadWitsComposure(npc.AttributesJson);
-        int suggestedMod = wits + composure;
-        int suggestedHealth = 7;
-        int suggestedWill = 4;
-        string? linkedStatBlockName = null;
-
-        (int resolve, int composureAttr) = SocialManeuveringAttributeParser.ReadResolveComposure(npc.AttributesJson);
-        suggestedWill = Math.Max(1, resolve + composureAttr);
-
-        if (npc.LinkedStatBlockId is int blockId)
-        {
-            NpcStatBlock? block = await _dbContext.NpcStatBlocks
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == blockId);
-            if (block != null)
-            {
-                suggestedHealth = Math.Max(1, block.Health);
-                suggestedWill = Math.Max(1, block.Willpower);
-                linkedStatBlockName = block.Name;
-            }
-        }
-
-        bool tracksVitae = npc.CreatureType == CreatureType.Vampire || npc.IsVampire;
-        int suggestedMaxVitae = 0;
-        if (tracksVitae)
-        {
-            int bp = SocialManeuveringAttributeParser.ReadBloodPotency(npc.AttributesJson);
-            (_, int maxV, _) = _creationRules.CalculateInitialBloodPotencyAndVitae(bp);
-            suggestedMaxVitae = maxV;
-        }
-
-        return new ChronicleNpcEncounterPrepDto(
-            npc.Name,
-            suggestedMod,
-            suggestedHealth,
-            linkedStatBlockName,
-            suggestedWill,
-            tracksVitae,
-            suggestedMaxVitae);
-    }
-
-    /// <inheritdoc />
-    public async Task<EncounterNpcTemplate> AddNpcTemplateFromChronicleNpcAsync(
-        int encounterId,
-        int chronicleNpcId,
-        int initiativeMod,
-        int healthBoxes,
-        int maxWillpower,
-        int maxVitae,
-        bool isRevealed,
-        string? defaultMaskedName,
-        string storyTellerUserId)
-    {
-        ChronicleNpc? npc = await _dbContext.ChronicleNpcs
-            .AsNoTracking()
-            .FirstOrDefaultAsync(n => n.Id == chronicleNpcId)
-            ?? throw new InvalidOperationException($"Chronicle NPC {chronicleNpcId} not found.");
-
-        CombatEncounter encounter = await LoadDraftEncounterAsync(encounterId);
-
-        if (encounter.CampaignId != npc.CampaignId)
-        {
-            throw new InvalidOperationException("Chronicle NPC does not belong to this encounter's campaign.");
-        }
-
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        bool templateDup = await _dbContext.Set<EncounterNpcTemplate>()
-            .AnyAsync(t => t.EncounterId == encounterId && t.ChronicleNpcId == chronicleNpcId);
-        if (templateDup)
-        {
-            throw new InvalidOperationException(
-                "This Danse Macabre NPC is already listed in this encounter prep.");
-        }
-
-        int boxes = ClampNpcHealthBoxes(healthBoxes);
-        int will = ClampNpcMaxWillpower(maxWillpower);
-        int vitaeCap = ResolveChronicleNpcMaxVitae(npc, maxVitae);
-
-        return await AddNpcTemplateAsync(
-            encounterId,
-            npc.Name,
-            initiativeMod,
-            boxes,
-            will,
-            notes: null,
-            isRevealed,
-            defaultMaskedName,
-            storyTellerUserId,
-            chronicleNpcId,
-            vitaeCap);
-    }
-
-    /// <inheritdoc />
-    public async Task<InitiativeEntry> AddNpcToEncounterFromChronicleNpcAsync(
-        int encounterId,
-        int chronicleNpcId,
-        int initiativeMod,
-        int rollResult,
-        int healthBoxes,
-        int maxWillpower,
-        int maxVitae,
-        string storyTellerUserId)
-    {
-        ChronicleNpc? npc = await _dbContext.ChronicleNpcs
-            .AsNoTracking()
-            .FirstOrDefaultAsync(n => n.Id == chronicleNpcId)
-            ?? throw new InvalidOperationException($"Chronicle NPC {chronicleNpcId} not found.");
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
-
-        if (encounter.CampaignId != npc.CampaignId)
-        {
-            throw new InvalidOperationException("Chronicle NPC does not belong to this encounter's campaign.");
-        }
-
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        bool initiativeDup = await _dbContext.InitiativeEntries
-            .AnyAsync(i => i.EncounterId == encounterId && i.ChronicleNpcId == chronicleNpcId);
-        if (initiativeDup)
-        {
-            throw new InvalidOperationException("This Danse Macabre NPC is already in this encounter.");
-        }
-
-        int boxes = ClampNpcHealthBoxes(healthBoxes);
-        int will = ClampNpcMaxWillpower(maxWillpower);
-        int vitaeCap = ResolveChronicleNpcMaxVitae(npc, maxVitae);
-
-        return await AddNpcToEncounterAsync(
-            encounterId,
-            npc.Name,
-            initiativeMod,
-            rollResult,
-            storyTellerUserId,
-            boxes,
-            will,
-            chronicleNpcId,
-            vitaeCap);
-    }
 
     /// <inheritdoc />
     public async Task LaunchEncounterAsync(int encounterId, string storyTellerUserId)
@@ -275,11 +38,6 @@ public class EncounterService(
             throw new InvalidOperationException("Only draft encounters can be launched.");
         }
 
-        if (encounter.ResolvedAt != null)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
-        }
-
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         await EnsureNoOtherOpenEncounterAsync(encounter.CampaignId, exceptEncounterId: encounterId);
@@ -287,8 +45,6 @@ public class EncounterService(
         foreach (EncounterNpcTemplate template in encounter.NpcTemplates)
         {
             int roll = Random.Shared.Next(1, 11);
-            int maxWp = template.MaxWillpower < 1 ? 4 : ClampNpcMaxWillpower(template.MaxWillpower);
-            int maxV = ClampNpcMaxVitae(template.MaxVitae);
             InitiativeEntry entry = new()
             {
                 EncounterId = encounterId,
@@ -300,15 +56,14 @@ public class EncounterService(
                 HasActed = false,
                 IsHeld = false,
                 IsRevealed = template.IsRevealed,
-                MaskedDisplayName = template.DefaultMaskedName,
-                NpcHealthBoxes = ClampNpcHealthBoxes(template.HealthBoxes),
+                MaskedDisplayName = template.MaskedDisplayName,
+                NpcHealthBoxes = template.HealthBoxes,
                 NpcHealthDamage = string.Empty,
-                NpcMaxWillpower = maxWp,
-                NpcCurrentWillpower = maxWp,
-                NpcMaxVitae = maxV,
-                NpcCurrentVitae = maxV,
+                NpcMaxWillpower = template.MaxWillpower,
+                NpcCurrentWillpower = template.MaxWillpower,
+                NpcMaxVitae = template.MaxVitae,
+                NpcCurrentVitae = template.MaxVitae,
             };
-
             _dbContext.InitiativeEntries.Add(entry);
         }
 
@@ -329,128 +84,39 @@ public class EncounterService(
     }
 
     /// <inheritdoc />
-    public async Task<EncounterNpcTemplate> AddNpcTemplateAsync(
-        int encounterId,
-        string name,
-        int initiativeMod,
-        int healthBoxes,
-        int maxWillpower,
-        string? notes,
-        bool isRevealed,
-        string? defaultMaskedName,
-        string storyTellerUserId,
-        int? chronicleNpcId = null,
-        int maxVitae = 0)
-    {
-        CombatEncounter encounter = await LoadDraftEncounterAsync(encounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        string trimmedName = (name ?? string.Empty).Trim();
-        if (string.IsNullOrEmpty(trimmedName))
-        {
-            throw new ArgumentException("NPC name is required.", nameof(name));
-        }
-
-        if (trimmedName.Length > 200)
-        {
-            throw new ArgumentException("NPC name must be at most 200 characters.", nameof(name));
-        }
-
-        int boxes = ClampNpcHealthBoxes(healthBoxes);
-        int will = ClampNpcMaxWillpower(maxWillpower);
-        int vitaeCap = ClampNpcMaxVitae(maxVitae);
-
-        EncounterNpcTemplate row = new()
-        {
-            EncounterId = encounterId,
-            ChronicleNpcId = chronicleNpcId,
-            Name = trimmedName,
-            InitiativeMod = initiativeMod,
-            HealthBoxes = boxes,
-            MaxWillpower = will,
-            MaxVitae = vitaeCap,
-            Notes = notes,
-            IsRevealed = isRevealed,
-            DefaultMaskedName = defaultMaskedName,
-        };
-
-        _dbContext.Set<EncounterNpcTemplate>().Add(row);
-        await _dbContext.SaveChangesAsync();
-
-        return row;
-    }
-
-    /// <inheritdoc />
-    public async Task RemoveNpcTemplateAsync(int templateId, string storyTellerUserId)
-    {
-        EncounterNpcTemplate row = await _dbContext.Set<EncounterNpcTemplate>()
-            .FirstOrDefaultAsync(t => t.Id == templateId)
-            ?? throw new InvalidOperationException($"NPC template {templateId} not found.");
-
-        CombatEncounter encounter = await LoadDraftEncounterAsync(row.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        _dbContext.Set<EncounterNpcTemplate>().Remove(row);
-        await _dbContext.SaveChangesAsync();
-    }
-
-    /// <inheritdoc />
     public async Task BulkAddOnlinePlayersAsync(int encounterId, IReadOnlyList<int> characterIds, string storyTellerUserId)
     {
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
+        CombatEncounter encounter = await LoadMutableEncounterAsync(encounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
-        SessionStateDto? session = await _sessionService.GetSessionStateAsync(encounter.CampaignId);
-        HashSet<int> onlineCharIds = session?.Presence
-            .Where(p => p.IsOnline && p.CharacterId.HasValue)
-            .Select(p => p.CharacterId!.Value)
-            .ToHashSet() ?? [];
-
-        List<InitiativeEntry> existing = await _dbContext.InitiativeEntries
-            .Where(i => i.EncounterId == encounterId && i.CharacterId != null)
-            .ToListAsync();
-        HashSet<int> alreadyIn = existing.Select(e => e.CharacterId!.Value).ToHashSet();
-
-        foreach (int characterId in characterIds.Distinct())
+        foreach (int charId in characterIds)
         {
-            if (alreadyIn.Contains(characterId))
+            // Verify character is not already in the encounter
+            bool exists = await _dbContext.InitiativeEntries
+                .AnyAsync(i => i.EncounterId == encounterId && i.CharacterId == charId);
+
+            if (exists)
             {
                 continue;
             }
 
-            if (!onlineCharIds.Contains(characterId))
-            {
-                _logger.LogWarning(
-                    "Skipping character {CharacterId} for bulk initiative — not online in session for campaign {CampaignId}",
-                    characterId,
-                    encounter.CampaignId);
-                continue;
-            }
-
-            Character? character = await _dbContext.Characters
+            Character character = await _dbContext.Characters
+                .AsNoTracking()
                 .Include(c => c.Attributes)
-                .FirstOrDefaultAsync(c => c.Id == characterId && c.CampaignId == encounter.CampaignId);
+                .FirstOrDefaultAsync(c => c.Id == charId)
+                ?? throw new InvalidOperationException($"Character {charId} not found.");
 
-            if (character == null)
-            {
-                _logger.LogWarning(
-                    "Skipping character {CharacterId} — not in campaign {CampaignId}",
-                    characterId,
-                    encounter.CampaignId);
-                continue;
-            }
-
-            int wits = character.GetAttributeRating(AttributeId.Wits);
-            int composure = character.GetAttributeRating(AttributeId.Composure);
+            int wits = character.GetAttributeRating(Domain.AttributeId.Wits);
+            int composure = character.GetAttributeRating(Domain.AttributeId.Composure);
             int mod = wits + composure;
             int roll = Random.Shared.Next(1, 11);
 
-            await AddCharacterToEncounterCoreAsync(encounterId, characterId, mod, roll);
+            await AddCharacterToEncounterCoreAsync(encounterId, charId, mod, roll);
         }
 
         await _dbContext.SaveChangesAsync();
         await RecalculateOrderAsync(encounterId);
-        await PublishInitiativeAsync(encounterId, storyTellerUserId);
+        await PublishInitiativeIfActiveAsync(encounter, storyTellerUserId);
     }
 
     /// <inheritdoc />
@@ -468,12 +134,6 @@ public class EncounterService(
         await _dbContext.SaveChangesAsync();
         await RecalculateOrderAsync(encounterId);
         await PublishInitiativeIfActiveAsync(encounter, storyTellerUserId);
-
-        _logger.LogInformation(
-            "Character {CharacterId} added to encounter {EncounterId} with initiative {Total}",
-            characterId,
-            encounterId,
-            entry.Total);
 
         return entry;
     }
@@ -493,38 +153,29 @@ public class EncounterService(
         CombatEncounter encounter = await LoadMutableEncounterAsync(encounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
-        string trimmedName = (npcName ?? string.Empty).Trim();
-        if (string.IsNullOrEmpty(trimmedName))
+        string name = (npcName ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(name))
         {
             throw new ArgumentException("NPC name is required.", nameof(npcName));
         }
-
-        if (trimmedName.Length > 200)
-        {
-            throw new ArgumentException("NPC name must be at most 200 characters.", nameof(npcName));
-        }
-
-        int boxes = ClampNpcHealthBoxes(npcHealthBoxes);
-        int maxWp = ClampNpcMaxWillpower(npcMaxWillpower);
-        int maxV = ClampNpcMaxVitae(npcMaxVitae);
 
         InitiativeEntry entry = new()
         {
             EncounterId = encounterId,
             ChronicleNpcId = chronicleNpcId,
-            NpcName = trimmedName,
+            NpcName = name,
             InitiativeMod = initiativeMod,
             RollResult = rollResult,
             Total = initiativeMod + rollResult,
             HasActed = false,
             IsHeld = false,
             IsRevealed = true,
-            NpcHealthBoxes = boxes,
+            NpcHealthBoxes = Math.Clamp(npcHealthBoxes, 1, 50),
             NpcHealthDamage = string.Empty,
-            NpcMaxWillpower = maxWp,
-            NpcCurrentWillpower = maxWp,
-            NpcMaxVitae = maxV,
-            NpcCurrentVitae = maxV,
+            NpcMaxWillpower = Math.Clamp(npcMaxWillpower, 1, 20),
+            NpcCurrentWillpower = Math.Clamp(npcMaxWillpower, 1, 20),
+            NpcMaxVitae = Math.Clamp(npcMaxVitae, 0, 100),
+            NpcCurrentVitae = Math.Clamp(npcMaxVitae, 0, 100),
         };
 
         _dbContext.InitiativeEntries.Add(entry);
@@ -532,13 +183,52 @@ public class EncounterService(
         await RecalculateOrderAsync(encounterId);
         await PublishInitiativeIfActiveAsync(encounter, storyTellerUserId);
 
-        _logger.LogInformation(
-            "NPC {NpcName} added to encounter {EncounterId} with initiative {Total}",
-            trimmedName,
-            encounterId,
-            entry.Total);
-
         return entry;
+    }
+
+    /// <inheritdoc />
+    public async Task<InitiativeEntry> AddNpcToEncounterFromChronicleNpcAsync(
+        int encounterId,
+        int chronicleNpcId,
+        int initiativeMod,
+        int rollResult,
+        int healthBoxes,
+        int maxWillpower,
+        int maxVitae,
+        string storyTellerUserId)
+    {
+        bool exists = await _dbContext.InitiativeEntries
+            .AnyAsync(i => i.EncounterId == encounterId && i.ChronicleNpcId == chronicleNpcId);
+
+        if (exists)
+        {
+            throw new InvalidOperationException("This chronicle NPC is already in the encounter.");
+        }
+
+        ChronicleNpc? npc = await _dbContext.ChronicleNpcs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == chronicleNpcId)
+            ?? throw new InvalidOperationException($"Chronicle NPC {chronicleNpcId} not found.");
+
+        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
+
+        if (encounter.CampaignId != npc.CampaignId)
+        {
+            throw new InvalidOperationException("Chronicle NPC does not belong to this encounter's campaign.");
+        }
+
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+
+        return await AddNpcToEncounterAsync(
+            encounterId,
+            npc.Name,
+            initiativeMod,
+            rollResult,
+            storyTellerUserId,
+            healthBoxes,
+            maxWillpower,
+            chronicleNpcId,
+            maxVitae);
     }
 
     /// <inheritdoc />
@@ -552,77 +242,43 @@ public class EncounterService(
             .OrderBy(i => i.Order)
             .ToListAsync();
 
-        if (entries.Count == 0)
+        InitiativeEntry? currentActor = entries.FirstOrDefault(e => !e.HasActed);
+        if (currentActor != null)
         {
-            return;
+            currentActor.HasActed = true;
+            currentActor.IsHeld = false; // Hold expires when you finally act
         }
 
-        InitiativeEntry? current = entries.FirstOrDefault(i => !i.HasActed);
-
-        if (current == null)
+        if (entries.All(e => e.HasActed))
         {
-            foreach (InitiativeEntry entry in entries)
+            foreach (var e in entries)
             {
-                entry.HasActed = false;
-                entry.IsHeld = false;
+                e.HasActed = false;
+                e.IsHeld = false;
             }
 
             encounter.CurrentRound++;
-            _logger.LogInformation(
-                "Encounter {EncounterId}: new round {Round} (all {Count} participants reset)",
-                encounterId,
-                encounter.CurrentRound,
-                entries.Count);
-        }
-        else
-        {
-            current.HasActed = true;
-
-            _logger.LogInformation(
-                "Encounter {EncounterId}: participant {EntryId} marked as acted",
-                encounterId,
-                current.Id);
         }
 
         await _dbContext.SaveChangesAsync();
+        await RecalculateOrderAsync(encounterId);
         await PublishInitiativeAsync(encounterId, storyTellerUserId);
     }
 
     /// <inheritdoc />
     public async Task ResolveEncounterAsync(int encounterId, string storyTellerUserId)
     {
-        CombatEncounter encounter = await _dbContext.CombatEncounters
-            .FirstOrDefaultAsync(e => e.Id == encounterId)
-            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
-
-        if (encounter.IsDraft)
-        {
-            throw new InvalidOperationException("Only a started encounter can be resolved.");
-        }
-
-        if (encounter.ResolvedAt != null)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
-        }
-
-        if (!encounter.IsActive && !encounter.IsPaused)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is not running or paused.");
-        }
-
+        CombatEncounter encounter = await LoadMutableEncounterAsync(encounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         encounter.IsActive = false;
         encounter.IsPaused = false;
         encounter.ResolvedAt = DateTime.UtcNow;
+
         await _dbContext.SaveChangesAsync();
+        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, encounter.CampaignId, []);
 
-        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, encounter.CampaignId, Array.Empty<InitiativeEntryDto>());
-
-        _logger.LogInformation(
-            "Encounter {EncounterId} resolved by ST {UserId}",
-            encounterId,
-            storyTellerUserId);
+        _logger.LogInformation("Encounter {EncounterId} resolved by ST {UserId}", encounterId, storyTellerUserId);
     }
 
     /// <inheritdoc />
@@ -633,14 +289,9 @@ public class EncounterService(
 
         encounter.IsActive = false;
         encounter.IsPaused = true;
+
         await _dbContext.SaveChangesAsync();
-
-        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, encounter.CampaignId, Array.Empty<InitiativeEntryDto>());
-
-        _logger.LogInformation(
-            "Encounter {EncounterId} paused by ST {UserId}",
-            encounterId,
-            storyTellerUserId);
+        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, encounter.CampaignId, []);
     }
 
     /// <inheritdoc />
@@ -650,24 +301,19 @@ public class EncounterService(
             .FirstOrDefaultAsync(e => e.Id == encounterId)
             ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
 
-        if (!encounter.IsPaused || encounter.IsDraft || encounter.ResolvedAt != null)
+        if (!encounter.IsPaused)
         {
-            throw new InvalidOperationException($"Encounter {encounterId} is not paused or cannot be resumed.");
+            throw new InvalidOperationException("Only paused encounters can be resumed.");
         }
 
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
         await EnsureNoOtherOpenEncounterAsync(encounter.CampaignId, exceptEncounterId: encounterId);
 
-        encounter.IsPaused = false;
         encounter.IsActive = true;
+        encounter.IsPaused = false;
+
         await _dbContext.SaveChangesAsync();
         await PublishInitiativeAsync(encounterId, storyTellerUserId);
-
-        _logger.LogInformation(
-            "Encounter {EncounterId} resumed by ST {UserId}",
-            encounterId,
-            storyTellerUserId);
     }
 
     /// <inheritdoc />
@@ -676,13 +322,14 @@ public class EncounterService(
         await _authHelper.RequireStorytellerAsync(campaignId, storyTellerUserId, "view encounters");
 
         return await _dbContext.CombatEncounters
-            .AsNoTracking()
+            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
             .Include(e => e.NpcTemplates)
             .Where(e => e.CampaignId == campaignId)
-            .OrderByDescending(e => e.IsActive && !e.IsDraft)
-            .ThenByDescending(e => e.IsPaused && !e.IsDraft && e.ResolvedAt == null)
+            .OrderByDescending(e => e.IsActive)
+            .ThenByDescending(e => e.IsPaused)
             .ThenByDescending(e => e.IsDraft)
             .ThenByDescending(e => e.CreatedAt)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -690,14 +337,10 @@ public class EncounterService(
     public async Task<CombatEncounter?> GetEncounterAsync(int encounterId, string userId)
     {
         CombatEncounter? encounter = await _dbContext.CombatEncounters
-            .AsNoTracking()
-            .Include(e => e.Campaign)
             .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
-                .ThenInclude(i => i.Character)!
-                    .ThenInclude(c => c!.Attributes)
-            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
-                .ThenInclude(i => i.ChronicleNpc)
+                .ThenInclude(i => i.Character)
             .Include(e => e.NpcTemplates)
+            .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == encounterId);
 
         if (encounter == null)
@@ -705,42 +348,29 @@ public class EncounterService(
             return null;
         }
 
-        await _authHelper.RequireCampaignMemberAsync(encounter.CampaignId, userId, "view this encounter");
+        await _authHelper.RequireCampaignMemberAsync(encounter.CampaignId, userId, "view encounter");
 
-        bool isSt = encounter.Campaign?.StoryTellerId == userId;
-        if (isSt)
-        {
-            return encounter;
-        }
-
-        return RedactEncounterForPlayer(encounter, userId);
+        bool isSt = await _dbContext.Campaigns.AnyAsync(c => c.Id == encounter.CampaignId && c.StoryTellerId == userId);
+        return isSt ? encounter : RedactEncounterForPlayer(encounter, userId);
     }
 
     /// <inheritdoc />
     public async Task<CombatEncounter?> GetActiveEncounterForCampaignAsync(int campaignId, string userId)
     {
-        // Factory context per call: Blazor Server can invoke this concurrently (e.g. initiative hub + initial load)
-        // on the same circuit; the scoped ApplicationDbContext must not run overlapping operations.
-        await using ApplicationDbContext readContext = await _dbContextFactory.CreateDbContextAsync();
-        await _authHelper.RequireCampaignMemberAsync(readContext, campaignId, userId, "view encounter state");
+        await _authHelper.RequireCampaignMemberAsync(campaignId, userId, "view active encounter");
 
-        CombatEncounter? encounter = await readContext.CombatEncounters
+        CombatEncounter? encounter = await _dbContext.CombatEncounters
+            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
+                .ThenInclude(i => i.Character)
             .AsNoTracking()
-            .Include(e => e.Campaign)
-            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
-                .ThenInclude(i => i.Character)!
-                    .ThenInclude(c => c!.Attributes)
-            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
-                .ThenInclude(i => i.ChronicleNpc)
-            .Where(e => e.CampaignId == campaignId && e.IsActive && !e.IsDraft)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(e => e.CampaignId == campaignId && e.IsActive && !e.IsDraft);
 
         if (encounter == null)
         {
             return null;
         }
 
-        bool isSt = encounter.Campaign?.StoryTellerId == userId;
+        bool isSt = await _dbContext.Campaigns.AnyAsync(c => c.Id == campaignId && c.StoryTellerId == userId);
         return isSt ? encounter : RedactEncounterForPlayer(encounter, userId);
     }
 
@@ -758,41 +388,25 @@ public class EncounterService(
         await _dbContext.SaveChangesAsync();
         await RecalculateOrderAsync(entry.EncounterId);
         await PublishInitiativeIfActiveAsync(encounter, storyTellerUserId);
-
-        _logger.LogInformation(
-            "Initiative entry {EntryId} removed from encounter {EncounterId} by ST {UserId}",
-            entryId,
-            entry.EncounterId,
-            storyTellerUserId);
     }
 
     /// <inheritdoc />
     public async Task ReorderInitiativeAsync(int encounterId, IReadOnlyList<int> entryIdsInOrder, string storyTellerUserId)
     {
         CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "reorder initiative");
 
         List<InitiativeEntry> entries = await _dbContext.InitiativeEntries
             .Where(i => i.EncounterId == encounterId)
             .ToListAsync();
 
-        if (entryIdsInOrder.Count != entries.Count || entryIdsInOrder.Distinct().Count() != entries.Count)
-        {
-            throw new InvalidOperationException("Reorder list must include each initiative entry exactly once.");
-        }
-
-        HashSet<int> valid = entries.Select(e => e.Id).ToHashSet();
-        if (entryIdsInOrder.Any(id => !valid.Contains(id)))
-        {
-            throw new InvalidOperationException("Reorder list contains unknown entry ids.");
-        }
-
         for (int i = 0; i < entryIdsInOrder.Count; i++)
         {
-            InitiativeEntry? row = entries.FirstOrDefault(e => e.Id == entryIdsInOrder[i]);
-            if (row != null)
+            int id = entryIdsInOrder[i];
+            InitiativeEntry? entry = entries.FirstOrDefault(e => e.Id == id);
+            if (entry != null)
             {
-                row.Order = i + 1;
+                entry.Order = i + 1;
             }
         }
 
@@ -801,181 +415,23 @@ public class EncounterService(
     }
 
     /// <inheritdoc />
-    public async Task ApplyNpcDamageAsync(int entryId, char damageType, string storyTellerUserId)
-    {
-        if (damageType is not ('/' or 'X' or '*'))
-        {
-            throw new ArgumentException("Damage type must be '/', 'X', or '*'.", nameof(damageType));
-        }
-
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC damage applies to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        if (entry.NpcHealthDamage.Length >= entry.NpcHealthBoxes)
-        {
-            return;
-        }
-
-        entry.NpcHealthDamage += damageType;
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task HealNpcDamageAsync(int entryId, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC heal applies to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        if (entry.NpcHealthDamage.Length == 0)
-        {
-            return;
-        }
-
-        entry.NpcHealthDamage = entry.NpcHealthDamage[..^1];
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task SpendNpcWillpowerAsync(int entryId, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC willpower applies to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        if (entry.NpcCurrentWillpower <= 0)
-        {
-            return;
-        }
-
-        entry.NpcCurrentWillpower--;
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task RestoreNpcWillpowerAsync(int entryId, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC willpower applies to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        if (entry.NpcCurrentWillpower >= entry.NpcMaxWillpower)
-        {
-            return;
-        }
-
-        entry.NpcCurrentWillpower++;
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task SpendNpcVitaeAsync(int entryId, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC vitae applies to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        if (entry.NpcCurrentVitae <= 0)
-        {
-            return;
-        }
-
-        entry.NpcCurrentVitae--;
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task RestoreNpcVitaeAsync(int entryId, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC vitae applies to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        if (entry.NpcCurrentVitae >= entry.NpcMaxVitae)
-        {
-            return;
-        }
-
-        entry.NpcCurrentVitae++;
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
     public async Task HoldActionAsync(int encounterId, string storyTellerUserId)
     {
         CombatEncounter encounter = await LoadActiveCombatEncounterAsync(encounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
-        List<InitiativeEntry> entries = await _dbContext.InitiativeEntries
-            .Where(i => i.EncounterId == encounterId)
-            .OrderBy(i => i.Order)
-            .ToListAsync();
+        InitiativeEntry? currentActor = await _dbContext.InitiativeEntries
+            .Where(e => e.EncounterId == encounterId && !e.HasActed && !e.IsHeld)
+            .OrderBy(e => e.Order)
+            .FirstOrDefaultAsync();
 
-        InitiativeEntry? current = entries.FirstOrDefault(i => !i.HasActed);
-        if (current == null)
+        if (currentActor != null)
         {
-            return;
+            currentActor.IsHeld = true;
+            await _dbContext.SaveChangesAsync();
+            await RecalculateOrderAsync(encounterId);
+            await PublishInitiativeAsync(encounterId, storyTellerUserId);
         }
-
-        current.IsHeld = true;
-        await _dbContext.SaveChangesAsync();
-        await RecalculateOrderAsync(encounterId);
-        await PublishInitiativeAsync(encounterId, storyTellerUserId);
     }
 
     /// <inheritdoc />
@@ -985,268 +441,47 @@ public class EncounterService(
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         InitiativeEntry? released = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId && i.EncounterId == encounterId);
+            .FirstOrDefaultAsync(e => e.Id == entryId && e.EncounterId == encounterId && e.IsHeld);
 
-        if (released == null || !released.IsHeld)
+        if (released == null)
         {
-            throw new InvalidOperationException("Entry is not held in this encounter.");
+            return;
         }
 
         released.IsHeld = false;
 
         List<InitiativeEntry> entries = await _dbContext.InitiativeEntries
-            .Where(i => i.EncounterId == encounterId)
+            .Where(e => e.EncounterId == encounterId)
             .ToListAsync();
 
-        List<InitiativeEntry> tier0 = entries
-            .Where(e => Tier(e) == 0)
-            .OrderBy(e => e.Order)
-            .ToList();
+        static int Tier(InitiativeEntry e) => e.HasActed ? 2 : (e.IsHeld ? 1 : 0);
 
+        List<InitiativeEntry> tier0 = entries.Where(e => Tier(e) == 0).OrderBy(e => e.Order).ToList();
         tier0.Remove(released);
         tier0.Insert(0, released);
 
-        List<InitiativeEntry> tier1 = entries
-            .Where(e => Tier(e) == 1)
-            .OrderByDescending(e => e.Total)
-            .ThenByDescending(e => e.InitiativeMod)
-            .ThenBy(e => e.CharacterId == null ? 1 : 0)
-            .ToList();
+        List<InitiativeEntry> sorted = [.. tier0, .. entries.Where(e => Tier(e) == 1).OrderByDescending(e => e.Total), .. entries.Where(e => Tier(e) == 2).OrderByDescending(e => e.Total)];
 
-        List<InitiativeEntry> tier2 = entries
-            .Where(e => Tier(e) == 2)
-            .OrderByDescending(e => e.Total)
-            .ThenByDescending(e => e.InitiativeMod)
-            .ThenBy(e => e.CharacterId == null ? 1 : 0)
-            .ToList();
-
-        List<InitiativeEntry> combined = [];
-        combined.AddRange(tier0);
-        combined.AddRange(tier1);
-        combined.AddRange(tier2);
-
-        for (int i = 0; i < combined.Count; i++)
+        for (int i = 0; i < sorted.Count; i++)
         {
-            combined[i].Order = i + 1;
+            sorted[i].Order = i + 1;
         }
 
         await _dbContext.SaveChangesAsync();
         await PublishInitiativeAsync(encounterId, storyTellerUserId);
     }
 
-    /// <inheritdoc />
-    public async Task SetNpcEntryRevealAsync(int entryId, bool revealed, string? maskedDisplayName, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("Reveal toggle applies to NPC rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        entry.IsRevealed = revealed;
-        if (maskedDisplayName != null)
-        {
-            entry.MaskedDisplayName = string.IsNullOrWhiteSpace(maskedDisplayName) ? null : maskedDisplayName.Trim();
-        }
-
-        await _dbContext.SaveChangesAsync();
-        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-    }
-
-    /// <inheritdoc />
-    public async Task<NpcEncounterRollResultDto> RollNpcEncounterPoolAsync(
-        int initiativeEntryId,
-        string? trait1,
-        string? trait2,
-        int? manualDicePool,
-        string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Id == initiativeEntryId)
-            ?? throw new InvalidOperationException($"Initiative entry {initiativeEntryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC encounter rolls apply to NPC initiative rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "roll for an NPC in encounter");
-
-        int pool;
-        string poolDescription;
-
-        if (manualDicePool.HasValue)
-        {
-            if (manualDicePool.Value < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(manualDicePool), "Manual dice pool cannot be negative.");
-            }
-
-            pool = manualDicePool.Value;
-            poolDescription = pool == 0
-                ? "Manual pool (chance die)"
-                : $"Manual pool ({pool})";
-        }
-        else
-        {
-            if (entry.ChronicleNpcId is not int chronicleNpcId)
-            {
-                throw new InvalidOperationException(
-                    "Plain NPC rows require a manual dice pool. Link this NPC from Danse Macabre to roll by traits.");
-            }
-
-            if (string.IsNullOrWhiteSpace(trait1) || string.IsNullOrWhiteSpace(trait2))
-            {
-                throw new ArgumentException("Select two traits or enter a manual dice pool.");
-            }
-
-            string t1 = trait1.Trim();
-            string t2 = trait2.Trim();
-            if (!TryParseTraitKind(t1, out bool t1Attr) || !TryParseTraitKind(t2, out bool t2Attr))
-            {
-                throw new ArgumentException("Each trait must be a valid attribute or skill name.");
-            }
-
-            ChronicleNpc? npc = await _dbContext.ChronicleNpcs
-                .AsNoTracking()
-                .FirstOrDefaultAsync(n => n.Id == chronicleNpcId);
-
-            if (npc == null)
-            {
-                throw new InvalidOperationException($"Chronicle NPC {chronicleNpcId} not found.");
-            }
-
-            if (npc.CampaignId != encounter.CampaignId)
-            {
-                throw new InvalidOperationException("Chronicle NPC does not belong to this encounter's campaign.");
-            }
-
-            int v1 = ChronicleNpcTraitJsonReader.ReadTraitRating(t1, t1Attr, npc.AttributesJson, npc.SkillsJson);
-            int v2 = ChronicleNpcTraitJsonReader.ReadTraitRating(t2, t2Attr, npc.AttributesJson, npc.SkillsJson);
-            pool = v1 + v2;
-            string d1 = TraitMetadata.GetDisplayName(t1);
-            string d2 = TraitMetadata.GetDisplayName(t2);
-            poolDescription = $"{d1} + {d2} ({pool})";
-        }
-
-        RollResult result = _diceService.Roll(pool, tenAgain: true);
-        string npcLabel = entry.NpcName ?? "NPC";
-
-        _logger.LogInformation(
-            "NPC encounter roll for entry {EntryId} ({NpcName}) in encounter {EncounterId}: {PoolDescription}, successes={Successes}",
-            initiativeEntryId,
-            npcLabel,
-            entry.EncounterId,
-            poolDescription,
-            result.Successes);
-
-        return new NpcEncounterRollResultDto(
-            result.Successes,
-            result.DiceRolled,
-            poolDescription,
-            result.IsExceptionalSuccess,
-            result.IsDramaticFailure);
-    }
-
-    private static bool TryParseTraitKind(string name, out bool isAttribute)
-    {
-        isAttribute = false;
-        if (Enum.TryParse(name, out AttributeId _))
-        {
-            isAttribute = true;
-            return true;
-        }
-
-        return Enum.TryParse(name, out SkillId _);
-    }
-
-    private static int Tier(InitiativeEntry e)
-    {
-        if (e.HasActed)
-        {
-            return 2;
-        }
-
-        return e.IsHeld ? 1 : 0;
-    }
-
-    private static int ClampNpcHealthBoxes(int healthBoxes) => Math.Clamp(healthBoxes, 1, 50);
-
-    private static int ClampNpcMaxWillpower(int maxWillpower) => Math.Clamp(maxWillpower, 1, 20);
-
-    private static int ClampNpcMaxVitae(int maxVitae) => Math.Clamp(maxVitae, 0, 100);
-
-    private static int ResolveChronicleNpcMaxVitae(ChronicleNpc npc, int maxVitae)
-    {
-        bool kindred = npc.CreatureType == CreatureType.Vampire || npc.IsVampire;
-        if (!kindred)
-        {
-            return 0;
-        }
-
-        return ClampNpcMaxVitae(maxVitae);
-    }
-
+    // ── Private helpers ───────────────────────────────────────────────────────
     private static CombatEncounter RedactEncounterForPlayer(CombatEncounter source, string viewerUserId)
     {
-        CombatEncounter clone = new()
+        CombatEncounter clone = new() { Id = source.Id, CampaignId = source.CampaignId, Name = source.Name, IsActive = source.IsActive, IsDraft = source.IsDraft, IsPaused = source.IsPaused, CurrentRound = source.CurrentRound, CreatedAt = source.CreatedAt, ResolvedAt = source.ResolvedAt, InitiativeEntries = [], NpcTemplates = [] };
+        foreach (var entry in source.InitiativeEntries)
         {
-            Id = source.Id,
-            CampaignId = source.CampaignId,
-            Name = source.Name,
-            IsActive = source.IsActive,
-            IsDraft = source.IsDraft,
-            IsPaused = source.IsPaused,
-            CurrentRound = source.CurrentRound,
-            CreatedAt = source.CreatedAt,
-            ResolvedAt = source.ResolvedAt,
-            InitiativeEntries = [],
-            NpcTemplates = [],
-        };
-
-        foreach (InitiativeEntry entry in source.InitiativeEntries)
-        {
-            string? npcDisplayName = entry.CharacterId != null
-                ? null
-                : entry.IsRevealed
-                    ? entry.NpcName
-                    : (string.IsNullOrWhiteSpace(entry.MaskedDisplayName) ? "Unknown" : entry.MaskedDisplayName.Trim());
-
-            InitiativeEntry copy = new()
-            {
-                Id = entry.Id,
-                EncounterId = entry.EncounterId,
-                CharacterId = entry.CharacterId,
-                NpcName = npcDisplayName,
-                InitiativeMod = entry.InitiativeMod,
-                RollResult = entry.RollResult,
-                Total = entry.Total,
-                HasActed = entry.HasActed,
-                IsHeld = entry.IsHeld,
-                IsRevealed = entry.IsRevealed,
-                MaskedDisplayName = entry.MaskedDisplayName,
-                Order = entry.Order,
-                NpcHealthBoxes = entry.NpcHealthBoxes,
-                NpcHealthDamage = string.Empty,
-                NpcMaxWillpower = entry.NpcMaxWillpower,
-                NpcCurrentWillpower = entry.NpcCurrentWillpower,
-                NpcMaxVitae = 0,
-                NpcCurrentVitae = 0,
-            };
-
+            string? name = entry.CharacterId != null ? null : (entry.IsRevealed ? entry.NpcName : (string.IsNullOrWhiteSpace(entry.MaskedDisplayName) ? "Unknown" : entry.MaskedDisplayName.Trim()));
+            InitiativeEntry copy = new() { Id = entry.Id, EncounterId = entry.EncounterId, CharacterId = entry.CharacterId, NpcName = name, InitiativeMod = entry.InitiativeMod, RollResult = entry.RollResult, Total = entry.Total, HasActed = entry.HasActed, IsHeld = entry.IsHeld, IsRevealed = entry.IsRevealed, MaskedDisplayName = entry.MaskedDisplayName, Order = entry.Order, NpcHealthBoxes = entry.NpcHealthBoxes, NpcHealthDamage = string.Empty, NpcMaxWillpower = entry.NpcMaxWillpower, NpcCurrentWillpower = entry.NpcCurrentWillpower, NpcMaxVitae = 0, NpcCurrentVitae = 0 };
             if (entry.Character != null)
             {
-                copy.Character = entry.Character.ApplicationUserId == viewerUserId
-                    ? entry.Character
-                    : CreateRedactedCharacterStub(entry.Character);
+                copy.Character = entry.Character.ApplicationUserId == viewerUserId ? entry.Character : new Character { Id = entry.Character.Id, Name = entry.Character.Name, ApplicationUserId = string.Empty };
             }
 
             clone.InitiativeEntries.Add(copy);
@@ -1255,57 +490,13 @@ public class EncounterService(
         return clone;
     }
 
-    private static Character CreateRedactedCharacterStub(Character source) =>
-        new()
-        {
-            Id = source.Id,
-            Name = source.Name,
-            ApplicationUserId = string.Empty,
-            Size = 0,
-            HealthDamage = string.Empty,
-            Attributes = [],
-            Skills = [],
-            CharacterEquipments = [],
-        };
-
-    private Task<InitiativeEntry> AddCharacterToEncounterCoreAsync(
-        int encounterId,
-        int characterId,
-        int initiativeMod,
-        int rollResult)
-    {
-        InitiativeEntry entry = new()
-        {
-            EncounterId = encounterId,
-            CharacterId = characterId,
-            InitiativeMod = initiativeMod,
-            RollResult = rollResult,
-            Total = initiativeMod + rollResult,
-            HasActed = false,
-            IsHeld = false,
-            IsRevealed = true,
-        };
-
-        _dbContext.InitiativeEntries.Add(entry);
-        return Task.FromResult(entry);
-    }
-
-    /// <summary>
-    /// At most one open fight per campaign: launched and not resolved (running or paused).
-    /// </summary>
     private async Task EnsureNoOtherOpenEncounterAsync(int campaignId, int exceptEncounterId)
     {
         bool conflict = await _dbContext.CombatEncounters.AnyAsync(e =>
-            e.CampaignId == campaignId
-            && e.Id != exceptEncounterId
-            && !e.IsDraft
-            && e.ResolvedAt == null
-            && (e.IsActive || e.IsPaused));
-
+            e.CampaignId == campaignId && e.Id != exceptEncounterId && !e.IsDraft && e.ResolvedAt == null && (e.IsActive || e.IsPaused));
         if (conflict)
         {
-            throw new InvalidOperationException(
-                "Another encounter is already in progress or paused. Resolve or resume it before starting a new one.");
+            throw new InvalidOperationException("Another encounter is already in progress or paused.");
         }
     }
 
@@ -1321,8 +512,7 @@ public class EncounterService(
     {
         CombatEncounter? enc = await _dbContext.CombatEncounters
             .AsNoTracking()
-            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
-                .ThenInclude(i => i.Character)
+            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order)).ThenInclude(i => i.Character)
             .FirstOrDefaultAsync(e => e.Id == encounterId);
 
         if (enc == null || !enc.IsActive || enc.IsDraft)
@@ -1330,35 +520,13 @@ public class EncounterService(
             return;
         }
 
-        IReadOnlyList<InitiativeEntryDto> dtos = EncounterInitiativeBroadcastMapper.Map(enc);
-        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, enc.CampaignId, dtos);
-    }
-
-    private async Task<CombatEncounter> LoadDraftEncounterAsync(int encounterId)
-    {
-        CombatEncounter encounter = await _dbContext.CombatEncounters
-            .FirstOrDefaultAsync(e => e.Id == encounterId)
-            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
-
-        if (!encounter.IsDraft)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is not a draft.");
-        }
-
-        if (encounter.ResolvedAt != null)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
-        }
-
-        return encounter;
+        await _sessionService.UpdateInitiativeAsync(storyTellerUserId, enc.CampaignId, EncounterInitiativeBroadcastMapper.Map(enc));
     }
 
     private async Task<CombatEncounter> LoadMutableEncounterAsync(int encounterId)
     {
-        CombatEncounter encounter = await _dbContext.CombatEncounters
-            .FirstOrDefaultAsync(e => e.Id == encounterId)
+        CombatEncounter encounter = await _dbContext.CombatEncounters.FirstOrDefaultAsync(e => e.Id == encounterId)
             ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
-
         if (encounter.ResolvedAt != null)
         {
             throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
@@ -1369,45 +537,33 @@ public class EncounterService(
 
     private async Task<CombatEncounter> LoadActiveCombatEncounterAsync(int encounterId)
     {
-        CombatEncounter encounter = await _dbContext.CombatEncounters
-            .FirstOrDefaultAsync(e => e.Id == encounterId)
-            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
-
+        CombatEncounter encounter = await LoadMutableEncounterAsync(encounterId);
         if (!encounter.IsActive || encounter.IsDraft)
         {
             throw new InvalidOperationException($"Encounter {encounterId} is not an active launched fight.");
         }
 
-        if (encounter.ResolvedAt != null)
-        {
-            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
-        }
-
         return encounter;
     }
 
-    /// <summary>
-    /// Re-sorts entries using tier (unheld unacted → held unacted → acted) then initiative tie-breakers.
-    /// </summary>
     private async Task RecalculateOrderAsync(int encounterId)
     {
-        List<InitiativeEntry> entries = await _dbContext.InitiativeEntries
-            .Where(i => i.EncounterId == encounterId)
-            .ToListAsync();
-
-        List<InitiativeEntry> sorted = entries
-            .OrderBy(Tier)
-            .ThenByDescending(i => i.Total)
-            .ThenByDescending(i => i.InitiativeMod)
-            .ThenBy(i => i.CharacterId == null ? 1 : 0)
-            .ToList();
-
+        List<InitiativeEntry> entries = await _dbContext.InitiativeEntries.Where(i => i.EncounterId == encounterId).ToListAsync();
+        static int Tier(InitiativeEntry e) => e.HasActed ? 2 : (e.IsHeld ? 1 : 0);
+        List<InitiativeEntry> sorted = entries.OrderBy(Tier).ThenByDescending(i => i.Total).ThenByDescending(i => i.InitiativeMod).ThenBy(i => i.CharacterId == null ? 1 : 0).ToList();
         int order = 1;
-        foreach (InitiativeEntry entry in sorted)
+        foreach (var entry in sorted)
         {
             entry.Order = order++;
         }
 
         await _dbContext.SaveChangesAsync();
+    }
+
+    private async Task<InitiativeEntry> AddCharacterToEncounterCoreAsync(int encounterId, int characterId, int initiativeMod, int rollResult)
+    {
+        InitiativeEntry entry = new() { EncounterId = encounterId, CharacterId = characterId, InitiativeMod = initiativeMod, RollResult = rollResult, Total = initiativeMod + rollResult, HasActed = false, IsHeld = false, IsRevealed = true };
+        _dbContext.InitiativeEntries.Add(entry);
+        return await Task.FromResult(entry);
     }
 }
