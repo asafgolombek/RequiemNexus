@@ -87,6 +87,21 @@
     {
         var results = new List<PaletteSection>();
 
+        if (_query.StartsWith("/"))
+        {
+            var commands = new List<PaletteItem>();
+            if ("/roll".StartsWith(_query, StringComparison.OrdinalIgnoreCase))
+                commands.Add(new PaletteItem("Roll Dice", "command:roll", "🎲"));
+            if ("/goto".StartsWith(_query, StringComparison.OrdinalIgnoreCase))
+                commands.Add(new PaletteItem("Go to section...", "command:goto", "📍"));
+            
+            if (commands.Any())
+            {
+                results.Add(new PaletteSection("Commands", commands));
+                return results;
+            }
+        }
+
         var filteredPages = _staticPages.Where(i => i.Name.Contains(_query, StringComparison.OrdinalIgnoreCase)).ToList();
         if (filteredPages.Any()) results.Add(new PaletteSection("Pages", filteredPages));
 
@@ -102,6 +117,20 @@
     private void OnKeyDown(KeyboardEventArgs e)
     {
         var allItems = FilteredResults().SelectMany(s => s.Items).ToList();
+        
+        if (e.Key == "Enter")
+        {
+            if (_activeItem != null)
+            {
+                ExecuteItem(_activeItem);
+            }
+            else if (_query.StartsWith("/roll "))
+            {
+                ExecuteRollCommand(_query[6..]);
+            }
+            return;
+        }
+
         if (!allItems.Any()) return;
 
         int index = _activeItem == null ? -1 : allItems.IndexOf(_activeItem);
@@ -116,14 +145,45 @@
             index = (index - 1 + allItems.Count) % allItems.Count;
             _activeItem = allItems[index];
         }
-        else if (e.Key == "Enter" && _activeItem != null)
-        {
-            Navigate(_activeItem.Href);
-        }
         else if (e.Key == "Escape")
         {
             Close();
         }
+    }
+
+    private void ExecuteItem(PaletteItem item)
+    {
+        if (item.Href.StartsWith("command:"))
+        {
+            HandleInternalCommand(item.Href);
+        }
+        else
+        {
+            Navigate(item.Href);
+        }
+    }
+
+    private void HandleInternalCommand(string command)
+    {
+        switch (command)
+        {
+            case "command:roll":
+                _query = "/roll ";
+                _activeItem = null;
+                break;
+            case "command:goto":
+                _query = "/goto ";
+                _activeItem = null;
+                break;
+        }
+    }
+
+    private void ExecuteRollCommand(string args)
+    {
+        // For now, we'll just show a toast or navigate to a specialized roll page if it existed.
+        // In a real implementation, this could trigger the DiceRollerModal via a service.
+        PaletteService.Close();
+        // Placeholder for triggering roll logic
     }
 
     private void Navigate(string href)

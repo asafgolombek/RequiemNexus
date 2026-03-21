@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
@@ -27,7 +28,16 @@ public class CharacterServiceIntegrationTests
             o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         IDbContextFactory<ApplicationDbContext> factory = services.BuildServiceProvider()
             .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-        return new(ctx, factory, new CharacterCreationRules(), new BeatLedgerService(ctx), new Mock<ISessionService>().Object);
+
+        var auth = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
+
+        return new CharacterManagementService(
+            ctx,
+            factory,
+            new CharacterCreationRules(),
+            new BeatLedgerService(ctx),
+            auth,
+            new Mock<ISessionService>().Object);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
@@ -127,12 +137,14 @@ public class CharacterServiceIntegrationTests
         await ctx.SaveChangesAsync();
 
         // Act
-        await service.AddBeatAsync(character);
+        await service.AddBeatAsync(character.Id, character.ApplicationUserId);
 
         // Assert
-        Assert.Equal(0, character.Beats);
-        Assert.Equal(1, character.ExperiencePoints);
-        Assert.Equal(1, character.TotalExperiencePoints);
+        var dbChar = await ctx.Characters.FindAsync(character.Id);
+        Assert.NotNull(dbChar);
+        Assert.Equal(0, dbChar.Beats);
+        Assert.Equal(1, dbChar.ExperiencePoints);
+        Assert.Equal(1, dbChar.TotalExperiencePoints);
         Assert.Equal(1, await ctx.BeatLedger.CountAsync()); // 1 for AddBeat
         Assert.Equal(1, await ctx.XpLedger.CountAsync()); // 1 for Conversion to XP
     }
@@ -148,11 +160,13 @@ public class CharacterServiceIntegrationTests
         await ctx.SaveChangesAsync();
 
         // Act
-        await service.AddXPAsync(character);
+        await service.AddXPAsync(character.Id, character.ApplicationUserId);
 
         // Assert
-        Assert.Equal(1, character.ExperiencePoints);
-        Assert.Equal(1, character.TotalExperiencePoints);
+        var dbChar = await ctx.Characters.FindAsync(character.Id);
+        Assert.NotNull(dbChar);
+        Assert.Equal(1, dbChar.ExperiencePoints);
+        Assert.Equal(1, dbChar.TotalExperiencePoints);
         Assert.Equal(1, await ctx.XpLedger.CountAsync());
     }
 

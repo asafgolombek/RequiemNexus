@@ -95,9 +95,19 @@
                 
                 @if (_lastResultDto != null)
                 {
-                    <div class="result-box @(_lastResultDto.IsExceptionalSuccess ? "exceptional" : "") @(_lastResultDto.IsDramaticFailure ? "dramatic-failure" : "") @(_shakeClass) @(_isRolling ? "results-rolling" : "")">
+                    <div class="result-box @(_lastResultDto.IsExceptionalSuccess ? "exceptional" : "") @(_lastResultDto.IsDramaticFailure ? "dramatic-failure" : "") @(_shakeClass) @(_isRolling ? "results-rolling" : "")"
+                         aria-live="polite">
                         <h4 class="result-title">
-                            <span id="@_successCountId">@(_isRolling ? "?" : _lastResultDto.Successes.ToString())</span> Success@(_lastResultDto.Successes != 1 ? "es" : "")
+                            @if (_isRolling)
+                            {
+                                <span>Rolling...</span>
+                            }
+                            else
+                            {
+                                <span id="@_successCountId" aria-label="@_lastResultDto.Successes Successes @(_lastResultDto.IsExceptionalSuccess ? "Exceptional!" : "") @(_lastResultDto.IsDramaticFailure ? "Dramatic Failure!" : "")">
+                                    @_lastResultDto.Successes
+                                </span> @("Success" + (_lastResultDto.Successes != 1 ? "es" : ""))
+                            }
                         </h4>
                         @if (!_isRolling)
                         {

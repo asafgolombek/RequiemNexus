@@ -1,0 +1,432 @@
+/* Storyteller Glimpse Scoped Styles */
+
+.glimpse-card {
+    margin-bottom: 1.5rem;
+}
+
+.section-header {
+    margin-bottom: 0.75rem;
+}
+
+.coterie-beat-award {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.draggable-beat {
+    font-size: 1.5rem;
+    cursor: grab;
+    padding: 0.5rem;
+    background: var(--ash-gray);
+    border: 1px dashed var(--crimson);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.draggable-beat:active {
+    cursor: grabbing;
+}
+
+.draggable-beat:hover {
+    background: rgba(196, 30, 58, 0.1);
+    transform: scale(1.1);
+}
+
+.glimpse-card.drop-zone {
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.glimpse-card.drop-zone-active {
+    border: 2px solid var(--crimson);
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(196, 30, 58, 0.4);
+}
+
+.coterie-reason-input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.feedback-ok {
+    margin-top: 0.5rem;
+    color: var(--success-color);
+}
+
+/* Social Maneuvering */
+.social-description {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin-bottom: 1rem;
+}
+
+.social-config-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+    padding: 0.65rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.config-label {
+    font-size: 0.85em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.config-input-small {
+    width: 72px;
+}
+
+.new-maneuver-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.form-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85em;
+}
+
+.form-select-medium {
+    min-width: 160px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85em;
+}
+
+.btn-align-start {
+    align-self: flex-start;
+}
+
+.empty-maneuvers {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.maneuver-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.maneuver-item {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.maneuver-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+}
+
+.maneuver-goal {
+    font-size: 0.88em;
+    margin: 0.25rem 0 0.5rem;
+    color: var(--text-secondary);
+}
+
+.maneuver-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.85em;
+    margin-bottom: 0.5rem;
+}
+
+.clues-section {
+    font-size: 0.82em;
+    margin: 0.45rem 0;
+    padding: 0.5rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+}
+
+.clues-progress {
+    color: var(--text-secondary);
+    margin-left: 0.35rem;
+}
+
+.clues-bank-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.4rem;
+}
+
+.input-mini {
+    width: 52px;
+}
+
+.manual-clue-form {
+    margin-top: 0.45rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.clue-source-label {
+    font-size: 0.78em;
+    flex: 1;
+    min-width: 140px;
+}
+
+.clue-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.45rem 0 0;
+    font-size: 0.8em;
+}
+
+.clue-item {
+    padding: 0.25rem 0;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.clue-spend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.impression-config-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.impression-select {
+    display: inline-block;
+    width: auto;
+    min-width: 120px;
+    margin-left: 0.35rem;
+}
+
+.doors-input {
+    display: inline-block;
+    width: 64px;
+    margin-left: 0.35rem;
+}
+
+.maneuver-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.5rem;
+    margin-top: 0.35rem;
+}
+
+.pool-input {
+    width: 56px;
+}
+
+.bp-severity-input {
+    display: inline-block;
+    width: 52px;
+    margin-left: 0.25rem;
+}
+
+/* Pending Requests */
+.pending-request-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.request-meta {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.request-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.note-input {
+    width: 160px;
+    font-size: 0.85em;
+}
+
+/* Character Cards */
+.glimpse-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.vitals-grid {
+    display: grid;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.vital-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.vital-label {
+    font-size: 0.85em;
+    min-width: 85px;
+}
+
+.vital-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--ash-gray);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.vital-bar {
+    height: 100%;
+    transition: width 0.4s ease;
+}
+
+.health-bar { background: var(--crimson); }
+.willpower-bar { background: var(--warning-amber); }
+.vitae-bar { background: var(--accent-light); }
+
+.vital-value {
+    font-size: 0.8em;
+    min-width: 45px;
+    text-align: right;
+    color: var(--text-secondary);
+}
+
+.glimpse-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85em;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.award-panel {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.award-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.award-input {
+    flex: 1;
+    min-width: 140px;
+    font-size: 0.85em;
+}
+
+.xp-amount-input {
+    width: 70px;
+    font-size: 0.85em;
+}
+
+.feedback-small {
+    font-size: 0.8em;
+    margin-top: 0.4rem;
+}
+
+.text-small {
+    font-size: 0.85em;
+}
+
+.text-xsmall {
+    font-size: 0.75em;
+}
+
+.text-muted-rn {
+    color: var(--text-secondary);
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.flex-baseline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.margin-left-auto {
+    margin-left: auto;
+}
+
+.btn-align-small {
+    font-size: 0.85em;
+}
+
+.btn-small {
+    font-size: 0.8em;
+}
+
+.btn-xsmall {
+    font-size: 0.78em;
+}
+
+.input-small-text {
+    font-size: 0.85em;
+}
+
+.input-xsmall-text {
+    font-size: 0.9em;
+}
+
+.mt-small {
+    margin-top: 0.2rem;
+}
+
+.ml-small {
+    margin-left: 0.25rem;
+}

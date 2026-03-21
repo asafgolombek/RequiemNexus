@@ -380,33 +380,37 @@ public partial class CharacterDetails : IAsyncDisposable
 
     private async Task AddBeat()
     {
-        if (_character != null)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await CharacterService.AddBeatAsync(_character);
+            await CharacterService.AddBeatAsync(_character.Id, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
         }
     }
 
     private async Task RemoveBeat()
     {
-        if (_character != null)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await CharacterService.RemoveBeatAsync(_character);
+            await CharacterService.RemoveBeatAsync(_character.Id, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
         }
     }
 
     private async Task AddXP()
     {
-        if (_character != null)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await CharacterService.AddXPAsync(_character);
+            await CharacterService.AddXPAsync(_character.Id, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
         }
     }
 
     private async Task RemoveXP()
     {
-        if (_character != null)
+        if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await CharacterService.RemoveXPAsync(_character);
+            await CharacterService.RemoveXPAsync(_character.Id, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
         }
     }
 

@@ -165,7 +165,7 @@ public class SocialManeuveringService(
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
         SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
-        await RequireInitiatorOrStorytellerAsync(db, maneuver, userId, "roll to open a Door");
+        await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "roll to open a Door");
 
         if (maneuver.Status != ManeuverStatus.Active)
         {
@@ -232,7 +232,7 @@ public class SocialManeuveringService(
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
         SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
-        await RequireInitiatorOrStorytellerAsync(db, maneuver, userId, "force Doors");
+        await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "force Doors");
 
         if (maneuver.Status != ManeuverStatus.Active)
         {
@@ -402,7 +402,7 @@ public class SocialManeuveringService(
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
         SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
-        await RequireInitiatorOrStorytellerAsync(db, maneuver, userId, "bank Investigation successes");
+        await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "bank Investigation successes");
 
         if (maneuver.Status != ManeuverStatus.Active)
         {
@@ -502,7 +502,7 @@ public class SocialManeuveringService(
             throw new InvalidOperationException($"Maneuver clue {clueId} has no maneuver.");
         }
 
-        await RequireInitiatorOrStorytellerAsync(db, clue.SocialManeuver, userId, "spend a maneuver clue");
+        await _authHelper.RequireCharacterAccessAsync(clue.SocialManeuver.InitiatorCharacterId, userId, "spend a maneuver clue");
 
         if (clue.IsSpent)
         {
@@ -603,30 +603,6 @@ public class SocialManeuveringService(
             stUserId);
 
         await PublishManeuverUpdateAsync(db, maneuver.Id);
-    }
-
-    private async Task RequireInitiatorOrStorytellerAsync(ApplicationDbContext db, SocialManeuver maneuver, string userId, string operationName)
-    {
-        Character initiator = await db.Characters
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == maneuver.InitiatorCharacterId)
-            ?? throw new InvalidOperationException($"Character {maneuver.InitiatorCharacterId} not found.");
-
-        bool isOwner = initiator.ApplicationUserId == userId;
-        bool isStoryteller = await db.Campaigns.AnyAsync(
-            c => c.Id == maneuver.CampaignId && c.StoryTellerId == userId);
-
-        if (!isOwner && !isStoryteller)
-        {
-            _logger.LogWarning(
-                "Unauthorized attempt to {OperationName} on maneuver {ManeuverId} by user {UserId}",
-                operationName,
-                maneuver.Id,
-                userId);
-
-            throw new UnauthorizedAccessException(
-                $"Only the initiating character's owner or the Storyteller may {operationName}.");
-        }
     }
 
     private async Task ApplyOpenDoorOutcomeConditionsAsync(

@@ -155,6 +155,8 @@ builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, Req
 builder.Services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterPrepService, RequiemNexus.Application.Services.EncounterPrepService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcCombatService, RequiemNexus.Application.Services.NpcCombatService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterTemplateService, RequiemNexus.Application.Services.EncounterTemplateService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPerceptionRollService, RequiemNexus.Application.Services.PerceptionRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICityFactionService, RequiemNexus.Application.Services.CityFactionService>();

@@ -25,13 +25,13 @@ public interface ICharacterService
     Task SaveAsync(Character character);
 
     // Beat & XP mutations
-    Task AddBeatAsync(Character character);
+    Task AddBeatAsync(int characterId, string userId);
 
-    Task RemoveBeatAsync(Character character);
+    Task RemoveBeatAsync(int characterId, string userId);
 
-    Task AddXPAsync(Character character);
+    Task AddXPAsync(int characterId, string userId);
 
-    Task RemoveXPAsync(Character character);
+    Task RemoveXPAsync(int characterId, string userId);
 
     // Retirement (campaign-scoped)
 

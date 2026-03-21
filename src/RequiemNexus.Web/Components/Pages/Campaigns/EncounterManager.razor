@@ -9,6 +9,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
 @inject IEncounterService EncounterService
+@inject IEncounterPrepService EncounterPrepService
 @inject IEncounterTemplateService EncounterTemplateService
 @inject IChronicleNpcService ChronicleNpcService
 @inject ICampaignService CampaignService
@@ -527,7 +528,7 @@
         _createError = string.Empty;
         try
         {
-            await EncounterService.CreateDraftEncounterAsync(Id, _newEncounterName.Trim(), _currentUserId!);
+            await EncounterPrepService.CreateDraftEncounterAsync(Id, _newEncounterName.Trim(), _currentUserId!);
             _newEncounterName = string.Empty;
             await LoadEncounters();
         }
@@ -573,7 +574,7 @@
         _busy = true;
         try
         {
-            await EncounterService.RemoveNpcTemplateAsync(templateId, _currentUserId!);
+            await EncounterPrepService.RemoveNpcTemplateAsync(templateId, _currentUserId!);
             await LoadEncounters();
         }
         finally
@@ -701,7 +702,7 @@
         _renameEncounterError = string.Empty;
         try
         {
-            await EncounterService.UpdateDraftEncounterNameAsync(encounterId, _renameEncounterBuffer, _currentUserId);
+            await EncounterPrepService.UpdateDraftEncounterNameAsync(encounterId, _renameEncounterBuffer, _currentUserId);
             CancelEncounterRename();
             await LoadEncounters();
         }
@@ -734,7 +735,7 @@
         }
 
         ChronicleNpcEncounterPrepDto? prep =
-            await EncounterService.GetChronicleNpcEncounterPrepAsync(_selectedChronicleNpcId, _currentUserId);
+            await EncounterPrepService.GetChronicleNpcEncounterPrepAsync(_selectedChronicleNpcId, _currentUserId);
         if (prep == null)
         {
             return;
@@ -770,7 +771,7 @@
         {
             if (_npcPickerIsDraft)
             {
-                await EncounterService.AddNpcTemplateFromChronicleNpcAsync(
+                await EncounterPrepService.AddNpcTemplateFromChronicleNpcAsync(
                     _activeEncounterForNpc.Value,
                     _selectedChronicleNpcId,
                     _npcInitMod,
@@ -828,7 +829,7 @@
 
             if (_npcPickerIsDraft)
             {
-                await EncounterService.AddNpcTemplateAsync(
+                await EncounterPrepService.AddNpcTemplateAsync(
                     _activeEncounterForNpc.Value,
                     block.Name,
                     _npcInitMod,
@@ -889,7 +890,7 @@
         _busy = true;
         try
         {
-            await EncounterService.AddNpcTemplateAsync(
+            await EncounterPrepService.AddNpcTemplateAsync(
                 _activeEncounterForNpc.Value,
                 _improvName.Trim(),
                 0,

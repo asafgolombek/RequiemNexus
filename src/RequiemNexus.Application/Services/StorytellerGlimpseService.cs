@@ -32,12 +32,28 @@ public class StorytellerGlimpseService(
     {
         await RequireStorytellerAsync(campaignId, storyTellerUserId);
 
-        List<Character> characters = await _dbContext.Characters
+        // Projected query: fetch only needed columns (no SELECT *)
+        var characterData = await _dbContext.Characters
             .Where(c => c.CampaignId == campaignId)
             .AsNoTracking()
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.ApplicationUserId,
+                c.CurrentHealth,
+                c.MaxHealth,
+                c.CurrentWillpower,
+                c.MaxWillpower,
+                c.CurrentVitae,
+                c.MaxVitae,
+                c.Humanity,
+                c.Beats,
+                c.ExperiencePoints,
+            })
             .ToListAsync();
 
-        List<int> characterIds = characters.Select(c => c.Id).ToList();
+        List<int> characterIds = characterData.Select(c => c.Id).ToList();
 
         // Count active conditions per character in a single query
         Dictionary<int, int> activeConditionCounts = await _dbContext.CharacterConditions
@@ -46,20 +62,22 @@ public class StorytellerGlimpseService(
             .Select(g => new { CharacterId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.CharacterId, x => x.Count);
 
-        return characters.Select(c => new CharacterVitalsDto(
-            c.Id,
-            c.Name,
-            c.ApplicationUserId,
-            c.CurrentHealth,
-            c.MaxHealth,
-            c.CurrentWillpower,
-            c.MaxWillpower,
-            c.CurrentVitae,
-            c.MaxVitae,
-            c.Humanity,
-            c.Beats,
-            c.ExperiencePoints,
-            activeConditionCounts.GetValueOrDefault(c.Id, 0))).ToList();
+        return characterData.Select(c => new CharacterVitalsDto
+        {
+            CharacterId = c.Id,
+            Name = c.Name,
+            PlayerUserId = c.ApplicationUserId,
+            CurrentHealth = c.CurrentHealth,
+            MaxHealth = c.MaxHealth,
+            CurrentWillpower = c.CurrentWillpower,
+            MaxWillpower = c.MaxWillpower,
+            CurrentVitae = c.CurrentVitae,
+            MaxVitae = c.MaxVitae,
+            Humanity = c.Humanity,
+            Beats = c.Beats,
+            ExperiencePoints = c.ExperiencePoints,
+            ActiveConditionCount = activeConditionCounts.GetValueOrDefault(c.Id, 0),
+        }).ToList();
     }
 
     /// <inheritdoc />

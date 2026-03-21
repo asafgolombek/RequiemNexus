@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
@@ -16,6 +17,8 @@ public class CampaignServiceTests
     private sealed class MatchingDbContextFactory(DbContextOptions<ApplicationDbContext> options) : IDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext() => new(options);
+        public ValueTask<ApplicationDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(new ApplicationDbContext(options));
     }
 
     /// <summary>
@@ -25,7 +28,7 @@ public class CampaignServiceTests
     private static CampaignService CreateCampaignService(ApplicationDbContext ctx, DbContextOptions<ApplicationDbContext> options)
     {
         var logger = new Mock<ILogger<CampaignService>>().Object;
-        var authHelper = new Mock<IAuthorizationHelper>().Object;
+        var authHelper = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
         var factory = new MatchingDbContextFactory(options);
 
         return new CampaignService(ctx, factory, logger, authHelper, new Mock<ISessionService>().Object);
@@ -36,7 +39,8 @@ public class CampaignServiceTests
         ServiceCollection services = new();
         services.AddDbContextFactory<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         var factory = services.BuildServiceProvider().GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-        return new(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), new BeatLedgerService(ctx), new Mock<ISessionService>().Object);
+        var auth = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
+        return new CharacterManagementService(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), new BeatLedgerService(ctx), auth, new Mock<ISessionService>().Object);
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>

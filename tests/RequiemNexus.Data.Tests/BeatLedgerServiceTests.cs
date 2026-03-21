@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
@@ -18,7 +19,8 @@ public class BeatLedgerServiceTests
         ServiceCollection services = new();
         services.AddDbContextFactory<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         var factory = services.BuildServiceProvider().GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-        return new(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), new BeatLedgerService(ctx), new Mock<ISessionService>().Object);
+        var auth = new AuthorizationHelper(ctx, NullLogger<AuthorizationHelper>.Instance);
+        return new CharacterManagementService(ctx, factory, new RequiemNexus.Domain.CharacterCreationRules(), new BeatLedgerService(ctx), auth, new Mock<ISessionService>().Object);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)

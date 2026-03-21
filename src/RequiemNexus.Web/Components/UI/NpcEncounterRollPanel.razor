@@ -5,7 +5,7 @@
 @using RequiemNexus.Application.Services
 @using RequiemNexus.Domain
 @using RequiemNexus.Domain.Enums
-@inject IEncounterService EncounterService
+@inject INpcCombatService NpcCombatService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="npc-roll-panel" style="margin:0.5rem 0 0;padding:0.75rem;border:1px solid var(--gothic-border, #333);border-radius:6px;background:var(--gothic-surface-alt, rgba(0,0,0,0.2));">
@@ -197,7 +197,7 @@
         _rollBusy = true;
         try
         {
-            _result = await EncounterService.RollNpcEncounterPoolAsync(
+            _result = await NpcCombatService.RollNpcEncounterPoolAsync(
                 InitiativeEntryId,
                 string.IsNullOrEmpty(_trait1) ? null : _trait1,
                 string.IsNullOrEmpty(_trait2) ? null : _trait2,

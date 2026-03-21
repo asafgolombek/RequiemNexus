@@ -1,9 +1,16 @@
 namespace RequiemNexus.Application.DTOs;
 
 /// <summary>
-/// Summary of a bloodline for the Apply for Bloodline dialog.
+/// Summary of a bloodline for selection dialogs.
 /// </summary>
-/// <param name="Id">Primary key of <see cref="Data.Models.BloodlineDefinition"/>.</param>
-/// <param name="Name">Bloodline name.</param>
-/// <param name="Description">Bloodline description.</param>
-public record BloodlineSummaryDto(int Id, string Name, string Description);
+public record BloodlineSummaryDto
+{
+    /// <summary>Primary key of the bloodline definition.</summary>
+    public required int Id { get; init; }
+
+    /// <summary>Bloodline name (e.g. "Khaibit").</summary>
+    public required string Name { get; init; }
+
+    /// <summary>Brief thematic description.</summary>
+    public required string Description { get; init; }
+}

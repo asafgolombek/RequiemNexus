@@ -22,11 +22,25 @@
 .roll-entry.exceptional {
     border-left-color: #ffd700;
     background: rgba(255, 215, 0, 0.05);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    animation: slideIn 0.3s ease-out, critical-flash 1s ease-out;
 }
 
 .roll-entry.dramatic {
     border-left-color: var(--brand-crimson);
-    background: rgba(139, 0, 0, 0.1);
+    background: rgba(196, 30, 58, 0.1);
+    box-shadow: 0 0 10px rgba(196, 30, 58, 0.3);
+    animation: slideIn 0.3s ease-out, dramatic-glow 1.5s infinite alternate;
+}
+
+@keyframes critical-flash {
+    0% { background-color: var(--bone-white); }
+    100% { background-color: rgba(255, 215, 0, 0.05); }
+}
+
+@keyframes dramatic-glow {
+    from { box-shadow: 0 0 5px rgba(196, 30, 58, 0.3); }
+    to { box-shadow: 0 0 15px rgba(196, 30, 58, 0.6); }
 }
 
 .roll-meta {
