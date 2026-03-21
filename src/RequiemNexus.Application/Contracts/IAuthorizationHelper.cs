@@ -1,3 +1,5 @@
+using RequiemNexus.Data;
+
 namespace RequiemNexus.Application.Contracts;
 
 /// <summary>
@@ -42,4 +44,15 @@ public interface IAuthorizationHelper
     /// <param name="userId">The requesting user.</param>
     /// <param name="operationName">Human-readable name for log messages.</param>
     Task RequireCampaignMemberAsync(int campaignId, string userId, string operationName = "access this campaign");
+
+    /// <summary>
+    /// Same as <see cref="RequireCampaignMemberAsync(int,string,string)"/>, but runs the membership check on the supplied
+    /// <see cref="ApplicationDbContext"/> instance. Use with <c>IDbContextFactory</c> so Blazor Server or parallel reads never
+    /// overlap operations on the scoped context.
+    /// </summary>
+    /// <param name="context">The EF Core context to query (caller owns lifetime).</param>
+    /// <param name="campaignId">The campaign to check.</param>
+    /// <param name="userId">The requesting user.</param>
+    /// <param name="operationName">Human-readable name for log messages.</param>
+    Task RequireCampaignMemberAsync(ApplicationDbContext context, int campaignId, string userId, string operationName = "access this campaign");
 }

@@ -83,9 +83,13 @@ public class AuthorizationHelper(ApplicationDbContext dbContext, ILogger<Authori
     }
 
     /// <inheritdoc />
-    public async Task RequireCampaignMemberAsync(int campaignId, string userId, string operationName = "access this campaign")
+    public Task RequireCampaignMemberAsync(int campaignId, string userId, string operationName = "access this campaign") =>
+        RequireCampaignMemberAsync(dbContext, campaignId, userId, operationName);
+
+    /// <inheritdoc />
+    public async Task RequireCampaignMemberAsync(ApplicationDbContext context, int campaignId, string userId, string operationName = "access this campaign")
     {
-        bool allowed = await dbContext.Campaigns
+        bool allowed = await context.Campaigns
             .AnyAsync(c =>
                 c.Id == campaignId
                 && (c.StoryTellerId == userId || c.Characters.Any(ch => ch.ApplicationUserId == userId)));

@@ -1,3 +1,4 @@
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Application.Contracts;
@@ -205,4 +206,15 @@ public interface IEncounterService
     /// Sets whether players can see the NPC's true name.
     /// </summary>
     Task SetNpcEntryRevealAsync(int entryId, bool revealed, string? maskedDisplayName, string storyTellerUserId);
+
+    /// <summary>
+    /// Rolls a dice pool for an NPC initiative row (Storyteller only). Plain NPCs require <paramref name="manualDicePool"/>;
+    /// Danse Macabre rows may use two traits or an optional manual override.
+    /// </summary>
+    Task<NpcEncounterRollResultDto> RollNpcEncounterPoolAsync(
+        int initiativeEntryId,
+        string? trait1,
+        string? trait2,
+        int? manualDicePool,
+        string storyTellerUserId);
 }

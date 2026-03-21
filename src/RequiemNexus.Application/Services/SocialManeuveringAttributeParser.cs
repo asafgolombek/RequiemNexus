@@ -12,24 +12,9 @@ internal static class SocialManeuveringAttributeParser
     /// </summary>
     public static (int Resolve, int Composure) ReadResolveComposure(string? attributesJson)
     {
-        const int fallback = 2;
-        if (string.IsNullOrWhiteSpace(attributesJson))
-        {
-            return (fallback, fallback);
-        }
-
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(attributesJson);
-            JsonElement root = doc.RootElement;
-            int resolve = ReadAttributeDot(root, "Resolve", fallback);
-            int composure = ReadAttributeDot(root, "Composure", fallback);
-            return (resolve, composure);
-        }
-        catch (JsonException)
-        {
-            return (fallback, fallback);
-        }
+        return (
+            ChronicleNpcTraitJsonReader.ReadTraitRating("Resolve", isAttribute: true, attributesJson, null),
+            ChronicleNpcTraitJsonReader.ReadTraitRating("Composure", isAttribute: true, attributesJson, null));
     }
 
     /// <summary>
@@ -37,24 +22,9 @@ internal static class SocialManeuveringAttributeParser
     /// </summary>
     public static (int Wits, int Composure) ReadWitsComposure(string? attributesJson)
     {
-        const int fallback = 2;
-        if (string.IsNullOrWhiteSpace(attributesJson))
-        {
-            return (fallback, fallback);
-        }
-
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(attributesJson);
-            JsonElement root = doc.RootElement;
-            int wits = ReadAttributeDot(root, "Wits", fallback);
-            int composure = ReadAttributeDot(root, "Composure", fallback);
-            return (wits, composure);
-        }
-        catch (JsonException)
-        {
-            return (fallback, fallback);
-        }
+        return (
+            ChronicleNpcTraitJsonReader.ReadTraitRating("Wits", isAttribute: true, attributesJson, null),
+            ChronicleNpcTraitJsonReader.ReadTraitRating("Composure", isAttribute: true, attributesJson, null));
     }
 
     /// <summary>
@@ -98,15 +68,5 @@ internal static class SocialManeuveringAttributeParser
         }
 
         return el.TryGetInt32(out int v) ? v : fallback;
-    }
-
-    private static int ReadAttributeDot(JsonElement root, string name, int fallback)
-    {
-        if (!root.TryGetProperty(name, out JsonElement el) || el.ValueKind != JsonValueKind.Number)
-        {
-            return fallback;
-        }
-
-        return el.TryGetInt32(out int v) ? Math.Clamp(v, 1, 5) : fallback;
     }
 }

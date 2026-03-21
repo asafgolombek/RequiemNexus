@@ -332,6 +332,9 @@
                                     <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcReveal(entry)">
                                         @(entry.IsRevealed ? "🙈 Hide" : "👁 Reveal")
                                     </button>
+                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcRoll(entry.Id)">
+                                        @(_npcRollEntryId == entry.Id ? "Hide roll" : "Roll")
+                                    </button>
                                 }
                                 @if (entry.IsHeld)
                                 {
@@ -366,6 +369,14 @@
                             }
                         </div>
                     </div>
+                    @if (_npcRollEntryId == entry.Id && isNpc && _isSt && _encounter.IsActive && !_encounter.IsDraft)
+                    {
+                        <NpcEncounterRollPanel InitiativeEntryId="entry.Id"
+                                               HasChronicleNpc="entry.ChronicleNpcId.HasValue"
+                                               AttributesJson="@(entry.ChronicleNpc?.AttributesJson ?? "{}")"
+                                               SkillsJson="@(entry.ChronicleNpc?.SkillsJson ?? "{}")"
+                                               OnClosed="CloseNpcRollPanelAsync" />
+                    }
                 }
             </div>
         }
@@ -422,6 +433,7 @@
         }
     }
     private int? _defeatConfirmEntryId;
+    private int? _npcRollEntryId;
     private string _addError = string.Empty;
     private string _actionFeedback = string.Empty;
     private string? _cookieHeader;
@@ -856,6 +868,17 @@
         {
             _busy = false;
         }
+    }
+
+    private void ToggleNpcRoll(int entryId)
+    {
+        _npcRollEntryId = _npcRollEntryId == entryId ? null : entryId;
+    }
+
+    private Task CloseNpcRollPanelAsync()
+    {
+        _npcRollEntryId = null;
+        return Task.CompletedTask;
     }
 
     private async Task ToggleNpcReveal(InitiativeEntry entry)

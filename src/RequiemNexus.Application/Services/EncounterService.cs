@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -8,6 +9,8 @@ using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.Services;
 
@@ -18,16 +21,20 @@ namespace RequiemNexus.Application.Services;
 /// </summary>
 public class EncounterService(
     ApplicationDbContext dbContext,
+    IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ILogger<EncounterService> logger,
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
-    ICharacterCreationRules creationRules) : IEncounterService
+    ICharacterCreationRules creationRules,
+    IDiceService diceService) : IEncounterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly ILogger<EncounterService> _logger = logger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
     private readonly ICharacterCreationRules _creationRules = creationRules;
+    private readonly IDiceService _diceService = diceService;
 
     /// <inheritdoc />
     public async Task<CombatEncounter> CreateDraftEncounterAsync(int campaignId, string name, string storyTellerUserId)
@@ -688,6 +695,8 @@ public class EncounterService(
             .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
                 .ThenInclude(i => i.Character)!
                     .ThenInclude(c => c!.Attributes)
+            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
+                .ThenInclude(i => i.ChronicleNpc)
             .Include(e => e.NpcTemplates)
             .FirstOrDefaultAsync(e => e.Id == encounterId);
 
@@ -710,14 +719,19 @@ public class EncounterService(
     /// <inheritdoc />
     public async Task<CombatEncounter?> GetActiveEncounterForCampaignAsync(int campaignId, string userId)
     {
-        await _authHelper.RequireCampaignMemberAsync(campaignId, userId, "view encounter state");
+        // Factory context per call: Blazor Server can invoke this concurrently (e.g. initiative hub + initial load)
+        // on the same circuit; the scoped ApplicationDbContext must not run overlapping operations.
+        await using ApplicationDbContext readContext = await _dbContextFactory.CreateDbContextAsync();
+        await _authHelper.RequireCampaignMemberAsync(readContext, campaignId, userId, "view encounter state");
 
-        CombatEncounter? encounter = await _dbContext.CombatEncounters
+        CombatEncounter? encounter = await readContext.CombatEncounters
             .AsNoTracking()
             .Include(e => e.Campaign)
             .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
                 .ThenInclude(i => i.Character)!
                     .ThenInclude(c => c!.Attributes)
+            .Include(e => e.InitiativeEntries.OrderBy(i => i.Order))
+                .ThenInclude(i => i.ChronicleNpc)
             .Where(e => e.CampaignId == campaignId && e.IsActive && !e.IsDraft)
             .FirstOrDefaultAsync();
 
@@ -1043,6 +1057,115 @@ public class EncounterService(
 
         await _dbContext.SaveChangesAsync();
         await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task<NpcEncounterRollResultDto> RollNpcEncounterPoolAsync(
+        int initiativeEntryId,
+        string? trait1,
+        string? trait2,
+        int? manualDicePool,
+        string storyTellerUserId)
+    {
+        InitiativeEntry entry = await _dbContext.InitiativeEntries
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == initiativeEntryId)
+            ?? throw new InvalidOperationException($"Initiative entry {initiativeEntryId} not found.");
+
+        if (entry.CharacterId != null)
+        {
+            throw new InvalidOperationException("NPC encounter rolls apply to NPC initiative rows only.");
+        }
+
+        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "roll for an NPC in encounter");
+
+        int pool;
+        string poolDescription;
+
+        if (manualDicePool.HasValue)
+        {
+            if (manualDicePool.Value < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(manualDicePool), "Manual dice pool cannot be negative.");
+            }
+
+            pool = manualDicePool.Value;
+            poolDescription = pool == 0
+                ? "Manual pool (chance die)"
+                : $"Manual pool ({pool})";
+        }
+        else
+        {
+            if (entry.ChronicleNpcId is not int chronicleNpcId)
+            {
+                throw new InvalidOperationException(
+                    "Plain NPC rows require a manual dice pool. Link this NPC from Danse Macabre to roll by traits.");
+            }
+
+            if (string.IsNullOrWhiteSpace(trait1) || string.IsNullOrWhiteSpace(trait2))
+            {
+                throw new ArgumentException("Select two traits or enter a manual dice pool.");
+            }
+
+            string t1 = trait1.Trim();
+            string t2 = trait2.Trim();
+            if (!TryParseTraitKind(t1, out bool t1Attr) || !TryParseTraitKind(t2, out bool t2Attr))
+            {
+                throw new ArgumentException("Each trait must be a valid attribute or skill name.");
+            }
+
+            ChronicleNpc? npc = await _dbContext.ChronicleNpcs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(n => n.Id == chronicleNpcId);
+
+            if (npc == null)
+            {
+                throw new InvalidOperationException($"Chronicle NPC {chronicleNpcId} not found.");
+            }
+
+            if (npc.CampaignId != encounter.CampaignId)
+            {
+                throw new InvalidOperationException("Chronicle NPC does not belong to this encounter's campaign.");
+            }
+
+            int v1 = ChronicleNpcTraitJsonReader.ReadTraitRating(t1, t1Attr, npc.AttributesJson, npc.SkillsJson);
+            int v2 = ChronicleNpcTraitJsonReader.ReadTraitRating(t2, t2Attr, npc.AttributesJson, npc.SkillsJson);
+            pool = v1 + v2;
+            string d1 = TraitMetadata.GetDisplayName(t1);
+            string d2 = TraitMetadata.GetDisplayName(t2);
+            poolDescription = $"{d1} + {d2} ({pool})";
+        }
+
+        RollResult result = _diceService.Roll(pool, tenAgain: true);
+        string npcLabel = entry.NpcName ?? "NPC";
+
+        _logger.LogInformation(
+            "NPC encounter roll for entry {EntryId} ({NpcName}) in encounter {EncounterId}: {PoolDescription}, successes={Successes}",
+            initiativeEntryId,
+            npcLabel,
+            entry.EncounterId,
+            poolDescription,
+            result.Successes);
+
+        return new NpcEncounterRollResultDto(
+            result.Successes,
+            result.DiceRolled,
+            poolDescription,
+            result.IsExceptionalSuccess,
+            result.IsDramaticFailure);
+    }
+
+    private static bool TryParseTraitKind(string name, out bool isAttribute)
+    {
+        isAttribute = false;
+        if (Enum.TryParse(name, out AttributeId _))
+        {
+            isAttribute = true;
+            return true;
+        }
+
+        return Enum.TryParse(name, out SkillId _);
     }
 
     private static int Tier(InitiativeEntry e)
