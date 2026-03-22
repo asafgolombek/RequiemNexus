@@ -181,7 +181,42 @@ public class AssetProcurementServiceTests
 
         AssetProcurementStartResult result = await sut.BeginProcurementAsync(1, 12, 1, "player", null);
 
+        Assert.Equal(AssetProcurementOutcome.Blocked, result.Outcome);
         Assert.Equal(0, await ctx.PendingAssetProcurements.CountAsync());
         Assert.Contains("chronicle", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task BeginProcurementAsync_NotListedInCatalog_ReturnsBlocked()
+    {
+        string db = nameof(BeginProcurementAsync_NotListedInCatalog_ReturnsBlocked);
+        await using var ctx = CreateContext(db);
+        ctx.Characters.Add(CreateCharacter(1, null));
+        ctx.Assets.Add(new Asset
+        {
+            Id = 20,
+            Name = "Hidden",
+            Kind = AssetKind.General,
+            Slug = "test:hidden",
+            Availability = 1,
+            IsIllicit = false,
+            IsListedInCatalog = false,
+        });
+        await ctx.SaveChangesAsync();
+
+        var auth = new Mock<IAuthorizationHelper>();
+        auth.Setup(a => a.RequireCharacterAccessAsync(1, "player", It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        var assetSvc = new Mock<ICharacterAssetService>();
+
+        var sut = new AssetProcurementService(ctx, auth.Object, assetSvc.Object, NullLogger<AssetProcurementService>.Instance);
+
+        AssetProcurementStartResult result = await sut.BeginProcurementAsync(1, 20, 1, "player", null);
+
+        Assert.Equal(AssetProcurementOutcome.Blocked, result.Outcome);
+        Assert.Contains("not available", result.Message, StringComparison.OrdinalIgnoreCase);
+        assetSvc.Verify(
+            s => s.AddCharacterAssetAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()),
+            Times.Never);
     }
 }

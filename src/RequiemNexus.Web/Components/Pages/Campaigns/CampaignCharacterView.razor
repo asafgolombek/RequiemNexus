@@ -276,9 +276,11 @@ else
                     </section>
                 }
 
-                <ConditionsSection CharacterId="_character.Id"
-                                   UserId="@(_currentUserId ?? string.Empty)"
-                                   CanEdit="false" />
+                <div class="cs-conditions-sheet-slot">
+                    <ConditionsSection CharacterId="_character.Id"
+                                       UserId="@(_currentUserId ?? string.Empty)"
+                                       CanEdit="false" />
+                </div>
 
             </div>
         </CascadingValue>

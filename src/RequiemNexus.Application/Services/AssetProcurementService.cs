@@ -71,7 +71,7 @@ public class AssetProcurementService(
         if (!asset.IsListedInCatalog)
         {
             return new AssetProcurementStartResult(
-                AssetProcurementOutcome.RequiresProcurementRoll,
+                AssetProcurementOutcome.Blocked,
                 null,
                 null,
                 "This asset is not available for direct procurement.");
@@ -82,7 +82,7 @@ public class AssetProcurementService(
             if (character.CampaignId is not int campaignId)
             {
                 return new AssetProcurementStartResult(
-                    AssetProcurementOutcome.AwaitingStorytellerApproval,
+                    AssetProcurementOutcome.Blocked,
                     null,
                     null,
                     "Illicit items require a chronicle and Storyteller approval.");

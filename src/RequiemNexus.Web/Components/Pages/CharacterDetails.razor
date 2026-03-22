@@ -502,8 +502,10 @@ else
                         }
                     </div>
 
-                    <ConditionsSection CharacterId="_character.Id"
-                                       UserId="@(_currentUserId ?? string.Empty)" />
+                    <div class="cs-conditions-sheet-slot">
+                        <ConditionsSection CharacterId="_character.Id"
+                                           UserId="@(_currentUserId ?? string.Empty)" />
+                    </div>
 
                 </div>
             }
@@ -522,7 +524,7 @@ else
                             }
                         </select>
                         <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" />
-                        <button class="btn-primary-rn" type="button" @onclick="ProcureSelectedAssetAsync">Procure</button>
+                        <button class="btn-primary-rn" type="button" disabled="@(_selectedAssetId <= 0 || _selectedAssetQuantity < 1)" @onclick="ProcureSelectedAssetAsync">Procure</button>
                     </div>
                     @if (_procurementAwaitingRoll)
                     {

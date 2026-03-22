@@ -443,15 +443,42 @@ public partial class CharacterDetails : IAsyncDisposable
 
     private async Task ProcureSelectedAssetAsync()
     {
-        if (_character == null || string.IsNullOrEmpty(_currentUserId) || _selectedAssetId <= 0 || _selectedAssetQuantity <= 0)
+        if (_character == null)
         {
+            Logger.LogWarning("Procure blocked: character not loaded for route {CharacterId}", Id);
+            ToastService.Show("Pack", "Character not loaded. Try refreshing the page.", ToastType.Warning);
             return;
         }
 
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            Logger.LogWarning("Procure blocked: no authenticated user for character {CharacterId}", _character.Id);
+            ToastService.Show("Pack", "Sign in again to procure items.", ToastType.Warning);
+            return;
+        }
+
+        if (_selectedAssetId <= 0)
+        {
+            Logger.LogWarning("Procure blocked: no asset selected for character {CharacterId}", _character.Id);
+            ToastService.Show("Pack", "Choose an item from the list first.", ToastType.Warning);
+            return;
+        }
+
+        if (_selectedAssetQuantity <= 0)
+        {
+            Logger.LogWarning(
+                "Procure blocked: invalid quantity {Quantity} for character {CharacterId}",
+                _selectedAssetQuantity,
+                _character.Id);
+            ToastService.Show("Pack", "Enter a quantity of at least 1.", ToastType.Warning);
+            return;
+        }
+
+        int procureCharacterId = _character.Id;
         try
         {
             AssetProcurementStartResult r = await AssetProcurementService.BeginProcurementAsync(
-                _character.Id,
+                procureCharacterId,
                 _selectedAssetId,
                 _selectedAssetQuantity,
                 _currentUserId,
@@ -461,50 +488,106 @@ public partial class CharacterDetails : IAsyncDisposable
             {
                 case AssetProcurementOutcome.AddedImmediately:
                     ToastService.Show("Acquired", r.Message ?? "Item added.", ToastType.Success);
-                    _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+                    _character = await CharacterService.ReloadCharacterAsync(procureCharacterId, _currentUserId);
                     _procurementAwaitingRoll = false;
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
                     break;
                 case AssetProcurementOutcome.RequiresProcurementRoll:
                     _procurementAwaitingRoll = true;
                     _procurementAssetId = _selectedAssetId;
                     _procurementQty = _selectedAssetQuantity;
                     ToastService.Show("Procurement roll", r.Message ?? "Roll, then confirm success.", ToastType.Info);
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
                     break;
                 case AssetProcurementOutcome.AwaitingStorytellerApproval:
                     ToastService.Show("Pending approval", r.Message ?? "Storyteller notified.", ToastType.Info);
                     _procurementAwaitingRoll = false;
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
+                    break;
+                case AssetProcurementOutcome.Blocked:
+                    ToastService.Show("Procurement", r.Message ?? "This action cannot be completed.", ToastType.Warning);
+                    _procurementAwaitingRoll = false;
+                    break;
+                default:
+                    Logger.LogWarning(
+                        "Unhandled procurement outcome {Outcome} for character {CharacterId}",
+                        r.Outcome,
+                        procureCharacterId);
+                    ToastService.Show(
+                        "Procurement",
+                        "Something went wrong. Try again or contact support.",
+                        ToastType.Error);
+                    _procurementAwaitingRoll = false;
                     break;
             }
-
-            _selectedAssetId = 0;
-            _selectedAssetQuantity = 1;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.LogWarning(ex, "Procurement denied for character {CharacterId}", procureCharacterId);
+            ToastService.Show(
+                "Procurement",
+                "You can only procure on your own character (or as Storyteller where allowed).",
+                ToastType.Error);
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Procurement failed for character {CharacterId}", procureCharacterId);
             ToastService.Show("Procurement", ex.Message, ToastType.Error);
         }
     }
 
     private async Task CompleteProcurementAfterRollAsync()
     {
-        if (_character == null || string.IsNullOrEmpty(_currentUserId) || !_procurementAwaitingRoll)
+        if (_character == null)
         {
+            Logger.LogWarning("Complete procurement roll blocked: character not loaded for route {CharacterId}", Id);
+            ToastService.Show("Procurement", "Character not loaded. Try refreshing the page.", ToastType.Warning);
             return;
         }
 
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            Logger.LogWarning("Complete procurement roll blocked: no user for character {CharacterId}", _character.Id);
+            ToastService.Show("Procurement", "Sign in again to complete procurement.", ToastType.Warning);
+            return;
+        }
+
+        if (!_procurementAwaitingRoll)
+        {
+            Logger.LogWarning("Complete procurement roll blocked: no active roll intent for character {CharacterId}", _character.Id);
+            ToastService.Show(
+                "Procurement",
+                "Start procurement from the Pack tab first, then roll and confirm.",
+                ToastType.Warning);
+            return;
+        }
+
+        int completeRollCharacterId = _character.Id;
         try
         {
             await AssetProcurementService.CompleteProcurementRollAsync(
-                _character.Id,
+                completeRollCharacterId,
                 _procurementAssetId,
                 _procurementQty,
                 _currentUserId);
             ToastService.Show("Acquired", "Item added after your procurement roll.", ToastType.Success);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(completeRollCharacterId, _currentUserId);
             _procurementAwaitingRoll = false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.LogWarning(ex, "Complete procurement roll denied for character {CharacterId}", completeRollCharacterId);
+            ToastService.Show(
+                "Procurement",
+                "You can only complete procurement on your own character (or as Storyteller where allowed).",
+                ToastType.Error);
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Complete procurement roll failed for character {CharacterId}", completeRollCharacterId);
             ToastService.Show("Procurement", ex.Message, ToastType.Error);
         }
     }

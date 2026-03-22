@@ -13,4 +13,7 @@ public enum AssetProcurementOutcome
 
     /// <summary>Storyteller must approve in Glimpse (illicit).</summary>
     AwaitingStorytellerApproval,
+
+    /// <summary>Cannot proceed; UI should show the start result message only (no roll, no pending row).</summary>
+    Blocked,
 }
