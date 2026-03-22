@@ -22,4 +22,9 @@ public enum ModifierTarget
     Firearms,
 
     FirearmsAccuracy,
+
+    /// <summary>
+    /// Equipment or service bonus tied to a specific skill; see <c>PassiveModifier.AppliesToSkill</c>.
+    /// </summary>
+    SkillPool,
 }

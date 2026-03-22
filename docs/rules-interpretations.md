@@ -1,25 +1,16 @@
-# Rules interpretations (VtR 2e → Nexus)
+# Rules interpretation log (Vampire: The Requiem 2e)
 
-Deliberate mechanical choices where the book leaves table pacing ambiguous or where the app needs a clock.
+Deliberate mechanics choices where the table text is ambiguous or automation requires a single rule.
 
-## Social maneuvering (Phase 10)
+## Phase 11 — Assets & Armory (equipment modifiers)
 
-| Topic | Interpretation |
-|-------|----------------|
-| **Perfect impression — “1 turn”** | In Nexus, **one roll per open-Door attempt** is allowed with **no minimum real-time wait** (`TimeSpan.Zero`). At the table this is “one turn”; digitally we do not infer scene length from wall clock. |
-| **Hard leverage — severity vs Humanity** | Breaking-point **severity** is an **integer supplied by the ST** when forcing Doors with hard leverage. Doors removed before the force roll use **\|severity − persuader Humanity\|**: **≤ 2** removes **one** Door, **≥ 3** removes **two** (VtR 2e Social Maneuvering). |
-
-## Social maneuvering — auto Conditions (Phase 10.6)
-
-Nexus applies Conditions to the **initiating PC** only (targets are chronicle NPCs without character Conditions). **No second row** is added if the character already has an **unresolved** Condition of the same `ConditionType`.
-
-| Trigger | Condition | Notes |
-|---------|-----------|--------|
-| Open Door: maneuver reaches **Succeeded** (remaining Doors 0) | *Swooned* | Description references target NPC name. |
-| Open Door: **dramatic failure** | *Shaken* | |
-| Open Door: **exceptional success** and at least one Door opened, maneuver still **Active** | *Inspired* | CoD *Inspired*; enum appended after `Custom` to preserve stored values. |
-| **Force Doors**: success | *Swooned* | Same as success outcome. |
-| **Force Doors**: failure (**Burnt**) | *Shaken* | |
-| **Hostile** impression for **one week** (auto-fail) | *Shaken* | Applied as the chronicle Storyteller for audit (`ApplyConditionAsync` user id). |
-
-ST narrative door edits that set remaining Doors to 0 **do not** auto-apply *Swooned* (ST fiat).
+- **Persistence (TPT):** The catalog is an `Asset` root row with **table-per-type** extensions (`WeaponAsset`, `ArmorAsset`, `EquipmentAsset`, `ServiceAsset`). `AssetCapability` rows attach extra mechanical hooks to one catalog item (e.g. a tool bonus plus a reference to a separate **weapon profile** asset for melee stats). Inventory is `CharacterAsset` (quantity, equipped, ready slots, structure).
+- **Crowbar:** One listed general `Asset` is seeded from `generalItems.json`; a non-catalog weapon-profile asset (`vtm2e:wp:crowbar-profile`) holds melee stats. The general row gains capabilities linking Larceny assist dice and that profile. Duplicate standalone Crowbar weapon catalog entries are not seeded.
+- **Tiered dice bonuses (`"1 to 3"`, etc.) in JSON seeds:** The resolver applies the **upper bound** of the range as the equipment bonus (same as taking the best-quality item the dots allow). `Availability` for procurement uses the **upper bound** of tiered availability strings.
+- **Equipment bonus cap (corebook p. 185):** Multiple items may assist one roll, but the total bonus from **catalog equipment rows** (`ModifierSourceType.Equipment` with `SkillPool`) is **capped at +5** per resolved pool. Modifiers from Coils and other sources are not counted toward that cap.
+- **Weapon damage in pools:** Weapon `Damage` is added to the dice pool when the pool includes **Brawl**, **Weaponry**, or **Firearms**, matching the combat skill for that weapon (ranged → Firearms; melee → Weaponry unless the special text references Brawl).
+- **Broken gear:** If `CurrentStructure` is tracked and equals **0**, the item contributes **no** equipment modifiers (skill assists, weapon damage, or strength-based penalties from that row).
+- **Strength requirement (automation):** If any **equipped** weapon the character is using for mechanics requires a higher **Strength** than the character’s Strength attribute, the app applies **−1 die** to **Brawl**, **Weaponry**, and **Firearms** pools (table may vary by ST; this is a single consistent hook for the resolver).
+- **Procurement:** If **Resources** (sum of `Resources` merit ratings) ≥ asset **Availability**, the item is added immediately. Otherwise the client gets a suggested **Manipulation + Persuasion** pool (Streetwise substitution remains at the table). **Illicit** items create a **pending procurement** for the Storyteller; the character must belong to a **chronicle** (campaign); granting uses the same ownership/ST checks as other mutations.
+- **Armor on the sheet:** Only **equipped**, non-broken inventory rows contribute **general** and **ballistic** armor from `ArmorAsset`. Defense and Speed on the sheet follow the same equipped-armor data (see `Character` / derived stat pipeline).
+- **Ballistic / damage-type conversion:** Automated **lethal ↔ bashing** resolution and damage application against armor is **deferred** until an attack/damage pipeline exists; equipped armor still affects displayed ratings and Defense/Speed modifiers from the book.

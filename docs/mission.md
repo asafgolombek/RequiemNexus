@@ -26,12 +26,12 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 9.5 | Sacrifice Mechanics (Blood Sorcery) | ✅ Complete |
 | 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ✅ Complete |
 | 10 | The Social Graces (Social Maneuvering) | ✅ Complete |
-| 11 | Assets & Armory (Equipment & Services) | ⬜ Planned |
+| 11 | Assets & Armory (Equipment & Services) | ✅ Complete |
 | 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → Phase 11 — Assets & Armory** (Phase 10 Social Maneuvering delivered; see phase table above).
+> **Currently Active → Phase 12 — The Web of Night** (Phase 11 Assets & Armory delivered; see phase table above).
 
 ---
 
@@ -369,10 +369,14 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **The Objective:** Standardize physical assets and their mechanical impact on play.
 
-- [ ] **Equipment Database** — Searchable catalog of physical (weapons/armor), mental (hacking tools), and social (luxury cars) equipment
-- [ ] **Stat Tracking** — Explicit tracking for Durability, Size, Availability, and Structure of items
-- [ ] **Dynamic Modifiers** — Equipment bonuses automatically injected into the Dice Nexus pool for relevant skill rolls via the Unified Pool Resolver
-- [ ] **Service Management** — Tracking "Services" (Security, Medical, Occult Research) with their associated Costs and Availability ratings
+- [x] **Unified Asset Schema** — Core `Asset` with **TPT** (`EquipmentAsset` / `WeaponAsset` / `ArmorAsset` / `ServiceAsset`) and **`AssetCapability`** for multi-role items (e.g. Crowbar tool + weapon profile); see `docs/rules-interpretations.md`.
+- [x] **Character Inventory (`CharacterAsset`)** — Ownership, **Structure**, **Equipped**, and **ready slots**; skill/service bonuses from gear apply only while equipped and non-broken.
+- [x] **The Procurement Engine** — Resources vs. Availability; suggested procurement pool when below threshold; **`isIllicit`** → pending row and Storyteller approve/reject on Glimpse.
+- [x] **Services (book)** — Services modeled with skill assist and **recurring Resources** cost in seed data; bonuses follow the same equipped rules as other gear where applicable.
+- [x] **Dice Nexus Modifier Injection** — `DiceRollerModal` / sheet paths use `ITraitResolver` with equipment modifiers (skill cap, weapon damage, strength under-requirement penalty).
+- [x] **Armor Mitigation Logic** — General and ballistic ratings plus Defense/Speed from equipped armor on the sheet; **automated damage-type conversion** deferred until an attack pipeline exists (documented in rules log).
+- [x] **The Armory UI (The Pack)** — Pack tab with equip/structure/ready slots and procurement entry points.
+- [x] **Seed Catalog Integration** — JSON seeds under `SeedSource` for general items, weapons, armor, and services.
 
 ---
 

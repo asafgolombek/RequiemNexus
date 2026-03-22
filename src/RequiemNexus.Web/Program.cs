@@ -166,7 +166,8 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IFeedingTerritoryS
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IFactionRelationshipService, RequiemNexus.Application.Services.FactionRelationshipService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcStatBlockService, RequiemNexus.Application.Services.NpcStatBlockService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterNoteService, RequiemNexus.Application.Services.CharacterNoteService>();
-builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterEquipmentService, RequiemNexus.Application.Services.CharacterEquipmentService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterAssetService, RequiemNexus.Application.Services.CharacterAssetService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IAssetProcurementService, RequiemNexus.Application.Services.AssetProcurementService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBloodlineService, RequiemNexus.Application.Services.BloodlineService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICovenantService, RequiemNexus.Application.Services.CovenantService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ISorceryService, RequiemNexus.Application.Services.SorceryService>();

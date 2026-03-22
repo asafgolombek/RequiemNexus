@@ -9,6 +9,7 @@
 @inject ICovenantService CovenantService
 @inject ISorceryService SorceryService
 @inject ICoilService CoilService
+@inject IAssetProcurementService AssetProcurementService
 @inject ICampaignService CampaignService
 @inject ISocialManeuveringService SocialManeuveringService
 @inject IChronicleNpcService ChronicleNpcService
@@ -83,6 +84,7 @@
             Rites="_pendingRites"
             ChosenMysteries="_pendingChosenMysteries"
             Coils="_pendingCoils"
+            AssetProcurements="_pendingAssetProcurements"
             OnChanged="LoadVitals" />
 
         @* ── Pinned NPCs ────────────────────────────────────────────────────── *@

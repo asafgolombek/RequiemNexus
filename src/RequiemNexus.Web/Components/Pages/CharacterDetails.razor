@@ -14,7 +14,8 @@
 @using RequiemNexus.Web.Services
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
-@inject ICharacterEquipmentService EquipmentService
+@inject ICharacterAssetService CharacterAssetService
+@inject IAssetProcurementService AssetProcurementService
 @inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
 @inject ITraitResolver TraitResolver
@@ -129,6 +130,7 @@ else
 
         <div class="tab-bar" role="tablist" aria-label="Character sheet sections">
             <button type="button" class="tab-btn @(_activeTab == "sheet" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "sheet")" aria-controls="panel-sheet" id="tab-sheet" @onclick='() => SelectTab("sheet")' @onkeydown="HandleTabKeydown">Character Sheet</button>
+            <button type="button" class="tab-btn @(_activeTab == "pack" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "pack")" aria-controls="panel-pack" id="tab-pack" @onclick='() => SelectTab("pack")' @onkeydown="HandleTabKeydown">The Pack</button>
             <button type="button" class="tab-btn @(_activeTab == "identity" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "identity")" aria-controls="panel-identity" id="tab-identity" @onclick='() => SelectTab("identity")' @onkeydown="HandleTabKeydown">Identity &amp; Backstory</button>
             <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history")" aria-controls="panel-history" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
         </div>
@@ -382,7 +384,7 @@ else
                                                 <span>@cd.DevotionDefinition.Name</span>
                                                 @if (!cd.DevotionDefinition.IsPassive && !string.IsNullOrEmpty(cd.DevotionDefinition.PoolDefinitionJson))
                                                 {
-                                                    <button class="btn-ghost btn-roll-small" @onclick="() => OpenDevotionRoller(cd)">Roll</button>
+                                                    <button class="btn-ghost btn-roll-small" @onclick="async () => await OpenDevotionRollerAsync(cd)">Roll</button>
                                                 }
                                             </li>
                                         }
@@ -500,55 +502,107 @@ else
                         }
                     </div>
 
-                    <!-- EQUIPMENT -->
-                    <section class="cs-section cs-equipment">
-                        <h2>Equipment</h2>
-
-                        <div class="equipment-form">
-                            <select @bind="_selectedEquipmentId" class="equipment-select">
-                                <option value="0">-- Select Equipment --</option>
-                                @foreach (var eq in _availableEquipment)
-                                {
-                                    <option value="@eq.Id">@eq.Name (@eq.Type)</option>
-                                }
-                            </select>
-                            <input type="number" min="1" @bind="_selectedEquipmentQuantity"
-                                class="equipment-quantity" />
-                            <button class="btn-primary-rn" @onclick="AddEquipment">Add</button>
-                        </div>
-
-                        <ul class="equipment-grid">
-                            @foreach (var ce in _character.CharacterEquipments)
-                            {
-                                <li class="equipment-item">
-                                    <div class="equipment-info">
-                                        <strong class="equipment-name">@ce.Equipment?.Name (x@ce.Quantity)</strong>
-                                        <div class="equipment-meta">
-                                            <span>Type: @ce.Equipment?.Type</span>
-                                            @if (ce.Equipment?.Damage > 0)
-                                            {
-                                                <span>| Dmg: @ce.Equipment?.Damage</span>
-                                            }
-                                            @if (ce.Equipment?.ArmorRating > 0)
-                                            {
-                                                <span>| Arm: @ce.Equipment?.ArmorRating</span>
-                                            }
-                                        </div>
-                                        @if (!string.IsNullOrEmpty(ce.Equipment?.Description))
-                                        {
-                                            <p class="equipment-desc">@ce.Equipment?.Description</p>
-                                        }
-                                    </div>
-                                    <button class="equipment-remove-btn" @onclick="() => RemoveEquipment(ce.Id)">Remove</button>
-                                </li>
-                            }
-                        </ul>
-                    </section>
-
                     <ConditionsSection CharacterId="_character.Id"
                                        UserId="@(_currentUserId ?? string.Empty)" />
 
                 </div>
+            }
+            else if (_activeTab == "pack")
+            {
+                <section class="cs-section cs-equipment" id="panel-pack" role="tabpanel" aria-labelledby="tab-pack">
+                    <h2>The Pack</h2>
+                    <p class="pack-intro text-muted">Procure gear with Resources or a procurement roll; illicit items need Storyteller approval.</p>
+
+                    <div class="equipment-form">
+                        <select @bind="_selectedAssetId" class="equipment-select">
+                            <option value="0">-- Select asset --</option>
+                            @foreach (var a in _availableAssets)
+                            {
+                                <option value="@a.Id">@a.Name (@a.Kind)</option>
+                            }
+                        </select>
+                        <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" />
+                        <button class="btn-primary-rn" type="button" @onclick="ProcureSelectedAssetAsync">Procure</button>
+                    </div>
+                    @if (_procurementAwaitingRoll)
+                    {
+                        <div class="alert alert-info mt-2" role="status">
+                            Roll Manipulation + Persuasion (or Streetwise) for procurement, then confirm below.
+                            <button type="button" class="btn-primary-rn ms-2" @onclick="CompleteProcurementAfterRollAsync">I succeeded — add item</button>
+                            <button type="button" class="btn-ghost ms-1" @onclick="CancelProcurementIntent">Cancel</button>
+                        </div>
+                    }
+
+                    <h3 class="mt-3">Ready slots</h3>
+                    <p class="text-muted text-small">Pin up to three equipped items for quick reference.</p>
+                    <div class="ready-slots-row">
+                        @for (int s = 0; s < 3; s++)
+                        {
+                            int slot = s;
+                            var pinned = _character.CharacterAssets.FirstOrDefault(ca => ca.ReadySlotIndex == slot);
+                            <div class="ready-slot">
+                                <span class="ready-slot-label">Slot @(slot + 1)</span>
+                                @if (pinned?.Asset != null)
+                                {
+                                    <span>@pinned.Asset.Name</span>
+                                    <button type="button" class="btn-ghost text-small" @onclick="() => ClearReadySlotAsync(pinned.Id)">Clear</button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Empty</span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <h3 class="mt-3">Inventory</h3>
+                    <ul class="equipment-grid">
+                        @foreach (var ca in _character.CharacterAssets.OrderByDescending(x => x.IsEquipped).ThenBy(x => x.Asset?.Name))
+                        {
+                            var broken = ca.CurrentStructure is int st && st <= 0;
+                            <li class="equipment-item @(broken ? "equipment-broken" : "")">
+                                <div class="equipment-info">
+                                    <strong class="equipment-name">@ca.Asset?.Name (x@ca.Quantity)</strong>
+                                    @if (broken)
+                                    {
+                                        <span class="badge-broken">Broken</span>
+                                    }
+                                    <div class="equipment-meta">
+                                        <span>Kind: @ca.Asset?.Kind</span>
+                                        @if (ca.Asset is WeaponAsset w && w.Damage > 0)
+                                        {
+                                            <span>| Dmg: @w.Damage</span>
+                                        }
+                                        @if (ca.Asset is ArmorAsset ar && ar.ArmorRating > 0)
+                                        {
+                                            <span>| Arm: @ar.ArmorRating</span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(ca.Asset?.Description))
+                                    {
+                                        <p class="equipment-desc">@ca.Asset.Description</p>
+                                    }
+                                    <label class="equipment-equipped-label">
+                                        <input type="checkbox" checked="@ca.IsEquipped" disabled="@broken"
+                                               @onchange="e => OnAssetEquippedChanged(ca, e)" />
+                                        Equipped
+                                    </label>
+                                    <div class="pack-row mt-1">
+                                        <label class="text-small">Structure <input type="number" class="form-control d-inline-block" style="width:4rem" value="@(ca.CurrentStructure?.ToString() ?? "")" placeholder="—" @onchange="e => OnStructureChanged(ca, e)" /></label>
+                                        <span class="text-small ms-2">Pin:</span>
+                                        @for (int s = 0; s < 3; s++)
+                                        {
+                                            int slot = s;
+                                            <button type="button" class="btn-ghost text-small @(ca.ReadySlotIndex == slot ? "active" : "")" @onclick="() => PinToSlotAsync(ca, slot)">@(slot + 1)</button>
+                                        }
+                                        <button type="button" class="btn-ghost text-small" @onclick="() => ClearReadySlotAsync(ca.Id)">Unpin</button>
+                                    </div>
+                                </div>
+                                <button class="equipment-remove-btn" type="button" @onclick="() => RemoveCharacterAsset(ca.Id)">Remove</button>
+                            </li>
+                        }
+                    </ul>
+                </section>
             }
             else if (_activeTab == "identity")
             {
@@ -574,7 +628,7 @@ else
         }
     </div>
 
-    <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" />
+    <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" FixedDicePool="_rollerFixedDicePool" />
     <ApplyBloodlineModal IsOpen="_isApplyBloodlineModalOpen"
                          IsOpenChanged="HandleApplyBloodlineModalClosed"
                          EligibleBloodlines="_eligibleBloodlines"

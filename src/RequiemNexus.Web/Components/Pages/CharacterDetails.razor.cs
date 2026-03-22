@@ -43,13 +43,18 @@ public partial class CharacterDetails : IAsyncDisposable
     private string? _currentUserId;
     private string? _cookieHeader;
     private PersistingComponentStateSubscription _persistingSubscription;
-    private List<Equipment> _availableEquipment = new List<Equipment>();
-    private int _selectedEquipmentId = 0;
-    private int _selectedEquipmentQuantity = 1;
+    private List<Asset> _availableAssets = [];
+    private int _selectedAssetId = 0;
+    private int _selectedAssetQuantity = 1;
+
+    private bool _procurementAwaitingRoll;
+    private int _procurementAssetId;
+    private int _procurementQty;
 
     private bool _isRollerOpen = false;
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
+    private int? _rollerFixedDicePool;
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
@@ -102,7 +107,7 @@ public partial class CharacterDetails : IAsyncDisposable
 
     private void HandleTabKeydown(KeyboardEventArgs e)
     {
-        var tabs = new[] { "sheet", "identity", "history" };
+        var tabs = new[] { "sheet", "pack", "identity", "history" };
         int i = Array.IndexOf(tabs, _activeTab);
         if (i < 0)
         {
@@ -231,7 +236,7 @@ public partial class CharacterDetails : IAsyncDisposable
                 // Detach any tracked instance from this scoped DbContext (e.g. after visiting Advancement)
                 // before loading the full include graph again.
                 _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
-                _availableEquipment = await EquipmentService.GetAvailableEquipmentAsync();
+                _availableAssets = await CharacterAssetService.GetListedCatalogAsync();
             }
         }
         catch (Exception ex)
@@ -378,6 +383,7 @@ public partial class CharacterDetails : IAsyncDisposable
 
     private void OpenRoller(string traitName)
     {
+        _rollerFixedDicePool = null;
         _rollerTraitName = traitName;
         _rollerBaseDice = GetTraitValue(traitName);
         _isRollerOpen = true;
@@ -435,53 +441,169 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
-    private async Task AddEquipment()
+    private async Task ProcureSelectedAssetAsync()
     {
-        if (_character != null && !string.IsNullOrEmpty(_currentUserId) && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
-        {
-            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity, _currentUserId);
-            ce.Equipment = _availableEquipment.FirstOrDefault(e => e.Id == _selectedEquipmentId);
-            _character.CharacterEquipments.Add(ce);
-
-            _selectedEquipmentId = 0;
-            _selectedEquipmentQuantity = 1;
-        }
-    }
-
-    private void OpenDevotionRoller(CharacterDevotion cd)
-    {
-        if (_character == null || cd.DevotionDefinition?.PoolDefinitionJson == null)
+        if (_character == null || string.IsNullOrEmpty(_currentUserId) || _selectedAssetId <= 0 || _selectedAssetQuantity <= 0)
         {
             return;
         }
 
         try
         {
+            AssetProcurementStartResult r = await AssetProcurementService.BeginProcurementAsync(
+                _character.Id,
+                _selectedAssetId,
+                _selectedAssetQuantity,
+                _currentUserId,
+                playerNote: null);
+
+            switch (r.Outcome)
+            {
+                case AssetProcurementOutcome.AddedImmediately:
+                    ToastService.Show("Acquired", r.Message ?? "Item added.", ToastType.Success);
+                    _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+                    _procurementAwaitingRoll = false;
+                    break;
+                case AssetProcurementOutcome.RequiresProcurementRoll:
+                    _procurementAwaitingRoll = true;
+                    _procurementAssetId = _selectedAssetId;
+                    _procurementQty = _selectedAssetQuantity;
+                    ToastService.Show("Procurement roll", r.Message ?? "Roll, then confirm success.", ToastType.Info);
+                    break;
+                case AssetProcurementOutcome.AwaitingStorytellerApproval:
+                    ToastService.Show("Pending approval", r.Message ?? "Storyteller notified.", ToastType.Info);
+                    _procurementAwaitingRoll = false;
+                    break;
+            }
+
+            _selectedAssetId = 0;
+            _selectedAssetQuantity = 1;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Procurement", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task CompleteProcurementAfterRollAsync()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId) || !_procurementAwaitingRoll)
+        {
+            return;
+        }
+
+        try
+        {
+            await AssetProcurementService.CompleteProcurementRollAsync(
+                _character.Id,
+                _procurementAssetId,
+                _procurementQty,
+                _currentUserId);
+            ToastService.Show("Acquired", "Item added after your procurement roll.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+            _procurementAwaitingRoll = false;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Procurement", ex.Message, ToastType.Error);
+        }
+    }
+
+    private void CancelProcurementIntent()
+    {
+        _procurementAwaitingRoll = false;
+    }
+
+    private async Task OpenDevotionRollerAsync(CharacterDevotion cd)
+    {
+        if (_character == null || cd.DevotionDefinition?.PoolDefinitionJson == null)
+        {
+            return;
+        }
+
+        _rollerFixedDicePool = null;
+        _rollerTraitName = cd.DevotionDefinition.Name;
+        try
+        {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            var pool = System.Text.Json.JsonSerializer.Deserialize<PoolDefinition>(cd.DevotionDefinition.PoolDefinitionJson, options);
-            _rollerTraitName = cd.DevotionDefinition.Name;
-            _rollerBaseDice = pool != null ? TraitResolver.ResolvePool(_character, pool) : 0;
+            PoolDefinition? pool = System.Text.Json.JsonSerializer.Deserialize<PoolDefinition>(cd.DevotionDefinition.PoolDefinitionJson, options);
+            _rollerFixedDicePool = pool != null ? await TraitResolver.ResolvePoolAsync(_character, pool) : 0;
+            _rollerBaseDice = 0;
             _isRollerOpen = true;
         }
         catch
         {
-            _rollerTraitName = cd.DevotionDefinition.Name;
             _rollerBaseDice = 0;
             _isRollerOpen = true;
         }
     }
 
-    private async Task RemoveEquipment(int ceId)
+    private async Task RemoveCharacterAsset(int characterAssetId)
     {
         if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await EquipmentService.RemoveEquipmentAsync(ceId, _currentUserId);
-            var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
-            if (ce != null)
+            await CharacterAssetService.RemoveCharacterAssetAsync(characterAssetId, _currentUserId);
+            CharacterAsset? row = _character.CharacterAssets.FirstOrDefault(e => e.Id == characterAssetId);
+            if (row != null)
             {
-                _character.CharacterEquipments.Remove(ce);
+                _character.CharacterAssets.Remove(row);
             }
+        }
+    }
+
+    private async Task OnAssetEquippedChanged(CharacterAsset ca, ChangeEventArgs e)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId) || e.Value is not bool isEquipped)
+        {
+            return;
+        }
+
+        await CharacterAssetService.SetEquippedAsync(ca.Id, isEquipped, _currentUserId);
+        ca.IsEquipped = isEquipped;
+    }
+
+    private async Task OnStructureChanged(CharacterAsset ca, ChangeEventArgs e)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        string? raw = e.Value?.ToString();
+        int? structure = string.IsNullOrWhiteSpace(raw) ? null : int.TryParse(raw, out int n) ? n : ca.CurrentStructure;
+        await CharacterAssetService.SetCurrentStructureAsync(ca.Id, structure, _currentUserId);
+        ca.CurrentStructure = structure;
+    }
+
+    private async Task PinToSlotAsync(CharacterAsset ca, int slotIndex)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CharacterAssetService.SetReadySlotAsync(ca.Id, slotIndex, _currentUserId);
+        foreach (CharacterAsset o in _character.CharacterAssets.Where(x => x.Id != ca.Id && x.ReadySlotIndex == slotIndex))
+        {
+            o.ReadySlotIndex = null;
+        }
+
+        ca.ReadySlotIndex = slotIndex;
+    }
+
+    private async Task ClearReadySlotAsync(int characterAssetId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        await CharacterAssetService.SetReadySlotAsync(characterAssetId, null, _currentUserId);
+        CharacterAsset? ca = _character.CharacterAssets.FirstOrDefault(x => x.Id == characterAssetId);
+        if (ca != null)
+        {
+            ca.ReadySlotIndex = null;
         }
     }
 

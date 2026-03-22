@@ -67,12 +67,83 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
             }
         }
 
+        HashSet<SkillId> poolSkills = CollectPoolSkillIds(pool);
+
         var modifiers = await modifierService.GetModifiersForCharacterAsync(character.Id);
-        int delta = modifiers
-            .Where(m => targets.Contains(m.Target) && m.ModifierType != ModifierType.RuleBreaking)
-            .Sum(m => m.Value);
+        int delta = 0;
+        int equipmentSkillBonusSum = 0;
+
+        foreach (var m in modifiers)
+        {
+            if (m.ModifierType == ModifierType.RuleBreaking)
+            {
+                continue;
+            }
+
+            if (m.Target == ModifierTarget.SkillPool
+                && m.AppliesToSkill.HasValue
+                && poolSkills.Contains(m.AppliesToSkill.Value))
+            {
+                if (m.Source.SourceType == ModifierSourceType.Equipment)
+                {
+                    equipmentSkillBonusSum += m.Value;
+                }
+                else
+                {
+                    delta += m.Value;
+                }
+
+                continue;
+            }
+
+            if (m.Target == ModifierTarget.SkillPool)
+            {
+                continue;
+            }
+
+            if (targets.Contains(m.Target))
+            {
+                delta += m.Value;
+            }
+        }
+
+        equipmentSkillBonusSum = Math.Min(equipmentSkillBonusSum, 5);
+        delta += equipmentSkillBonusSum;
 
         return Math.Max(0, basePool + delta);
+    }
+
+    private static HashSet<SkillId> CollectPoolSkillIds(PoolDefinition pool)
+    {
+        var set = new HashSet<SkillId>();
+        foreach (var trait in pool.Traits)
+        {
+            AddSkillFromTrait(set, trait);
+        }
+
+        if (pool.LowerOf is { } lowerOf)
+        {
+            AddSkillFromTrait(set, lowerOf.Left);
+            AddSkillFromTrait(set, lowerOf.Right);
+        }
+
+        if (pool.PenaltyTraits is { } penalties)
+        {
+            foreach (var trait in penalties)
+            {
+                AddSkillFromTrait(set, trait);
+            }
+        }
+
+        return set;
+    }
+
+    private static void AddSkillFromTrait(HashSet<SkillId> set, TraitReference trait)
+    {
+        if (trait.Type == TraitType.Skill && trait.SkillId.HasValue)
+        {
+            set.Add(trait.SkillId.Value);
+        }
     }
 
     private static ModifierTarget? GetModifierTargetForTrait(TraitReference trait)
