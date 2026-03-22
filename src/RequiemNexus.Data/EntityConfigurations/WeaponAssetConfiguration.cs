@@ -13,5 +13,6 @@ public sealed class WeaponAssetConfiguration : IEntityTypeConfiguration<WeaponAs
     public void Configure(EntityTypeBuilder<WeaponAsset> builder)
     {
         builder.ToTable("WeaponAssets");
+        builder.Property(w => w.WeaponSlotPoints).HasDefaultValue(1);
     }
 }

@@ -5,14 +5,11 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
-using RequiemNexus.Domain;
-using RequiemNexus.Domain.Enums;
-using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.Services;
 
 /// <summary>
-/// Procurement rolls and illicit Storyteller approval (Phase 11).
+/// Listed asset procurement and illicit Storyteller approval (Phase 11).
 /// </summary>
 public class AssetProcurementService(
     ApplicationDbContext dbContext,
@@ -21,13 +18,6 @@ public class AssetProcurementService(
     ILogger<AssetProcurementService> logger) : IAssetProcurementService
 {
     private const string _resourcesMeritName = "Resources";
-
-    private static readonly PoolDefinition _procurementPoolPersuasion = new(
-        Traits:
-        [
-            new TraitReference(TraitType.Attribute, AttributeId.Manipulation, null, null),
-            new TraitReference(TraitType.Skill, null, SkillId.Persuasion, null),
-        ]);
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<PendingAssetProcurementDto>> GetPendingForCampaignAsync(
@@ -73,7 +63,6 @@ public class AssetProcurementService(
             return new AssetProcurementStartResult(
                 AssetProcurementOutcome.Blocked,
                 null,
-                null,
                 "This asset is not available for direct procurement.");
         }
 
@@ -83,7 +72,6 @@ public class AssetProcurementService(
             {
                 return new AssetProcurementStartResult(
                     AssetProcurementOutcome.Blocked,
-                    null,
                     null,
                     "Illicit items require a chronicle and Storyteller approval.");
             }
@@ -109,7 +97,6 @@ public class AssetProcurementService(
             return new AssetProcurementStartResult(
                 AssetProcurementOutcome.AwaitingStorytellerApproval,
                 pending.Id,
-                null,
                 "Request submitted to the Storyteller.");
         }
 
@@ -123,30 +110,21 @@ public class AssetProcurementService(
             return new AssetProcurementStartResult(
                 AssetProcurementOutcome.AddedImmediately,
                 null,
-                null,
                 "Item acquired using your Resources.");
         }
 
-        return new AssetProcurementStartResult(
-            AssetProcurementOutcome.RequiresProcurementRoll,
-            null,
-            _procurementPoolPersuasion,
-            "Roll Manipulation + Persuasion (or use Streetwise instead of Persuasion at the table).");
-    }
-
-    /// <inheritdoc />
-    public async Task CompleteProcurementRollAsync(int characterId, int assetId, int quantity, string userId)
-    {
-        await authHelper.RequireCharacterAccessAsync(characterId, userId, "complete procurement");
-
-        Asset asset = await dbContext.Assets.AsNoTracking().FirstAsync(a => a.Id == assetId);
-        if (asset.IsIllicit)
-        {
-            throw new InvalidOperationException("Illicit items cannot be granted via a simple roll outcome.");
-        }
-
         await characterAssetService.AddCharacterAssetAsync(characterId, assetId, quantity, userId);
-        logger.LogInformation("Procurement roll completed: character {CharacterId} gained asset {AssetId}", characterId, assetId);
+        logger.LogInformation(
+            "Procurement granted below Resources threshold for character {CharacterId} asset {AssetId} qty {Quantity} by {UserId}",
+            characterId,
+            assetId,
+            quantity,
+            userId);
+
+        return new AssetProcurementStartResult(
+            AssetProcurementOutcome.AddedImmediately,
+            null,
+            "Item added to your inventory. (Availability is higher than your Resources dots — no table roll required.)");
     }
 
     /// <inheritdoc />

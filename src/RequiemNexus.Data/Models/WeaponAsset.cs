@@ -36,4 +36,7 @@ public class WeaponAsset : Asset
 
     /// <summary>Optional weapon Size from the book.</summary>
     public int? ItemSize { get; set; }
+
+    /// <summary>Occupied weapon carry slots when equipped (e.g. 2 for long guns, 1 for sidearms).</summary>
+    public int WeaponSlotPoints { get; set; } = 1;
 }

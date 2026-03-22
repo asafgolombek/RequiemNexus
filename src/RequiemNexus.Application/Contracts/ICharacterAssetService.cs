@@ -19,8 +19,8 @@ public interface ICharacterAssetService
     /// <summary>Sets equipped flag for mechanical contribution.</summary>
     Task SetEquippedAsync(int characterAssetId, bool isEquipped, string userId);
 
-    /// <summary>Pins or clears a quick slot (0–2).</summary>
-    Task SetReadySlotAsync(int characterAssetId, int? slotIndex, string userId);
+    /// <summary>Assigns a backpack slot (0–9) or clears when null. Clears equipped when moving into the backpack.</summary>
+    Task SetBackpackSlotAsync(int characterAssetId, int? slotIndex, string userId);
 
     /// <summary>Updates structure track; null leaves unchanged.</summary>
     Task SetCurrentStructureAsync(int characterAssetId, int? currentStructure, string userId);

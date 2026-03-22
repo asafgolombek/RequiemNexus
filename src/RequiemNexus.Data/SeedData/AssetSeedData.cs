@@ -156,6 +156,7 @@ public static class AssetSeedData
                 HasNineAgain = nineAgain,
                 ArmorPiercingRating = ap,
                 HasStun = stun,
+                WeaponSlotPoints = autofire ? 2 : 1,
             };
         }
     }

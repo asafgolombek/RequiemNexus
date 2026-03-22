@@ -1,6 +1,7 @@
 @page "/character/{Id:int}"
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.UI
@@ -397,6 +398,9 @@ else
                             }
                         </section>
 
+                        <CharacterSheetWornCard Character="_character" />
+                        <CharacterSheetBackpackCard Character="_character" OnManagePack="GoToPackTab" />
+
                         <!-- BLOOD SORCERY: Cr├║ac/Theban covenants, Ordo rituals, or characters with Necromancy -->
                         @if (ShowBloodSorcerySection)
                         {
@@ -513,41 +517,68 @@ else
             {
                 <section class="cs-section cs-equipment" id="panel-pack" role="tabpanel" aria-labelledby="tab-pack">
                     <h2>The Pack</h2>
-                    <p class="pack-intro text-muted">Procure gear with Resources or a procurement roll; illicit items need Storyteller approval.</p>
+                    <p class="pack-intro text-muted">Procure listed gear: when your Resources dots meet Availability the item is noted as bought with Resources; otherwise it is still added without a table roll. Illicit items require Storyteller approval.</p>
 
                     <div class="equipment-form">
-                        <select @bind="_selectedAssetId" class="equipment-select">
+                        <select @bind="_selectedAssetId" class="equipment-select" aria-label="Asset to procure">
                             <option value="0">-- Select asset --</option>
-                            @foreach (var a in _availableAssets)
+                            @foreach (var g in _availableAssets.GroupBy(a => a.Kind).OrderBy(x => x.Key.ToString()))
                             {
-                                <option value="@a.Id">@a.Name (@a.Kind)</option>
+                                <optgroup label="@g.Key">
+                                    @foreach (var a in g.OrderBy(x => x.Name))
+                                    {
+                                        <option value="@a.Id">@a.Name</option>
+                                    }
+                                </optgroup>
                             }
                         </select>
-                        <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" />
-                        <button class="btn-primary-rn" type="button" disabled="@(_selectedAssetId <= 0 || _selectedAssetQuantity < 1)" @onclick="ProcureSelectedAssetAsync">Procure</button>
+                        <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" aria-label="Quantity to procure" />
+                        <button class="btn-primary-rn"
+                                type="button"
+                                id="btn-procure-asset"
+                                disabled="@IsProcureButtonDisabled"
+                                aria-describedby="@((_availableAssets.Count == 0 || IsProcureButtonDisabled) ? "procure-hint" : null)"
+                                title="@ProcureButtonTitle"
+                                @onclick="ProcureSelectedAssetAsync">Procure</button>
                     </div>
-                    @if (_procurementAwaitingRoll)
+                    @if (_availableAssets.Count == 0)
                     {
-                        <div class="alert alert-info mt-2" role="status">
-                            Roll Manipulation + Persuasion (or Streetwise) for procurement, then confirm below.
-                            <button type="button" class="btn-primary-rn ms-2" @onclick="CompleteProcurementAfterRollAsync">I succeeded — add item</button>
-                            <button type="button" class="btn-ghost ms-1" @onclick="CancelProcurementIntent">Cancel</button>
-                        </div>
+                        <p class="text-muted text-small mt-2" id="procure-hint" role="status">
+                            No listed assets are in the catalog, so Procure stays disabled.
+                        </p>
+                    }
+                    else if (IsProcureButtonDisabled)
+                    {
+                        <p class="text-muted text-small mt-2" id="procure-hint" role="note">
+                            Select an item from the list and set quantity to at least 1 to enable Procure.
+                        </p>
                     }
 
-                    <h3 class="mt-3">Ready slots</h3>
-                    <p class="text-muted text-small">Pin up to three equipped items for quick reference.</p>
-                    <div class="ready-slots-row">
-                        @for (int s = 0; s < 3; s++)
+                    @{
+                        var wornWeapons = _character.CharacterAssets
+                            .Where(ca => ca.IsEquipped && ca.Asset is WeaponAsset && CharacterAssetActiveHelper.IsEquippedAndActive(ca))
+                            .ToList();
+                        int wpUsed = wornWeapons.Sum(ca => ca.Asset is WeaponAsset w ? Math.Max(1, w.WeaponSlotPoints) : 0);
+                    }
+                    <h3 class="mt-3">Worn</h3>
+                    <p class="text-muted text-small">At most one armor. Weapons share @EquipmentCarryRules.MaxWeaponSlotPoints slot points (e.g. two 1-slot sidearms or one 2-slot long gun).</p>
+                    <p class="text-small mb-2">Weapon slot points used: <strong>@wpUsed / @EquipmentCarryRules.MaxWeaponSlotPoints</strong></p>
+
+                    <h3 class="mt-3">Backpack (@EquipmentCarryRules.MaxBackpackSlots slots)</h3>
+                    <p class="text-muted text-small">Carried on your person but not worn. Assign slots from each inventory row below.</p>
+                    <div class="backpack-grid">
+                        @for (int i = 0; i < EquipmentCarryRules.MaxBackpackSlots; i++)
                         {
-                            int slot = s;
-                            var pinned = _character.CharacterAssets.FirstOrDefault(ca => ca.ReadySlotIndex == slot);
-                            <div class="ready-slot">
-                                <span class="ready-slot-label">Slot @(slot + 1)</span>
-                                @if (pinned?.Asset != null)
+                            int slot = i;
+                            var occ = _character.CharacterAssets.FirstOrDefault(ca => ca.BackpackSlotIndex == slot);
+                            <div class="backpack-cell">
+                                <span class="text-muted text-small">Slot @(slot + 1)</span>
+                                @if (occ?.Asset != null)
                                 {
-                                    <span>@pinned.Asset.Name</span>
-                                    <button type="button" class="btn-ghost text-small" @onclick="() => ClearReadySlotAsync(pinned.Id)">Clear</button>
+                                    <div class="backpack-cell-body">
+                                        <span>@occ.Asset.Name</span>
+                                        <button type="button" class="btn-ghost text-small" @onclick="() => ClearBackpackSlotAsync(occ.Id)">Clear</button>
+                                    </div>
                                 }
                                 else
                                 {
@@ -558,10 +589,12 @@ else
                     </div>
 
                     <h3 class="mt-3">Inventory</h3>
+                    <p class="text-muted text-small">Rows not worn and not in a backpack slot are off-person stash (haven, safehouse, etc.).</p>
                     <ul class="equipment-grid">
-                        @foreach (var ca in _character.CharacterAssets.OrderByDescending(x => x.IsEquipped).ThenBy(x => x.Asset?.Name))
+                        @foreach (var ca in PackInventoryOrder(_character.CharacterAssets))
                         {
                             var broken = ca.CurrentStructure is int st && st <= 0;
+                            var isService = ca.Asset?.Kind == AssetKind.Service;
                             <li class="equipment-item @(broken ? "equipment-broken" : "")">
                                 <div class="equipment-info">
                                     <strong class="equipment-name">@ca.Asset?.Name (x@ca.Quantity)</strong>
@@ -574,6 +607,7 @@ else
                                         @if (ca.Asset is WeaponAsset w && w.Damage > 0)
                                         {
                                             <span>| Dmg: @w.Damage</span>
+                                            <span>| Carry: @(Math.Max(1, w.WeaponSlotPoints)) pt</span>
                                         }
                                         @if (ca.Asset is ArmorAsset ar && ar.ArmorRating > 0)
                                         {
@@ -584,20 +618,29 @@ else
                                     {
                                         <p class="equipment-desc">@ca.Asset.Description</p>
                                     }
-                                    <label class="equipment-equipped-label">
-                                        <input type="checkbox" checked="@ca.IsEquipped" disabled="@broken"
-                                               @onchange="e => OnAssetEquippedChanged(ca, e)" />
-                                        Equipped
-                                    </label>
+                                    @if (isService)
+                                    {
+                                        <p class="text-muted text-small">Services cannot be worn.</p>
+                                    }
+                                    else
+                                    {
+                                        <label class="equipment-equipped-label">
+                                            <input type="checkbox" checked="@ca.IsEquipped" disabled="@broken"
+                                                   @onchange="e => OnAssetEquippedChanged(ca, e)" />
+                                            Equipped (worn)
+                                        </label>
+                                    }
                                     <div class="pack-row mt-1">
                                         <label class="text-small">Structure <input type="number" class="form-control d-inline-block" style="width:4rem" value="@(ca.CurrentStructure?.ToString() ?? "")" placeholder="—" @onchange="e => OnStructureChanged(ca, e)" /></label>
-                                        <span class="text-small ms-2">Pin:</span>
-                                        @for (int s = 0; s < 3; s++)
-                                        {
-                                            int slot = s;
-                                            <button type="button" class="btn-ghost text-small @(ca.ReadySlotIndex == slot ? "active" : "")" @onclick="() => PinToSlotAsync(ca, slot)">@(slot + 1)</button>
-                                        }
-                                        <button type="button" class="btn-ghost text-small" @onclick="() => ClearReadySlotAsync(ca.Id)">Unpin</button>
+                                        <label class="text-small ms-2">Backpack
+                                            <select class="form-select form-select-sm d-inline-block w-auto ms-1" style="max-width:10rem" disabled="@broken" value="@BackpackSlotSelectValue(ca)" @onchange="e => OnBackpackSlotSelectAsync(ca, e)">
+                                                <option value="">—</option>
+                                                @for (int bi = 0; bi < EquipmentCarryRules.MaxBackpackSlots; bi++)
+                                                {
+                                                    <option value="@bi">Slot @(bi + 1)</option>
+                                                }
+                                            </select>
+                                        </label>
                                     </div>
                                 </div>
                                 <button class="equipment-remove-btn" type="button" @onclick="() => RemoveCharacterAsset(ca.Id)">Remove</button>

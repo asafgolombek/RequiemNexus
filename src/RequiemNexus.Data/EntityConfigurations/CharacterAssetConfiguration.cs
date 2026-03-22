@@ -21,6 +21,10 @@ public sealed class CharacterAssetConfiguration : IEntityTypeConfiguration<Chara
         builder.HasIndex(ca => ca.CharacterId);
         builder.HasIndex(ca => ca.AssetId);
 
+        builder.HasIndex(ca => new { ca.CharacterId, ca.BackpackSlotIndex })
+            .IsUnique()
+            .HasFilter("\"BackpackSlotIndex\" IS NOT NULL");
+
         builder.Property(ca => ca.IsEquipped).HasDefaultValue(true);
     }
 }

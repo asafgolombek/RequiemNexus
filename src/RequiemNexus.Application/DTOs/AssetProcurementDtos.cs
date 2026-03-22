@@ -1,5 +1,3 @@
-using RequiemNexus.Domain.Models;
-
 namespace RequiemNexus.Application.DTOs;
 
 /// <summary>
@@ -8,5 +6,4 @@ namespace RequiemNexus.Application.DTOs;
 public sealed record AssetProcurementStartResult(
     AssetProcurementOutcome Outcome,
     int? PendingProcurementId,
-    PoolDefinition? ProcurementRollPool,
     string? Message);

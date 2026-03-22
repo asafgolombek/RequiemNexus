@@ -2,6 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // F5 this config for Blazor Server breakpoints in .razor.cs; preLaunchTask builds Debug to match program.
             "name": "C#: RequiemNexus.Web",
             "type": "coreclr",
             "request": "launch",

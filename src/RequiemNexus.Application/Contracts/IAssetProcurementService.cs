@@ -11,7 +11,7 @@ public interface IAssetProcurementService
     Task<IReadOnlyList<PendingAssetProcurementDto>> GetPendingForCampaignAsync(int campaignId, string storyTellerUserId);
 
     /// <summary>
-    /// Attempts procurement: auto-add, roll template, or illicit pending row.
+    /// Attempts procurement: auto-add for listed assets, or illicit pending row when applicable.
     /// </summary>
     Task<AssetProcurementStartResult> BeginProcurementAsync(
         int characterId,
@@ -19,9 +19,6 @@ public interface IAssetProcurementService
         int quantity,
         string userId,
         string? playerNote);
-
-    /// <summary>After a successful non-illicit procurement roll, grants the asset.</summary>
-    Task CompleteProcurementRollAsync(int characterId, int assetId, int quantity, string userId);
 
     /// <summary>Storyteller approves a pending illicit (or gated) request.</summary>
     Task ApprovePendingAsync(int pendingId, string storyTellerUserId, string? note);

@@ -1,17 +1,23 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.Services;
 
 /// <summary>
 /// Application service for character inventory (Phase 11 assets).
 /// </summary>
-public class CharacterAssetService(ApplicationDbContext dbContext, IAuthorizationHelper authHelper) : ICharacterAssetService
+public class CharacterAssetService(
+    ApplicationDbContext dbContext,
+    IAuthorizationHelper authHelper,
+    ILogger<CharacterAssetService> logger) : ICharacterAssetService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
+    private readonly ILogger<CharacterAssetService> _logger = logger;
 
     /// <inheritdoc />
     public async Task<List<Asset>> GetListedCatalogAsync()
@@ -33,6 +39,7 @@ public class CharacterAssetService(ApplicationDbContext dbContext, IAuthorizatio
             CharacterId = characterId,
             AssetId = assetId,
             Quantity = quantity,
+            IsEquipped = false,
         };
         _dbContext.CharacterAssets.Add(row);
         await _dbContext.SaveChangesAsync();
@@ -59,41 +66,59 @@ public class CharacterAssetService(ApplicationDbContext dbContext, IAuthorizatio
     {
         CharacterAsset? row = await _dbContext.CharacterAssets
             .Include(c => c.Character)
+            .Include(c => c.Asset)
             .FirstOrDefaultAsync(c => c.Id == characterAssetId)
             ?? throw new InvalidOperationException($"Character asset {characterAssetId} was not found.");
 
         await _authHelper.RequireCharacterAccessAsync(row.CharacterId, userId, "toggle equipped");
-        row.IsEquipped = isEquipped;
+
+        List<CharacterAsset> all = await LoadTrackedInventoryForCharacterAsync(row.CharacterId);
+        CharacterAssetInventoryMutation.ApplyEquippedProposal(all, characterAssetId, isEquipped);
+
+        Result<bool> check = CharacterAssetInventoryMutation.ValidateInventory(all);
+        if (!check.IsSuccess)
+        {
+            _logger.LogWarning(
+                "Equip validation failed for character asset {CharacterAssetId} on character {CharacterId}: {Reason}",
+                characterAssetId,
+                row.CharacterId,
+                check.Error);
+            throw new InvalidOperationException(check.Error);
+        }
+
         await _dbContext.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public async Task SetReadySlotAsync(int characterAssetId, int? slotIndex, string userId)
+    public async Task SetBackpackSlotAsync(int characterAssetId, int? slotIndex, string userId)
     {
-        if (slotIndex is < 0 or > 2)
+        if (slotIndex is < 0 or > 9)
         {
-            throw new ArgumentOutOfRangeException(nameof(slotIndex), "Ready slot must be 0–2 or null.");
+            throw new ArgumentOutOfRangeException(nameof(slotIndex), "Backpack slot must be 0–9 or null.");
         }
 
         CharacterAsset? row = await _dbContext.CharacterAssets
             .Include(c => c.Character)
+            .Include(c => c.Asset)
             .FirstOrDefaultAsync(c => c.Id == characterAssetId)
             ?? throw new InvalidOperationException($"Character asset {characterAssetId} was not found.");
 
-        await _authHelper.RequireCharacterAccessAsync(row.CharacterId, userId, "set ready slot");
+        await _authHelper.RequireCharacterAccessAsync(row.CharacterId, userId, "set backpack slot");
 
-        if (slotIndex.HasValue)
+        List<CharacterAsset> all = await LoadTrackedInventoryForCharacterAsync(row.CharacterId);
+        CharacterAssetInventoryMutation.ApplyBackpackProposal(all, characterAssetId, slotIndex);
+
+        Result<bool> check = CharacterAssetInventoryMutation.ValidateInventory(all);
+        if (!check.IsSuccess)
         {
-            List<CharacterAsset> others = await _dbContext.CharacterAssets
-                .Where(ca => ca.CharacterId == row.CharacterId && ca.ReadySlotIndex == slotIndex && ca.Id != row.Id)
-                .ToListAsync();
-            foreach (CharacterAsset o in others)
-            {
-                o.ReadySlotIndex = null;
-            }
+            _logger.LogWarning(
+                "Backpack validation failed for character asset {CharacterAssetId} on character {CharacterId}: {Reason}",
+                characterAssetId,
+                row.CharacterId,
+                check.Error);
+            throw new InvalidOperationException(check.Error);
         }
 
-        row.ReadySlotIndex = slotIndex;
         await _dbContext.SaveChangesAsync();
     }
 
@@ -108,5 +133,13 @@ public class CharacterAssetService(ApplicationDbContext dbContext, IAuthorizatio
         await _authHelper.RequireCharacterAccessAsync(row.CharacterId, userId, "update structure");
         row.CurrentStructure = currentStructure;
         await _dbContext.SaveChangesAsync();
+    }
+
+    private async Task<List<CharacterAsset>> LoadTrackedInventoryForCharacterAsync(int characterId)
+    {
+        return await _dbContext.CharacterAssets
+            .Include(ca => ca.Asset)
+            .Where(ca => ca.CharacterId == characterId)
+            .ToListAsync();
     }
 }

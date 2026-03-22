@@ -82,9 +82,9 @@ public class AssetProcurementServiceTests
     }
 
     [Fact]
-    public async Task BeginProcurementAsync_BelowResources_ReturnsProcurementPool()
+    public async Task BeginProcurementAsync_BelowResources_AddsWithoutRoll()
     {
-        string db = nameof(BeginProcurementAsync_BelowResources_ReturnsProcurementPool);
+        string db = nameof(BeginProcurementAsync_BelowResources_AddsWithoutRoll);
         await using var ctx = CreateContext(db);
         var merit = new Merit { Id = 1, Name = "Resources" };
         ctx.Merits.Add(merit);
@@ -106,16 +106,16 @@ public class AssetProcurementServiceTests
         auth.Setup(a => a.RequireCharacterAccessAsync(1, "player", It.IsAny<string>()))
             .Returns(Task.CompletedTask);
         var assetSvc = new Mock<ICharacterAssetService>();
+        assetSvc.Setup(s => s.AddCharacterAssetAsync(1, 8, 1, "player"))
+            .ReturnsAsync(new CharacterAsset { Id = 99, CharacterId = 1, AssetId = 8, Quantity = 1 });
 
         var sut = new AssetProcurementService(ctx, auth.Object, assetSvc.Object, NullLogger<AssetProcurementService>.Instance);
 
         AssetProcurementStartResult result = await sut.BeginProcurementAsync(1, 8, 1, "player", null);
 
-        Assert.Equal(AssetProcurementOutcome.RequiresProcurementRoll, result.Outcome);
-        Assert.NotNull(result.ProcurementRollPool);
-        assetSvc.Verify(
-            s => s.AddCharacterAssetAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()),
-            Times.Never);
+        Assert.Equal(AssetProcurementOutcome.AddedImmediately, result.Outcome);
+        Assert.Contains("Resources", result.Message, StringComparison.OrdinalIgnoreCase);
+        assetSvc.Verify(s => s.AddCharacterAssetAsync(1, 8, 1, "player"), Times.Once);
     }
 
     [Fact]

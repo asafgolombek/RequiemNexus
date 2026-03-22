@@ -29,6 +29,9 @@ public class CharacterAsset
     /// <summary>Quick-slot index 0–2 for Pack UI; null when not pinned.</summary>
     public int? ReadySlotIndex { get; set; }
 
+    /// <summary>Backpack slot 0–9 when carried on person; null when not in backpack. Mutually exclusive with <see cref="IsEquipped"/>.</summary>
+    public int? BackpackSlotIndex { get; set; }
+
     /// <summary>Remaining Structure; null when not tracked. Zero means broken (no bonuses).</summary>
     public int? CurrentStructure { get; set; }
 
