@@ -1,0 +1,12 @@
+.ghoul-aging-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.12rem 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #1a1208;
+    background: linear-gradient(135deg, #e8a317, #c4780a);
+    border-radius: 4px;
+}

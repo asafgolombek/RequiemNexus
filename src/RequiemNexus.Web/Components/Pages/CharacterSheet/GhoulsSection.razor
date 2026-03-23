@@ -1,0 +1,83 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@inject IGhoulManagementService GhoulService
+
+<section class="cs-section cs-ghouls">
+    <h2>Ghouls</h2>
+    @if (string.IsNullOrEmpty(CurrentUserId))
+    {
+        <p class="text-muted text-small">Sign in to view your ghouls.</p>
+    }
+    else if (_loading)
+    {
+        <p class="text-muted text-small"><em>Loading…</em></p>
+    }
+    else if (_ghouls.Count == 0)
+    {
+        <p class="text-muted text-small">No active ghouls are bound to this character as regnant.</p>
+    }
+    else
+    {
+        <ul class="trait-list" style="margin:0.25rem 0 0;padding-left:0;list-style:none;">
+            @foreach (var g in _ghouls)
+            {
+                <li class="trait-item" style="margin-bottom:0.65rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border-subtle,#2a2a2a);">
+                    <div class="bloodline-detail-row">
+                        <span class="trait-subheading">Name:</span>
+                        <strong>@g.Name</strong>
+                        @if (g.IsAgingDue)
+                        {
+                            <GhoulAgingBadge IsAgingDue="true" OverdueMonths="g.OverdueMonthsAfterGrace" />
+                        }
+                    </div>
+                    <div class="bloodline-detail-row" style="margin-top:0.25rem;">
+                        <span class="trait-subheading">Last fed:</span>
+                        <span>@(g.LastFedAt?.ToLocalTime().ToString("g") ?? "—")</span>
+                    </div>
+                    @if (g.AccessibleDisciplineNames.Count > 0)
+                    {
+                        <div class="bloodline-detail-row" style="margin-top:0.25rem;">
+                            <span class="trait-subheading">Disciplines:</span>
+                            <span class="text-small">@string.Join(", ", g.AccessibleDisciplineNames)</span>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public int CharacterId { get; set; }
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    private List<GhoulDto> _ghouls = [];
+
+    private bool _loading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(CurrentUserId))
+        {
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            IReadOnlyList<GhoulDto> list = await GhoulService.GetGhoulsForRegnantAsync(CharacterId, CurrentUserId);
+            _ghouls = list.ToList();
+        }
+        catch
+        {
+            _ghouls = [];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

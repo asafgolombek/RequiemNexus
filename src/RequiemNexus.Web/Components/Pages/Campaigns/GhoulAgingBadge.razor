@@ -1,0 +1,16 @@
+@if (IsAgingDue)
+{
+    <span class="ghoul-aging-badge" title="@_title">Aging due</span>
+}
+
+@code {
+    [Parameter]
+    public bool IsAgingDue { get; set; }
+
+    [Parameter]
+    public int? OverdueMonths { get; set; }
+
+    private string _title => OverdueMonths is > 0
+        ? $"Overdue ~{OverdueMonths} full month(s) past the feeding interval — record consequences in Notes or at the table."
+        : "Past the 30-day Vitae interval — ST may apply aging.";
+}

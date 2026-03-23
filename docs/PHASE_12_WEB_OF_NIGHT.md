@@ -842,7 +842,7 @@ All domain tests are purely in-memory. No EF Core, no I/O. Every test is determi
 
 ## 📖 Rules Interpretation Log — Phase 12 Entries
 
-Document all of these in `docs/rules-interpretations.md` when implementing:
+**Canonical copy:** `docs/rules-interpretations.md` — section *Phase 12 — The Web of Night*. The table below is the design reference; keep both in sync if interpretations change.
 
 | Decision | Interpretation |
 |----------|---------------|
@@ -910,22 +910,23 @@ Work should be completed in the order listed. Complete each unit before moving t
 
 ### Subsystem D — Ghoul Management
 
-- [ ] **`GhoulAgingRules`** (Domain) — `IsAgingDue`, `OverdueMonths`.
-- [ ] **Domain unit tests** for `GhoulAgingRules`.
-- [ ] **`IGhoulManagementService` + `GhoulManagementService`** (Application).
-- [ ] **`GhoulDto`, `GhoulAgingAlertDto`, `CreateGhoulRequest`, `UpdateGhoulRequest`** (Application Contracts).
-- [ ] **Application integration tests** for `IGhoulManagementService`.
-- [ ] **`GhoulsTab.razor`** (Web — ST Glimpse tab).
-- [ ] **`CreateGhoulModal.razor`**, **`EditGhoulModal.razor`** (Web).
-- [ ] **`GhoulAgingBadge.razor`** (Web — amber badge indicator).
-- [ ] **Character sheet "Ghouls" section** (Web — regnant's own ghouls, read-only for player).
+- [x] **`GhoulAgingRules`** (Domain) — `IsAgingDue`, `OverdueMonths`.
+- [x] **Domain unit tests** for `GhoulAgingRules`.
+- [x] **`IGhoulManagementService` + `GhoulManagementService`** (Application).
+- [x] **`GhoulDto`, `GhoulAgingAlertDto`, `CreateGhoulRequest`, `UpdateGhoulRequest`** (Application Contracts).
+- [x] **Application integration tests** for `IGhoulManagementService`.
+- [x] **`GhoulsTab.razor`** (Web — ST Glimpse tab).
+- [x] **`CreateGhoulModal.razor`**, **`EditGhoulModal.razor`** (Web).
+- [x] **`GhoulAgingBadge.razor`** (Web — amber badge indicator).
+- [x] **`GhoulDisciplineAccessEditor.razor`** (Web — ST Discipline picker).
+- [x] **Character sheet "Ghouls" section** (Web — regnant's own ghouls, read-only for player).
 
 ### Completion
 
-- [ ] **`docs/rules-interpretations.md`** — add all Phase 12 entries (table above).
-- [ ] **`dotnet format`** — all modified files pass format check.
-- [ ] **`.\scripts\test-local.ps1`** — full suite green.
-- [ ] **`docs/mission.md`** — mark Phase 12 as `✅ Complete`.
+- [x] **`docs/rules-interpretations.md`** — add all Phase 12 entries (table above).
+- [x] **`dotnet format`** — all modified files pass format check.
+- [x] **`.\scripts\test-local.ps1`** — full suite green.
+- [x] **`docs/mission.md`** — mark Phase 12 as `✅ Complete`.
 
 ---
 

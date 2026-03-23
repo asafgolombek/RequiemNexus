@@ -95,6 +95,11 @@
         <PredatoryAuraHistoryPanel CampaignId="Id"
                                    StorytellerUserId="@(_currentUserId ?? string.Empty)" />
 
+        <GhoulsTab CampaignId="Id"
+                   StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                   Vitals="_vitals"
+                   Npcs="_npcs" />
+
         @* ── Pinned NPCs ────────────────────────────────────────────────────── *@
         @if (_pinnedNpcIds.Any())
         {
