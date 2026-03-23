@@ -1,7 +1,7 @@
 @if (IsOpen)
 {
-    <div class="modal-backdrop" @onclick="OnCancel" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
-        <div class="modal-panel confirm-modal" @onclick:stopPropagation>
+    <div class="modal-backdrop" @onclick="OnCancel">
+        <div class="modal-panel confirm-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
             <div class="modal-header">
                 <h3 id="confirm-modal-title">@Title</h3>
                 <button type="button" class="close-btn" @onclick="OnCancel" aria-label="Close">×</button>
@@ -9,9 +9,9 @@
             <div class="modal-body">
                 <p class="confirm-message">@Message</p>
             </div>
-            <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 1rem;">
-                <button type="button" class="btn-ghost" @onclick="OnCancel">Cancel</button>
-                <button type="button" class="btn-danger-rn" @onclick="OnConfirm">@ConfirmLabel</button>
+            <div class="modal-footer">
+                <button type="button" class="btn-rn-ghost" @onclick="OnCancel">Cancel</button>
+                <button type="button" class="btn-rn-danger" @onclick="OnConfirm">@ConfirmLabel</button>
             </div>
         </div>
     </div>

@@ -15,7 +15,7 @@
             @foreach (DiceMacro macro in _macros)
             {
                 <div style="display:flex;align-items:center;gap:0.35rem;">
-                    <button class="btn-ghost"
+                    <button class="btn-rn-ghost"
                             style="font-size:0.85em;"
                             title="@macro.Description"
                             @onclick="() => OnMacroSelected.InvokeAsync(macro.DicePool)">
@@ -23,7 +23,7 @@
                     </button>
                     @if (!ReadOnly)
                     {
-                        <button class="btn-danger-rn"
+                        <button class="btn-rn-danger"
                                 style="font-size:0.75em;padding:0.1rem 0.4rem;"
                                 @onclick="() => DeleteMacro(macro.Id)">
                             ✕
@@ -54,7 +54,7 @@
                        style="flex:1;min-width:140px;"
                        placeholder="Description (optional)"
                        @bind="_newDesc" />
-                <button class="btn-primary-rn"
+                <button class="btn-rn-primary"
                         style="font-size:0.85em;"
                         disabled="@(string.IsNullOrWhiteSpace(_newName) || _newPool < 1)"
                         @onclick="AddMacro">

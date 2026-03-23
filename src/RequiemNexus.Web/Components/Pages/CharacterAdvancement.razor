@@ -43,7 +43,7 @@ else
                     <strong class="xp-counter-label">Experiences</strong>
                     <span class="xp-counter-value">@_character.ExperiencePoints</span>
                 </div>
-                <button class="btn-ghost" @onclick="GoBackToSheet" style="margin-top: 10px;">Return to Character Sheet</button>
+                <button class="btn-rn-ghost" @onclick="GoBackToSheet" style="margin-top: 10px;">Return to Character Sheet</button>
             </div>
         </header>
 
@@ -137,7 +137,7 @@ else
                             <input type="number" min="1" max="5" @bind="_newMeritRating" class="equipment-quantity" style="width: 60px;" />
                         </div>
 
-                        <button class="btn-primary-rn" @onclick="AddNewMerit" disabled="@(_selectedMeritId == 0)">Add</button>
+                        <button class="btn-rn-primary" @onclick="AddNewMerit" disabled="@(_selectedMeritId == 0)">Add</button>
                     </div>
                     @if (_selectedMeritId != 0)
                     {
@@ -170,7 +170,7 @@ else
                             <input type="number" min="1" max="5" @bind="_newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
                         </div>
 
-                        <button class="btn-primary-rn" @onclick="AddNewDiscipline" disabled="@(_selectedDisciplineId == 0)">Add</button>
+                        <button class="btn-rn-primary" @onclick="AddNewDiscipline" disabled="@(_selectedDisciplineId == 0)">Add</button>
                     </div>
                 </section>
 
@@ -187,7 +187,7 @@ else
                                     <option value="@d.Id">@d.Name (@d.XpCost XP)</option>
                                 }
                             </select>
-                            <button class="btn-primary-rn" @onclick="AddNewDevotion" disabled="@(_selectedDevotionId == 0)">Purchase</button>
+                            <button class="btn-rn-primary" @onclick="AddNewDevotion" disabled="@(_selectedDevotionId == 0)">Purchase</button>
                         </div>
                         
                         @if (_selectedDevotionId != 0)
@@ -226,13 +226,13 @@ else
                             <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
                             @if (_character.CampaignId.HasValue)
                             {
-                                <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+                                <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-rn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
                             }
                         }
                         else
                         {
                             <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, Necromancy, or Ordo rituals you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
-                            <button class="btn-primary-rn" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Request rite</button>
+                            <button class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Request rite</button>
                         }
                     </section>
                 }

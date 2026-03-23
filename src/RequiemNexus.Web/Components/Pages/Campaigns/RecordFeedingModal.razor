@@ -70,8 +70,8 @@
                 }
             </div>
             <div class="edit-lineage-footer">
-                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
-                <button type="button" class="btn-primary-rn" disabled="@(_busy || !CanSubmit)" @onclick="SubmitAsync">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-rn-primary" disabled="@(_busy || !CanSubmit)" @onclick="SubmitAsync">
                     @(_busy ? "Recording…" : "Record feeding")
                 </button>
             </div>
@@ -125,7 +125,7 @@
     });
 
     private string ModeClass(string mode) =>
-        $"btn-ghost lineage-mode-btn {(_regnantMode == mode ? "lineage-mode-active" : string.Empty)}";
+        $"btn-rn-ghost lineage-mode-btn {(_regnantMode == mode ? "lineage-mode-active" : string.Empty)}";
 
     private async Task CloseAsync()
     {

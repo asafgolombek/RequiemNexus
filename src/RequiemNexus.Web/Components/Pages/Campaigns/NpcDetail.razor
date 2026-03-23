@@ -19,7 +19,7 @@
     {
         <div class="alert-rn alert-danger">
             <p>Access denied. Only the Storyteller may view NPC details.</p>
-            <a href="/campaigns/@CampaignId/danse-macabre" class="btn-ghost">Back</a>
+            <a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost">Back</a>
         </div>
     }
     else if (_npc == null)
@@ -28,7 +28,7 @@
     }
     else
     {
-        <a href="/campaigns/@CampaignId/danse-macabre" class="btn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Danse Macabre</a>
+        <a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Danse Macabre</a>
 
         <div class="campaign-header">
             <h2>@_npc.Name
@@ -98,7 +98,7 @@
                 </select>
                 @if (_editFactionId > 0)
                 {
-                    <a href="/campaigns/@CampaignId/factions/@_editFactionId" class="btn-ghost" style="font-size:0.8em;margin-top:0.25rem;display:inline-block;">
+                    <a href="/campaigns/@CampaignId/factions/@_editFactionId" class="btn-rn-ghost" style="font-size:0.8em;margin-top:0.25rem;display:inline-block;">
                         👑 View Faction
                     </a>
                 }
@@ -122,7 +122,7 @@
                     @(_npc.IsAlive ? "Alive" : "Deceased")
                 </label>
             </div>
-            <button class="btn-primary-rn" disabled="@_busy" @onclick="SaveNpc">Save Changes</button>
+            <button class="btn-rn-primary" disabled="@_busy" @onclick="SaveNpc">Save Changes</button>
         </div>
 
         @* ── Attributes ────────────────────────────────────────────────────────── *@
@@ -176,7 +176,7 @@
                 <div class="form-group">
                     <label>Linked Stat Block Id</label>
                     <input class="form-control" type="number" @bind="_editStatBlockId" />
-                    <button class="btn-ghost" disabled="@_busy" @onclick="SaveStatBlockLink">Update Link</button>
+                    <button class="btn-rn-ghost" disabled="@_busy" @onclick="SaveStatBlockLink">Update Link</button>
                 </div>
             }
             else
@@ -184,7 +184,7 @@
                 <p class="text-muted">No stat block linked.</p>
                 <div class="form-group" style="display:flex;gap:1rem;align-items:center;">
                     <input class="form-control" type="number" placeholder="Stat Block Id" @bind="_editStatBlockId" style="max-width:200px;" />
-                    <button class="btn-ghost" disabled="@(_editStatBlockId == null || _busy)" @onclick="SaveStatBlockLink">Link Stat Block</button>
+                    <button class="btn-rn-ghost" disabled="@(_editStatBlockId == null || _busy)" @onclick="SaveStatBlockLink">Link Stat Block</button>
                 </div>
             }
         </div>
@@ -194,13 +194,13 @@
             {
                 <div class="confirm-card card-rn">
                     <p>⚠️ Delete NPC <strong>@_npc.Name</strong>? This cannot be undone.</p>
-                    <button class="btn-primary-rn" disabled="@_busy" @onclick="ConfirmDelete">Yes, Delete</button>
-                    <button class="btn-ghost" @onclick="() => _showConfirmDelete = false">Cancel</button>
+                    <button class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmDelete">Yes, Delete</button>
+                    <button class="btn-rn-ghost" @onclick="() => _showConfirmDelete = false">Cancel</button>
                 </div>
             }
             else
             {
-                <button class="btn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete NPC</button>
+                <button class="btn-rn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete NPC</button>
             }
         </div>
     }

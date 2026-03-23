@@ -19,7 +19,7 @@
     {
         <div class="alert-rn alert-danger">
             <p>Access denied. Only the Storyteller may edit factions.</p>
-            <a href="/campaigns/@CampaignId/danse-macabre" class="btn-ghost">Back</a>
+            <a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost">Back</a>
         </div>
     }
     else if (_faction == null)
@@ -28,7 +28,7 @@
     }
     else
     {
-        <a href="/campaigns/@CampaignId/danse-macabre" class="btn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Danse Macabre</a>
+        <a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Danse Macabre</a>
 
         <div class="campaign-header">
             <h2>@_faction.Name <span class="badge-rn">@_faction.FactionType</span></h2>
@@ -82,12 +82,12 @@
                 </select>
                 @if (_editLeaderNpcId > 0)
                 {
-                    <a href="/campaigns/@CampaignId/npcs/@_editLeaderNpcId" class="btn-ghost" style="font-size:0.8em;margin-top:0.25rem;display:inline-block;">
+                    <a href="/campaigns/@CampaignId/npcs/@_editLeaderNpcId" class="btn-rn-ghost" style="font-size:0.8em;margin-top:0.25rem;display:inline-block;">
                         👤 View Leader NPC
                     </a>
                 }
             </div>
-            <button class="btn-primary-rn" disabled="@_busy" @onclick="SaveFaction">Save Changes</button>
+            <button class="btn-rn-primary" disabled="@_busy" @onclick="SaveFaction">Save Changes</button>
         </div>
 
         <div class="card-rn" style="margin-bottom:1.5rem;">
@@ -183,7 +183,7 @@
                         }
                     </select>
                     <input class="form-control" placeholder="Notes" @bind="_relNotes" />
-                    <button class="btn-primary-rn" disabled="@(_relOtherFactionId == 0 || _busy)" @onclick="SaveRelationship">Set</button>
+                    <button class="btn-rn-primary" disabled="@(_relOtherFactionId == 0 || _busy)" @onclick="SaveRelationship">Set</button>
                 </div>
             </div>
         </div>
@@ -193,13 +193,13 @@
             {
                 <div class="confirm-card card-rn">
                     <p>⚠️ Delete faction <strong>@_faction.Name</strong>? This cannot be undone.</p>
-                    <button class="btn-primary-rn" disabled="@_busy" @onclick="ConfirmDelete">Yes, Delete</button>
-                    <button class="btn-ghost" @onclick="() => _showConfirmDelete = false">Cancel</button>
+                    <button class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmDelete">Yes, Delete</button>
+                    <button class="btn-rn-ghost" @onclick="() => _showConfirmDelete = false">Cancel</button>
                 </div>
             }
             else
             {
-                <button class="btn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete Faction</button>
+                <button class="btn-rn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete Faction</button>
             }
         </div>
     }

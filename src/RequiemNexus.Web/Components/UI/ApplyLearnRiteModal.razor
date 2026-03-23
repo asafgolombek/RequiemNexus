@@ -3,8 +3,8 @@
 
 @if (IsOpen)
 {
-    <div class="modal-backdrop" @onclick="Close" role="dialog" aria-modal="true" aria-labelledby="apply-rite-title">
-        <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation>
+    <div class="modal-backdrop" @onclick="Close">
+        <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="apply-rite-title">
             <div class="modal-header">
                 <h3 id="apply-rite-title">Learn Blood Sorcery Rite</h3>
                 <button type="button" class="close-btn" @onclick="Close" aria-label="Close">×</button>
@@ -33,9 +33,9 @@
                 }
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-ghost" @onclick="Close">Cancel</button>
+                <button type="button" class="btn-rn-ghost" @onclick="Close">Cancel</button>
                 <button type="button"
-                        class="btn-primary-rn"
+                        class="btn-rn-primary"
                         disabled="@(SelectedRiteId == null || _requesting)"
                         @onclick="RequestLearn">
                     @(_requesting ? "Requesting…" : "Request to Learn")

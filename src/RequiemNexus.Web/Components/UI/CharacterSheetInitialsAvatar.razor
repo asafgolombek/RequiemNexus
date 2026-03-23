@@ -1,0 +1,33 @@
+@* Near-term character portrait: initials in a gothic circle (UI_UX_FACELIFT Track 4.1). *@
+<div class="char-avatar" role="img" aria-label="@AriaLabel">
+    <span class="char-avatar-initials" aria-hidden="true">@GetInitials(CharacterName)</span>
+</div>
+
+@code {
+    /// <summary>Character display name used to derive initials.</summary>
+    [Parameter]
+    public string? CharacterName { get; set; }
+
+    private string AriaLabel => string.IsNullOrWhiteSpace(CharacterName)
+        ? "Character avatar"
+        : $"Avatar for {CharacterName}";
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "?";
+        }
+
+        string trimmed = name.Trim();
+        string[] parts = trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+        {
+            return string.Concat(char.ToUpperInvariant(parts[0][0]), char.ToUpperInvariant(parts[^1][0]));
+        }
+
+        return trimmed.Length >= 2
+            ? trimmed[..2].ToUpperInvariant()
+            : char.ToUpperInvariant(trimmed[0]).ToString();
+    }
+}

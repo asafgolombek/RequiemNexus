@@ -25,15 +25,15 @@
                             {
                                 <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
                             }
-                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveBloodline(app.CharacterBloodlineId)">Approve</button>
+                            <button class="btn-rn-primary text-small" disabled="@_busy" @onclick="() => ApproveBloodline(app.CharacterBloodlineId)">Approve</button>
                             @if (_rejectingId == app.CharacterBloodlineId)
                             {
-                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectBloodline(app.CharacterBloodlineId)">Confirm Reject</button>
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                                <button class="btn-rn-danger text-small" disabled="@_busy" @onclick="() => ConfirmRejectBloodline(app.CharacterBloodlineId)">Confirm Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
                             }
                             else
                             {
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartReject(app.CharacterBloodlineId)">Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="() => StartReject(app.CharacterBloodlineId)">Reject</button>
                             }
                         </div>
                     </li>
@@ -58,15 +58,15 @@
                             {
                                 <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
                             }
-                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveCovenant(app.CharacterId)">Approve</button>
+                            <button class="btn-rn-primary text-small" disabled="@_busy" @onclick="() => ApproveCovenant(app.CharacterId)">Approve</button>
                             @if (_rejectingCovenantId == app.CharacterId)
                             {
-                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectCovenant(app.CharacterId)">Confirm Reject</button>
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                                <button class="btn-rn-danger text-small" disabled="@_busy" @onclick="() => ConfirmRejectCovenant(app.CharacterId)">Confirm Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
                             }
                             else
                             {
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectCovenant(app.CharacterId)">Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectCovenant(app.CharacterId)">Reject</button>
                             }
                         </div>
                     </li>
@@ -91,15 +91,15 @@
                             {
                                 <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
                             }
-                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveRite(app.CharacterRiteId)">Approve</button>
+                            <button class="btn-rn-primary text-small" disabled="@_busy" @onclick="() => ApproveRite(app.CharacterRiteId)">Approve</button>
                             @if (_rejectingRiteId == app.CharacterRiteId)
                             {
-                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectRite(app.CharacterRiteId)">Confirm Reject</button>
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                                <button class="btn-rn-danger text-small" disabled="@_busy" @onclick="() => ConfirmRejectRite(app.CharacterRiteId)">Confirm Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
                             }
                             else
                             {
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectRite(app.CharacterRiteId)">Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectRite(app.CharacterRiteId)">Reject</button>
                             }
                         </div>
                     </li>
@@ -119,8 +119,8 @@
                     <li class="pending-request-item">
                         <span><strong>@app.CharacterName</strong> → @app.ScaleName</span>
                         <div class="request-actions">
-                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveChosenMystery(app.CharacterId)">Approve</button>
-                            <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => RejectChosenMystery(app.CharacterId)">Reject</button>
+                            <button class="btn-rn-primary text-small" disabled="@_busy" @onclick="() => ApproveChosenMystery(app.CharacterId)">Approve</button>
+                            <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="() => RejectChosenMystery(app.CharacterId)">Reject</button>
                         </div>
                     </li>
                 }
@@ -148,15 +148,15 @@
                             {
                                 <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
                             }
-                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveProcurement(p.Id)">Approve</button>
+                            <button class="btn-rn-primary text-small" disabled="@_busy" @onclick="() => ApproveProcurement(p.Id)">Approve</button>
                             @if (_rejectingProcurementId == p.Id)
                             {
-                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectProcurement(p.Id)">Confirm Reject</button>
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                                <button class="btn-rn-danger text-small" disabled="@_busy" @onclick="() => ConfirmRejectProcurement(p.Id)">Confirm Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
                             }
                             else
                             {
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectProcurement(p.Id)">Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectProcurement(p.Id)">Reject</button>
                             }
                         </div>
                     </li>
@@ -181,15 +181,15 @@
                             {
                                 <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
                             }
-                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveCoil(app.CharacterCoilId)">Approve</button>
+                            <button class="btn-rn-primary text-small" disabled="@_busy" @onclick="() => ApproveCoil(app.CharacterCoilId)">Approve</button>
                             @if (_rejectingCoilId == app.CharacterCoilId)
                             {
-                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectCoil(app.CharacterCoilId)">Confirm Reject</button>
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                                <button class="btn-rn-danger text-small" disabled="@_busy" @onclick="() => ConfirmRejectCoil(app.CharacterCoilId)">Confirm Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
                             }
                             else
                             {
-                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectCoil(app.CharacterCoilId)">Reject</button>
+                                <button class="btn-rn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectCoil(app.CharacterCoilId)">Reject</button>
                             }
                         </div>
                     </li>

@@ -17,7 +17,7 @@
 @if (IsVisible)
 {
     <div class="modal-backdrop @(_isRolling ? "backdrop-surge" : "")" @onclick="Close">
-        <div class="modal-panel" @onclick:stopPropagation>
+        <div class="modal-panel dice-roller-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="dice-roller-title">
             @if (_showBurst)
             {
                 <div class="particle-burst" aria-hidden="true">
@@ -29,7 +29,7 @@
             }
 
             <div class="modal-header">
-                <h3>Roll: @TraitName</h3>
+                <h3 id="dice-roller-title">Roll: @TraitName</h3>
                 <button class="close-btn" @onclick="Close">&times;</button>
             </div>
             
@@ -81,7 +81,7 @@
                 </div>
                 
                 <div class="roller-actions">
-                    <button class="btn-primary-rn roll-action-btn" @onclick="RollDice">Roll the Dice</button>
+                    <button class="btn-rn-primary roll-action-btn" @onclick="RollDice">Roll the Dice</button>
                     @if (_showTools)
                     {
                         <div class="debug-tools">
@@ -89,7 +89,7 @@
                             <input type="number" @bind="_seed" class="roller-input" placeholder="Optional" />
                         </div>
                     }
-                    <button class="btn-ghost debug-toggle" @onclick="() => _showTools = !_showTools">
+                    <button class="btn-rn-ghost debug-toggle" @onclick="() => _showTools = !_showTools">
                         @(_showTools ? "Hide" : "Show") Debug Tools
                     </button>
                 </div>
@@ -124,7 +124,7 @@
                             <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                                 @if (_shareSlug == null)
                                 {
-                                    <button class="btn-ghost" style="font-size: 0.85em;" @onclick="ShareRoll" disabled="@_sharing">
+                                    <button class="btn-rn-ghost" style="font-size: 0.85em;" @onclick="ShareRoll" disabled="@_sharing">
                                         @(_sharing ? "Generating Link..." : "🔗 Share Public Link")
                                     </button>
                                 }
@@ -132,7 +132,7 @@
                                 {
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <span class="share-url" style="font-size: 0.8em; color: var(--gold); word-break: break-all;">Link: @GetShareUrl()</span>
-                                        <button type="button" class="btn-ghost" style="font-size: 0.85em; white-space: nowrap;" @onclick="CopyShareUrl" disabled="@_copying">
+                                        <button type="button" class="btn-rn-ghost" style="font-size: 0.85em; white-space: nowrap;" @onclick="CopyShareUrl" disabled="@_copying">
                                             @(_copying ? "Copied!" : "📋 Copy")
                                         </button>
                                     </div>

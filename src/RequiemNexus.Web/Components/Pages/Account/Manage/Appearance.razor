@@ -1,0 +1,50 @@
+@page "/Account/Manage/Appearance"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<PageTitle>Appearance - Requiem Nexus</PageTitle>
+
+<h3>Appearance</h3>
+
+<p class="text-muted mb-4">Tune motion and background effects for this browser. Settings are stored locally on your device.</p>
+
+<div class="form-group form-check mb-3">
+    <InputCheckbox id="requiem-performance-mode"
+                   class="form-check-input"
+                   @bind-Value="_performanceMode"
+                   @bind-Value:after="SyncPerformanceModeToBrowserAsync" />
+    <label class="form-check-label" for="requiem-performance-mode">
+        <strong>Performance mode</strong>
+        <div class="text-muted small">Turns off ambient particles, entrance animations, and most hover motion. Respects your choice even after you leave this page.</div>
+    </label>
+</div>
+
+<p class="text-muted small mb-0">
+    If your system requests reduced motion, many animations are already minimized automatically.
+</p>
+
+@code {
+    private bool _performanceMode;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var fromBrowser = await JS.InvokeAsync<bool>("requiemGetPerformanceMode");
+        if (fromBrowser == _performanceMode)
+        {
+            return;
+        }
+
+        _performanceMode = fromBrowser;
+        StateHasChanged();
+    }
+
+    private async Task SyncPerformanceModeToBrowserAsync()
+    {
+        await JS.InvokeVoidAsync("requiemSetPerformanceMode", _performanceMode);
+    }
+}

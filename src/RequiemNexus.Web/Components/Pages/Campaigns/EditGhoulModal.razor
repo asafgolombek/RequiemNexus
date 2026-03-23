@@ -37,8 +37,8 @@
                 }
             </div>
             <div class="edit-lineage-footer">
-                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
-                <button type="button" class="btn-primary-rn" disabled="@(_busy || string.IsNullOrWhiteSpace(_name))" @onclick="SubmitAsync">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-rn-primary" disabled="@(_busy || string.IsNullOrWhiteSpace(_name))" @onclick="SubmitAsync">
                     @(_busy ? "Saving…" : "Save")
                 </button>
             </div>

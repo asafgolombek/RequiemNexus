@@ -59,8 +59,8 @@
                 }
             </div>
             <div class="edit-lineage-footer">
-                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
-                <button type="button" class="btn-primary-rn" disabled="@_busy" @onclick="SaveAsync">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="SaveAsync">
                     @(_busy ? "Saving…" : "Save access")
                 </button>
             </div>

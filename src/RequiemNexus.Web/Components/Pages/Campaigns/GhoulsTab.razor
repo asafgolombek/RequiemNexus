@@ -16,7 +16,7 @@
                 <span class="ghouls-aging-tab-badge" title="Ghouls past the 30-day feeding interval">@_agingAlertCount aging</span>
             }
         </h3>
-        <button type="button" class="btn-primary-rn btn-align-small" @onclick="() => _createOpen = true" disabled="@_loading">
+        <button type="button" class="btn-rn-primary btn-align-small" @onclick="() => _createOpen = true" disabled="@_loading">
             Add ghoul
         </button>
     </div>
@@ -74,10 +74,10 @@
                                 }
                             </td>
                             <td class="ghoul-actions-cell">
-                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => FeedAsync(g)" disabled="@_busyId.HasValue">Feed</button>
-                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => OpenEdit(g)" disabled="@_busyId.HasValue">Edit</button>
-                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => OpenDisciplines(g)" disabled="@_busyId.HasValue">Disciplines</button>
-                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => ReleaseAsync(g)" disabled="@_busyId.HasValue">Release</button>
+                                <button type="button" class="btn-rn-ghost btn-align-small" @onclick="() => FeedAsync(g)" disabled="@_busyId.HasValue">Feed</button>
+                                <button type="button" class="btn-rn-ghost btn-align-small" @onclick="() => OpenEdit(g)" disabled="@_busyId.HasValue">Edit</button>
+                                <button type="button" class="btn-rn-ghost btn-align-small" @onclick="() => OpenDisciplines(g)" disabled="@_busyId.HasValue">Disciplines</button>
+                                <button type="button" class="btn-rn-ghost btn-align-small" @onclick="() => ReleaseAsync(g)" disabled="@_busyId.HasValue">Release</button>
                             </td>
                         </tr>
                     }

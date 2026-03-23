@@ -63,7 +63,7 @@
                                                    placeholder="Recorded benefit…"
                                                    value="@GetSpendBenefit(clue.Id)"
                                                    @onchange="e => SetSpendBenefit(clue.Id, e)" />
-                                            <button type="button" class="btn-primary-rn" style="font-size:0.75em;" disabled="@_busy"
+                                            <button type="button" class="btn-rn-primary" style="font-size:0.75em;" disabled="@_busy"
                                                     @onclick="() => SpendClueAsync(clue.Id)">Spend</button>
                                         </div>
                                     }
@@ -78,7 +78,7 @@
                             <input type="number" class="form-control" style="width:52px;" min="0" max="50"
                                    value="@GetOpenPool(m.Id)"
                                    @onchange="e => SetOpenPool(m.Id, e)" />
-                            <button type="button" class="btn-primary-rn" style="font-size:0.8em;" disabled="@_busy"
+                            <button type="button" class="btn-rn-primary" style="font-size:0.8em;" disabled="@_busy"
                                     @onclick="() => RollOpenAsync(m.Id)">Roll open</button>
                             <span style="font-size:0.8em;margin-left:0.35rem;">Force pool</span>
                             <input type="number" class="form-control" style="width:52px;" min="0" max="50"
@@ -95,7 +95,7 @@
                                            @onchange="e => SetForceBp(m.Id, e)" />
                                 </label>
                             }
-                            <button type="button" class="btn-danger-rn" style="font-size:0.8em;" disabled="@_busy"
+                            <button type="button" class="btn-rn-danger" style="font-size:0.8em;" disabled="@_busy"
                                     @onclick="() => RollForceAsync(m.Id)">Roll force</button>
                         </div>
                     }

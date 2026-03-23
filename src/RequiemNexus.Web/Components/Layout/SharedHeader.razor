@@ -1,51 +1,76 @@
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
-@using RequiemNexus.Data.Models
+@using Microsoft.JSInterop
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Services
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-@inject SignInManager<ApplicationUser> SignInManager
+@inject CommandPaletteService PaletteService
+@inject PlatformShortcutHintService PlatformHints
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <header class="main-header">
-    <div class="container-xl px-3 py-3">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <a href="/home" class="d-flex align-items-center justify-content-center text-decoration-none" style="width: 40px; height: 40px;">
-                    <svg viewBox="0 0 40 40" class="w-100 h-100">
-                        <circle cx="20" cy="20" r="18" fill="none" stroke="#8B0000" stroke-width="1.5"/>
-                        <circle cx="20" cy="20" r="14" fill="none" stroke="#C41E3A" stroke-width="0.5"/>
-                        <path d="M20 6 L20 34 M6 20 L34 20" stroke="#F5F0E8" stroke-width="1" opacity="0.6"/>
-                        <circle cx="20" cy="20" r="4" fill="#8B0000"/>
-                        <circle cx="20" cy="20" r="2" fill="#C41E3A"/>
+    <div class="header-inner container-xl">
+        <div class="header-row">
+            <div class="header-brand-block">
+                <a href="/home" class="brand-link" aria-label="Requiem Nexus home">
+                    <svg viewBox="0 0 40 40" class="brand-svg" aria-hidden="true" focusable="false">
+                        <circle cx="20" cy="20" r="18" fill="none" stroke="var(--crimson)" stroke-width="1.5" />
+                        <circle cx="20" cy="20" r="14" fill="none" stroke="var(--crimson-glow)" stroke-width="0.5" />
+                        <path d="M20 6 L20 34 M6 20 L34 20" stroke="var(--bone-white)" stroke-width="1" opacity="0.6" />
+                        <circle cx="20" cy="20" r="4" fill="var(--crimson)" />
+                        <g class="brand-mark-pulse">
+                            <circle cx="20" cy="20" r="2" fill="var(--crimson-glow)" />
+                        </g>
                     </svg>
                 </a>
-                <div>
-                    <h1 class="font-heading tracking-widest mb-0" style="color:var(--bone-white); line-height: 1; font-size: 1.25rem;">REQUIEM NEXUS</h1>
-                    <p class="font-body text-secondary uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 0.1em;">Digital Grimoire</p>
+                <div class="brand-text">
+                    <h1 class="brand-title font-heading">REQUIEM NEXUS</h1>
+                    <p class="brand-tagline font-body">Digital Grimoire</p>
                 </div>
             </div>
-            
-            <div class="d-flex align-items-center gap-4">
+
+            <div class="header-actions-row">
                 @if (ShowSearch)
                 {
-                    <div class="d-none d-md-flex align-items-center" style="background:var(--charcoal); border:1px solid var(--muted-gray); border-radius:4px; padding: 4px 8px;">
-                        <span style="color:var(--muted-gray); font-size: 12px; margin-right: 6px;">🔍</span>
-                        <input type="text" class="bg-transparent border-0 font-body text-bone-white focus-ring-0" placeholder="Search..." style="color:var(--bone-white); outline:none; font-size: 0.75rem;" />
-                    </div>
+                    <button type="button"
+                            class="cmd-palette-trigger"
+                            aria-label="Open command palette"
+                            @onclick="OpenCommandPalette">
+                        <span class="cmd-palette-trigger-inner">
+                            <Icon Name="@IconName.Search" Class="cmd-palette-icon" />
+                            <span class="cmd-palette-hint" aria-hidden="true">@(_shortcutLabel ?? "Ctrl+K")</span>
+                        </span>
+                    </button>
                 }
 
-                <nav class="d-none d-md-flex align-items-center gap-4">
+                <nav class="header-desktop-nav" aria-label="Account">
                     @if (!string.IsNullOrEmpty(_userName))
                     {
-                        <span class="font-body text-secondary" style="font-size: 0.75rem;">@_userName</span>
+                        <span class="header-username font-body">@_userName</span>
                     }
-                    <a href="/Account/Manage" class="btn-ghost text-decoration-none px-3 py-2" style="font-size: 0.75rem;">SETTINGS</a>
-                    
-                    <form method="post" action="/Account/Logout" class="m-0">
+                    <a href="/Account/Manage" class="header-link-btn font-body">SETTINGS</a>
+                    <form method="post" action="/Account/Logout" class="header-logout-form">
                         <AntiforgeryToken />
                         <input type="hidden" name="returnUrl" value="/" />
-                        <button type="submit" class="btn-primary-rn text-decoration-none px-3 py-2 border-0" style="font-size: 0.75rem;">LOG OUT</button>
+                        <button type="submit" class="header-link-btn header-link-btn-primary font-body">LOG OUT</button>
                     </form>
                 </nav>
+
+                <button type="button"
+                        class="mobile-menu-toggle"
+                        aria-label="@(_drawerOpen ? "Close menu" : "Open menu")"
+                        aria-expanded="@(_drawerOpen ? "true" : "false")"
+                        aria-controls="mobile-nav-drawer"
+                        @ref="_hamburgerButton"
+                        @onclick="ToggleDrawerAsync">
+                    <span class="mobile-menu-bars @( _drawerOpen ? "open" : "" )" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
             </div>
         </div>
     </div>
@@ -53,33 +78,146 @@
 
 @if (ShowSubNav)
 {
-    <nav style="background:linear-gradient(180deg, var(--deep-black) 0%, var(--charcoal) 100%); border-bottom:1px solid var(--muted-gray);">
-        <div class="container-xl px-3 d-flex gap-4 overflow-auto">
-            <a href="/characters" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none @(IsActivePath("/characters") ? "active" : "")" style="font-size: 0.875rem; color: @(IsActivePath("/characters") ? "var(--bone-white)" : "var(--text-secondary)");">
+    <nav class="sub-nav-bar" aria-label="Primary sections">
+        <div class="sub-nav-inner container-xl">
+            <a href="/characters" class="nav-tab font-body @(IsActivePath("/characters") ? "active" : "")">
                 My Characters
             </a>
-            <a href="/campaigns" class="nav-tab font-body tracking-wide py-3 px-2 text-decoration-none @(IsActivePath("/campaigns") ? "active" : "")" style="font-size: 0.875rem; color: @(IsActivePath("/campaigns") ? "var(--bone-white)" : "var(--text-secondary)");">
+            <a href="/campaigns" class="nav-tab font-body @(IsActivePath("/campaigns") ? "active" : "")">
                 My Campaigns
             </a>
         </div>
     </nav>
 }
 
+<div class="mobile-drawer-root @(_drawerOpen ? "open" : "")">
+    @if (_drawerOpen)
+    {
+        <div class="mobile-drawer-backdrop" @onclick="CloseDrawerAsync"></div>
+    }
+    <aside id="mobile-nav-drawer"
+           class="mobile-drawer-panel"
+           @ref="_drawerPanelRef"
+           @onclick:stopPropagation="true"
+           role="dialog"
+           aria-modal="@(_drawerOpen ? "true" : "false")"
+           aria-hidden="@(_drawerOpen ? "false" : "true")"
+           aria-label="Main navigation">
+        <div class="mobile-drawer-header font-heading">Navigate</div>
+        @if (!string.IsNullOrEmpty(_userName))
+        {
+            <p class="mobile-drawer-user font-body">@_userName</p>
+        }
+        <a href="/characters" class="mobile-drawer-link font-body" @onclick="CloseDrawerAsync">My Characters</a>
+        <a href="/campaigns" class="mobile-drawer-link font-body" @onclick="CloseDrawerAsync">My Campaigns</a>
+        <a href="/Account/Manage" class="mobile-drawer-link font-body" @onclick="CloseDrawerAsync">Settings</a>
+        <form method="post" action="/Account/Logout" class="mobile-drawer-logout">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="/" />
+            <button type="submit" class="mobile-drawer-link mobile-drawer-logout-btn font-body">Log Out</button>
+        </form>
+    </aside>
+</div>
+
 @code {
     [Parameter] public bool ShowSubNav { get; set; } = true;
+
     [Parameter] public bool ShowSearch { get; set; } = true;
 
     private string? _userName;
+    private string? _shortcutLabel;
+    private bool _drawerOpen;
+    private bool _scheduleFocusTrap;
+    private ElementReference _hamburgerButton;
+    private ElementReference _drawerPanelRef;
+    private DotNetObjectReference<SharedHeader>? _dotNetRef;
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _dotNetRef = DotNetObjectReference.Create(this);
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _userName = authState.User.Identity?.Name;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _shortcutLabel = await PlatformHints.GetCommandPaletteShortcutLabelAsync(JS);
+            StateHasChanged();
+        }
+
+        if (_scheduleFocusTrap)
+        {
+            _scheduleFocusTrap = false;
+            if (_dotNetRef != null)
+            {
+                await JS.InvokeVoidAsync("rnDrawerFocusTrap.attach", _drawerPanelRef, _dotNetRef);
+            }
+        }
+    }
+
+    private void OpenCommandPalette() => PaletteService.Open();
+
+    private async Task ToggleDrawerAsync()
+    {
+        if (_drawerOpen)
+        {
+            await CloseDrawerAsync();
+        }
+        else
+        {
+            _drawerOpen = true;
+            _scheduleFocusTrap = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CloseDrawerAsync()
+    {
+        if (!_drawerOpen)
+        {
+            return;
+        }
+
+        _drawerOpen = false;
+        await JS.InvokeVoidAsync("rnDrawerFocusTrap.detach");
+        StateHasChanged();
+        await Task.Yield();
+        try
+        {
+            await _hamburgerButton.FocusAsync();
+        }
+        catch
+        {
+            /* focus may fail if element not in DOM */
+        }
+    }
+
+    /// <summary>Called from <c>rnDrawerFocusTrap</c> when Escape is pressed.</summary>
+    [JSInvokable]
+    public Task CloseDrawerFromEscape()
+    {
+        return InvokeAsync(() => CloseDrawerAsync());
     }
 
     private bool IsActivePath(string path)
     {
-        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        string currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         return $"/{currentUri}".StartsWith(path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("rnDrawerFocusTrap.detach");
+        }
+        catch
+        {
+            /* circuit may be gone */
+        }
+
+        _dotNetRef?.Dispose();
     }
 }

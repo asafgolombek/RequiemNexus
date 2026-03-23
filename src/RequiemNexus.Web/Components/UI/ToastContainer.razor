@@ -2,13 +2,28 @@
 @implements IDisposable
 @inject ToastService ToastService
 
-<div class="toast-container" aria-live="polite">
+<div class="toast-host" role="region" aria-label="Notifications">
     @foreach (var toast in ToastService.Toasts.Reverse())
     {
-        <div class="toast-item toast-@toast.Type.ToString().ToLower()" key="@toast.Id">
-            <div class="toast-content">
-                <span class="toast-title">@toast.Title</span>
-                <span class="toast-message">@toast.Message</span>
+        var isError = toast.Type == ToastType.Error;
+        <div class="toast-item toast-@toast.Type.ToString().ToLower()"
+             role="@(isError ? "alert" : "status")"
+             aria-live="@(isError ? "assertive" : "polite")"
+             @key="toast.Id">
+            <div class="toast-row">
+                <span class="toast-icon" aria-hidden="true">
+                    <Icon Name="@GetIcon(toast.Type)" Class="toast-icon-svg" />
+                </span>
+                <div class="toast-text">
+                    <span class="toast-title">@toast.Title</span>
+                    <span class="toast-message">@toast.Message</span>
+                </div>
+                <button type="button"
+                        class="toast-dismiss"
+                        aria-label="Dismiss notification"
+                        @onclick="@(() => ToastService.Dismiss(toast.Id))">
+                    ×
+                </button>
             </div>
             <div class="toast-progress" style="animation-duration: @(toast.DurationMs)ms"></div>
         </div>
@@ -23,8 +38,16 @@
 
     private void HandleToastsChanged()
     {
-        InvokeAsync(StateHasChanged);
+        _ = InvokeAsync(StateHasChanged);
     }
+
+    private static IconName GetIcon(ToastType type) => type switch
+    {
+        ToastType.Success => IconName.CircleCheck,
+        ToastType.Error => IconName.CircleX,
+        ToastType.Warning => IconName.TriangleAlert,
+        _ => IconName.Info,
+    };
 
     public void Dispose()
     {

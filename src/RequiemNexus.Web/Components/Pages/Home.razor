@@ -1,32 +1,154 @@
 @page "/home"
 @rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.Components.Authorization
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.RealTime
+@using RequiemNexus.Web.Components.UI
+@inject ICharacterService CharacterService
+@inject ICampaignService CampaignService
+@inject ISessionService SessionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<Home> Logger
 
 <PageTitle>Home - Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
-    <!-- Main Dashboard Body -->
     <main class="dashboard-content">
-        <div class="welcome-banner card-rn stagger-1">
-            <h2>Welcome to Requiem Nexus</h2>
-            <p>Your portal to darkness and legend awaits. Manage your campaigns, characters, and chronicles.</p>
-        </div>
+        <section class="welcome-banner card-rn stagger-1" aria-labelledby="welcome-heading">
+            <div class="welcome-banner-top">
+                <h2 id="welcome-heading" class="welcome-title font-heading">REQUIEM NEXUS</h2>
+                <p class="welcome-subtitle font-body">Digital Grimoire</p>
+            </div>
+            <hr class="welcome-rule" />
+            <p class="welcome-quote font-body">The blood is the life. Your chronicle awaits.</p>
+            @if (_loadError != null)
+            {
+                <p class="welcome-load-error font-body" role="status">@_loadError</p>
+            }
+            else
+            {
+                <ul class="welcome-stat-chips font-body" role="list">
+                    <li>
+                        <span class="stat-chip" aria-label="@CountPhrase(_characterCount, "character", "characters")">
+                            <span class="stat-chip-value" aria-hidden="true">@_characterCount</span>
+                            <span class="stat-chip-label" aria-hidden="true">@Plural(_characterCount, "Character", "Characters")</span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="stat-chip" aria-label="@CountPhrase(_campaignCount, "campaign", "campaigns")">
+                            <span class="stat-chip-value" aria-hidden="true">@_campaignCount</span>
+                            <span class="stat-chip-label" aria-hidden="true">@Plural(_campaignCount, "Campaign", "Campaigns")</span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="stat-chip" aria-label="@CountPhrase(_liveSessionCount, "live session", "live sessions")">
+                            <span class="stat-chip-value" aria-hidden="true">@_liveSessionCount</span>
+                            <span class="stat-chip-label" aria-hidden="true">@Plural(_liveSessionCount, "Live session", "Live sessions")</span>
+                        </span>
+                    </li>
+                </ul>
+            }
+        </section>
 
-        <div class="dashboard-widgets grid-auto-fill mt-4">
+        <div class="dashboard-widgets mt-4">
             <a href="/characters" class="widget-card card-rn fade-in-up stagger-2">
+                <span class="widget-kbd-hint font-body" title="Tip: open Command Palette (Ctrl or ⌘ + K) to jump anywhere.">
+                    <kbd class="widget-kbd">C</kbd>
+                </span>
+                <div class="widget-arrow" aria-hidden="true">
+                    <Icon Name="@IconName.ChevronRight" Class="widget-arrow-icon" />
+                </div>
                 <div class="widget-icon"><Icon Name="@IconName.Users" /></div>
-                <h3>My Characters</h3>
-                <p>View and manage your vampires.</p>
+                @if (_countsLoaded)
+                {
+                    <p class="widget-count font-body">@CountPhrase(_characterCount, "character", "characters")</p>
+                }
+                <h3 class="font-heading">My Characters</h3>
+                <p class="widget-desc font-body">View and manage your vampires.</p>
             </a>
             <a href="/campaigns" class="widget-card card-rn fade-in-up stagger-3">
+                <span class="widget-kbd-hint font-body" title="Tip: open Command Palette (Ctrl or ⌘ + K) to jump anywhere.">
+                    <kbd class="widget-kbd">P</kbd>
+                </span>
+                <div class="widget-arrow" aria-hidden="true">
+                    <Icon Name="@IconName.ChevronRight" Class="widget-arrow-icon" />
+                </div>
                 <div class="widget-icon"><Icon Name="@IconName.BookOpen" /></div>
-                <h3>My Campaigns</h3>
-                <p>Access your chronicles and story notes.</p>
+                @if (_countsLoaded)
+                {
+                    <p class="widget-count font-body">@CountPhrase(_campaignCount, "campaign", "campaigns")</p>
+                }
+                <h3 class="font-heading">My Campaigns</h3>
+                <p class="widget-desc font-body">Access your chronicles and story notes.</p>
             </a>
             <a href="/character/create" class="widget-card card-rn fade-in-up stagger-4">
+                <span class="widget-kbd-hint font-body" title="Tip: open Command Palette (Ctrl or ⌘ + K) to jump anywhere.">
+                    <kbd class="widget-kbd">E</kbd>
+                </span>
+                <div class="widget-arrow" aria-hidden="true">
+                    <Icon Name="@IconName.ChevronRight" Class="widget-arrow-icon" />
+                </div>
                 <div class="widget-icon"><Icon Name="@IconName.Droplet" /></div>
-                <h3>Embrace New</h3>
-                <p>Create a new character.</p>
+                <h3 class="font-heading">Embrace New</h3>
+                <p class="widget-desc font-body">Create a new character.</p>
             </a>
         </div>
     </main>
 </div>
+
+@code {
+    private int _characterCount;
+    private int _campaignCount;
+    private int _liveSessionCount;
+    private bool _countsLoaded;
+    private string? _loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string? userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            _countsLoaded = true;
+            return;
+        }
+
+        try
+        {
+            var charactersTask = CharacterService.GetCharactersByUserIdAsync(userId);
+            var campaignsTask = CampaignService.GetCampaignsByUserIdAsync(userId);
+            await Task.WhenAll(charactersTask, campaignsTask);
+
+            var characters = await charactersTask;
+            var campaigns = await campaignsTask;
+            _characterCount = characters.Count;
+            _campaignCount = campaigns.Count;
+
+            if (campaigns.Count > 0)
+            {
+                var sessionTasks = campaigns.ConvertAll(c => SessionService.GetSessionStateAsync(c.Id));
+                var states = await Task.WhenAll(sessionTasks);
+                _liveSessionCount = states.Count(s => s != null);
+            }
+            else
+            {
+                _liveSessionCount = 0;
+            }
+
+            _countsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            _loadError = "Could not load your dashboard stats. Try refreshing the page.";
+            _countsLoaded = true;
+            Logger.LogError(ex, "Failed to load home dashboard stats.");
+        }
+    }
+
+    private static string Plural(int count, string singular, string plural) => count == 1 ? singular : plural;
+
+    private static string CountPhrase(int count, string singular, string plural) =>
+        $"{count} {(count == 1 ? singular : plural)}";
+}

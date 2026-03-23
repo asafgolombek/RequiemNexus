@@ -50,6 +50,9 @@ public sealed class ToastService : IDisposable
         OnToastsChanged?.Invoke();
     }
 
+    /// <summary>Dismisses a toast immediately (e.g. user clicked dismiss).</summary>
+    public void Dismiss(Guid id) => RemoveToast(id);
+
     public void Dispose()
     {
         lock (_timers)

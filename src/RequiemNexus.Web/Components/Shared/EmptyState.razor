@@ -1,13 +1,34 @@
+@using RequiemNexus.Web.Components.UI
+
 @if (IsEmpty)
 {
-    <div class="empty-state-rn">
+    <div class="empty-state-rn" role="status">
         @if (ChildContent != null)
         {
             @ChildContent
         }
         else
         {
-            <p>@Message</p>
+            @if (LeadingIcon.HasValue)
+            {
+                <div class="empty-state-rn-icon" aria-hidden="true">
+                    <Icon Name="@LeadingIcon.Value" />
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Title))
+            {
+                <h3 class="empty-state-rn-title">@Title</h3>
+            }
+            @if (!string.IsNullOrWhiteSpace(Message))
+            {
+                <p class="empty-state-rn-subtitle">@Message</p>
+            }
+            @if (CtaContent != null)
+            {
+                <div class="empty-state-rn-cta">
+                    @CtaContent
+                </div>
+            }
         }
     </div>
 }
@@ -21,11 +42,23 @@ else
     [Parameter]
     public bool IsEmpty { get; set; }
 
-    /// <summary>Gets or sets the fallback message when no <see cref="ChildContent"/> is provided.</summary>
+    /// <summary>Gets or sets the heading (Cinzel) when not using <see cref="ChildContent"/>.</summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>Gets or sets the secondary line when not using <see cref="ChildContent"/>.</summary>
     [Parameter]
     public string Message { get; set; } = "Nothing here yet.";
 
-    /// <summary>Gets or sets custom content for the empty state.</summary>
+    /// <summary>Gets or sets an optional leading icon when not using <see cref="ChildContent"/>.</summary>
+    [Parameter]
+    public IconName? LeadingIcon { get; set; }
+
+    /// <summary>Gets or sets optional primary actions (buttons/links) below the message.</summary>
+    [Parameter]
+    public RenderFragment? CtaContent { get; set; }
+
+    /// <summary>Gets or sets custom content for the empty state (replaces structured title/message/CTA).</summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 

@@ -96,15 +96,15 @@
     </div>
 
     <div class="wizard-footer">
-        <button class="btn-ghost" @onclick="PreviousStep" disabled="@(_currentStep == CreationStep.BasicInformation)">Back</button>
+        <button class="btn-rn-ghost" @onclick="PreviousStep" disabled="@(_currentStep == CreationStep.BasicInformation)">Back</button>
 
         @if (_currentStep < CreationStep.ReviewAndEmbrace)
         {
-            <button class="btn-primary-rn" @onclick="NextStepAsync" disabled="@(!CanProceedToNextStep())">Next Step</button>
+            <button class="btn-rn-primary" @onclick="NextStepAsync" disabled="@(!CanProceedToNextStep())">Next Step</button>
         }
         else
         {
-            <button class="btn-primary-rn wizard-btn-embrace" @onclick="SaveCharacter" disabled="@_isSaving">@(_isSaving ? "Embrace…" : "Embrace")</button>
+            <button class="btn-rn-primary wizard-btn-embrace" @onclick="SaveCharacter" disabled="@_isSaving">@(_isSaving ? "Embrace…" : "Embrace")</button>
         }
     </div>
 </div>

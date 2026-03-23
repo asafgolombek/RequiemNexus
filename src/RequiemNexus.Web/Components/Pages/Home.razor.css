@@ -1,52 +1,198 @@
-/* Dashboard Content Area */
+/* Dashboard — UI_UX_FACELIFT Track 3.2–3.3 */
 .dashboard-content {
     flex: 1;
 }
 
-.dashboard-content h2 {
-    font-size: 1.5rem;
-    color: var(--text-bright);
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    font-family: var(--font-heading);
-}
-
 .welcome-banner {
-    background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
-    border-left: 4px solid var(--accent-color);
-    padding: 2.5rem;
-    margin-bottom: 2rem;
+    padding: var(--space-8) var(--space-6);
+    margin-bottom: var(--space-8);
+    border-left: 4px solid var(--crimson-glow);
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.22), rgba(0, 0, 0, 0.82));
 }
 
-.welcome-banner h2 {
-    font-size: 2.2rem;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(to right, var(--crimson-glow), var(--bone-white));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    border: none;
+.welcome-banner-top {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
 }
 
-.welcome-banner p {
-    font-size: 1.1rem;
-    color: var(--text-muted);
+.welcome-title {
     margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--bone-white);
 }
 
+.welcome-subtitle {
+    margin: 0;
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.welcome-rule {
+    margin: var(--space-4) 0;
+    border: none;
+    border-top: 1px solid rgba(196, 30, 58, 0.45);
+    opacity: 1;
+}
+
+.welcome-quote {
+    margin: 0 0 var(--space-6);
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.welcome-load-error {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--crimson-glow);
+}
+
+.welcome-stat-chips {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.stat-chip {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-3);
+    border: 1px solid var(--crimson-glow);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+}
+
+.stat-chip-value {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--bone-white);
+}
+
+.stat-chip-label {
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+/* Widget grid — min card width per facelift (Track 3.3) */
 .dashboard-widgets {
-    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--space-6);
 }
 
 .widget-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     text-decoration: none;
     color: var(--text-color);
-    padding: 2rem;
-    gap: 1rem;
+    padding: var(--space-8) var(--space-5) var(--space-6);
+    gap: var(--space-2);
+    overflow: hidden;
+    transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast);
+}
+
+.widget-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+}
+
+.widget-card:focus {
+    outline: none;
+}
+
+.widget-card:focus-visible {
+    outline: 2px solid var(--crimson-glow);
+    outline-offset: 3px;
+}
+
+.widget-kbd-hint {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    margin: 0;
+    line-height: 1;
+}
+
+.widget-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 var(--space-1);
+    font-size: var(--text-xs);
+    font-family: var(--font-primary);
+    color: var(--text-secondary);
+    background: var(--color-surface-3);
+    border: 1px solid var(--muted-gray);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.widget-arrow {
+    position: absolute;
+    top: 50%;
+    right: var(--space-2);
+    transform: translate(120%, -50%);
+    opacity: 0;
+    color: var(--crimson-glow);
+    transition:
+        transform var(--transition-fast),
+        opacity var(--transition-fast);
+    pointer-events: none;
+}
+
+.widget-arrow-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.widget-card:hover .widget-arrow,
+.widget-card:focus-visible .widget-arrow {
+    transform: translate(0, -50%);
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .widget-card:hover {
+        transform: none;
+    }
+
+    .widget-arrow {
+        transition: none;
+    }
+
+    .widget-card:hover .widget-arrow,
+    .widget-card:focus-visible .widget-arrow {
+        transform: translate(0, -50%);
+        opacity: 1;
+    }
 }
 
 .widget-icon {
@@ -55,7 +201,7 @@
     justify-content: center;
     width: 3.5rem;
     height: 3.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
     color: inherit;
     transition: transform var(--transition-fast);
     filter: drop-shadow(0 0 10px var(--accent-glow));
@@ -67,16 +213,29 @@
 }
 
 .widget-card:hover .widget-icon {
-    transform: scale(1.15) translateY(-5px);
+    transform: scale(1.1);
+}
+
+.widget-count {
+    margin: 0;
+    order: 1;
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--crimson-glow);
 }
 
 .widget-card h3 {
+    order: 2;
     margin: 0;
+    font-size: var(--text-lg);
     color: var(--text-bright);
 }
 
-.widget-card p {
+.widget-desc {
+    order: 3;
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
+    line-height: 1.45;
 }

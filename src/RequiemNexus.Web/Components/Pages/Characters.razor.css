@@ -139,12 +139,12 @@
     margin-top: auto;
 }
 
-.card-actions .btn-primary-rn {
+.card-actions .btn-rn-primary {
     flex: 1;
     text-align: center;
 }
 
-.card-actions .btn-danger-rn {
+.card-actions .btn-rn-danger {
     padding: 8px 14px;
 }
 

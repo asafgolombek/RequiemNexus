@@ -20,7 +20,7 @@
     {
         <div class="alert-rn alert-danger">
             <p>Access denied. Only the Storyteller may view the Danse Macabre.</p>
-            <a href="/campaigns/@CampaignId" class="btn-ghost">Back to Campaign</a>
+            <a href="/campaigns/@CampaignId" class="btn-rn-ghost">Back to Campaign</a>
         </div>
     }
     else if (_loading)
@@ -30,7 +30,7 @@
     else
     {
         <div class="campaign-header">
-            <a href="/campaigns/@CampaignId" class="btn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Campaign</a>
+            <a href="/campaigns/@CampaignId" class="btn-rn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Campaign</a>
             <h2>🌹 Danse Macabre</h2>
         </div>
 
@@ -67,7 +67,7 @@
                             Rating (1–5)
                             <input class="form-control" type="number" min="1" max="5" style="width:80px;" @bind="_newTerritoryRating" />
                         </label>
-                        <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newTerritoryName) || _busy)" @onclick="AddTerritory">Add</button>
+                        <button class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newTerritoryName) || _busy)" @onclick="AddTerritory">Add</button>
                     </div>
                 </div>
 
@@ -87,7 +87,7 @@
                                 {
                                     <p>Controlled by: <a href="/campaigns/@CampaignId/factions/@territory.ControlledByFactionId">@territory.ControlledByFaction.Name</a></p>
                                 }
-                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => DeleteTerritory(territory.Id)">🗑 Delete</button>
+                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => DeleteTerritory(territory.Id)">🗑 Delete</button>
                             </div>
                         }
                     </div>
@@ -127,7 +127,7 @@
                             Influence (1–5)
                             <input class="form-control" type="number" min="1" max="5" style="width:80px;" @bind="_newFactionInfluence" />
                         </label>
-                        <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newFactionName) || _busy)" @onclick="AddFaction">Add</button>
+                        <button class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newFactionName) || _busy)" @onclick="AddFaction">Add</button>
                     </div>
                 </div>
 
@@ -183,7 +183,7 @@
                                 <option value="@CreatureType.Ghoul">Ghoul</option>
                             </select>
                         </label>
-                        <button class="btn-primary-rn" disabled="@(string.IsNullOrWhiteSpace(_newNpcName) || _busy)" @onclick="AddNpc">Add</button>
+                        <button class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newNpcName) || _busy)" @onclick="AddNpc">Add</button>
                     </div>
                 </div>
 
@@ -211,7 +211,7 @@
                                 {
                                     <p>Faction: <a href="/campaigns/@CampaignId/factions/@npc.PrimaryFactionId">@npc.PrimaryFaction.Name</a></p>
                                 }
-                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => DeleteNpc(npc.Id)">🗑 Delete</button>
+                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => DeleteNpc(npc.Id)">🗑 Delete</button>
                             </div>
                         }
                     </div>
@@ -298,7 +298,7 @@
         _npcs = await NpcService.GetNpcsAsync(CampaignId, _showDeceased);
     }
 
-    private string TabClass(int tab) => _activeTab == tab ? "btn-primary-rn" : "btn-ghost";
+    private string TabClass(int tab) => _activeTab == tab ? "btn-rn-primary" : "btn-rn-ghost";
 
     private async Task AddTerritory()
     {

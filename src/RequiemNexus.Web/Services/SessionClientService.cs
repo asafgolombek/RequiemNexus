@@ -279,7 +279,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
             if (roll.RolledByUserId != _currentUserId)
             {
                 toastService.Show(
-                    "🩸 Dice Roll",
+                    "Dice Roll",
                     $"{roll.PlayerName} rolled {roll.Successes} success(es) on {roll.PoolDescription}",
                     roll.IsDramaticFailure ? ToastType.Error : roll.IsExceptionalSuccess ? ToastType.Success : ToastType.Info);
             }
@@ -425,15 +425,15 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         {
             if (IsRateLimited(ex))
             {
-                toastService.Show("⏳ Slow Down", "You are sending messages too quickly. The Masquerade requires patience.", ToastType.Warning);
+                toastService.Show("Slow Down", "You are sending messages too quickly. The Masquerade requires patience.", ToastType.Warning);
             }
             else if (ex is HubException)
             {
-                toastService.Show("🚫 Action Denied", ex.Message, ToastType.Error);
+                toastService.Show("Action Denied", ex.Message, ToastType.Error);
             }
             else
             {
-                toastService.Show("⚠️ Link Failure", "The real-time link encountered an error.", ToastType.Error);
+                toastService.Show("Link Failure", "The real-time link encountered an error.", ToastType.Error);
                 Console.WriteLine($"Hub Invocation Error ({methodName}): {ex.Message}");
             }
         }

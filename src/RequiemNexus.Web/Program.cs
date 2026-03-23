@@ -193,6 +193,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewPackServi
 
 builder.Services.AddSingleton<RequiemNexus.Web.Services.ToastService>();
 builder.Services.AddSingleton<RequiemNexus.Web.Services.CommandPaletteService>();
+builder.Services.AddScoped<RequiemNexus.Web.Services.PlatformShortcutHintService>();
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
 
 builder.Services.AddCascadingAuthenticationState();

@@ -15,7 +15,7 @@
                 <span class="bond-fading-badge" title="Bonds past the 30-day feeding threshold">@_fadingCount fading</span>
             }
         </h3>
-        <button type="button" class="btn-primary-rn btn-align-small" @onclick="() => _feedingOpen = true" disabled="@_loading">
+        <button type="button" class="btn-rn-primary btn-align-small" @onclick="() => _feedingOpen = true" disabled="@_loading">
             Record feeding
         </button>
     </div>
@@ -52,7 +52,7 @@
                             <td class="text-xsmall">@(b.LastFedAt?.ToLocalTime().ToString("g") ?? "—")</td>
                             <td class="text-xsmall">@b.ActiveConditionName</td>
                             <td>
-                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => FadeAsync(b)" disabled="@_busyId.HasValue">
+                                <button type="button" class="btn-rn-ghost btn-align-small" @onclick="() => FadeAsync(b)" disabled="@_busyId.HasValue">
                                     Fade
                                 </button>
                             </td>

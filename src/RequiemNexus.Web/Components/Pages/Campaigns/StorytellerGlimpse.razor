@@ -40,7 +40,7 @@
     {
         <div class="campaign-header">
             <h2>Storyteller Glimpse</h2>
-            <a href="/campaigns/@Id" class="btn-ghost">← Back to Campaign</a>
+            <a href="/campaigns/@Id" class="btn-rn-ghost">← Back to Campaign</a>
         </div>
 
         @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
@@ -55,7 +55,7 @@
                 <input class="form-control coterie-reason-input"
                        placeholder="Reason for coterie Beat…"
                        @bind="_coteReason" />
-                <button class="btn-primary-rn"
+                <button class="btn-rn-primary"
                         disabled="@(string.IsNullOrWhiteSpace(_coteReason) || _awarding)"
                         @onclick="AwardCoterieBeat">
                     Award to All
@@ -113,7 +113,7 @@
                         <div class="card-rn glimpse-card active">
                             <div class="glimpse-card-header">
                                 <h4>📌 @npc.Name</h4>
-                                <button class="btn-ghost" style="font-size:0.8em;" @onclick="() => TogglePinNpc(npc.Id)">📍 Unpin</button>
+                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => TogglePinNpc(npc.Id)">📍 Unpin</button>
                             </div>
                             
                             @if (!string.IsNullOrEmpty(npc.Title))
@@ -158,8 +158,8 @@
                         <div class="glimpse-card-header">
                             <h4>@v.Name</h4>
                             <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
-                                <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
-                                <button type="button" class="btn-ghost" style="font-size:0.8em;" @onclick="() => OpenLineageEditor(v.CharacterId)">Lineage</button>
+                                <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-rn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                                <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => OpenLineageEditor(v.CharacterId)">Lineage</button>
                             </div>
                         </div>
 
@@ -203,7 +203,7 @@
                                 <input class="form-control award-input"
                                        placeholder="Beat reason…"
                                        @bind="_beatReasons[v.CharacterId]" />
-                                <button class="btn-primary-rn"
+                                <button class="btn-rn-primary"
                                         style="font-size:0.85em;"
                                         disabled="@(string.IsNullOrWhiteSpace(_beatReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
                                         @onclick="() => AwardBeat(v.CharacterId)">
@@ -222,7 +222,7 @@
                                 <input class="form-control award-input"
                                        placeholder="XP reason…"
                                        @bind="_xpReasons[v.CharacterId]" />
-                                <button class="btn-ghost"
+                                <button class="btn-rn-ghost"
                                         style="font-size:0.85em;"
                                         disabled="@(_xpAmounts.GetValueOrDefault(v.CharacterId) <= 0 || string.IsNullOrWhiteSpace(_xpReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
                                         @onclick="() => AwardXp(v.CharacterId)">

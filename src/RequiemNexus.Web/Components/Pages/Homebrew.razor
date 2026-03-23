@@ -22,7 +22,7 @@
         <div class="card-rn" style="margin-bottom:1.5rem;">
             <h3>Pack Export / Import</h3>
             <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
-                <button class="btn-primary-rn" @onclick="ExportPack">Export JSON Pack</button>
+                <button class="btn-rn-primary" @onclick="ExportPack">Export JSON Pack</button>
             </div>
             @if (!string.IsNullOrEmpty(_exportJson))
             {
@@ -32,7 +32,7 @@
                 <summary style="cursor:pointer;font-size:0.9em;color:var(--gothic-muted);">Import Pack JSON</summary>
                 <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">
                     <textarea class="form-control" rows="6" placeholder="Paste JSON pack here..." @bind="_importJson" />
-                    <button class="btn-primary-rn" style="align-self:flex-start;" disabled="@string.IsNullOrWhiteSpace(_importJson)" @onclick="ImportPack">Import</button>
+                    <button class="btn-rn-primary" style="align-self:flex-start;" disabled="@string.IsNullOrWhiteSpace(_importJson)" @onclick="ImportPack">Import</button>
                     @if (!string.IsNullOrEmpty(_importMessage))
                     {
                         <p style="color:var(--gothic-gold);">@_importMessage</p>
@@ -60,7 +60,7 @@
                                 <span style="color:var(--gothic-muted);font-size:0.85em;margin-left:0.5rem;">@d.Description</span>
                             }
                         </div>
-                        <button class="btn-danger-rn" style="font-size:0.75em;" @onclick="() => DeleteDiscipline(d.Id)">Delete</button>
+                        <button class="btn-rn-danger" style="font-size:0.75em;" @onclick="() => DeleteDiscipline(d.Id)">Delete</button>
                     </div>
                 }
             }
@@ -69,7 +69,7 @@
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;align-items:center;">
                     <input class="form-control" style="flex:1;min-width:140px;" placeholder="Name" @bind="_newDisciplineName" />
                     <input class="form-control" style="flex:2;min-width:200px;" placeholder="Description" @bind="_newDisciplineDesc" />
-                    <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newDisciplineName)" @onclick="CreateDiscipline">Save</button>
+                    <button class="btn-rn-primary" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newDisciplineName)" @onclick="CreateDiscipline">Save</button>
                 </div>
             </details>
         </div>
@@ -90,7 +90,7 @@
                             <strong>@m.Name</strong>
                             <span style="color:var(--gothic-muted);font-size:0.8em;margin-left:0.5rem;">[@m.ValidRatings]</span>
                         </div>
-                        <button class="btn-danger-rn" style="font-size:0.75em;" @onclick="() => DeleteMerit(m.Id)">Delete</button>
+                        <button class="btn-rn-danger" style="font-size:0.75em;" @onclick="() => DeleteMerit(m.Id)">Delete</button>
                     </div>
                 }
             }
@@ -100,7 +100,7 @@
                     <input class="form-control" style="flex:1;min-width:140px;" placeholder="Name" @bind="_newMeritName" />
                     <input class="form-control" style="flex:2;min-width:200px;" placeholder="Description" @bind="_newMeritDesc" />
                     <input class="form-control" style="width:100px;" placeholder="Ratings (1,2,3)" @bind="_newMeritRatings" />
-                    <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newMeritName)" @onclick="CreateMerit">Save</button>
+                    <button class="btn-rn-primary" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newMeritName)" @onclick="CreateMerit">Save</button>
                 </div>
             </details>
         </div>
@@ -118,7 +118,7 @@
                 {
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0;border-bottom:1px solid var(--gothic-border);">
                         <strong>@c.Name</strong>
-                        <button class="btn-danger-rn" style="font-size:0.75em;" @onclick="() => DeleteClan(c.Id)">Delete</button>
+                        <button class="btn-rn-danger" style="font-size:0.75em;" @onclick="() => DeleteClan(c.Id)">Delete</button>
                     </div>
                 }
             }
@@ -127,7 +127,7 @@
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;align-items:center;">
                     <input class="form-control" style="flex:1;min-width:140px;" placeholder="Name" @bind="_newClanName" />
                     <input class="form-control" style="flex:2;min-width:200px;" placeholder="Description" @bind="_newClanDesc" />
-                    <button class="btn-primary-rn" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newClanName)" @onclick="CreateClan">Save</button>
+                    <button class="btn-rn-primary" style="font-size:0.85em;" disabled="@string.IsNullOrWhiteSpace(_newClanName)" @onclick="CreateClan">Save</button>
                 </div>
             </details>
         </div>

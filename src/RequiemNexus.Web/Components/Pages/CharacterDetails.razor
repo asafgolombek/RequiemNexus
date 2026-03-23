@@ -44,7 +44,7 @@ else if (_sheetLoadError != null)
         <div class="alert alert-danger" role="alert">
             <strong>Could not load character.</strong> @_sheetLoadError
         </div>
-        <a href="/characters" class="btn-primary-rn mt-3">Back to My Characters</a>
+        <a href="/characters" class="btn-rn-primary mt-3">Back to My Characters</a>
     </div>
 }
 else if (_character == null)
@@ -52,7 +52,7 @@ else if (_character == null)
     <div class="page-container fade-in">
         <div class="empty-state-rn">
             <p>@(string.IsNullOrEmpty(_currentUserId) ? "You must be signed in to view this character." : "Character not found or you do not have access.")</p>
-            <a href="/characters" class="btn-primary-rn">Back to My Characters</a>
+            <a href="/characters" class="btn-rn-primary">Back to My Characters</a>
         </div>
     </div>
 }
@@ -62,7 +62,7 @@ else
         <div class="character-sheet fade-in">
             <!-- HEADER -->
         <header class="cs-header">
-            <div class="char-avatar"></div>
+            <CharacterSheetInitialsAvatar CharacterName="@_character.Name" />
             <div class="char-info">
                 @if (_isEditingName)
                 {
@@ -70,7 +70,12 @@ else
                 }
                 else
                 {
-                    <h1 @onclick="() => _isEditingName = true" class="edit-name-trigger" title="Click to edit name">@_character.Name <i class="edit-icon">✎</i></h1>
+                    <div class="char-title-row">
+                        <h1 @onclick="() => _isEditingName = true" class="edit-name-trigger" title="Click to edit name">@_character.Name <i class="edit-icon">✎</i></h1>
+                        <span class="char-session-status @(SessionClient.IsConnected ? "char-session-status-live" : "char-session-status-idle")"
+                              title="@(SessionClient.IsConnected ? "Connected to a live session" : "Not in a live session")"
+                              aria-label="@(SessionClient.IsConnected ? "Live session connected" : "No live session")"></span>
+                    </div>
                 }
                 <div class="char-meta">
                     <span><strong>Concept:</strong> @(string.IsNullOrEmpty(_character.Concept) ? "???" : _character.Concept)</span>
@@ -110,18 +115,18 @@ else
                         </div>
                     </div>
                     <div class="char-xp-actions">
-                        <button class="btn-ghost mode-toggle-btn"
+                        <button class="btn-rn-ghost mode-toggle-btn"
                         @onclick="GoToAdvancement">
                             Enter Advancement
                         </button>
-                        <button class="btn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
+                        <button class="btn-rn-ghost mode-toggle-btn @(_isFreeEditMode ? "active" : "")"
                         @onclick="ToggleFreeEditMode">
                             @(_isFreeEditMode ? "Finish Edit" : "Edit Character")
                         </button>
-                        <button class="btn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
+                        <button class="btn-rn-ghost mode-toggle-btn" @onclick="ExportJson" disabled="@_isExporting">
                             @(_isExporting ? "Exporting…" : "Export JSON")
                         </button>
-                        <button class="btn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
+                        <button class="btn-rn-ghost mode-toggle-btn" @onclick="ExportPdf" disabled="@_isExporting">
                             @(_isExporting ? "Exporting…" : "Export PDF")
                         </button>
                     </div>
@@ -300,7 +305,7 @@ else
                                     </div>
                                     @if (_isFreeEditMode)
                                     {
-                                        <button class="btn-ghost btn-roll-small bloodline-detail-row" @onclick="() => RemoveBloodline(activeBloodline.Id)" disabled="@_removingBloodline">
+                                        <button class="btn-rn-ghost btn-roll-small bloodline-detail-row" @onclick="() => RemoveBloodline(activeBloodline.Id)" disabled="@_removingBloodline">
                                             @(_removingBloodline ? "Removing…" : "Remove Bloodline")
                                         </button>
                                     }
@@ -312,13 +317,13 @@ else
                                 <p class="pending-note">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <a href="/campaigns/@_character.CampaignId" class="btn-ghost btn-roll-small bloodline-detail-row">View Campaign</a>
+                                    <a href="/campaigns/@_character.CampaignId" class="btn-rn-ghost btn-roll-small bloodline-detail-row">View Campaign</a>
                                 }
                             }
                             else if (_character.BloodPotency >= 2 && _character.ClanId.HasValue && _character.CampaignId.HasValue)
                             {
                                 <p class="unaligned-note">None. Apply when Blood Potency 2+.</p>
-                                <button class="btn-primary-rn text-small" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
+                                <button class="btn-rn-primary text-small" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
                             }
                             else
                             {
@@ -340,7 +345,7 @@ else
                                     }
                                     else if (_character.CampaignId.HasValue && !_character.CovenantLeaveRequestedAt.HasValue)
                                     {
-                                        <button class="btn-ghost btn-roll-small bloodline-detail-row" @onclick="RequestLeaveCovenant" disabled="@_requestingLeave">
+                                        <button class="btn-rn-ghost btn-roll-small bloodline-detail-row" @onclick="RequestLeaveCovenant" disabled="@_requestingLeave">
                                             @(_requestingLeave ? "Requesting…" : "Request to Leave")
                                         </button>
                                     }
@@ -352,13 +357,13 @@ else
                                 <p class="pending-note">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost btn-roll-small bloodline-detail-row">Storyteller Glimpse</a>
+                                    <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-rn-ghost btn-roll-small bloodline-detail-row">Storyteller Glimpse</a>
                                 }
                             }
                             else if (_character.CampaignId.HasValue)
                             {
                                 <p class="unaligned-note">Unaligned. Apply to join a covenant.</p>
-                                <button class="btn-primary-rn text-small" @onclick="OpenApplyCovenantModal">Apply for Covenant</button>
+                                <button class="btn-rn-primary text-small" @onclick="OpenApplyCovenantModal">Apply for Covenant</button>
                             }
                             else
                             {
@@ -389,7 +394,7 @@ else
                                                 <span>@cd.DevotionDefinition.Name</span>
                                                 @if (!cd.DevotionDefinition.IsPassive && !string.IsNullOrEmpty(cd.DevotionDefinition.PoolDefinitionJson))
                                                 {
-                                                    <button class="btn-ghost btn-roll-small" @onclick="async () => await OpenDevotionRollerAsync(cd)">Roll</button>
+                                                    <button class="btn-rn-ghost btn-roll-small" @onclick="async () => await OpenDevotionRollerAsync(cd)">Roll</button>
                                                 }
                                             </li>
                                         }
@@ -430,7 +435,7 @@ else
                                                     }
                                                     @if (!string.IsNullOrEmpty(cr.SorceryRiteDefinition.PoolDefinitionJson))
                                                     {
-                                                        <button class="btn-ghost btn-roll-small" @onclick="() => OpenRiteRoller(cr)">Roll</button>
+                                                        <button class="btn-rn-ghost btn-roll-small" @onclick="() => OpenRiteRoller(cr)">Roll</button>
                                                     }
                                                 </li>
                                             }
@@ -443,13 +448,13 @@ else
                                     <p class="pending-note">Your Storyteller will review this. You'll be notified when it's approved.</p>
                                     @if (_character.CampaignId.HasValue)
                                     {
-                                        <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-ghost btn-roll-small bloodline-detail-row">Storyteller Glimpse</a>
+                                        <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-rn-ghost btn-roll-small bloodline-detail-row">Storyteller Glimpse</a>
                                     }
                                 }
                                 else
                                 {
                                     <p class="unaligned-note">No rites yet. Purchase Cr├║ac, Theban Sorcery, Necromancy, or Ordo Sorcery dots via Advancement where appropriate, then request to learn rites.</p>
-                                    <button class="btn-primary-rn text-small" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
+                                    <button class="btn-rn-primary text-small" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
                                 }
                             </section>
                         }
@@ -474,7 +479,7 @@ else
                                 else if (_character.CampaignId.HasValue)
                                 {
                                     <p class="unaligned-note">No Chosen Mystery selected.</p>
-                                    <button class="btn-primary-rn text-small" @onclick="OpenChosenMysteryModal">Select Chosen Mystery</button>
+                                    <button class="btn-rn-primary text-small" @onclick="OpenChosenMysteryModal">Select Chosen Mystery</button>
                                 }
                                 @{
                                     var approvedCoils = _character.Coils?.Where(cc => cc.Status == Data.Models.Enums.CoilLearnStatus.Approved && cc.CoilDefinition != null).ToList();
@@ -500,7 +505,7 @@ else
                                 }
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <button class="btn-ghost btn-roll-small bloodline-detail-row" @onclick="OpenLearnCoilModal">Purchase Coil</button>
+                                    <button class="btn-rn-ghost btn-roll-small bloodline-detail-row" @onclick="OpenLearnCoilModal">Purchase Coil</button>
                                 }
                                 @if (_character.HasCrucibleRitualAccess)
                                 {
@@ -537,7 +542,7 @@ else
                             }
                         </select>
                         <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" aria-label="Quantity to purchase" />
-                        <button class="btn-primary-rn"
+                        <button class="btn-rn-primary"
                                 type="button"
                                 id="btn-purchase-asset"
                                 disabled="@IsPurchaseButtonDisabled"
@@ -581,7 +586,7 @@ else
                                 {
                                     <div class="backpack-cell-body">
                                         <span>@occ.Asset.Name</span>
-                                        <button type="button" class="btn-ghost text-small" @onclick="() => ClearBackpackSlotAsync(occ.Id)">Clear</button>
+                                        <button type="button" class="btn-rn-ghost text-small" @onclick="() => ClearBackpackSlotAsync(occ.Id)">Clear</button>
                                     </div>
                                 }
                                 else
@@ -696,7 +701,7 @@ else
             <div class="modal-content-rn" @onclick:stopPropagation>
                 <h3>Forge: @(_forgeTarget?.Asset?.Name ?? "Item")</h3>
                 <p>Modifiers and upgrades for this item will appear here in the next content update.</p>
-                <button type="button" class="btn-primary-rn" @onclick="() => _isForgeModalOpen = false">Close</button>
+                <button type="button" class="btn-rn-primary" @onclick="() => _isForgeModalOpen = false">Close</button>
             </div>
         </div>
     }

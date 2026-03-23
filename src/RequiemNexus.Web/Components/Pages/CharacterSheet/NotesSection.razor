@@ -28,7 +28,7 @@
                     </div>
                     @if (note.AuthorUserId == UserId || IsStoryteller)
                     {
-                        <button class="btn-danger-rn"
+                        <button class="btn-rn-danger"
                                 style="font-size:0.75em;padding:0.1rem 0.4rem;margin-left:0.5rem;"
                                 @onclick="() => DeleteNote(note.Id)">
                             ✕
@@ -58,7 +58,7 @@
                         ST Private (hidden from player)
                     </label>
                 }
-                <button class="btn-primary-rn"
+                <button class="btn-rn-primary"
                         style="font-size:0.85em;align-self:flex-start;"
                         disabled="@(string.IsNullOrWhiteSpace(_newTitle))"
                         @onclick="AddNote">

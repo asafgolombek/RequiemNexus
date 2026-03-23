@@ -43,6 +43,117 @@ window.registerCommandPaletteShortcut = function (dotNetRef) {
     });
 };
 
+// Visible shortcut hint for the command palette (UI_UX_FACELIFT Track 2.3). Avoids navigator.platform.
+/** Performance mode: fewer animations (pairs with wwwroot/css/app-chrome.css html.performance-mode). */
+window.requiemGetPerformanceMode = function () {
+    try {
+        return localStorage.getItem('requiem-performance-mode') === '1';
+    } catch {
+        return false;
+    }
+};
+
+window.requiemSetPerformanceMode = function (enabled) {
+    try {
+        if (enabled) {
+            localStorage.setItem('requiem-performance-mode', '1');
+            document.documentElement.classList.add('performance-mode');
+        } else {
+            localStorage.removeItem('requiem-performance-mode');
+            document.documentElement.classList.remove('performance-mode');
+        }
+    } catch {
+        /* ignore */
+    }
+};
+
+window.getPaletteShortcutLabel = function () {
+    try {
+        const uaData = navigator.userAgentData;
+        if (uaData && typeof uaData.platform === 'string') {
+            const p = uaData.platform.toLowerCase();
+            if (p.includes('mac') || p.includes('iphone') || p.includes('ipad')) {
+                return '⌘K';
+            }
+        }
+    } catch {
+        /* ignore */
+    }
+    const ua = navigator.userAgent || '';
+    if (/Mac|iPhone|iPad|iPod/i.test(ua)) {
+        return '⌘K';
+    }
+    return 'Ctrl+K';
+};
+
+/**
+ * Focus trap for the mobile nav drawer: Tab cycles, Escape notifies .NET.
+ * @param {HTMLElement} drawerRoot
+ * @param {DotNetObject} dotNetRef - must expose [JSInvokable] CloseDrawerFromEscape()
+ */
+window.rnDrawerFocusTrap = (function () {
+    let onKeyDown = null;
+
+    return {
+        attach: function (drawerRoot, dotNetRef) {
+            if (onKeyDown) {
+                document.removeEventListener('keydown', onKeyDown, true);
+                onKeyDown = null;
+            }
+            if (!drawerRoot) {
+                return;
+            }
+
+            const selector = 'a[href], button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+            function getFocusable() {
+                return Array.from(drawerRoot.querySelectorAll(selector)).filter(
+                    (el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement);
+            }
+
+            const nodes = getFocusable();
+            if (nodes.length > 0) {
+                nodes[0].focus();
+            }
+
+            onKeyDown = function (e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dotNetRef.invokeMethodAsync('CloseDrawerFromEscape');
+                    return;
+                }
+                if (e.key !== 'Tab') {
+                    return;
+                }
+                const list = getFocusable();
+                if (list.length === 0) {
+                    return;
+                }
+                const first = list[0];
+                const last = list[list.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else if (document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            };
+
+            document.addEventListener('keydown', onKeyDown, true);
+        },
+        detach: function () {
+            if (onKeyDown) {
+                document.removeEventListener('keydown', onKeyDown, true);
+                onKeyDown = null;
+            }
+        }
+    };
+})();
+
 // --- Micro-Interactions ---
 
 window.countUp = function (elementId, target, duration) {
@@ -79,7 +190,7 @@ window.scrollToBottom = function (element) {
 
 document.addEventListener('mousedown', (e) => {
     // 1. Button Ripple
-    const btn = e.target.closest('.btn-primary, .btn-login, .btn-secondary, .btn-primary-rn, .btn-secondary-rn');
+    const btn = e.target.closest('.btn-primary, .btn-login, .btn-secondary, .btn-primary-rn, .btn-secondary-rn, .btn-rn-primary, .btn-rn-secondary, .btn-rn-gold');
     if (btn) {
         const rect = btn.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -99,7 +210,7 @@ document.addEventListener('mousedown', (e) => {
     }
 
     // 2. Long-press Confirm
-    const holdBtn = e.target.closest('.btn-danger-hold');
+    const holdBtn = e.target.closest('.btn-danger-hold, .btn-rn-danger-hold');
     if (holdBtn) {
         holdBtn.classList.add('holding');
         

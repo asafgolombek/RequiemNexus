@@ -7,12 +7,12 @@
 }
 
 /* Button Ripple */
-.btn-primary, .btn-login, .btn-secondary, .btn-primary-rn, .btn-secondary-rn {
+.btn-primary, .btn-login, .btn-secondary, .btn-primary-rn, .btn-secondary-rn, .btn-rn-primary, .btn-rn-secondary, .btn-rn-gold {
     position: relative;
     overflow: hidden;
 }
 
-.btn-primary::after, .btn-login::after, .btn-secondary::after, .btn-primary-rn::after, .btn-secondary-rn::after {
+.btn-primary::after, .btn-login::after, .btn-secondary::after, .btn-primary-rn::after, .btn-secondary-rn::after, .btn-rn-primary::after, .btn-rn-secondary::after, .btn-rn-gold::after {
     content: '';
     position: absolute;
     width: 100px;
@@ -37,14 +37,16 @@
 }
 
 /* Long-press Confirm */
-.btn-danger-hold {
+.btn-danger-hold,
+.btn-rn-danger-hold {
     position: relative;
     overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
 }
 
-.btn-danger-hold::before {
+.btn-danger-hold::before,
+.btn-rn-danger-hold::before {
     content: '';
     position: absolute;
     top: 0; left: 0; bottom: 0;
@@ -55,7 +57,8 @@
     z-index: 1;
 }
 
-.btn-danger-hold.holding::before {
+.btn-danger-hold.holding::before,
+.btn-rn-danger-hold.holding::before {
     width: 100%;
 }
 
@@ -196,16 +199,28 @@ h1:focus {
   text-align: start;
 }
 
-/* ---------- Shared Button Styles ---------- */
-/* .btn-primary-rn is an alias for .btn-primary — both produce identical results */
+/* ---------- Shared Button Styles (Grimoire) ----------
+   DEPRECATED — prefer .btn-rn-* on new markup; legacy classes remain as aliases (UI_UX_FACELIFT Track 5.1).
+   .btn-primary       → .btn-rn-primary
+   .btn-primary-rn    → .btn-rn-primary
+   .btn-secondary     → .btn-rn-secondary
+   .btn-secondary-rn  → .btn-rn-secondary
+   .btn-ghost         → .btn-rn-ghost
+   .btn-danger-rn     → .btn-rn-danger
+   .btn-danger-hold   → .btn-rn-danger-hold (long-press confirm)
+   Default height ≈ md (36px). Stack .btn-rn-sm (28px) or .btn-rn-lg (44px) for sizing.
+*/
 .btn-primary,
-.btn-primary-rn {
+.btn-primary-rn,
+.btn-rn-primary {
   background: linear-gradient(135deg, var(--crimson) 0%, #6B0000 100%);
   border: 1px solid var(--crimson-glow);
   color: var(--bone-white);
   transition: all .3s cubic-bezier(.4,0,.2,1);
   padding: 8px 16px;
-  border-radius: 4px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
   font-family: var(--font-heading);
   letter-spacing: 0.05em;
   text-decoration: none;
@@ -214,27 +229,31 @@ h1:focus {
   justify-content: center;
 }
 .btn-primary:hover,
-.btn-primary-rn:hover {
+.btn-primary-rn:hover,
+.btn-rn-primary:hover {
   background: linear-gradient(135deg, var(--crimson-glow) 0%, var(--crimson) 100%);
   box-shadow: 0 0 40px rgba(196,30,58,.6), 0 0 80px rgba(139,0,0,.3), inset 0 0 15px rgba(245,240,232,.1);
   transform: translateY(-2px);
   color: var(--bone-white);
 }
 .btn-primary:active,
-.btn-primary-rn:active {
+.btn-primary-rn:active,
+.btn-rn-primary:active {
   transform: translateY(0);
   box-shadow: 0 0 20px rgba(196,30,58,.4), inset 0 0 10px rgba(196,30,58,.3);
 }
 
-/* .btn-secondary-rn is an alias for .btn-secondary — both produce identical results */
 .btn-secondary,
-.btn-secondary-rn {
+.btn-secondary-rn,
+.btn-rn-secondary {
   background: transparent;
   border: 1px solid var(--muted-gray);
   color: var(--bone-white);
   transition: all .3s ease;
   padding: 8px 16px;
-  border-radius: 4px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
   font-family: var(--font-heading);
   letter-spacing: 0.05em;
   text-decoration: none;
@@ -243,19 +262,23 @@ h1:focus {
   justify-content: center;
 }
 .btn-secondary:hover,
-.btn-secondary-rn:hover {
+.btn-secondary-rn:hover,
+.btn-rn-secondary:hover {
   border-color: var(--bone-white);
   background: rgba(245,240,232,.05);
   color: var(--bone-white);
 }
 
-.btn-ghost {
+.btn-ghost,
+.btn-rn-ghost {
   background: transparent;
   border: 1px solid transparent;
   color: var(--bone-white);
   transition: all .3s ease;
   padding: 8px 16px;
-  border-radius: 4px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
   font-family: var(--font-heading);
   letter-spacing: 0.05em;
   text-decoration: none;
@@ -263,10 +286,122 @@ h1:focus {
   align-items: center;
   justify-content: center;
 }
-.btn-ghost:hover {
+.btn-ghost:hover,
+.btn-rn-ghost:hover {
   background: rgba(245,240,232,.08);
   border-color: rgba(245,240,232,.1);
   color: var(--bone-white);
+}
+
+/* Destructive (immediate action — modal confirm or explicit flow) */
+.btn-danger-rn,
+.btn-rn-danger {
+  background: transparent;
+  border: 1px solid var(--crimson-glow);
+  color: var(--bone-white);
+  transition: all .3s ease;
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-danger-rn:hover,
+.btn-rn-danger:hover {
+  background: var(--color-danger-dim);
+  border-color: var(--crimson-glow);
+  color: var(--bone-white);
+  box-shadow: 0 0 16px rgba(196, 30, 58, 0.25);
+}
+
+/* EXPERIMENTAL gold — WCAG on surfaces still pending (design-tokens / UI_UX_FACELIFT Q10) */
+.btn-rn-gold {
+  background: linear-gradient(135deg, var(--color-gold-dim) 0%, var(--color-gold) 100%);
+  border: 1px solid var(--color-gold);
+  color: var(--deep-black);
+  transition: all .3s ease;
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-rn-gold:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.35);
+  color: var(--deep-black);
+}
+
+/* Size modifiers */
+.btn-primary.btn-rn-sm,
+.btn-primary-rn.btn-rn-sm,
+.btn-rn-primary.btn-rn-sm,
+.btn-secondary.btn-rn-sm,
+.btn-secondary-rn.btn-rn-sm,
+.btn-rn-secondary.btn-rn-sm,
+.btn-ghost.btn-rn-sm,
+.btn-rn-ghost.btn-rn-sm,
+.btn-danger-rn.btn-rn-sm,
+.btn-rn-danger.btn-rn-sm,
+.btn-rn-gold.btn-rn-sm,
+.btn-login.btn-rn-sm {
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: var(--text-xs);
+}
+
+.btn-primary.btn-rn-lg,
+.btn-primary-rn.btn-rn-lg,
+.btn-rn-primary.btn-rn-lg,
+.btn-secondary.btn-rn-lg,
+.btn-secondary-rn.btn-rn-lg,
+.btn-rn-secondary.btn-rn-lg,
+.btn-ghost.btn-rn-lg,
+.btn-rn-ghost.btn-rn-lg,
+.btn-danger-rn.btn-rn-lg,
+.btn-rn-danger.btn-rn-lg,
+.btn-rn-gold.btn-rn-lg,
+.btn-login.btn-rn-lg {
+  min-height: 44px;
+  padding: 10px 20px;
+  font-size: var(--text-sm);
+}
+
+/* Bootstrap .btn-sm stacked on Grimoire buttons — treat as compact (Track 5.1 sm) */
+.btn-primary.btn-sm,
+.btn-primary-rn.btn-sm,
+.btn-rn-primary.btn-sm,
+.btn-secondary.btn-sm,
+.btn-secondary-rn.btn-sm,
+.btn-rn-secondary.btn-sm,
+.btn-ghost.btn-sm,
+.btn-rn-ghost.btn-sm,
+.btn-danger-rn.btn-sm,
+.btn-rn-danger.btn-sm,
+.btn-rn-gold.btn-sm,
+.btn-login.btn-sm {
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:hover,
+  .btn-primary-rn:hover,
+  .btn-rn-primary:hover,
+  .btn-rn-gold:hover {
+    transform: none;
+  }
 }
 
 /* ── UI Elements ── */
@@ -403,13 +538,56 @@ h1:focus {
   gap: 2rem;
 }
 
-/* ---------- Empty State ---------- */
+/* ---------- Empty State (Track 5.4) ---------- */
 .empty-state-rn {
   text-align: center;
   padding: 4rem 2rem;
   background-color: var(--bg-surface);
   border-radius: var(--radius-md);
   border: 1px dashed var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.empty-state-rn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--crimson-glow);
+  opacity: 0.9;
+}
+
+.empty-state-rn-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-state-rn-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  color: var(--bone-white);
+  margin: 0;
+}
+
+.empty-state-rn-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-md, 1rem);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 28rem;
+}
+
+.empty-state-rn-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-top: var(--space-2);
 }
 
 .empty-state-rn p {
@@ -574,12 +752,70 @@ h1:focus {
 }
 
 .cs-header .char-avatar {
+    display: flex;
     width: 4rem;
     height: 4rem;
     flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
-    background: var(--bg-panel);
+    background: linear-gradient(145deg, rgba(139, 0, 0, 0.55), var(--deep-black));
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--bone-white);
+}
+
+.cs-header .char-avatar-initials {
+    line-height: 1;
+    user-select: none;
+}
+
+.cs-header .char-title-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.cs-header .char-title-row .edit-name-trigger {
+    margin: 0;
+}
+
+.cs-header .char-session-status {
+    flex-shrink: 0;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: var(--radius-full);
+    background: var(--muted-gray);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.cs-header .char-session-status-live {
+    background: var(--success-emerald);
+    box-shadow: 0 0 10px rgba(46, 90, 58, 0.65);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .cs-header .char-session-status-live {
+        animation: char-session-pulse 2s ease-in-out infinite;
+    }
+}
+
+@keyframes char-session-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.75;
+        transform: scale(1.15);
+    }
 }
 
 .cs-header .char-info {
@@ -765,80 +1001,165 @@ h1:focus {
 .font-sm   { font-size: 0.85em; }
 .font-xs   { font-size: 0.75em; }
 
-/* ---------- Shared overlay modals (Blazor; avoid Bootstrap .modal-backdrop full-viewport black) ----------
-   Use .rn-modal-* + .rn-selection-* on any new picker dialog so styling stays consistent. */
+/* ---------- Shared overlay modals (UI_UX_FACELIFT Track 5.3) ----------
+   Shell: .modal-backdrop + .modal-panel (legacy) or .rn-modal-backdrop + .rn-modal-panel.
+   Use .rn-selection-* for list rows inside pickers. */
+.modal-backdrop,
 .rn-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1040;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem;
+  padding: var(--space-5);
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: grimoire-modal-backdrop-in 0.2s ease-out;
 }
 
+.modal-panel,
 .rn-modal-panel {
   width: 100%;
   max-width: 520px;
   max-height: min(88vh, 720px);
   display: flex;
   flex-direction: column;
-  background: linear-gradient(145deg, var(--ash-gray) 0%, var(--charcoal) 100%);
-  border: 1px solid var(--crimson);
-  border-radius: var(--radius-md);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--muted-gray);
+  border-radius: var(--radius-lg);
   color: var(--bone-white);
   font-family: var(--font-primary);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.65),
-    0 0 32px rgba(196, 30, 58, 0.18);
+  box-shadow: var(--shadow-4);
+  overflow: hidden;
+  animation: grimoire-modal-panel-in 0.25s ease-out;
 }
 
 .rn-modal-panel--wide {
   max-width: min(96vw, 640px);
 }
 
-.rn-modal-header {
+.confirm-modal,
+.modal-panel.dice-roller-modal {
+  max-width: 420px;
+}
+
+.rn-modal-header,
+.modal-panel > .modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.25rem 0.85rem;
-  border-bottom: 1px solid rgba(139, 0, 0, 0.55);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  margin: 0;
   flex-shrink: 0;
+  border-bottom: 1px solid var(--crimson-glow);
 }
 
 .rn-modal-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   line-height: 1.3;
   color: var(--bone-white);
+  flex: 1;
+  min-width: 0;
 }
 
-.rn-modal-close {
+.modal-panel > .modal-header h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  line-height: 1.3;
+  color: var(--bone-white);
+  flex: 1;
+  min-width: 0;
+}
+
+.rn-modal-close,
+.modal-panel .close-btn {
   flex-shrink: 0;
   margin: 0;
-  padding: 0.2rem 0.45rem;
+  padding: 0.35rem 0.5rem;
   line-height: 1;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  min-width: 2rem;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
 }
 
-.rn-modal-close:hover {
+.rn-modal-close:hover,
+.modal-panel .close-btn:hover {
   color: var(--bone-white);
   background: rgba(139, 0, 0, 0.35);
   border-color: var(--crimson-glow);
+}
+
+.modal-panel > .modal-body {
+  padding: var(--space-4) var(--space-5);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.modal-panel > .modal-footer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  margin: 0;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@keyframes grimoire-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes grimoire-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .rn-modal-backdrop,
+  .modal-panel,
+  .rn-modal-panel {
+    animation: none;
+  }
 }
 
 .rn-modal-body {
@@ -1000,4 +1321,281 @@ h1:focus {
 
 .animate-pulse {
     animation: crimson-pulse 0.8s ease-out;
+}
+
+/* ---------- Ambient particles (global — Track 6.4; was MainLayout scoped) ---------- */
+.particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    bottom: -10px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--bone-white);
+    animation: rn-drift linear infinite;
+}
+
+@keyframes rn-drift {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: var(--p-opacity, 0.05);
+    }
+
+    50% {
+        transform: translateY(-50vh) translateX(var(--p-sway, 20px));
+    }
+
+    90% {
+        opacity: var(--p-opacity, 0.05);
+    }
+
+    100% {
+        transform: translateY(-110vh) translateX(0);
+        opacity: 0;
+    }
+}
+
+.particle-1 {
+    left: 8%;
+    --p-opacity: 0.04;
+    animation-duration: 22s;
+    animation-delay: 0s;
+    width: 2px;
+    height: 2px;
+}
+
+.particle-2 {
+    left: 17%;
+    --p-opacity: 0.06;
+    animation-duration: 31s;
+    animation-delay: 3s;
+    --p-sway: -15px;
+}
+
+.particle-3 {
+    left: 25%;
+    --p-opacity: 0.03;
+    animation-duration: 25s;
+    animation-delay: 7s;
+    width: 4px;
+    height: 4px;
+}
+
+.particle-4 {
+    left: 33%;
+    --p-opacity: 0.05;
+    animation-duration: 18s;
+    animation-delay: 1s;
+    --p-sway: 30px;
+}
+
+.particle-5 {
+    left: 45%;
+    --p-opacity: 0.04;
+    animation-duration: 40s;
+    animation-delay: 10s;
+    width: 2px;
+    height: 2px;
+    --p-sway: -25px;
+}
+
+.particle-6 {
+    left: 55%;
+    --p-opacity: 0.07;
+    animation-duration: 28s;
+    animation-delay: 5s;
+    width: 3px;
+    height: 3px;
+}
+
+.particle-7 {
+    left: 62%;
+    --p-opacity: 0.04;
+    animation-duration: 35s;
+    animation-delay: 15s;
+    --p-sway: 15px;
+}
+
+.particle-8 {
+    left: 70%;
+    --p-opacity: 0.06;
+    animation-duration: 20s;
+    animation-delay: 2s;
+    width: 2px;
+    height: 2px;
+    --p-sway: -10px;
+}
+
+.particle-9 {
+    left: 78%;
+    --p-opacity: 0.03;
+    animation-duration: 33s;
+    animation-delay: 8s;
+    width: 4px;
+    height: 4px;
+}
+
+.particle-10 {
+    left: 85%;
+    --p-opacity: 0.05;
+    animation-duration: 24s;
+    animation-delay: 12s;
+    --p-sway: 20px;
+}
+
+.particle-11 {
+    left: 92%;
+    --p-opacity: 0.04;
+    animation-duration: 38s;
+    animation-delay: 4s;
+    width: 2px;
+    height: 2px;
+}
+
+.particle-12 {
+    left: 5%;
+    --p-opacity: 0.05;
+    animation-duration: 15s;
+    animation-delay: 18s;
+    width: 3px;
+    height: 3px;
+    --p-sway: -20px;
+}
+
+/* Track 6.4 — prefers-reduced-motion + html.performance-mode */
+@media (prefers-reduced-motion: reduce) {
+    .particle {
+        animation: none !important;
+        opacity: 0 !important;
+        visibility: hidden;
+    }
+
+    .fade-in,
+    .fade-in-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .stagger-1,
+    .stagger-2,
+    .stagger-3,
+    .stagger-4,
+    .stagger-5 {
+        animation-delay: 0s !important;
+    }
+
+    .card-rn:hover,
+    .card-grimoire:hover {
+        transform: none;
+    }
+
+    .dot.filled {
+        animation: none !important;
+    }
+
+    .dot:hover {
+        transform: none;
+    }
+
+    .ripple-active::after {
+        animation: none !important;
+        opacity: 0 !important;
+    }
+
+    .animate-pulse {
+        animation: none !important;
+    }
+
+    .notification {
+        animation: none !important;
+    }
+
+    .toast-host .toast-item {
+        animation: none !important;
+    }
+
+    .toast-host .toast-progress {
+        animation: none !important;
+        opacity: 0.35;
+    }
+}
+
+html.performance-mode .particle {
+    animation: none !important;
+    opacity: 0 !important;
+    visibility: hidden;
+}
+
+html.performance-mode .fade-in,
+html.performance-mode .fade-in-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+html.performance-mode .stagger-1,
+html.performance-mode .stagger-2,
+html.performance-mode .stagger-3,
+html.performance-mode .stagger-4,
+html.performance-mode .stagger-5 {
+    animation-delay: 0s !important;
+}
+
+html.performance-mode .card-rn:hover,
+html.performance-mode .card-grimoire:hover {
+    transform: none;
+}
+
+html.performance-mode .dot.filled {
+    animation: none !important;
+}
+
+html.performance-mode .dot:hover {
+    transform: none;
+}
+
+html.performance-mode .ripple-active::after {
+    animation: none !important;
+    opacity: 0 !important;
+}
+
+html.performance-mode .animate-pulse {
+    animation: none !important;
+}
+
+html.performance-mode .notification {
+    animation: none !important;
+}
+
+html.performance-mode .brand-link:hover .brand-mark-pulse {
+    animation: none !important;
+}
+
+html.performance-mode .widget-card:hover {
+    transform: none;
+}
+
+html.performance-mode .widget-card:hover .widget-icon {
+    transform: none;
+}
+
+html.performance-mode .toast-host .toast-item {
+    animation: none !important;
+}
+
+html.performance-mode .toast-host .toast-progress {
+    animation: none !important;
+    opacity: 0.35;
 }

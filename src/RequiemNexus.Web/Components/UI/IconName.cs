@@ -13,4 +13,25 @@ public enum IconName
 
     /// <summary>Droplet — vitae / embrace (Lucide <c>droplet</c>).</summary>
     Droplet,
+
+    /// <summary>Magnifying glass — search / command palette (Lucide <c>search</c>).</summary>
+    Search,
+
+    /// <summary>Hamburger menu — mobile nav (Lucide <c>menu</c>).</summary>
+    Menu,
+
+    /// <summary>Chevron right — card affordance (Lucide <c>chevron-right</c>).</summary>
+    ChevronRight,
+
+    /// <summary>Circle with check — toast success (Lucide <c>circle-check</c>).</summary>
+    CircleCheck,
+
+    /// <summary>Circle with X — toast error (Lucide <c>circle-x</c>).</summary>
+    CircleX,
+
+    /// <summary>Alert triangle — toast warning (Lucide <c>triangle-alert</c>).</summary>
+    TriangleAlert,
+
+    /// <summary>Info in circle — toast info (Lucide <c>info</c>).</summary>
+    Info,
 }

@@ -29,7 +29,7 @@
         <div class="card-rn" style="max-width: 32rem;">
             <h2>Sign in to join</h2>
             <p>You need an account to attach a character to this chronicle.</p>
-            <p><a class="btn-primary-rn" href="@_loginUrl">Sign in</a></p>
+            <p><a class="btn-rn-primary" href="@_loginUrl">Sign in</a></p>
             <p style="margin-top: 1rem;"><a href="/register">Create an account</a></p>
         </div>
     }
@@ -67,7 +67,7 @@
                             }
                         </InputSelect>
                     </div>
-                    <button type="submit" class="btn-primary-rn" disabled="@(_joinModel.CharacterId == 0 || _busy)">Join campaign</button>
+                    <button type="submit" class="btn-rn-primary" disabled="@(_joinModel.CharacterId == 0 || _busy)">Join campaign</button>
                 </EditForm>
             }
         </div>

@@ -19,7 +19,7 @@
             <input type="number" class="form-control config-input-small" min="1" max="50"
                    @bind="_thresholdDraft" />
         </label>
-        <button type="button" class="btn-ghost btn-align-small" disabled="@_busy"
+        <button type="button" class="btn-rn-ghost btn-align-small" disabled="@_busy"
                 @onclick="SaveThreshold">Save threshold</button>
     </div>
 
@@ -53,7 +53,7 @@
             <label><input type="checkbox" @bind="_newAspiration" /> Prevents victim Aspiration (+1)</label>
             <label><input type="checkbox" @bind="_newVirtueMask" /> Against Virtue / Mask (+1)</label>
         </div>
-        <button class="btn-primary-rn btn-align-start"
+        <button class="btn-rn-primary btn-align-start"
                 disabled="@(_busy || _newInitiatorId == 0 || _newTargetNpcId == 0 || string.IsNullOrWhiteSpace(_newGoal))"
                 @onclick="CreateManeuver">
             Create maneuver
@@ -96,7 +96,7 @@
                             <div class="clues-bank-row">
                                 <input type="number" class="form-control input-mini" min="1" max="30"
                                        @bind="_bankSuccesses[m.Id]" />
-                                <button type="button" class="btn-ghost btn-small" disabled="@_busy"
+                                <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
                                         @onclick="() => BankInvestigation(m.Id)">Bank Investigation</button>
                             </div>
                         }
@@ -115,7 +115,7 @@
                                     <option value="@ClueLeverageKind.Hard">Hard</option>
                                 </select>
                             </label>
-                            <button type="button" class="btn-ghost btn-small" disabled="@_busy"
+                            <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
                                     @onclick="() => AddClue(m.Id)">Add clue</button>
                         </div>
                         @if (m.Clues.Any())
@@ -136,7 +136,7 @@
                                                 <input class="form-control flex-1 input-xsmall-text" style="min-width:120px;"
                                                        placeholder="Recorded benefit…"
                                                        @bind="_spendBenefit[clue.Id]" />
-                                                <button type="button" class="btn-primary-rn btn-xsmall" disabled="@_busy"
+                                                <button type="button" class="btn-rn-primary btn-xsmall" disabled="@_busy"
                                                         @onclick="() => SpendClue(clue.Id)">Spend</button>
                                             </div>
                                         }
@@ -161,7 +161,7 @@
                             <input type="number" class="form-control doors-input"
                                    min="0" max="@m.InitialDoors"
                                    @bind="_narrativeDoorsDraft[m.Id]" />
-                            <button type="button" class="btn-ghost btn-small ml-small" disabled="@_busy"
+                            <button type="button" class="btn-rn-ghost btn-small ml-small" disabled="@_busy"
                                     @onclick="() => ApplyNarrativeDoors(m.Id)">Apply</button>
                         </label>
                     </div>
@@ -173,7 +173,7 @@
                             <input type="number" class="form-control pool-input" min="0" max="50"
                                    @bind="_openPool[m.Id]" />
                             <span class="btn-align-small text-muted-rn">pool</span>
-                            <button type="button" class="btn-primary-rn btn-align-small" disabled="@_busy"
+                            <button type="button" class="btn-rn-primary btn-align-small" disabled="@_busy"
                                     @onclick="() => RollOpen(m.Id)">Roll open</button>
                             
                             <span class="text-small ml-small"><strong>Force Doors</strong></span>
@@ -189,7 +189,7 @@
                                            @bind="_forceBp[m.Id]" />
                                 </label>
                             }
-                            <button type="button" class="btn-danger-rn btn-align-small" disabled="@_busy"
+                            <button type="button" class="btn-rn-danger btn-align-small" disabled="@_busy"
                                     @onclick="() => RollForce(m.Id)">Roll force</button>
                         </div>
                     }

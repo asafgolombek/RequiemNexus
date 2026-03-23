@@ -24,7 +24,7 @@ else if (_character == null)
     <div class="page-container">
         <div class="empty-state-rn">
             <p>Character not found or you do not have access.</p>
-            <a href="/campaigns/@CampaignId" class="btn-primary-rn">Back to Campaign</a>
+            <a href="/campaigns/@CampaignId" class="btn-rn-primary">Back to Campaign</a>
         </div>
     </div>
 }
@@ -36,12 +36,12 @@ else
             <span style="color:#990000;font-family:'Cinzel',serif;font-size:0.85em;letter-spacing:2px;text-transform:uppercase;">
                 👁 View Only — @(_character.ApplicationUserId == _currentUserId ? "Your Character" : "Campaign Member Access")
             </span>
-            <a href="/campaigns/@CampaignId" class="btn-ghost" style="font-size:0.8em;">← Back to Campaign</a>
+            <a href="/campaigns/@CampaignId" class="btn-rn-ghost" style="font-size:0.8em;">← Back to Campaign</a>
         </div>
 
         <!-- HEADER -->
         <header class="cs-header">
-            <div class="char-avatar"></div>
+            <CharacterSheetInitialsAvatar CharacterName="@_character.Name" />
             <div class="char-info">
                 <h1>@_character.Name</h1>
                 <div class="char-meta">

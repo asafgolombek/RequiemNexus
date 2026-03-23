@@ -42,12 +42,12 @@
             <div class="edit-lineage-footer">
                 @if (_result != null)
                 {
-                    <button type="button" class="btn-primary-rn" @onclick="CloseAsync">Close</button>
+                    <button type="button" class="btn-rn-primary" @onclick="CloseAsync">Close</button>
                 }
                 else
                 {
-                    <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
-                    <button type="button" class="btn-primary-rn" disabled="@(_busy || _defenderId == 0)" @onclick="SubmitAsync">
+                    <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                    <button type="button" class="btn-rn-primary" disabled="@(_busy || _defenderId == 0)" @onclick="SubmitAsync">
                         @(_busy ? "Rolling…" : "Roll contest")
                     </button>
                 }

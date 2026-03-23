@@ -36,7 +36,7 @@
                             }
                             @if (CanEdit)
                             {
-                                <button class="btn-ghost btn-sm resolve-btn"
+                                <button class="btn-rn-ghost btn-sm resolve-btn"
                                         @onclick="() => ResolveCondition(c.Id)"
                                         title="Resolve">
                                     ✓ Resolve
@@ -62,7 +62,7 @@
                 {
                     <input @bind="_newCustomName" placeholder="Custom name" class="form-control" maxlength="100" />
                 }
-                <button class="btn-primary-rn btn-sm" @onclick="AddCondition">+ Add</button>
+                <button class="btn-rn-primary btn-sm" @onclick="AddCondition">+ Add</button>
             </div>
         }
     </div>
@@ -90,7 +90,7 @@
                             <strong>@label</strong>
                             @if (CanEdit)
                             {
-                                <button class="btn-ghost btn-sm resolve-btn"
+                                <button class="btn-rn-ghost btn-sm resolve-btn"
                                         @onclick="() => RemoveTilt(t.Id)"
                                         title="Remove Tilt">
                                     ✕ Remove
@@ -116,7 +116,7 @@
                 {
                     <input @bind="_newTiltCustomName" placeholder="Custom name" class="form-control" maxlength="100" />
                 }
-                <button class="btn-primary-rn btn-sm" @onclick="AddTilt">+ Add</button>
+                <button class="btn-rn-primary btn-sm" @onclick="AddTilt">+ Add</button>
             </div>
         }
     </div>

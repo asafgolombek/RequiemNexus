@@ -36,13 +36,13 @@
         <div class="alert-rn alert-danger">
             <strong>Access Denied</strong> — you are not a member of this campaign.
         </div>
-        <a href="/campaigns/@CampaignId" class="btn-ghost">← Back to Campaign</a>
+        <a href="/campaigns/@CampaignId" class="btn-rn-ghost">← Back to Campaign</a>
     }
     else if (_encounter == null)
     {
         <div class="empty-state-rn">
             <p>Encounter not found.</p>
-            <a href="/campaigns/@CampaignId/encounters" class="btn-ghost">← Back to Encounters</a>
+            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Back to Encounters</a>
         </div>
     }
     else
@@ -73,7 +73,7 @@
                     }
                 </span>
             </div>
-            <a href="/campaigns/@CampaignId/encounters" class="btn-ghost">← Encounters</a>
+            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Encounters</a>
         </div>
 
         @if (_isSt && _encounter.ResolvedAt == null && !_encounter.IsPaused)
@@ -161,7 +161,7 @@
                         <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1–10)</label>
                         <input type="number" class="form-control" style="width:80px;" min="1" max="10" @bind="_addRoll" />
                     </div>
-                    <button class="btn-primary-rn"
+                    <button class="btn-rn-primary"
                             disabled="@(!CanAddParticipant() || _busy)"
                             @onclick="AddParticipant">
                         Add
@@ -185,17 +185,17 @@
             <div style="margin-bottom:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
                 @if (_isSt && _encounter.IsActive && !_encounter.IsDraft)
                 {
-                    <button class="btn-primary-rn"
+                    <button class="btn-rn-primary"
                             disabled="@_busy"
                             @onclick="AdvanceTurn">
                         ▶ Advance Turn
                     </button>
-                    <button class="btn-ghost"
+                    <button class="btn-rn-ghost"
                             disabled="@_busy"
                             @onclick="HoldTurn">
                         ⏸ Hold action
                     </button>
-                    <button class="btn-ghost"
+                    <button class="btn-rn-ghost"
                             disabled="@_busy"
                             @onclick="ResolveEncounter">
                         ✓ Resolve Encounter
@@ -256,10 +256,10 @@
                                     }
                                 </div>
                                 <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.25rem;">
-                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '/')">+B</button>
-                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, 'X')">+L</button>
-                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '*')">+A</button>
-                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcHeal(entry.Id)">Heal</button>
+                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '/')">+B</button>
+                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, 'X')">+L</button>
+                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '*')">+A</button>
+                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcHeal(entry.Id)">Heal</button>
                                 </div>
                                 @if (entry.NpcMaxWillpower > 0)
                                 {
@@ -267,8 +267,8 @@
                                         Willpower: <strong>@entry.NpcCurrentWillpower</strong> / @entry.NpcMaxWillpower
                                     </div>
                                     <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
-                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendWill(entry.Id)">Spend</button>
-                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreWill(entry.Id)">Restore</button>
+                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendWill(entry.Id)">Spend</button>
+                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreWill(entry.Id)">Restore</button>
                                     </div>
                                 }
                                 @if (entry.NpcMaxVitae > 0)
@@ -277,8 +277,8 @@
                                         Vitae: <strong>@entry.NpcCurrentVitae</strong> / @entry.NpcMaxVitae
                                     </div>
                                     <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
-                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendVitae(entry.Id)">Spend vitae</button>
-                                        <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreVitae(entry.Id)">Restore vitae</button>
+                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendVitae(entry.Id)">Spend vitae</button>
+                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreVitae(entry.Id)">Restore vitae</button>
                                     </div>
                                 }
                             }
@@ -317,7 +317,7 @@
                                                 <option value="@t">@t</option>
                                             }
                                         </select>
-                                        <button class="btn-ghost"
+                                        <button class="btn-rn-ghost"
                                                 style="font-size:0.8em;"
                                                 disabled="@_busy"
                                                 @onclick="() => ApplyTilt(entry.CharacterId.Value)">
@@ -331,16 +331,16 @@
                             {
                                 @if (isNpc)
                                 {
-                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcReveal(entry)">
+                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcReveal(entry)">
                                         @(entry.IsRevealed ? "🙈 Hide" : "👁 Reveal")
                                     </button>
-                                    <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcRoll(entry.Id)">
+                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcRoll(entry.Id)">
                                         @(_npcRollEntryId == entry.Id ? "Hide roll" : "Roll")
                                     </button>
                                 }
                                 @if (entry.IsHeld)
                                 {
-                                    <button type="button" class="btn-primary-rn" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ReleaseHeld(entry.Id)">Release</button>
+                                    <button type="button" class="btn-rn-primary" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ReleaseHeld(entry.Id)">Release</button>
                                 }
                                 @if (isNpc)
                                 {
@@ -349,19 +349,19 @@
                                         <div style="display:flex;flex-direction:column;gap:0.35rem;align-items:flex-start;max-width:18rem;">
                                             <span style="font-size:0.72em;color:var(--gothic-muted);">Remove from initiative only. This does not remove the NPC from the chronicle (Danse Macabre).</span>
                                             <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                                                <button type="button" class="btn-primary-rn" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ConfirmDefeatNpc(entry.Id)">Confirm</button>
-                                                <button type="button" class="btn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="CancelDefeatConfirm">Cancel</button>
+                                                <button type="button" class="btn-rn-primary" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ConfirmDefeatNpc(entry.Id)">Confirm</button>
+                                                <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="CancelDefeatConfirm">Cancel</button>
                                             </div>
                                         </div>
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => _defeatConfirmEntryId = entry.Id">Defeated / out of fight</button>
+                                        <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => _defeatConfirmEntryId = entry.Id">Defeated / out of fight</button>
                                     }
                                 }
                                 else
                                 {
-                                    <button type="button" class="btn-ghost"
+                                    <button type="button" class="btn-rn-ghost"
                                             style="font-size:0.75em;align-self:flex-start;"
                                             disabled="@_busy"
                                             @onclick="() => RemoveEntry(entry.Id)">

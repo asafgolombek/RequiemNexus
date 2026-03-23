@@ -12,37 +12,40 @@
 <div class="page-container fade-in">
     <div class="page-header-rn">
         <h2>My Campaigns</h2>
-        <a href="/campaigns/create" class="btn-primary-rn btn-create">Create New Campaign</a>
+        <a href="/campaigns/create" class="btn-rn-primary btn-create">Create New Campaign</a>
     </div>
 
     @if (_campaigns == null)
     {
         <SkeletonLoader Variant="card" Count="3" />
     }
-    else if (!_campaigns.Any())
-    {
-        <div class="empty-state-rn">
-            <p>You haven't joined or created any campaigns yet.</p>
-            <a href="/campaigns/create" class="btn-primary-rn btn-create btn-large">Create New Campaign</a>
-        </div>
-    }
     else
     {
-        <div class="campaign-grid">
-            @{ int index = 1; }
-            @foreach (var campaign in _campaigns)
-            {
-                <a href="/campaigns/@campaign.Id" class="campaign-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
-                    <h3>@campaign.Name</h3>
-                    <p class="role-text">
-                        @(CampaignService.IsStoryteller(campaign, _currentUserId!) ? "👑 Story Teller" : "🗡️ Player")
-                    </p>
-                    <div class="card-stats-line">
-                        <span>👥 Characters: @(campaign.Characters?.Count ?? 0)</span>
-                    </div>
-                </a>
-            }
-        </div>
+        <EmptyState IsEmpty="@(!_campaigns.Any())"
+                    Title="No campaigns yet"
+                    Message="You have not joined or created any chronicles yet. Create a campaign to gather your coterie."
+                    LeadingIcon="@IconName.BookOpen">
+            <CtaContent>
+                <a href="/campaigns/create" class="btn-rn-primary btn-create btn-large">Create New Campaign</a>
+            </CtaContent>
+            <NotEmptyContent>
+                <div class="campaign-grid">
+                    @{ int index = 1; }
+                    @foreach (var campaign in _campaigns)
+                    {
+                        <a href="/campaigns/@campaign.Id" class="campaign-card card-rn fade-in-up stagger-@(Math.Min(index++, 5))">
+                            <h3>@campaign.Name</h3>
+                            <p class="role-text">
+                                @(CampaignService.IsStoryteller(campaign, _currentUserId!) ? "👑 Story Teller" : "🗡️ Player")
+                            </p>
+                            <div class="card-stats-line">
+                                <span>👥 Characters: @(campaign.Characters?.Count ?? 0)</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </NotEmptyContent>
+        </EmptyState>
     }
 </div>
 

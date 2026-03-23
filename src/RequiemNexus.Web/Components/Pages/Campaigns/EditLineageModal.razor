@@ -25,10 +25,10 @@
                 {
                     <p class="text-small text-muted-rn" style="margin-bottom:0.5rem;">Choose how this character’s sire is recorded.</p>
                     <div class="lineage-mode-row" style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.75rem;">
-                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "pc" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("pc")'>PC sire</button>
-                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "npc" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("npc")'>NPC sire</button>
-                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "ext" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("ext")'>External name</button>
-                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "clear" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("clear")'>No sire</button>
+                        <button type="button" class="@($"btn-rn-ghost lineage-mode-btn {(_mode == "pc" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("pc")'>PC sire</button>
+                        <button type="button" class="@($"btn-rn-ghost lineage-mode-btn {(_mode == "npc" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("npc")'>NPC sire</button>
+                        <button type="button" class="@($"btn-rn-ghost lineage-mode-btn {(_mode == "ext" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("ext")'>External name</button>
+                        <button type="button" class="@($"btn-rn-ghost lineage-mode-btn {(_mode == "clear" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("clear")'>No sire</button>
                     </div>
 
                     @if (_mode == "pc")
@@ -66,8 +66,8 @@
                 }
             </div>
             <div class="edit-lineage-footer">
-                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
-                <button type="button" class="btn-primary-rn" disabled="@(_loading || _busy || !CanApply)" @onclick="ApplyAsync">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-rn-primary" disabled="@(_loading || _busy || !CanApply)" @onclick="ApplyAsync">
                     @(_busy ? "Saving…" : "Save")
                 </button>
             </div>
