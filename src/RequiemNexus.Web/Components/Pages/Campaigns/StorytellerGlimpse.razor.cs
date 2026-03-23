@@ -72,6 +72,8 @@ public partial class StorytellerGlimpse
 
     private List<CoilApplicationDto> _pendingCoils = [];
 
+    private List<PendingAssetProcurementDto> _pendingAssetProcurements = [];
+
     private readonly HashSet<int> _pinnedNpcIds = [];
 
     private int? _activeDropTargetId;
@@ -104,6 +106,7 @@ public partial class StorytellerGlimpse
             _pendingRites = await SorceryService.GetPendingRiteApplicationsAsync(Id, _currentUserId!);
             _pendingChosenMysteries = await CoilService.GetPendingChosenMysteryApplicationsAsync(Id, _currentUserId!);
             _pendingCoils = await CoilService.GetPendingCoilApplicationsAsync(Id, _currentUserId!);
+            _pendingAssetProcurements = (await AssetProcurementService.GetPendingForCampaignAsync(Id, _currentUserId!)).ToList();
 
             await LoadSocialManeuvers();
 

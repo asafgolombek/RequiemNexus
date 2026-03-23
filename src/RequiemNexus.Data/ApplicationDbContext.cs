@@ -34,9 +34,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ClanDiscipline> ClanDisciplines { get; set; } = default!;
 
-    public DbSet<Equipment> Equipment { get; set; } = default!;
+    public DbSet<Asset> Assets { get; set; } = default!;
 
-    public DbSet<CharacterEquipment> CharacterEquipments { get; set; } = default!;
+    public DbSet<EquipmentAsset> EquipmentAssets { get; set; } = default!;
+
+    public DbSet<WeaponAsset> WeaponAssets { get; set; } = default!;
+
+    public DbSet<ArmorAsset> ArmorAssets { get; set; } = default!;
+
+    public DbSet<ServiceAsset> ServiceAssets { get; set; } = default!;
+
+    public DbSet<AssetCapability> AssetCapabilities { get; set; } = default!;
+
+    public DbSet<CharacterAsset> CharacterAssets { get; set; } = default!;
+
+    public DbSet<PendingAssetProcurement> PendingAssetProcurements { get; set; } = default!;
+
+    public DbSet<AssetModifier> AssetModifiers { get; set; } = default!;
+
+    public DbSet<CharacterAssetModifier> CharacterAssetModifiers { get; set; } = default!;
 
     public DbSet<CharacterAspiration> CharacterAspirations { get; set; } = default!;
 

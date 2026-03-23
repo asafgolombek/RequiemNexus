@@ -5,6 +5,7 @@
 @inject ICovenantService CovenantService
 @inject ISorceryService SorceryService
 @inject ICoilService CoilService
+@inject IAssetProcurementService AssetProcurementService
 @inject ToastService ToastService
 
 <div class="pending-requests-container">
@@ -127,6 +128,43 @@
         </div>
     }
 
+    @* ── Illicit asset procurement ── *@
+    @if (AssetProcurements.Any())
+    {
+        <div class="card-rn glimpse-card">
+            <h3 class="section-header">Pending Illicit Procurement</h3>
+            <ul class="maneuver-list">
+                @foreach (var p in AssetProcurements)
+                {
+                    <li class="pending-request-item">
+                        <span><strong>@p.CharacterName</strong> → @p.AssetName (×@p.Quantity)</span>
+                        <span class="request-meta">@p.RequestedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                        @if (!string.IsNullOrEmpty(p.PlayerNote))
+                        {
+                            <p class="text-small text-muted-rn">@p.PlayerNote</p>
+                        }
+                        <div class="request-actions">
+                            @if (_rejectingProcurementId == p.Id)
+                            {
+                                <input type="text" class="form-control note-input" placeholder="Optional note…" @bind="_rejectNote" />
+                            }
+                            <button class="btn-primary-rn text-small" disabled="@_busy" @onclick="() => ApproveProcurement(p.Id)">Approve</button>
+                            @if (_rejectingProcurementId == p.Id)
+                            {
+                                <button class="btn-danger-rn text-small" disabled="@_busy" @onclick="() => ConfirmRejectProcurement(p.Id)">Confirm Reject</button>
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="CancelReject">Cancel</button>
+                            }
+                            else
+                            {
+                                <button class="btn-ghost text-small" disabled="@_busy" @onclick="() => StartRejectProcurement(p.Id)">Reject</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
     @* ── Coils (Ordo) ── *@
     @if (Coils.Any())
     {
@@ -168,6 +206,7 @@
     [Parameter] public List<RiteApplicationDto> Rites { get; set; } = [];
     [Parameter] public List<ChosenMysteryApplicationDto> ChosenMysteries { get; set; } = [];
     [Parameter] public List<CoilApplicationDto> Coils { get; set; } = [];
+    [Parameter] public List<PendingAssetProcurementDto> AssetProcurements { get; set; } = [];
     [Parameter] public EventCallback OnChanged { get; set; }
 
     private bool _busy;
@@ -176,13 +215,15 @@
     private int? _rejectingCovenantId;
     private int? _rejectingRiteId;
     private int? _rejectingCoilId;
+    private int? _rejectingProcurementId;
 
-    private void CancelReject() { _rejectingId = _rejectingCovenantId = _rejectingRiteId = _rejectingCoilId = null; _rejectNote = ""; }
+    private void CancelReject() { _rejectingId = _rejectingCovenantId = _rejectingRiteId = _rejectingCoilId = _rejectingProcurementId = null; _rejectNote = ""; }
 
     private void StartReject(int id) { CancelReject(); _rejectingId = id; }
     private void StartRejectCovenant(int id) { CancelReject(); _rejectingCovenantId = id; }
     private void StartRejectRite(int id) { CancelReject(); _rejectingRiteId = id; }
     private void StartRejectCoil(int id) { CancelReject(); _rejectingCoilId = id; }
+    private void StartRejectProcurement(int id) { CancelReject(); _rejectingProcurementId = id; }
 
     private async Task ApproveBloodline(int id) { await Execute(() => BloodlineService.ApproveBloodlineAsync(id, null, StorytellerId), "Approved"); }
     private async Task ConfirmRejectBloodline(int id) { await Execute(() => BloodlineService.RejectBloodlineAsync(id, _rejectNote, StorytellerId), "Rejected"); CancelReject(); }
@@ -198,6 +239,9 @@
 
     private async Task ApproveCoil(int id) { await Execute(() => CoilService.ApproveCoilLearnAsync(id, null, StorytellerId), "Approved"); }
     private async Task ConfirmRejectCoil(int id) { await Execute(() => CoilService.RejectCoilLearnAsync(id, _rejectNote, StorytellerId), "Rejected"); CancelReject(); }
+
+    private async Task ApproveProcurement(int id) { await Execute(() => AssetProcurementService.ApprovePendingAsync(id, StorytellerId, null), "Approved"); }
+    private async Task ConfirmRejectProcurement(int id) { await Execute(() => AssetProcurementService.RejectPendingAsync(id, StorytellerId, _rejectNote), "Rejected"); CancelReject(); }
 
     private async Task Execute(Func<Task> action, string msg)
     {

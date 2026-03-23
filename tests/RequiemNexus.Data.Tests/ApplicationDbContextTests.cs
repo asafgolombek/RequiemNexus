@@ -25,10 +25,10 @@ public class ApplicationDbContextTests
         Assert.NotNull(ctx.Merits);
         Assert.NotNull(ctx.CharacterMerits);
         Assert.NotNull(ctx.CharacterDisciplines);
-        Assert.NotNull(ctx.CharacterEquipments);
+        Assert.NotNull(ctx.CharacterAssets);
         Assert.NotNull(ctx.CharacterAspirations);
         Assert.NotNull(ctx.CharacterBanes);
-        Assert.NotNull(ctx.Equipment);
+        Assert.NotNull(ctx.Assets);
         Assert.NotNull(ctx.Campaigns);
     }
 

@@ -4,6 +4,7 @@
 #pragma warning disable SA1204 // Static before instance
 #pragma warning disable SA1214 // Readonly fields before non-readonly
 
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -43,13 +44,26 @@ public partial class CharacterDetails : IAsyncDisposable
     private string? _currentUserId;
     private string? _cookieHeader;
     private PersistingComponentStateSubscription _persistingSubscription;
-    private List<Equipment> _availableEquipment = new List<Equipment>();
-    private int _selectedEquipmentId = 0;
-    private int _selectedEquipmentQuantity = 1;
+    private List<Asset> _availableAssets = [];
+    private int _selectedAssetId = 0;
+    private int _selectedAssetQuantity = 1;
+
+    /// <summary>
+    /// Whether the Pack tab Purchase action is inactive (no click is sent to the server while this is true).
+    /// </summary>
+    private bool IsPurchaseButtonDisabled => _selectedAssetId <= 0 || _selectedAssetQuantity < 1;
+
+    private string PurchaseButtonTitle =>
+        _availableAssets.Count == 0
+            ? "No listed assets in the catalog."
+            : IsPurchaseButtonDisabled
+                ? "Select an item and set quantity to at least 1."
+                : "Add this item to your inventory.";
 
     private bool _isRollerOpen = false;
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
+    private int? _rollerFixedDicePool;
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
@@ -100,9 +114,25 @@ public partial class CharacterDetails : IAsyncDisposable
 
     private void SelectTab(string tab) => _activeTab = tab;
 
+    private Task GoToPackTab()
+    {
+        SelectTab("pack");
+        return Task.CompletedTask;
+    }
+
+    private static IEnumerable<CharacterAsset> PackInventoryOrder(ICollection<CharacterAsset> assets) =>
+        assets.OrderByDescending(ca => ca.IsEquipped)
+            .ThenBy(ca => ca.BackpackSlotIndex ?? 100)
+            .ThenBy(ca => ca.Asset?.Name ?? string.Empty);
+
+    private static string BackpackSlotSelectValue(CharacterAsset ca) =>
+        ca.BackpackSlotIndex.HasValue
+            ? ca.BackpackSlotIndex.Value.ToString(CultureInfo.InvariantCulture)
+            : string.Empty;
+
     private void HandleTabKeydown(KeyboardEventArgs e)
     {
-        var tabs = new[] { "sheet", "identity", "history" };
+        var tabs = new[] { "sheet", "pack", "identity", "history" };
         int i = Array.IndexOf(tabs, _activeTab);
         if (i < 0)
         {
@@ -231,7 +261,7 @@ public partial class CharacterDetails : IAsyncDisposable
                 // Detach any tracked instance from this scoped DbContext (e.g. after visiting Advancement)
                 // before loading the full include graph again.
                 _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
-                _availableEquipment = await EquipmentService.GetAvailableEquipmentAsync();
+                _availableAssets = await CharacterAssetService.GetListedCatalogAsync();
             }
         }
         catch (Exception ex)
@@ -378,6 +408,7 @@ public partial class CharacterDetails : IAsyncDisposable
 
     private void OpenRoller(string traitName)
     {
+        _rollerFixedDicePool = null;
         _rollerTraitName = traitName;
         _rollerBaseDice = GetTraitValue(traitName);
         _isRollerOpen = true;
@@ -435,53 +466,250 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
-    private async Task AddEquipment()
+    private async Task PurchaseSelectedAssetAsync()
     {
-        if (_character != null && !string.IsNullOrEmpty(_currentUserId) && _selectedEquipmentId > 0 && _selectedEquipmentQuantity > 0)
+        if (_character == null)
         {
-            var ce = await EquipmentService.AddEquipmentAsync(_character.Id, _selectedEquipmentId, _selectedEquipmentQuantity, _currentUserId);
-            ce.Equipment = _availableEquipment.FirstOrDefault(e => e.Id == _selectedEquipmentId);
-            _character.CharacterEquipments.Add(ce);
+            Logger.LogWarning("Purchase blocked: character not loaded for route {CharacterId}", Id);
+            ToastService.Show("Pack", "Character not loaded. Try refreshing the page.", ToastType.Warning);
+            return;
+        }
 
-            _selectedEquipmentId = 0;
-            _selectedEquipmentQuantity = 1;
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            Logger.LogWarning("Purchase blocked: no authenticated user for character {CharacterId}", _character.Id);
+            ToastService.Show("Pack", "Sign in again to purchase items.", ToastType.Warning);
+            return;
+        }
+
+        if (_selectedAssetId <= 0)
+        {
+            Logger.LogWarning("Purchase blocked: no asset selected for character {CharacterId}", _character.Id);
+            ToastService.Show("Pack", "Choose an item from the list first.", ToastType.Warning);
+            return;
+        }
+
+        if (_selectedAssetQuantity <= 0)
+        {
+            Logger.LogWarning(
+                "Purchase blocked: invalid quantity {Quantity} for character {CharacterId}",
+                _selectedAssetQuantity,
+                _character.Id);
+            ToastService.Show("Pack", "Enter a quantity of at least 1.", ToastType.Warning);
+            return;
+        }
+
+        int purchaseCharacterId = _character.Id;
+        try
+        {
+            AssetProcurementStartResult r = await AssetProcurementService.BeginProcurementAsync(
+                purchaseCharacterId,
+                _selectedAssetId,
+                _selectedAssetQuantity,
+                _currentUserId,
+                playerNote: null);
+
+            switch (r.Outcome)
+            {
+                case AssetProcurementOutcome.AddedImmediately:
+                    ToastService.Show("Acquired", r.Message ?? "Item added.", ToastType.Success);
+                    _character = await CharacterService.ReloadCharacterAsync(purchaseCharacterId, _currentUserId);
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
+                    break;
+                case AssetProcurementOutcome.AddedByReach:
+                    ToastService.Show("The Reach", r.Message ?? "Item acquired using your Reach for this chapter.", ToastType.Success);
+                    _character = await CharacterService.ReloadCharacterAsync(purchaseCharacterId, _currentUserId);
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
+                    break;
+                case AssetProcurementOutcome.AwaitingStorytellerApproval:
+                    ToastService.Show("Pending approval", r.Message ?? "Storyteller notified.", ToastType.Info);
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
+                    break;
+                case AssetProcurementOutcome.Blocked:
+                    ToastService.Show("Purchase", r.Message ?? "This action cannot be completed.", ToastType.Warning);
+                    break;
+                default:
+                    Logger.LogWarning(
+                        "Unhandled procurement outcome {Outcome} for character {CharacterId}",
+                        r.Outcome,
+                        purchaseCharacterId);
+                    ToastService.Show(
+                        "Purchase",
+                        "Something went wrong. Try again or contact support.",
+                        ToastType.Error);
+                    break;
+            }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.LogWarning(ex, "Purchase denied for character {CharacterId}", purchaseCharacterId);
+            ToastService.Show(
+                "Purchase",
+                "You can only purchase on your own character (or as Storyteller where allowed).",
+                ToastType.Error);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Purchase failed for character {CharacterId}", purchaseCharacterId);
+            ToastService.Show("Purchase", ex.Message, ToastType.Error);
         }
     }
 
-    private void OpenDevotionRoller(CharacterDevotion cd)
+    private bool _isForgeModalOpen = false;
+    private CharacterAsset? _forgeTarget;
+    private List<AssetModifier> _availableModifiers = [];
+
+    private void OpenRepairRoller(CharacterAsset ca)
+    {
+        if (_character == null)
+        {
+            return;
+        }
+
+        _rollerTraitName = $"Repair {ca.Asset?.Name} (Wits + Crafts)";
+        _rollerBaseDice = _character.GetAttributeRating(AttributeId.Wits) + _character.GetSkillRating(SkillId.Crafts);
+        _rollerFixedDicePool = null;
+        _isRollerOpen = true;
+    }
+
+    private async Task OpenForgeModal(CharacterAsset ca)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _forgeTarget = ca;
+
+        // In a real implementation, we'd fetch modifiers from a service.
+        // For now, we'll just open the modal.
+        _isForgeModalOpen = true;
+    }
+
+    private async Task OpenDevotionRollerAsync(CharacterDevotion cd)
     {
         if (_character == null || cd.DevotionDefinition?.PoolDefinitionJson == null)
         {
             return;
         }
 
+        _rollerFixedDicePool = null;
+        _rollerTraitName = cd.DevotionDefinition.Name;
         try
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            var pool = System.Text.Json.JsonSerializer.Deserialize<PoolDefinition>(cd.DevotionDefinition.PoolDefinitionJson, options);
-            _rollerTraitName = cd.DevotionDefinition.Name;
-            _rollerBaseDice = pool != null ? TraitResolver.ResolvePool(_character, pool) : 0;
+            PoolDefinition? pool = System.Text.Json.JsonSerializer.Deserialize<PoolDefinition>(cd.DevotionDefinition.PoolDefinitionJson, options);
+            _rollerFixedDicePool = pool != null ? await TraitResolver.ResolvePoolAsync(_character, pool) : 0;
+            _rollerBaseDice = 0;
             _isRollerOpen = true;
         }
         catch
         {
-            _rollerTraitName = cd.DevotionDefinition.Name;
             _rollerBaseDice = 0;
             _isRollerOpen = true;
         }
     }
 
-    private async Task RemoveEquipment(int ceId)
+    private async Task RemoveCharacterAsset(int characterAssetId)
     {
         if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
-            await EquipmentService.RemoveEquipmentAsync(ceId, _currentUserId);
-            var ce = _character.CharacterEquipments.FirstOrDefault(e => e.Id == ceId);
-            if (ce != null)
+            await CharacterAssetService.RemoveCharacterAssetAsync(characterAssetId, _currentUserId);
+            CharacterAsset? row = _character.CharacterAssets.FirstOrDefault(e => e.Id == characterAssetId);
+            if (row != null)
             {
-                _character.CharacterEquipments.Remove(ce);
+                _character.CharacterAssets.Remove(row);
             }
+        }
+    }
+
+    private async Task OnAssetEquippedChanged(CharacterAsset ca, ChangeEventArgs e)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        bool isEquipped = e.Value switch
+        {
+            bool b => b,
+            string s when bool.TryParse(s, out bool bs) => bs,
+            _ => ca.IsEquipped,
+        };
+
+        int characterId = _character.Id;
+        try
+        {
+            await CharacterAssetService.SetEquippedAsync(ca.Id, isEquipped, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Equip toggle failed for character asset {CharacterAssetId}", ca.Id);
+            ToastService.Show("Pack", ex.Message, ToastType.Warning);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, _currentUserId);
+        }
+    }
+
+    private async Task OnStructureChanged(CharacterAsset ca, ChangeEventArgs e)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        string? raw = e.Value?.ToString();
+        int? structure = string.IsNullOrWhiteSpace(raw) ? null : int.TryParse(raw, out int n) ? n : ca.CurrentStructure;
+        await CharacterAssetService.SetCurrentStructureAsync(ca.Id, structure, _currentUserId);
+        ca.CurrentStructure = structure;
+    }
+
+    private async Task OnBackpackSlotSelectAsync(CharacterAsset ca, ChangeEventArgs e)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        string? raw = e.Value?.ToString();
+        int? slot = string.IsNullOrEmpty(raw) ? null : int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int n) ? n : ca.BackpackSlotIndex;
+
+        int characterId = _character.Id;
+        try
+        {
+            await CharacterAssetService.SetBackpackSlotAsync(ca.Id, slot, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Backpack assign failed for character asset {CharacterAssetId}", ca.Id);
+            ToastService.Show("Pack", ex.Message, ToastType.Warning);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, _currentUserId);
+        }
+    }
+
+    private async Task ClearBackpackSlotAsync(int characterAssetId)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        int characterId = _character.Id;
+        try
+        {
+            await CharacterAssetService.SetBackpackSlotAsync(characterAssetId, null, _currentUserId);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, _currentUserId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Backpack clear failed for character asset {CharacterAssetId}", characterAssetId);
+            ToastService.Show("Pack", ex.Message, ToastType.Warning);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, _currentUserId);
         }
     }
 

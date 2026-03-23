@@ -8,6 +8,7 @@
             "args": [
                 "build",
                 "${workspaceFolder}/src/RequiemNexus.Web/RequiemNexus.Web.csproj",
+                "/property:Configuration=Debug",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

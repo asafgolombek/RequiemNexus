@@ -9,6 +9,7 @@
 @inject IDiceService DiceService
 @inject SessionClientService SessionClient
 @inject IPublicRollService PublicRollService
+@inject ITraitResolver TraitResolver
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
 @implements IDisposable
@@ -34,15 +35,15 @@
             
             <div class="modal-body">
                 <div class="roller-form-group">
-                    <label>Base Trait (@TraitName)</label>
-                    <input type="number" value="@BaseDice" readonly class="roller-input" style="background: rgba(0,0,0,0.5);" />
+                    <label>@(FixedDicePool.HasValue ? "Pool (with modifiers)" : $"Base trait ({TraitName})")</label>
+                    <input type="number" value="@(FixedDicePool ?? BaseDice)" readonly class="roller-input" style="background: rgba(0,0,0,0.5);" />
                 </div>
                 
-                @if (Character != null)
+                @if (Character != null && !FixedDicePool.HasValue)
                 {
                     <div class="roller-form-group">
                         <label>Associated Trait</label>
-                        <select @bind="_associatedTraitName" class="roller-input" style="width: 100%; padding: 8px;">
+                        <select value="@_associatedTraitName" @onchange="OnAssociatedTraitChanged" class="roller-input" style="width: 100%; padding: 8px;">
                             <option value="">-- None --</option>
                             <optgroup label="Attributes">
                                 @foreach (var attr in _attributes.Where(a => a != TraitName))
@@ -162,6 +163,9 @@
     [Parameter] public int BaseDice { get; set; } = 1;
     [Parameter] public RequiemNexus.Data.Models.Character? Character { get; set; }
 
+    /// <summary>When set, pool size is fixed (e.g. devotion) and associated trait UI is hidden.</summary>
+    [Parameter] public int? FixedDicePool { get; set; }
+
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private string _associatedTraitName { get; set; } = string.Empty;
@@ -190,6 +194,34 @@
         SessionClient.DiceRollReceived += HandleDiceRollReceived;
     }
 
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await RefreshResolverTotalAsync();
+    }
+
+    private async Task OnAssociatedTraitChanged(ChangeEventArgs e)
+    {
+        _associatedTraitName = e.Value?.ToString() ?? string.Empty;
+        await RefreshResolverTotalAsync();
+    }
+
+    private async Task RefreshResolverTotalAsync()
+    {
+        _resolverTotal = null;
+        if (Character == null || !IsVisible || FixedDicePool.HasValue)
+        {
+            return;
+        }
+
+        RequiemNexus.Domain.Models.PoolDefinition? pool = RequiemNexus.Domain.SheetPoolBuilder.TryCreate(TraitName, _associatedTraitName);
+        if (pool != null)
+        {
+            _resolverTotal = await TraitResolver.ResolvePoolAsync(Character, pool);
+        }
+    }
+
     private int AssociatedTraitDice
     {
         get
@@ -203,7 +235,16 @@
         }
     }
 
-    private int TotalPool => BaseDice + AssociatedTraitDice + _modifier;
+    private int? _resolverTotal;
+
+    private int TotalPool
+    {
+        get
+        {
+            int basePart = FixedDicePool ?? _resolverTotal ?? (BaseDice + AssociatedTraitDice);
+            return Math.Max(0, basePart + _modifier);
+        }
+    }
 
     private async Task Close()
     {
@@ -212,6 +253,7 @@
         _shareSlug = null;
         _associatedTraitName = string.Empty;
         _modifier = 0;
+        _resolverTotal = null;
         await IsVisibleChanged.InvokeAsync(IsVisible);
     }
 

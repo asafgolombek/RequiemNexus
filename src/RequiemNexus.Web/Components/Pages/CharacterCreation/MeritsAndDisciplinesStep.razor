@@ -23,7 +23,7 @@
                     <option value="0">-- Select Merit --</option>
                     @foreach (var merit in AvailableMerits)
                     {
-                        <option value="@merit.Id">@merit.Name (Valid Ratings: @merit.ValidRatings)</option>
+                        <option value="@merit.Id">@merit.Name (Ratings: @MeritValidRatingsDisplayFormatter.FormatLabel(merit.ValidRatings))</option>
                     }
                 </select>
                 <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddMerit" disabled="@(selectedMeritId == 0 || MeritPointsSpent >= 7)">Add</button>

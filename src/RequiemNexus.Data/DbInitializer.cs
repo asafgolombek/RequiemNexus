@@ -21,6 +21,7 @@ public static class DbInitializer
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
         await SeedMeritsAsync(context);
+        await SeedEquipmentCatalogAsync(context);
         await SeedCovenantsAsync(context);
         await SeedCovenantDefinitionMeritsAsync(context);
         await SeedBloodlinesAsync(context);
@@ -398,6 +399,80 @@ public static class DbInitializer
                 await context.SaveChangesAsync();
             }
         }
+    }
+
+    private static async Task SeedEquipmentCatalogAsync(ApplicationDbContext context)
+    {
+        IReadOnlyList<Asset> catalog = AssetSeedData.LoadCatalogAssets();
+        if (catalog.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<string> existing = (await context.Assets
+                .Where(a => a.Slug != null)
+                .Select(a => a.Slug!)
+                .ToListAsync())
+            .ToHashSet(StringComparer.Ordinal);
+
+        List<Asset> toAdd = catalog
+            .Where(a => a.Slug != null && !existing.Contains(a.Slug))
+            .ToList();
+        if (toAdd.Count == 0)
+        {
+            await SeedDeferredAssetCapabilitiesAsync(context);
+            return;
+        }
+
+        await context.Assets.AddRangeAsync(toAdd);
+        await context.SaveChangesAsync();
+        await SeedDeferredAssetCapabilitiesAsync(context);
+    }
+
+    private static async Task SeedDeferredAssetCapabilitiesAsync(ApplicationDbContext context)
+    {
+        IReadOnlyList<DeferredAssetCapability> deferred = AssetSeedData.LoadDeferredCapabilities();
+        if (deferred.Count == 0)
+        {
+            return;
+        }
+
+        Dictionary<string, int> idBySlug = await context.Assets
+            .Where(a => a.Slug != null)
+            .Select(a => new { a.Slug, a.Id })
+            .ToDictionaryAsync(x => x.Slug!, x => x.Id, StringComparer.Ordinal);
+
+        foreach (DeferredAssetCapability d in deferred)
+        {
+            if (!idBySlug.TryGetValue(d.OwnerAssetSlug, out int ownerId))
+            {
+                continue;
+            }
+
+            bool already = await context.AssetCapabilities.AnyAsync(c => c.AssetId == ownerId && c.Kind == d.Kind);
+            if (already)
+            {
+                continue;
+            }
+
+            int? profileId = null;
+            if (d.WeaponProfileSlug != null && idBySlug.TryGetValue(d.WeaponProfileSlug, out int pid))
+            {
+                profileId = pid;
+            }
+
+            context.AssetCapabilities.Add(new AssetCapability
+            {
+                AssetId = ownerId,
+                Kind = d.Kind,
+                AssistsSkillName = d.AssistsSkillName,
+                DiceBonusMin = d.DiceBonusMin,
+                DiceBonusMax = d.DiceBonusMax,
+                WeaponProfileAssetId = profileId,
+            });
+        }
+
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedPrebuiltStatBlocksAsync(ApplicationDbContext context)

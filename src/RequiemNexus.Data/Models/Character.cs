@@ -124,14 +124,21 @@ public class Character
     public int CalculatedMaxWillpower => GetAttributeRating(AttributeId.Resolve) + GetAttributeRating(AttributeId.Composure);
 
     [NotMapped]
-    public int Speed => GetAttributeRating(AttributeId.Strength) + GetAttributeRating(AttributeId.Dexterity) + Size;
+    public int Speed => GetAttributeRating(AttributeId.Strength) + GetAttributeRating(AttributeId.Dexterity) + Size
+                        + CharacterAssets.Where(CharacterAssetActiveHelper.IsEquippedAndActive).Sum(ca => (ca.Asset as ArmorAsset)?.ArmorSpeedModifier ?? 0);
 
     [NotMapped]
     public int Defense => Math.Min(GetAttributeRating(AttributeId.Wits), GetAttributeRating(AttributeId.Dexterity))
-                          + GetSkillRating(SkillId.Athletics);
+                          + GetSkillRating(SkillId.Athletics)
+                          + CharacterAssets.Where(CharacterAssetActiveHelper.IsEquippedAndActive).Sum(ca => (ca.Asset as ArmorAsset)?.ArmorDefenseModifier ?? 0);
 
+    /// <summary>General armor rating from equipped armor only (slash/impact).</summary>
     [NotMapped]
-    public int Armor => CharacterEquipments.Sum(e => e.Equipment?.ArmorRating ?? 0);
+    public int Armor => CharacterAssets.Where(CharacterAssetActiveHelper.IsEquippedAndActive).Sum(ca => (ca.Asset as ArmorAsset)?.ArmorRating ?? 0);
+
+    /// <summary>Ballistic armor from equipped armor only.</summary>
+    [NotMapped]
+    public int BallisticArmor => CharacterAssets.Where(CharacterAssetActiveHelper.IsEquippedAndActive).Sum(ca => (ca.Asset as ArmorAsset)?.ArmorBallisticRating ?? 0);
 
     // --- Collections ---
     public virtual ICollection<CharacterAttribute> Attributes { get; set; } = new List<CharacterAttribute>();
@@ -154,7 +161,7 @@ public class Character
 
     public virtual ICollection<CharacterCoil> Coils { get; set; } = new List<CharacterCoil>();
 
-    public virtual ICollection<CharacterEquipment> CharacterEquipments { get; set; } = new List<CharacterEquipment>();
+    public virtual ICollection<CharacterAsset> CharacterAssets { get; set; } = new List<CharacterAsset>();
 
     public virtual ICollection<SocialManeuver> InitiatedSocialManeuvers { get; set; } = new List<SocialManeuver>();
 

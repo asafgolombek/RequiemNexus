@@ -1,0 +1,35 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Services
+
+<section class="cs-section cs-pack-backpack-summary" aria-label="Backpack">
+    <h2>Backpack</h2>
+    @if (Character == null)
+    {
+        <p class="none-note">—</p>
+    }
+    else
+    {
+        <ul class="backpack-summary-grid list-unstyled mb-2">
+            @for (int i = 0; i < EquipmentCarryRules.MaxBackpackSlots; i++)
+            {
+                int slot = i;
+                var row = Character.CharacterAssets.FirstOrDefault(ca => ca.BackpackSlotIndex == slot);
+                <li class="backpack-summary-cell text-small">
+                    <span class="text-muted">@(slot + 1).</span>
+                    @(row?.Asset?.Name ?? "—")
+                </li>
+            }
+        </ul>
+        <button type="button" class="btn-ghost text-small" @onclick="OnManagePack">Manage in The Pack</button>
+    }
+</section>
+
+@code {
+    /// <summary>Character whose backpack is summarized.</summary>
+    [Parameter]
+    public Character? Character { get; set; }
+
+    /// <summary>Switches parent UI to the Pack tab.</summary>
+    [Parameter]
+    public EventCallback OnManagePack { get; set; }
+}

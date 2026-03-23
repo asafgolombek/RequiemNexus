@@ -192,4 +192,76 @@ public class TraitResolverTests
 
         Assert.Equal(0, result);
     }
+
+    [Fact]
+    public async Task ResolvePoolAsync_SkillPoolEquipmentBonus_AppliesWhenSkillInPool_CappedPerBook()
+    {
+        var character = CreateCharacterWithTraits();
+        character.Skills.Add(new CharacterSkill { Name = "Investigation", Rating = 1 });
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Attribute, AttributeId.Intelligence, null, null),
+            new TraitReference(TraitType.Skill, null, SkillId.Investigation, null),
+        ]);
+
+        var mockMods = new Mock<IModifierService>();
+        mockMods.Setup(m => m.GetModifiersForCharacterAsync(character.Id))
+            .ReturnsAsync(
+            [
+                new PassiveModifier(
+                    ModifierTarget.SkillPool,
+                    2,
+                    ModifierType.Static,
+                    "Crime Scene Kit",
+                    new ModifierSource(ModifierSourceType.Equipment, 99))
+                {
+                    AppliesToSkill = SkillId.Investigation,
+                },
+            ]);
+
+        var resolver = new TraitResolver(mockMods.Object);
+        int result = await resolver.ResolvePoolAsync(character, pool);
+
+        Assert.Equal(2 + 1 + 2, result);
+    }
+
+    [Fact]
+    public async Task ResolvePoolAsync_EquipmentSkillPoolBonuses_SumCappedAtFive()
+    {
+        var character = CreateCharacterWithTraits();
+        character.Skills.Add(new CharacterSkill { Name = "Investigation", Rating = 1 });
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Skill, null, SkillId.Investigation, null),
+        ]);
+
+        var mockMods = new Mock<IModifierService>();
+        mockMods.Setup(m => m.GetModifiersForCharacterAsync(character.Id))
+            .ReturnsAsync(
+            [
+                new PassiveModifier(
+                    ModifierTarget.SkillPool,
+                    3,
+                    ModifierType.Static,
+                    "A",
+                    new ModifierSource(ModifierSourceType.Equipment, 1))
+                {
+                    AppliesToSkill = SkillId.Investigation,
+                },
+                new PassiveModifier(
+                    ModifierTarget.SkillPool,
+                    3,
+                    ModifierType.Static,
+                    "B",
+                    new ModifierSource(ModifierSourceType.Equipment, 2))
+                {
+                    AppliesToSkill = SkillId.Investigation,
+                },
+            ]);
+
+        var resolver = new TraitResolver(mockMods.Object);
+        int result = await resolver.ResolvePoolAsync(character, pool);
+
+        Assert.Equal(1 + 5, result); // skill 1 + equipment cap 5 (3+3 uncapped would be 6)
+    }
 }

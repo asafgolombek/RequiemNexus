@@ -1,0 +1,49 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Services
+
+<section class="cs-section cs-pack-worn-summary" aria-label="Worn equipment">
+    <h2>Worn</h2>
+    @if (Character == null)
+    {
+        <p class="none-note">—</p>
+    }
+    else
+    {
+        var armor = Character.CharacterAssets
+            .FirstOrDefault(ca => ca.IsEquipped && ca.Asset is ArmorAsset && CharacterAssetActiveHelper.IsEquippedAndActive(ca));
+        var weapons = Character.CharacterAssets
+            .Where(ca => ca.IsEquipped && ca.Asset is WeaponAsset && CharacterAssetActiveHelper.IsEquippedAndActive(ca))
+            .OrderBy(ca => ca.Asset?.Name)
+            .ToList();
+        int wpUsed = weapons.Sum(ca => ca.Asset is WeaponAsset w ? Math.Max(1, w.WeaponSlotPoints) : 0);
+
+        <p class="text-small text-muted mb-1">Armor</p>
+        <p class="mb-2">@(armor?.Asset?.Name ?? "None")</p>
+        <p class="text-small text-muted mb-1">Weapons (@wpUsed / @EquipmentCarryRules.MaxWeaponSlotPoints slots)</p>
+        @if (weapons.Count == 0)
+        {
+            <p class="none-note">None equipped</p>
+        }
+        else
+        {
+            <ul class="trait-list">
+                @foreach (var ca in weapons)
+                {
+                    <li class="trait-item">
+                        <span>@ca.Asset?.Name</span>
+                        @if (ca.Asset is WeaponAsset ww)
+                        {
+                            <span class="text-muted text-small">(@(Math.Max(1, ww.WeaponSlotPoints)) slot(s))</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    }
+</section>
+
+@code {
+    /// <summary>Character whose worn gear is summarized.</summary>
+    [Parameter]
+    public Character? Character { get; set; }
+}

@@ -16,4 +16,7 @@ public enum ModifierSourceType
     Merit,
 
     Condition,
+
+    /// <summary>Catalog equipment or services (Phase 11 — Assets &amp; Armory).</summary>
+    Equipment,
 }

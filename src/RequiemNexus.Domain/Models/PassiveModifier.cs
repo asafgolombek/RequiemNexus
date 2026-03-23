@@ -16,4 +16,11 @@ public record PassiveModifier(
     int Value,
     ModifierType ModifierType,
     string? Condition,
-    ModifierSource Source);
+    ModifierSource Source)
+{
+    /// <summary>
+    /// When <see cref="ModifierTarget.SkillPool"/> is used, the bonus applies only if the resolved pool includes this skill.
+    /// Phase 11: equipped general items and services grant skill-targeted dice bonuses.
+    /// </summary>
+    public global::RequiemNexus.Domain.SkillId? AppliesToSkill { get; init; }
+}

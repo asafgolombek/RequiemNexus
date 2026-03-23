@@ -69,7 +69,7 @@ public class CharacterManagementService(
             .Include(c => c.ChosenMysteryScale)
             .Include(c => c.PendingChosenMysteryScale)
             .Include(c => c.Banes)
-            .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
+            .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
 
@@ -245,7 +245,7 @@ public class CharacterManagementService(
             .Include(c => c.Skills)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
-            .Include(c => c.CharacterEquipments).ThenInclude(ce => ce.Equipment)
+            .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
             .Include(c => c.Aspirations)
             .Include(c => c.Banes)
             .AsNoTracking()

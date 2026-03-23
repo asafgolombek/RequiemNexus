@@ -521,6 +521,47 @@ h1:focus {
     letter-spacing: 2px;
 }
 
+/* Conditions & Tilts: narrow card (align with grid column ~28rem), spaced below preceding sheet blocks */
+.cs-conditions-sheet-slot {
+    margin-top: 1.75rem;
+}
+
+.cs-conditions-panel {
+    max-width: min(100%, 28rem);
+    width: 100%;
+}
+
+.cs-conditions-panel .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--text-bright);
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.cs-conditions-panel .add-condition-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.cs-conditions-panel .condition-select {
+    flex: 1 1 12rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.cs-conditions-panel .add-condition-row > .form-control:not(.condition-select) {
+    flex: 1 1 10rem;
+    min-width: 0;
+    max-width: 16rem;
+}
+
 /* Character sheet page header — shared by /character/{id}, campaign view-only sheet, advancement */
 .cs-header {
     display: flex;
