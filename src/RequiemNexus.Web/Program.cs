@@ -46,6 +46,7 @@ builder.Services.AddOpenTelemetry()
         metrics.AddAspNetCoreInstrumentation()
                .AddHttpClientInstrumentation()
                .AddMeter("RequiemNexus.RealTime")
+               .AddMeter("RequiemNexus.Relationships")
                .AddOtlpExporter();
     })
     .WithTracing(tracing =>
@@ -117,6 +118,7 @@ if (!redisConnectionString.Contains("abortConnect", StringComparison.OrdinalIgno
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnectionString));
 builder.Services.AddSingleton<RealTimeMetrics>();
+builder.Services.AddSingleton<RelationshipWebMetrics>();
 builder.Services.AddSingleton<ISessionStateRepository, SessionStateRepository>();
 builder.Services.AddScoped<ISessionAuthorizationService, SessionAuthorizationService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
@@ -158,6 +160,10 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService,
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterPrepService, RequiemNexus.Application.Services.EncounterPrepService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcCombatService, RequiemNexus.Application.Services.NpcCombatService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterTemplateService, RequiemNexus.Application.Services.EncounterTemplateService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IKindredLineageService, RequiemNexus.Application.Services.KindredLineageService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBloodBondService, RequiemNexus.Application.Services.BloodBondService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPredatoryAuraService, RequiemNexus.Application.Services.PredatoryAuraService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IGhoulManagementService, RequiemNexus.Application.Services.GhoulManagementService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPerceptionRollService, RequiemNexus.Application.Services.PerceptionRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICityFactionService, RequiemNexus.Application.Services.CityFactionService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IChronicleNpcService, RequiemNexus.Application.Services.ChronicleNpcService>();

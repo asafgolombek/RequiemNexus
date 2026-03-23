@@ -1,0 +1,82 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@inject IPredatoryAuraService PredatoryAuraService
+
+<div class="card-rn glimpse-card">
+    <details style="margin:0;">
+        <summary class="section-header" style="cursor:pointer;list-style-position:outside;">
+            Predatory Aura — recent contests
+        </summary>
+        @if (_loading)
+        {
+            <p class="text-small text-muted-rn" style="margin-top:0.65rem;"><em>Loading…</em></p>
+        }
+        else if (!_rows.Any())
+        {
+            <p class="text-small text-muted-rn" style="margin-top:0.65rem;">No contests recorded in this chronicle yet.</p>
+        }
+        else
+        {
+            <ul class="trait-list" style="margin:0.65rem 0 0;padding-left:0;list-style:none;">
+                @foreach (PredatoryAuraContestSummaryDto r in _rows)
+                {
+                    <li class="text-xsmall" style="margin-bottom:0.5rem;padding-bottom:0.45rem;border-bottom:1px solid var(--border-subtle,#2a2a2a);">
+                        <strong>@r.AttackerName</strong> vs <strong>@r.DefenderName</strong>
+                        — @r.AttackerSuccesses / @r.DefenderSuccesses successes
+                        @if (r.WinnerCharacterId.HasValue)
+                        {
+                            string wn = r.WinnerCharacterId == r.AttackerCharacterId ? r.AttackerName : r.DefenderName;
+                            <span class="text-muted-rn"> — winner: <strong>@wn</strong></span>
+                        }
+                        else
+                        {
+                            <span class="text-muted-rn"> — draw</span>
+                        }
+                        <span class="text-muted-rn"> (@r.OutcomeApplied)</span>
+                        <br />
+                        <span class="text-muted-rn">@r.ResolvedAt.ToLocalTime().ToString("g")</span>
+                    </li>
+                }
+            </ul>
+        }
+    </details>
+</div>
+
+@code {
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    private List<PredatoryAuraContestSummaryDto> _rows = [];
+
+    private bool _loading;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (CampaignId <= 0 || string.IsNullOrEmpty(StorytellerUserId))
+        {
+            _rows = [];
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            IReadOnlyList<PredatoryAuraContestSummaryDto> list =
+                await PredatoryAuraService.GetRecentContestsAsync(CampaignId, StorytellerUserId, 25);
+            _rows = list.ToList();
+        }
+        catch
+        {
+            _rows = [];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

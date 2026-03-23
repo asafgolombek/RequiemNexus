@@ -30,6 +30,8 @@ public class ConditionRulesTests
     [InlineData(ConditionType.Immolating)]
     [InlineData(ConditionType.Wassail)]
     [InlineData(ConditionType.Provoked)]
+    [InlineData(ConditionType.Inspired)]
+    [InlineData(ConditionType.Bound)]
     public void AwardsBeatOnResolve_ReturnsTrue_ForCanonicalConditions(ConditionType type)
     {
         Assert.True(_rules.AwardsBeatOnResolve(type));
@@ -41,6 +43,12 @@ public class ConditionRulesTests
         Assert.False(_rules.AwardsBeatOnResolve(ConditionType.Custom));
     }
 
+    [Fact]
+    public void AwardsBeatOnResolve_ReturnsFalse_ForAddictedCondition()
+    {
+        Assert.False(_rules.AwardsBeatOnResolve(ConditionType.Addicted));
+    }
+
     // -----------------------------------------------------------------------
     // GetConditionDescription
     // -----------------------------------------------------------------------
@@ -50,6 +58,8 @@ public class ConditionRulesTests
     [InlineData(ConditionType.Swooned)]
     [InlineData(ConditionType.Shaken)]
     [InlineData(ConditionType.Custom)]
+    [InlineData(ConditionType.Addicted)]
+    [InlineData(ConditionType.Bound)]
     public void GetConditionDescription_ReturnsNonEmptyString(ConditionType type)
     {
         string desc = _rules.GetConditionDescription(type);
@@ -66,6 +76,7 @@ public class ConditionRulesTests
     [InlineData(TiltType.Blinded)]
     [InlineData(TiltType.Frenzy)]
     [InlineData(TiltType.Custom)]
+    [InlineData(TiltType.BeatenDown)]
     public void GetTiltDescription_ReturnsNonEmptyString(TiltType type)
     {
         string desc = _rules.GetTiltDescription(type);
@@ -106,5 +117,13 @@ public class ConditionRulesTests
         // Custom tilts have no mechanical effect catalog entry — should not throw
         IReadOnlyList<string> effects = _rules.GetTiltEffects([TiltType.Custom]);
         Assert.Empty(effects);
+    }
+
+    [Fact]
+    public void GetTiltEffects_ReturnsPenalty_ForBeatenDown()
+    {
+        IReadOnlyList<string> effects = _rules.GetTiltEffects([TiltType.BeatenDown]);
+        Assert.Single(effects);
+        Assert.Contains("−2", effects[0]);
     }
 }

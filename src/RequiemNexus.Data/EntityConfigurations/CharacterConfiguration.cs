@@ -42,7 +42,21 @@ public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
             .HasForeignKey(c => c.CampaignId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder
+            .HasOne(c => c.SireCharacter)
+            .WithMany(c => c.Childer)
+            .HasForeignKey(c => c.SireCharacterId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder
+            .HasOne(c => c.SireNpc)
+            .WithMany(n => n.CharactersWithThisNpcSire)
+            .HasForeignKey(c => c.SireNpcId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(c => c.CampaignId);
+        builder.HasIndex(c => c.SireCharacterId);
+        builder.HasIndex(c => c.SireNpcId);
 
         builder
             .HasOne(c => c.ChosenMysteryScale)

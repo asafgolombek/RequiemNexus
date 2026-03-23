@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Web.Helpers;
 using Xunit;
 
 namespace RequiemNexus.Data.Tests;
@@ -135,5 +136,48 @@ public class DbInitializerTests
 
         Assert.Equal(bloodlineCount1, bloodlineCount2);
         Assert.Equal(devotionCount1, devotionCount2);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_SecondRun_DoesNotRemoveCharacterMerits()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_SecondRun_DoesNotRemoveCharacterMerits));
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+
+        Merit? anyOfficialMerit = await context.Merits.AsNoTracking().FirstOrDefaultAsync(m => !m.IsHomebrew);
+        Assert.NotNull(anyOfficialMerit);
+
+        var character = new Character
+        {
+            ApplicationUserId = "player-1",
+            Name = "Kindred With Merit",
+            Size = 5,
+        };
+        CharacterTraitHelper.SeedAttributes(character);
+        CharacterTraitHelper.SeedSkills(character);
+        character.Attributes.First(a => a.Name == "Stamina").Rating = 2;
+        character.Attributes.First(a => a.Name == "Resolve").Rating = 2;
+        character.Attributes.First(a => a.Name == "Composure").Rating = 2;
+
+        character.Merits.Add(new CharacterMerit
+        {
+            MeritId = anyOfficialMerit.Id,
+            Rating = 1,
+            Specification = string.Empty,
+        });
+        context.Characters.Add(character);
+        await context.SaveChangesAsync();
+
+        int meritLinksBefore = await context.CharacterMerits.CountAsync(cm => cm.CharacterId == character.Id);
+        Assert.Equal(1, meritLinksBefore);
+
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+
+        int meritLinksAfter = await context.CharacterMerits.CountAsync(cm => cm.CharacterId == character.Id);
+        Assert.Equal(1, meritLinksAfter);
     }
 }

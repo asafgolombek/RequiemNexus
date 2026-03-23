@@ -38,6 +38,8 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
 
     public event Action<SocialManeuverUpdateDto>? SocialManeuverUpdated;
 
+    public event Action<RelationshipUpdateDto>? RelationshipUpdated;
+
     public event Action? SessionStarted;
 
     public event Action<string>? SessionEnded;
@@ -292,6 +294,14 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         _hubConnection.On<ConditionNotificationDto>("ReceiveConditionNotification", n => ConditionNotificationReceived?.Invoke(n));
         _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
         _hubConnection.On<SocialManeuverUpdateDto>("ReceiveSocialManeuverUpdate", update => SocialManeuverUpdated?.Invoke(update));
+        _hubConnection.On<RelationshipUpdateDto>("ReceiveRelationshipUpdate", update =>
+        {
+            RelationshipUpdated?.Invoke(update);
+            if (!string.IsNullOrEmpty(update.Summary))
+            {
+                toastService.Show("Relationships", update.Summary, ToastType.Info);
+            }
+        });
 
         _hubConnection.Reconnected += async _ =>
         {

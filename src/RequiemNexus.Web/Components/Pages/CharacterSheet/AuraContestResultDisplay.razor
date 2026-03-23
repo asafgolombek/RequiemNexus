@@ -1,0 +1,35 @@
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Enums
+
+@if (Result is { } r)
+{
+    <div class="aura-contest-result" style="margin-top:0.75rem;padding:0.65rem 0.75rem;border:1px solid var(--border-subtle,#2a2a2a);border-radius:6px;background:var(--surface-elevated,#1a1a1a);">
+        <p class="text-small" style="margin:0 0 0.35rem;font-weight:600;">Contest resolved</p>
+        <p class="text-xsmall text-muted-rn" style="margin:0 0 0.5rem;">
+            @r.AttackerName (BP @r.AttackerBloodPotency): <strong>@r.AttackerSuccesses</strong> successes
+            ·
+            @r.DefenderName (BP @r.DefenderBloodPotency): <strong>@r.DefenderSuccesses</strong> successes
+        </p>
+        @if (r.Outcome == PredatoryAuraOutcome.Draw)
+        {
+            <p class="text-small" style="margin:0;color:var(--accent-cool,#6cf);">True draw — no Condition applied.</p>
+        }
+        else if (r.WinnerCharacterId.HasValue)
+        {
+            string winnerName = r.WinnerCharacterId == r.AttackerCharacterId ? r.AttackerName : r.DefenderName;
+            <p class="text-small" style="margin:0;">
+                Winner: <strong>@winnerName</strong>
+                @if (!string.IsNullOrEmpty(r.AppliedConditionToLoser))
+                {
+                    <span class="text-muted-rn"> — loser gains <strong>@r.AppliedConditionToLoser</strong></span>
+                }
+            </p>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Resolved contest to display; null hides the block.</summary>
+    [Parameter]
+    public PredatoryAuraContestResultDto? Result { get; set; }
+}

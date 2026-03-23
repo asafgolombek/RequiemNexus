@@ -16,7 +16,7 @@ public interface IConditionRules
 
     /// <summary>
     /// Returns <c>true</c> when resolving this Condition awards a Beat.
-    /// All canonical Conditions award a Beat on resolution; Custom conditions do not by default.
+    /// Custom and <see cref="ConditionType.Addicted"/> do not; other canonical Conditions do (including <see cref="ConditionType.Bound"/>).
     /// </summary>
     bool AwardsBeatOnResolve(ConditionType type);
 

@@ -67,4 +67,20 @@ public enum ConditionType
     /// Appended after <see cref="ConditionType.Custom"/> to preserve stored enum values for existing rows.
     /// </summary>
     Inspired,
+
+    /// <summary>
+    /// Vampire Blood Bond Stage 1. The thrall craves the regnant's blood above all else.
+    /// Persistent: fades when the Blood Bond drops below Stage 1 (every 30 days if untreated).
+    /// Does not award a Beat on removal — it is an addiction, not a drama resolution.
+    /// Appended after <see cref="ConditionType.Inspired"/> to preserve stored enum values for existing rows.
+    /// </summary>
+    Addicted,
+
+    /// <summary>
+    /// Vampire Blood Bond Stage 3 (Full Vinculum). The thrall cannot voluntarily act against
+    /// the regnant. Persistent Condition — resolves only when the bond fully fades.
+    /// Awards a Beat on resolution.
+    /// Appended after <see cref="ConditionType.Addicted"/> to preserve stored enum values for existing rows.
+    /// </summary>
+    Bound,
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
+using RequiemNexus.Application.Security;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -80,15 +81,33 @@ public class CampaignServiceTests
         var campaign = new Campaign { Name = "Test", StoryTellerId = "st" };
         ctx.Campaigns.Add(campaign);
 
-        var character = new Character { Name = "Vamp", ApplicationUserId = "user" };
+        var character = new Character { Name = "Vamp", ApplicationUserId = "st" };
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        // Act
-        await service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "user");
+        // Act — Storyteller may enroll their own character without a prior roster entry.
+        await service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "st");
 
         // Assert
         Assert.Equal(campaign.Id, character.CampaignId);
+    }
+
+    [Fact]
+    public async Task AddCharacterToCampaignAsync_RejectsPlayerWhoIsNotAlreadyMember()
+    {
+        string dbName = nameof(AddCharacterToCampaignAsync_RejectsPlayerWhoIsNotAlreadyMember);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Test", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        var character = new Character { Name = "Vamp", ApplicationUserId = "player" };
+        ctx.Characters.Add(character);
+        await ctx.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "player"));
     }
 
     [Fact]
@@ -140,9 +159,10 @@ public class CampaignServiceTests
         ctx.Campaigns.Add(campaign);
         var enrolled = new Character { Name = "PC", ApplicationUserId = "player-a" };
         ctx.Characters.Add(enrolled);
+        campaign.InviteTokenHash = CampaignInviteTokenHasher.Hash("join-secret");
         await ctx.SaveChangesAsync();
 
-        await service.AddCharacterToCampaignAsync(campaign.Id, enrolled.Id, "player-a");
+        await service.JoinCampaignWithInviteAsync(campaign.Id, enrolled.Id, "join-secret", "player-a");
 
         Campaign? memberView = await service.GetCampaignByIdAsync(campaign.Id, "player-a");
         Assert.NotNull(memberView);
@@ -184,12 +204,91 @@ public class CampaignServiceTests
         ctx.Campaigns.Add(campaign);
         var character = new Character { Name = "PC", ApplicationUserId = "player-a" };
         ctx.Characters.Add(character);
+        campaign.InviteTokenHash = CampaignInviteTokenHasher.Hash("tok");
         await ctx.SaveChangesAsync();
 
-        await service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "player-a");
+        await service.JoinCampaignWithInviteAsync(campaign.Id, character.Id, "tok", "player-a");
 
         Campaign? loaded = await service.GetCampaignByIdAsync(campaign.Id, "player-a");
         Assert.NotNull(loaded);
         Assert.Single(loaded.Characters);
+    }
+
+    [Fact]
+    public async Task GetJoinPreviewAsync_ReturnsNull_WhenInviteTokenWrong()
+    {
+        string dbName = nameof(GetJoinPreviewAsync_ReturnsNull_WhenInviteTokenWrong);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "X", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        campaign.InviteTokenHash = CampaignInviteTokenHasher.Hash("good");
+        await ctx.SaveChangesAsync();
+
+        Assert.Null(await service.GetJoinPreviewAsync(campaign.Id, "bad", "any-user"));
+    }
+
+    [Fact]
+    public async Task GetJoinPreviewAsync_ReturnsDto_WhenInviteTokenValid()
+    {
+        string dbName = nameof(GetJoinPreviewAsync_ReturnsDto_WhenInviteTokenValid);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Chronicle", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        campaign.InviteTokenHash = CampaignInviteTokenHasher.Hash("tok");
+        await ctx.SaveChangesAsync();
+
+        var dto = await service.GetJoinPreviewAsync(campaign.Id, "tok", "player");
+        Assert.NotNull(dto);
+        Assert.Equal(campaign.Id, dto!.CampaignId);
+        Assert.Equal("Chronicle", dto.Name);
+    }
+
+    [Fact]
+    public async Task RegenerateJoinInviteAsync_ReplacesStoredHash()
+    {
+        string dbName = nameof(RegenerateJoinInviteAsync_ReplacesStoredHash);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Y", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        string first = await service.RegenerateJoinInviteAsync(campaign.Id, "st");
+        string second = await service.RegenerateJoinInviteAsync(campaign.Id, "st");
+
+        Assert.NotEqual(first, second);
+        Campaign reloaded = await ctx.Campaigns.AsNoTracking().SingleAsync(c => c.Id == campaign.Id);
+        Assert.True(CampaignInviteTokenHasher.Verify(reloaded.InviteTokenHash, second));
+        Assert.False(CampaignInviteTokenHasher.Verify(reloaded.InviteTokenHash, first));
+    }
+
+    [Fact]
+    public async Task PlayerAlreadyInCampaign_MayAddSecondUnassignedCharacter()
+    {
+        string dbName = nameof(PlayerAlreadyInCampaign_MayAddSecondUnassignedCharacter);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Z", StoryTellerId = "st" };
+        var first = new Character { Name = "A", ApplicationUserId = "p" };
+        var second = new Character { Name = "B", ApplicationUserId = "p" };
+        ctx.Campaigns.Add(campaign);
+        ctx.Characters.AddRange(first, second);
+        campaign.InviteTokenHash = CampaignInviteTokenHasher.Hash("inv");
+        await ctx.SaveChangesAsync();
+
+        await service.JoinCampaignWithInviteAsync(campaign.Id, first.Id, "inv", "p");
+        await service.AddCharacterToCampaignAsync(campaign.Id, second.Id, "p");
+
+        Assert.Equal(campaign.Id, second.CampaignId);
     }
 }

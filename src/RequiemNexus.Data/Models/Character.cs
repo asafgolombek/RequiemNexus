@@ -85,6 +85,22 @@ public class Character
     [ForeignKey(nameof(CampaignId))]
     public virtual Campaign? Campaign { get; set; }
 
+    /// <summary>Linked PC sire, when present.</summary>
+    public int? SireCharacterId { get; set; }
+
+    [ForeignKey(nameof(SireCharacterId))]
+    public virtual Character? SireCharacter { get; set; }
+
+    /// <summary>Linked NPC sire, when present.</summary>
+    public int? SireNpcId { get; set; }
+
+    [ForeignKey(nameof(SireNpcId))]
+    public virtual ChronicleNpc? SireNpc { get; set; }
+
+    /// <summary>Free-text sire when no PC/NPC link exists.</summary>
+    [MaxLength(150)]
+    public string? SireDisplayName { get; set; }
+
     // Core specific stats for the Neonate Phase
     public int Humanity { get; set; } = 7;
 
@@ -164,6 +180,23 @@ public class Character
     public virtual ICollection<CharacterAsset> CharacterAssets { get; set; } = new List<CharacterAsset>();
 
     public virtual ICollection<SocialManeuver> InitiatedSocialManeuvers { get; set; } = new List<SocialManeuver>();
+
+    public virtual ICollection<Character> Childer { get; set; } = new List<Character>();
+
+    public virtual ICollection<BloodBond> BloodBondsAsThrall { get; set; } = new List<BloodBond>();
+
+    public virtual ICollection<BloodBond> BloodBondsAsRegnant { get; set; } = new List<BloodBond>();
+
+    public virtual ICollection<PredatoryAuraContest> PredatoryAuraContestsAsAttacker { get; set; } =
+        new List<PredatoryAuraContest>();
+
+    public virtual ICollection<PredatoryAuraContest> PredatoryAuraContestsAsDefender { get; set; } =
+        new List<PredatoryAuraContest>();
+
+    public virtual ICollection<PredatoryAuraContest> PredatoryAuraContestsAsWinner { get; set; } =
+        new List<PredatoryAuraContest>();
+
+    public virtual ICollection<Ghoul> GhoulsAsRegnant { get; set; } = new List<Ghoul>();
 
     /// <summary>Gets or sets a value indicating whether the character is retired from campaign play.
     /// Retired characters stay on the campaign roster for historical reference.</summary>

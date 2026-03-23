@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
+using RequiemNexus.Application.Security;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
@@ -126,8 +128,24 @@ public class CampaignService(
             .FirstOrDefaultAsync(c => c.Id == campaignId)
             ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
 
+        if (!CallerMayEnrollWithoutInvite(campaign, userId))
+        {
+            _logger.LogWarning(
+                "User {UserId} attempted AddCharacterToCampaign without ST/membership on campaign {CampaignId}",
+                userId,
+                campaignId);
+
+            throw new UnauthorizedAccessException(
+                "Only the Storyteller or a player already in this campaign may add a character this way. Use your invite link to join with your first character.");
+        }
+
         Character character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        if (character.CampaignId != null)
+        {
+            throw new InvalidOperationException("That character is already assigned to a campaign.");
+        }
 
         character.CampaignId = campaignId;
         await _dbContext.SaveChangesAsync();
@@ -137,6 +155,103 @@ public class CampaignService(
             characterId,
             campaignId,
             userId);
+    }
+
+    /// <inheritdoc />
+    public async Task<string> RegenerateJoinInviteAsync(int campaignId, string stUserId)
+    {
+        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage join invites");
+
+        Campaign campaign = await _dbContext.Campaigns.FirstOrDefaultAsync(c => c.Id == campaignId)
+            ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
+
+        string token = CampaignInviteTokenHasher.GenerateToken();
+        campaign.InviteTokenHash = CampaignInviteTokenHasher.Hash(token);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Join invite regenerated for campaign {CampaignId} by ST {UserId}", campaignId, stUserId);
+
+        return token;
+    }
+
+    /// <inheritdoc />
+    public async Task ClearJoinInviteAsync(int campaignId, string stUserId)
+    {
+        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage join invites");
+
+        Campaign campaign = await _dbContext.Campaigns.FirstOrDefaultAsync(c => c.Id == campaignId)
+            ?? throw new InvalidOperationException($"Campaign {campaignId} not found.");
+
+        campaign.InviteTokenHash = null;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Join invite cleared for campaign {CampaignId} by ST {UserId}", campaignId, stUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task<CampaignJoinPreviewDto?> GetJoinPreviewAsync(int campaignId, string inviteToken, string userId)
+    {
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(inviteToken))
+        {
+            return null;
+        }
+
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
+        var row = await ctx.Campaigns.AsNoTracking()
+            .Where(c => c.Id == campaignId)
+            .Select(c => new { c.Name, c.InviteTokenHash })
+            .FirstOrDefaultAsync();
+
+        if (row is null || string.IsNullOrEmpty(row.InviteTokenHash))
+        {
+            return null;
+        }
+
+        if (!CampaignInviteTokenHasher.Verify(row.InviteTokenHash, inviteToken))
+        {
+            return null;
+        }
+
+        return new CampaignJoinPreviewDto(campaignId, row.Name);
+    }
+
+    /// <inheritdoc />
+    public async Task JoinCampaignWithInviteAsync(int campaignId, int characterId, string inviteToken, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(inviteToken))
+        {
+            throw new UnauthorizedAccessException("A valid invite link is required to join this campaign.");
+        }
+
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "join this campaign");
+
+        string? storedHash = await _dbContext.Campaigns.AsNoTracking()
+            .Where(c => c.Id == campaignId)
+            .Select(c => c.InviteTokenHash)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrEmpty(storedHash) || !CampaignInviteTokenHasher.Verify(storedHash, inviteToken))
+        {
+            _logger.LogWarning("Invalid join invite attempt for campaign {CampaignId} by user {UserId}", campaignId, userId);
+            throw new UnauthorizedAccessException("This invite link is invalid or has been disabled.");
+        }
+
+        Character character = await _dbContext.Characters.FindAsync(characterId)
+            ?? throw new InvalidOperationException($"Character {characterId} not found.");
+
+        if (character.CampaignId != null)
+        {
+            throw new InvalidOperationException("That character is already assigned to a campaign.");
+        }
+
+        character.CampaignId = campaignId;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "User {UserId} joined campaign {CampaignId} with character {CharacterId} via invite",
+            userId,
+            campaignId,
+            characterId);
     }
 
     /// <inheritdoc />
@@ -372,6 +487,10 @@ public class CampaignService(
 
     /// <inheritdoc />
     public bool IsCampaignMember(Campaign campaign, string userId)
+        => campaign.StoryTellerId == userId
+        || campaign.Characters.Any(ch => ch.ApplicationUserId == userId);
+
+    private static bool CallerMayEnrollWithoutInvite(Campaign campaign, string userId)
         => campaign.StoryTellerId == userId
         || campaign.Characters.Any(ch => ch.ApplicationUserId == userId);
 }

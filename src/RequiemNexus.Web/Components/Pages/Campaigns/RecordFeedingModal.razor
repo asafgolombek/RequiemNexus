@@ -1,0 +1,178 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Web.Services
+@inject IBloodBondService BloodBondService
+@inject ToastService ToastService
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="bond-feed-title">
+            <div class="rn-modal-header">
+                <h2 id="bond-feed-title" class="rn-modal-title">Record Blood Bond feeding</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                <p class="text-small text-muted-rn" style="margin-bottom:0.75rem;">
+                    Select the thrall who drank, then exactly one regnant (PC, NPC, or name only). Re-feeding the same regnant escalates the bond until Stage 3.
+                </p>
+                <label class="text-small" for="bond-thrall">Thrall</label>
+                <select id="bond-thrall" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_thrallId">
+                    <option value="0">— Select thrall —</option>
+                    @foreach (var v in Vitals)
+                    {
+                        <option value="@v.CharacterId">@v.Name</option>
+                    }
+                </select>
+
+                <div class="lineage-mode-row" style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.75rem;">
+                    <button type="button" class="@ModeClass("pc")" @onclick='() => _regnantMode = "pc"'>PC regnant</button>
+                    <button type="button" class="@ModeClass("npc")" @onclick='() => _regnantMode = "npc"'>NPC regnant</button>
+                    <button type="button" class="@ModeClass("name")" @onclick='() => _regnantMode = "name"'>Name only</button>
+                </div>
+
+                @if (_regnantMode == "pc")
+                {
+                    <label class="text-small" for="bond-pc">Regnant (PC)</label>
+                    <select id="bond-pc" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_regnantPcId">
+                        <option value="0">— Select —</option>
+                        @foreach (var v in Vitals)
+                        {
+                            <option value="@v.CharacterId">@v.Name</option>
+                        }
+                    </select>
+                }
+                else if (_regnantMode == "npc")
+                {
+                    <label class="text-small" for="bond-npc">Regnant (NPC)</label>
+                    <select id="bond-npc" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_regnantNpcId">
+                        <option value="0">— Select —</option>
+                        @foreach (var n in Npcs)
+                        {
+                            <option value="@n.Id">@n.Name</option>
+                        }
+                    </select>
+                }
+                else
+                {
+                    <label class="text-small" for="bond-name">Regnant display name</label>
+                    <input id="bond-name" type="text" class="form-control" maxlength="150" placeholder="Unlinked regnant" @bind="_regnantName" style="margin:0.35rem 0 0.75rem;" />
+                }
+
+                <label class="text-small" for="bond-notes">Notes (optional)</label>
+                <textarea id="bond-notes" class="form-control" rows="2" maxlength="1000" @bind="_notes" style="margin:0.35rem 0 0;"></textarea>
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="text-small" style="color:var(--accent-warm);margin-top:0.5rem;">@_error</p>
+                }
+            </div>
+            <div class="edit-lineage-footer">
+                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-primary-rn" disabled="@(_busy || !CanSubmit)" @onclick="SubmitAsync">
+                    @(_busy ? "Recording…" : "Record feeding")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<CharacterVitalsDto> Vitals { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<ChronicleNpc> Npcs { get; set; } = [];
+
+    [Parameter]
+    public EventCallback OnRecorded { get; set; }
+
+    private int _thrallId;
+
+    private string _regnantMode = "pc";
+
+    private int _regnantPcId;
+
+    private int _regnantNpcId;
+
+    private string _regnantName = string.Empty;
+
+    private string _notes = string.Empty;
+
+    private string _error = string.Empty;
+
+    private bool _busy;
+
+    private bool CanSubmit => _thrallId != 0 && (_regnantMode switch
+    {
+        "pc" => _regnantPcId != 0 && _regnantPcId != _thrallId,
+        "npc" => _regnantNpcId != 0,
+        _ => !string.IsNullOrWhiteSpace(_regnantName),
+    });
+
+    private string ModeClass(string mode) =>
+        $"btn-ghost lineage-mode-btn {(_regnantMode == mode ? "lineage-mode-active" : string.Empty)}";
+
+    private async Task CloseAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        _error = string.Empty;
+        _thrallId = 0;
+        _regnantPcId = 0;
+        _regnantNpcId = 0;
+        _regnantName = string.Empty;
+        _notes = string.Empty;
+        _regnantMode = "pc";
+    }
+
+    private async Task SubmitAsync()
+    {
+        _error = string.Empty;
+        _busy = true;
+        try
+        {
+            var request = new RecordFeedingRequest(
+                CampaignId,
+                _thrallId,
+                _regnantMode == "pc" ? _regnantPcId : null,
+                _regnantMode == "npc" ? _regnantNpcId : null,
+                _regnantMode == "name" ? _regnantName : null,
+                string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim());
+
+            Result<BloodBondDto> result = await BloodBondService.RecordFeedingAsync(request, StorytellerUserId);
+            if (!result.IsSuccess)
+            {
+                _error = result.Error ?? "Could not record feeding.";
+                return;
+            }
+
+            ToastService.Show("Blood Bond", $"Recorded — Stage {result.Value!.Stage} with {result.Value.RegnantDisplayName}.", ToastType.Success);
+            await OnRecorded.InvokeAsync();
+            await CloseAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

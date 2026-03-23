@@ -82,6 +82,40 @@ public class CharacterServiceIntegrationTests
     }
 
     [Fact]
+    public async Task EmbraceCharacterAsync_PersistsMeritsAndAspirations()
+    {
+        string dbName = nameof(EmbraceCharacterAsync_PersistsMeritsAndAspirations);
+        using var ctx = CreateContext(dbName);
+        var service = CreateCharacterService(ctx, dbName);
+
+        var merit = new Merit
+        {
+            Name = "Integration Test Merit",
+            ValidRatings = "1,2,3",
+            IsHomebrew = false,
+        };
+        ctx.Merits.Add(merit);
+        await ctx.SaveChangesAsync();
+
+        Character character = BuildNewCharacter();
+        character.Merits.Add(new CharacterMerit { MeritId = merit.Id, Rating = 2, Specification = string.Empty });
+        character.Aspirations.Add(new CharacterAspiration { Description = "Find a haven" });
+
+        Character result = await service.EmbraceCharacterAsync(character);
+
+        Assert.Single(await ctx.CharacterMerits.Where(cm => cm.CharacterId == result.Id).ToListAsync());
+        Assert.Single(await ctx.CharacterAspirations.Where(a => a.CharacterId == result.Id).ToListAsync());
+
+        Character? loaded = await service.GetCharacterByIdAsync(result.Id, character.ApplicationUserId);
+        Assert.NotNull(loaded);
+        Assert.Single(loaded.Merits);
+        Assert.Equal(merit.Id, loaded.Merits.First().MeritId);
+        Assert.Equal(2, loaded.Merits.First().Rating);
+        Assert.Single(loaded.Aspirations);
+        Assert.Equal("Find a haven", loaded.Aspirations.First().Description);
+    }
+
+    [Fact]
     public async Task DeleteCharacterAsync_RemovesFromDatabase()
     {
         // Arrange

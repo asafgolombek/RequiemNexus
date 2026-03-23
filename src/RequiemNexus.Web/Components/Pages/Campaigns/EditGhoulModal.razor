@@ -1,0 +1,140 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Web.Services
+@inject IGhoulManagementService GhoulService
+@inject ToastService ToastService
+
+@if (IsOpen && Ghoul != null)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="ghoul-edit-title">
+            <div class="rn-modal-header">
+                <h2 id="ghoul-edit-title" class="rn-modal-title">Edit ghoul</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                <label class="text-small" for="ghoul-edit-name">Name</label>
+                <input id="ghoul-edit-name" type="text" class="form-control" maxlength="150" @bind="_name" style="margin:0.35rem 0 0.75rem;" />
+
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:120px;">
+                        <label class="text-small" for="ghoul-edit-apparent">Apparent age</label>
+                        <input id="ghoul-edit-apparent" type="number" class="form-control" min="0" max="200" @bind="_apparentStr" style="margin:0.35rem 0 0;" />
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <label class="text-small" for="ghoul-edit-actual">Actual age</label>
+                        <input id="ghoul-edit-actual" type="number" class="form-control" min="0" max="200" @bind="_actualStr" style="margin:0.35rem 0 0;" />
+                    </div>
+                </div>
+
+                <label class="text-small" for="ghoul-edit-notes" style="display:block;margin-top:0.75rem;">Notes</label>
+                <textarea id="ghoul-edit-notes" class="form-control" rows="3" maxlength="2000" @bind="_notes" style="margin:0.35rem 0 0;"></textarea>
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="text-small" style="color:var(--accent-warm);margin-top:0.5rem;">@_error</p>
+                }
+            </div>
+            <div class="edit-lineage-footer">
+                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-primary-rn" disabled="@(_busy || string.IsNullOrWhiteSpace(_name))" @onclick="SubmitAsync">
+                    @(_busy ? "Saving…" : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public GhoulDto? Ghoul { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    private string _name = string.Empty;
+
+    private string _apparentStr = string.Empty;
+
+    private string _actualStr = string.Empty;
+
+    private string _notes = string.Empty;
+
+    private string _error = string.Empty;
+
+    private bool _busy;
+
+    private int? _boundGhoulId;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && Ghoul != null && _boundGhoulId != Ghoul.Id)
+        {
+            _boundGhoulId = Ghoul.Id;
+            _name = Ghoul.Name;
+            _apparentStr = Ghoul.ApparentAge?.ToString() ?? string.Empty;
+            _actualStr = Ghoul.ActualAge?.ToString() ?? string.Empty;
+            _notes = Ghoul.Notes ?? string.Empty;
+            _error = string.Empty;
+        }
+
+        if (!IsOpen)
+        {
+            _boundGhoulId = null;
+        }
+    }
+
+    private static int? ParseOptionalInt(string s) =>
+        int.TryParse(s, out int v) ? v : null;
+
+    private async Task CloseAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (Ghoul == null)
+        {
+            return;
+        }
+
+        _error = string.Empty;
+        _busy = true;
+        try
+        {
+            var request = new UpdateGhoulRequest(
+                Ghoul.Id,
+                _name.Trim(),
+                ParseOptionalInt(_apparentStr),
+                ParseOptionalInt(_actualStr),
+                string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim());
+
+            Result<GhoulDto> result = await GhoulService.UpdateGhoulAsync(request, StorytellerUserId);
+            if (!result.IsSuccess)
+            {
+                _error = result.Error ?? "Could not update ghoul.";
+                return;
+            }
+
+            ToastService.Show("Ghouls", "Saved.", ToastType.Success);
+            await OnSaved.InvokeAsync();
+            await CloseAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

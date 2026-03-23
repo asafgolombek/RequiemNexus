@@ -322,7 +322,9 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 12 — The Web of Night (Relationship Webs).** Phase 11 (Assets & Armory — equipment, services, Pack UI, procurement) is complete. Phases 9–10 and 9.5–9.6 are complete.
+**Phase 13 — End-to-End Testing & Accessibility.** Phase 12 (The Web of Night — relationship webs) is complete. Phase 11 (Assets & Armory) and Phases 9–10 and 9.5–9.6 are complete.
+
+**Next execution plan:** [`docs/UI_UX_FACELIFT.md`](./docs/UI_UX_FACELIFT.md) (presentation layer — tokens, chrome, character sheet); peer notes in [`docs/UI_UX_FACELIFT_REVIEW.md`](./docs/UI_UX_FACELIFT_REVIEW.md).
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.

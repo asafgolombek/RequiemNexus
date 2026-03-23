@@ -50,5 +50,83 @@ public static class TestDbInitializer
                 throw;
             }
         }
+
+        await SeedPhase12RelationshipSamplesAsync(context);
+    }
+
+    /// <summary>
+    /// Idempotent sample sire link, Blood Bond, and Ghoul for Phase 12 integration and manual testing (development only).
+    /// </summary>
+    private static async Task SeedPhase12RelationshipSamplesAsync(ApplicationDbContext context)
+    {
+        const string seedCampaignName = "__Phase12_IntegrationSeed__";
+        if (await context.Campaigns.AnyAsync(c => c.Name == seedCampaignName))
+        {
+            return;
+        }
+
+        ApplicationUser? user = await context.Users.FirstOrDefaultAsync(u => u.Email == TestUserEmail);
+        if (user == null)
+        {
+            return;
+        }
+
+        Clan? clan = await context.Clans.OrderBy(c => c.Id).FirstOrDefaultAsync();
+        if (clan == null)
+        {
+            return;
+        }
+
+        var campaign = new Campaign
+        {
+            Name = seedCampaignName,
+            StoryTellerId = user.Id,
+            Description = "Phase 12 integration — sample lineage, bond, and ghoul",
+        };
+        await context.Campaigns.AddAsync(campaign);
+        await context.SaveChangesAsync();
+
+        var regnant = new Character
+        {
+            ApplicationUserId = user.Id,
+            Name = "Phase12 Regnant",
+            ClanId = clan.Id,
+            CampaignId = campaign.Id,
+        };
+        var thrall = new Character
+        {
+            ApplicationUserId = user.Id,
+            Name = "Phase12 Thrall",
+            ClanId = clan.Id,
+            CampaignId = campaign.Id,
+        };
+        await context.Characters.AddRangeAsync(regnant, thrall);
+        await context.SaveChangesAsync();
+
+        thrall.SireCharacterId = regnant.Id;
+        await context.SaveChangesAsync();
+
+        await context.BloodBonds.AddAsync(new BloodBond
+        {
+            ChronicleId = campaign.Id,
+            ThrallCharacterId = thrall.Id,
+            RegnantCharacterId = regnant.Id,
+            RegnantKey = $"c:{regnant.Id}",
+            Stage = 1,
+            LastFedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        await context.Ghouls.AddAsync(new Ghoul
+        {
+            ChronicleId = campaign.Id,
+            Name = "Phase12 Sample Ghoul",
+            RegnantCharacterId = regnant.Id,
+            LastFedAt = DateTime.UtcNow,
+            VitaeInSystem = 1,
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        await context.SaveChangesAsync();
     }
 }

@@ -27,11 +27,11 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 9.6 | Additional Blood Sorcery (Necromancy & Ordo Dracul) | ✅ Complete |
 | 10 | The Social Graces (Social Maneuvering) | ✅ Complete |
 | 11 | Assets & Armory (Equipment & Services) | ✅ Complete |
-| 12 | The Web of Night (Relationship Webs) | ⬜ Planned |
+| 12 | The Web of Night (Relationship Webs) | ✅ Complete |
 | 13 | End-to-End Testing & Accessibility | ⬜ Planned |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → Phase 12 — The Web of Night** (Phase 11 Assets & Armory delivered; see phase table above).
+> **Currently Active → Phase 13 — End-to-End Testing & Accessibility.** **Next execution plan:** [UI/UX Facelift](UI_UX_FACELIFT.md) (tokens, global chrome, home dashboard, character sheet). Peer review: [UI_UX_FACELIFT_REVIEW.md](UI_UX_FACELIFT_REVIEW.md). Phase 12 (The Web of Night) is delivered; see phase table above.
 
 ---
 
@@ -384,16 +384,18 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **The Objective:** Visualize and automate the spiritual and social ties that govern Kindred life.
 
-- [ ] **Blood Ties & Sympathy** — Real-time tracking of family trees (Sires, Childer) and the "Blood Sympathy" sense across distances
-- [ ] **Blood Bond Tracker** — Automated tracking of the three stages of the Blood Bond, including the specific Conditions they impose on the thrall
-- [ ] **Predatory Aura Interaction** — A dedicated UI for "Lashing Out" with the Predatory Aura, automating contested Blood Potency rolls and the resulting *Beaten* or *Shaken* states
-- [ ] **Ghoul Management** — Support for mortal retainers, tracking their Vitae dependency, monthly aging checks, and minor Discipline access
+- [x] **Blood Ties & Sympathy** — Real-time tracking of family trees (Sires, Childer) and the "Blood Sympathy" sense across distances
+- [x] **Blood Bond Tracker** — Automated tracking of the three stages of the Blood Bond, including the specific Conditions they impose on the thrall
+- [x] **Predatory Aura Interaction** — A dedicated UI for "Lashing Out" with the Predatory Aura, automating contested Blood Potency rolls and the resulting *Beaten* or *Shaken* states
+- [x] **Ghoul Management** — Support for mortal retainers, tracking their Vitae dependency, monthly aging checks, and minor Discipline access
 
 ---
 
 ## 📅 Phase 13: End-to-End Testing & Accessibility
 
 **The Objective:** Harden the ecosystem for all users and ensure the Gothic aesthetic remains usable.
+
+**Execution focus:** The team is driving **[UI_UX_FACELIFT.md](UI_UX_FACELIFT.md)** now — presentation-layer work (design tokens, `SharedHeader` / mobile nav, home dashboard, character sheet polish). That plan’s Track 6 (accessibility and polish) aligns directly with the checklist below; see also [UI_UX_FACELIFT_REVIEW.md](UI_UX_FACELIFT_REVIEW.md).
 
 - [ ] **Full E2E Playwright Suite** — Testing critical paths: Character Evolution (Phases 8–9), Social Maneuvers (Phase 10), and **Pack / procurement / equipment** flows (Phase 11)
 - [ ] **Automated Accessibility Scanning** — WCAG 2.1 AA audit integrated into the CI pipeline

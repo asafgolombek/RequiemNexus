@@ -66,31 +66,11 @@ public static class DbInitializer
 
     private static async Task SeedMeritsAsync(ApplicationDbContext context)
     {
-        var officialMerits = await context.Merits
-            .Where(m => !m.IsHomebrew)
-            .ToListAsync();
-
-        if (officialMerits.Count > 0)
+        // Idempotent: never remove CharacterMerits or re-seed on every startup — that wiped player selections
+        // after each host restart. Refreshing the official catalog requires an explicit migration or tooling.
+        if (await context.Merits.AnyAsync(m => !m.IsHomebrew))
         {
-            var officialMeritIds = officialMerits.Select(m => m.Id).ToHashSet();
-
-            var meritPrereqsToRemove = await context.MeritPrerequisites
-                .Where(mp => officialMeritIds.Contains(mp.MeritId))
-                .ToListAsync();
-            context.MeritPrerequisites.RemoveRange(meritPrereqsToRemove);
-
-            var covenantLinksToRemove = await context.CovenantDefinitionMerits
-                .Where(cdm => officialMeritIds.Contains(cdm.MeritId))
-                .ToListAsync();
-            context.CovenantDefinitionMerits.RemoveRange(covenantLinksToRemove);
-
-            var characterMeritsToRemove = await context.CharacterMerits
-                .Where(cm => officialMeritIds.Contains(cm.MeritId))
-                .ToListAsync();
-            context.CharacterMerits.RemoveRange(characterMeritsToRemove);
-
-            context.Merits.RemoveRange(officialMerits);
-            await context.SaveChangesAsync();
+            return;
         }
 
         var merits = MeritSeedData.LoadFromDocs();

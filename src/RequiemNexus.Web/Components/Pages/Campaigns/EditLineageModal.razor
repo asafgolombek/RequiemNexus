@@ -1,0 +1,258 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Web.Services
+@inject IKindredLineageService KindredLineageService
+@inject ICampaignService CampaignService
+@inject IChronicleNpcService ChronicleNpcService
+@inject ToastService ToastService
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="lineage-modal-title">
+            <div class="rn-modal-header">
+                <h2 id="lineage-modal-title" class="rn-modal-title">Edit lineage — @_characterName</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                @if (_loading)
+                {
+                    <p><em>Loading…</em></p>
+                }
+                else
+                {
+                    <p class="text-small text-muted-rn" style="margin-bottom:0.5rem;">Choose how this character’s sire is recorded.</p>
+                    <div class="lineage-mode-row" style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.75rem;">
+                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "pc" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("pc")'>PC sire</button>
+                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "npc" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("npc")'>NPC sire</button>
+                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "ext" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("ext")'>External name</button>
+                        <button type="button" class="@($"btn-ghost lineage-mode-btn {(_mode == "clear" ? "lineage-mode-active" : string.Empty)}")" @onclick='() => SetMode("clear")'>No sire</button>
+                    </div>
+
+                    @if (_mode == "pc")
+                    {
+                        <label class="text-small" for="lineage-pc-sire">Player character</label>
+                        <select id="lineage-pc-sire" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_pcSireId">
+                            <option value="0">— Select PC —</option>
+                            @foreach (var c in _pcOptions)
+                            {
+                                <option value="@c.Id">@c.Name</option>
+                            }
+                        </select>
+                    }
+                    else if (_mode == "npc")
+                    {
+                        <label class="text-small" for="lineage-npc-sire">Chronicle NPC</label>
+                        <select id="lineage-npc-sire" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_npcSireId">
+                            <option value="0">— Select NPC —</option>
+                            @foreach (var n in _npcOptions)
+                            {
+                                <option value="@n.Id">@n.Name</option>
+                            }
+                        </select>
+                    }
+                    else if (_mode == "ext")
+                    {
+                        <label class="text-small" for="lineage-ext">External sire name</label>
+                        <input id="lineage-ext" type="text" class="form-control" maxlength="150" placeholder="Name (not linked to a sheet)" @bind="_externalName" style="margin:0.35rem 0 0.75rem;" />
+                    }
+
+                    @if (!string.IsNullOrEmpty(_error))
+                    {
+                        <p class="text-small" style="color:var(--accent-warm);margin-top:0.5rem;">@_error</p>
+                    }
+                }
+            </div>
+            <div class="edit-lineage-footer">
+                <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                <button type="button" class="btn-primary-rn" disabled="@(_loading || _busy || !CanApply)" @onclick="ApplyAsync">
+                    @(_busy ? "Saving…" : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Whether the modal is shown.</summary>
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    /// <summary>Two-way bind for visibility.</summary>
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    /// <summary>Campaign id.</summary>
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    /// <summary>Character whose sire is edited (the childe).</summary>
+    [Parameter]
+    public int CharacterId { get; set; }
+
+    /// <summary>Storyteller user id.</summary>
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    /// <summary>Invoked after a successful save.</summary>
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    private bool _loading;
+    private bool _busy;
+    private string _characterName = string.Empty;
+    private string _mode = "clear";
+    private int _pcSireId;
+    private int _npcSireId;
+    private string _externalName = string.Empty;
+    private string? _error;
+    private List<(int Id, string Name)> _pcOptions = [];
+    private List<(int Id, string Name)> _npcOptions = [];
+
+    private bool _lastLoadedOpen;
+    private int _lastLoadedCharacterId;
+
+    private bool CanApply => _mode switch
+    {
+        "pc" => _pcSireId > 0,
+        "npc" => _npcSireId > 0,
+        "ext" => !string.IsNullOrWhiteSpace(_externalName),
+        "clear" => true,
+        _ => false,
+    };
+
+    private void SetMode(string mode) => _mode = mode;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (!IsOpen)
+        {
+            _lastLoadedOpen = false;
+            return;
+        }
+
+        if (CharacterId <= 0 || string.IsNullOrEmpty(StorytellerUserId))
+        {
+            return;
+        }
+
+        if (!_lastLoadedOpen || _lastLoadedCharacterId != CharacterId)
+        {
+            _lastLoadedOpen = true;
+            _lastLoadedCharacterId = CharacterId;
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            LineageGraphDto graph = await KindredLineageService.GetLineageGraphAsync(CharacterId, StorytellerUserId);
+            _characterName = graph.CharacterName;
+
+            Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId, StorytellerUserId);
+            _pcOptions = campaign?.Characters
+                .Where(c => c.Id != CharacterId)
+                .OrderBy(c => c.Name)
+                .Select(c => (c.Id, c.Name))
+                .ToList() ?? [];
+
+            List<ChronicleNpc> npcs = await ChronicleNpcService.GetNpcsAsync(CampaignId);
+            _npcOptions = npcs.OrderBy(n => n.Name).Select(n => (n.Id, n.Name)).ToList();
+
+            KinNodeDto? sire = graph.Sire;
+            if (sire?.CharacterId is int pcid)
+            {
+                _mode = "pc";
+                _pcSireId = pcid;
+                _npcSireId = 0;
+                _externalName = string.Empty;
+            }
+            else if (sire?.NpcId is int npid)
+            {
+                _mode = "npc";
+                _npcSireId = npid;
+                _pcSireId = 0;
+                _externalName = string.Empty;
+            }
+            else if (sire != null && !string.IsNullOrWhiteSpace(sire.DisplayName))
+            {
+                _mode = "ext";
+                _externalName = sire.DisplayName;
+                _pcSireId = 0;
+                _npcSireId = 0;
+            }
+            else
+            {
+                _mode = "clear";
+                _pcSireId = 0;
+                _npcSireId = 0;
+                _externalName = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            ToastService.Show("Lineage", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task ApplyAsync()
+    {
+        if (!CanApply || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _error = null;
+        try
+        {
+            Result<Unit> result = _mode switch
+            {
+                "clear" => await KindredLineageService.ClearSireAsync(CharacterId, StorytellerUserId),
+                "pc" => await KindredLineageService.SetSireCharacterAsync(CharacterId, _pcSireId, StorytellerUserId),
+                "npc" => await KindredLineageService.SetSireNpcAsync(CharacterId, _npcSireId, StorytellerUserId),
+                "ext" => await KindredLineageService.SetSireDisplayNameAsync(CharacterId, _externalName.Trim(), StorytellerUserId),
+                _ => Result<Unit>.Failure("Unknown mode."),
+            };
+
+            if (!result.IsSuccess)
+            {
+                _error = result.Error;
+                ToastService.Show("Lineage", result.Error ?? "Could not save.", ToastType.Warning);
+                return;
+            }
+
+            ToastService.Show("Lineage", "Sire updated.", ToastType.Success);
+            await OnSaved.InvokeAsync();
+            await CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            ToastService.Show("Lineage", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

@@ -69,6 +69,7 @@ public class CharacterManagementService(
             .Include(c => c.ChosenMysteryScale)
             .Include(c => c.PendingChosenMysteryScale)
             .Include(c => c.Banes)
+            .Include(c => c.Aspirations)
             .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }

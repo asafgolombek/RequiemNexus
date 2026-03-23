@@ -86,7 +86,13 @@
     [SupplyParameterFromForm]
     public LoginModel Input { get; set; } = default!;
 
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
     private string? _errorMessage;
+
+    /// <summary>Local path only; prevents open redirects.</summary>
+    private string SafeReturnPath => GetSafeLocalReturnPath(ReturnUrl);
 
     protected override async Task OnInitializedAsync()
     {
@@ -97,7 +103,7 @@
             var authState = await AuthenticationStateTask;
             if (authState.User?.Identity?.IsAuthenticated == true)
             {
-                NavigationManager.NavigateTo("/home");
+                NavigationManager.NavigateTo(SafeReturnPath);
             }
         }
     }
@@ -109,11 +115,12 @@
 
         if (result.Succeeded)
         {
-            NavigationManager.NavigateTo("/home", true); // true forces a reload so cookies are picked up by the app properly
+            NavigationManager.NavigateTo(SafeReturnPath, true); // true forces a reload so cookies are picked up by the app properly
         }
         else if (result.RequiresTwoFactor)
         {
-            var formattedUrl = $"/Account/LoginWith2fa?RememberMe={Input.RememberMe}&ReturnUrl=/home";
+            string encodedReturn = Uri.EscapeDataString(SafeReturnPath);
+            var formattedUrl = $"/Account/LoginWith2fa?RememberMe={Input.RememberMe}&ReturnUrl={encodedReturn}";
             NavigationManager.NavigateTo(formattedUrl);
         }
         else if (result.IsNotAllowed)
@@ -128,6 +135,21 @@
         {
             _errorMessage = "Invalid login attempt.";
         }
+    }
+
+    private static string GetSafeLocalReturnPath(string? returnUrl)
+    {
+        if (string.IsNullOrEmpty(returnUrl))
+        {
+            return "/home";
+        }
+
+        if (!returnUrl.StartsWith("/", StringComparison.Ordinal) || returnUrl.StartsWith("//", StringComparison.Ordinal))
+        {
+            return "/home";
+        }
+
+        return returnUrl;
     }
 
     public class LoginModel

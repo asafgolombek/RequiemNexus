@@ -225,4 +225,10 @@ public class SessionService(
 
         await _publisher.User(targetUserId).ReceiveConditionNotification(notification);
     }
+
+    /// <inheritdoc />
+    public async Task BroadcastRelationshipUpdateAsync(int chronicleId, RelationshipUpdateDto update)
+    {
+        await _publisher.Group(chronicleId).ReceiveRelationshipUpdate(update);
+    }
 }

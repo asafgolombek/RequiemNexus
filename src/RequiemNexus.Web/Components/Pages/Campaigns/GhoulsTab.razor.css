@@ -1,0 +1,47 @@
+.ghouls-tab-panel .ghouls-aging-tab-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.12rem 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #1a1208;
+    background: linear-gradient(135deg, #e8a317, #c4780a);
+    border-radius: 4px;
+}
+
+.ghouls-table-wrap {
+    overflow-x: auto;
+    margin-top: 0.5rem;
+}
+
+.ghouls-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.ghouls-table th,
+.ghouls-table td {
+    padding: 0.45rem 0.35rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle, #2a2a2a);
+}
+
+.ghoul-row-aging {
+    background: rgba(232, 163, 23, 0.08);
+}
+
+.ghoul-disc-cell .ghoul-disc-dot {
+    color: var(--accent-cool, #6ab0ff);
+    margin-right: 0.15rem;
+    cursor: default;
+}
+
+.ghoul-actions-cell {
+    white-space: nowrap;
+}
+
+.ghoul-actions-cell .btn-ghost {
+    margin-right: 0.15rem;
+}

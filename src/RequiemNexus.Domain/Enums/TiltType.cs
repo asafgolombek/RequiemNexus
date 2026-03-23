@@ -50,4 +50,12 @@ public enum TiltType
 
     /// <summary>A Storyteller-defined tilt not covered by the canonical list.</summary>
     Custom,
+
+    /// <summary>
+    /// Predatory Aura defeat. The character is cowed and hesitant.
+    /// −2 to all attack and contested rolls. Spend one action and succeed on a
+    /// Resolve + Composure roll (difficulty 1) to clear this Tilt.
+    /// Appended after <see cref="TiltType.Custom"/> to preserve stored enum values for existing rows.
+    /// </summary>
+    BeatenDown,
 }

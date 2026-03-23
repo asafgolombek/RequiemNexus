@@ -1,0 +1,229 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Web.Services
+@inject IGhoulManagementService GhoulService
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+
+<div class="card-rn glimpse-card ghouls-tab-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <h3 class="section-header">
+            Ghouls
+            @if (_agingAlertCount > 0)
+            {
+                <span class="ghouls-aging-tab-badge" title="Ghouls past the 30-day feeding interval">@_agingAlertCount aging</span>
+            }
+        </h3>
+        <button type="button" class="btn-primary-rn btn-align-small" @onclick="() => _createOpen = true" disabled="@_loading">
+            Add ghoul
+        </button>
+    </div>
+
+    @if (_loading)
+    {
+        <p class="text-small text-muted-rn"><em>Loading ghouls…</em></p>
+    }
+    else if (!_ghouls.Any())
+    {
+        <p class="text-small text-muted-rn">No active ghouls in this chronicle yet.</p>
+    }
+    else
+    {
+        <div class="ghouls-table-wrap">
+            <table class="ghouls-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Regnant</th>
+                        <th>Last fed</th>
+                        <th>Aging</th>
+                        <th>Disciplines</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var g in _ghouls)
+                    {
+                        <tr class="@(g.IsAgingDue ? "ghoul-row-aging" : null)">
+                            <td><strong>@g.Name</strong></td>
+                            <td class="text-xsmall">@g.RegnantDisplayName</td>
+                            <td class="text-xsmall">@(g.LastFedAt?.ToLocalTime().ToString("g") ?? "—")</td>
+                            <td>
+                                @if (g.IsAgingDue)
+                                {
+                                    <GhoulAgingBadge IsAgingDue="true" OverdueMonths="g.OverdueMonthsAfterGrace" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted-rn text-xsmall">OK</span>
+                                }
+                            </td>
+                            <td class="text-xsmall ghoul-disc-cell">
+                                @if (g.AccessibleDisciplineNames.Count == 0)
+                                {
+                                    <span class="text-muted-rn">—</span>
+                                }
+                                else
+                                {
+                                    @foreach (var n in g.AccessibleDisciplineNames)
+                                    {
+                                        <span class="ghoul-disc-dot" title="@n">●</span>
+                                    }
+                                }
+                            </td>
+                            <td class="ghoul-actions-cell">
+                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => FeedAsync(g)" disabled="@_busyId.HasValue">Feed</button>
+                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => OpenEdit(g)" disabled="@_busyId.HasValue">Edit</button>
+                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => OpenDisciplines(g)" disabled="@_busyId.HasValue">Disciplines</button>
+                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => ReleaseAsync(g)" disabled="@_busyId.HasValue">Release</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<CreateGhoulModal @bind-IsOpen="_createOpen"
+                  CampaignId="CampaignId"
+                  StorytellerUserId="StorytellerUserId"
+                  Vitals="Vitals"
+                  Npcs="Npcs"
+                  OnCreated="ReloadAsync" />
+
+<EditGhoulModal @bind-IsOpen="_editOpen"
+                Ghoul="_editTarget"
+                StorytellerUserId="StorytellerUserId"
+                OnSaved="ReloadAsync" />
+
+<GhoulDisciplineAccessEditor @bind-IsOpen="_discOpen"
+                             Ghoul="_discTarget"
+                             StorytellerUserId="StorytellerUserId"
+                             OnSaved="ReloadAsync" />
+
+@code {
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<CharacterVitalsDto> Vitals { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<ChronicleNpc> Npcs { get; set; } = [];
+
+    private List<GhoulDto> _ghouls = [];
+
+    private bool _loading = true;
+
+    private bool _createOpen;
+
+    private bool _editOpen;
+
+    private GhoulDto? _editTarget;
+
+    private bool _discOpen;
+
+    private GhoulDto? _discTarget;
+
+    private int? _busyId;
+
+    private int _agingAlertCount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CampaignId > 0 && !string.IsNullOrEmpty(StorytellerUserId))
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (string.IsNullOrEmpty(StorytellerUserId))
+        {
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _ghouls = (await GhoulService.GetGhoulsForChronicleAsync(CampaignId, StorytellerUserId)).ToList();
+            IReadOnlyList<GhoulAgingAlertDto> alerts = await GhoulService.GetAgingAlertsAsync(CampaignId, StorytellerUserId);
+            _agingAlertCount = alerts.Count;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Ghouls", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OpenEdit(GhoulDto g)
+    {
+        _editTarget = g;
+        _editOpen = true;
+    }
+
+    private void OpenDisciplines(GhoulDto g)
+    {
+        _discTarget = g;
+        _discOpen = true;
+    }
+
+    private async Task FeedAsync(GhoulDto g)
+    {
+        _busyId = g.Id;
+        try
+        {
+            Result<GhoulDto> result = await GhoulService.FeedGhoulAsync(g.Id, StorytellerUserId);
+            if (!result.IsSuccess)
+            {
+                ToastService.Show("Ghouls", result.Error ?? "Feed failed.", ToastType.Error);
+                return;
+            }
+
+            ToastService.Show("Ghouls", $"{g.Name} fed.", ToastType.Success);
+            await ReloadAsync();
+        }
+        finally
+        {
+            _busyId = null;
+        }
+    }
+
+    private async Task ReleaseAsync(GhoulDto g)
+    {
+        bool ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Release {g.Name} from service? They will disappear from the active list.");
+        if (!ok)
+        {
+            return;
+        }
+
+        _busyId = g.Id;
+        try
+        {
+            Result<Unit> result = await GhoulService.ReleaseGhoulAsync(g.Id, StorytellerUserId);
+            if (!result.IsSuccess)
+            {
+                ToastService.Show("Ghouls", result.Error ?? "Release failed.", ToastType.Error);
+                return;
+            }
+
+            ToastService.Show("Ghouls", $"{g.Name} released.", ToastType.Success);
+            await ReloadAsync();
+        }
+        finally
+        {
+            _busyId = null;
+        }
+    }
+}
