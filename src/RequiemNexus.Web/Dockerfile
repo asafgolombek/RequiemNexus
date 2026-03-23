@@ -3,8 +3,10 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution and project files to restore
+COPY ["Directory.Build.props", "."]
 COPY ["Directory.Packages.props", "."]
 COPY [".editorconfig", "."]
+COPY ["src/Directory.Build.props", "src/"]
 COPY ["src/RequiemNexus.slnx", "src/"]
 COPY ["src/RequiemNexus.Web/RequiemNexus.Web.csproj", "src/RequiemNexus.Web/"]
 COPY ["src/RequiemNexus.Application/RequiemNexus.Application.csproj", "src/RequiemNexus.Application/"]
