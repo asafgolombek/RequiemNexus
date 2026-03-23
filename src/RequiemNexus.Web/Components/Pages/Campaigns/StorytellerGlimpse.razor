@@ -92,6 +92,9 @@
                          Vitals="_vitals"
                          Npcs="_npcs" />
 
+        <PredatoryAuraHistoryPanel CampaignId="Id"
+                                   StorytellerUserId="@(_currentUserId ?? string.Empty)" />
+
         @* ── Pinned NPCs ────────────────────────────────────────────────────── *@
         @if (_pinnedNpcIds.Any())
         {

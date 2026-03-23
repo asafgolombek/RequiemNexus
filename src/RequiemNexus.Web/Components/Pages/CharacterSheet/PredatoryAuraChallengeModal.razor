@@ -1,0 +1,166 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Web.Services
+@inject IPredatoryAuraService PredatoryAuraService
+@inject ICampaignService CampaignService
+@inject ToastService ToastService
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="aura-lash-title">
+            <div class="rn-modal-header">
+                <h2 id="aura-lash-title" class="rn-modal-title">Predatory Aura — Lash Out</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                <p class="text-small text-muted-rn" style="margin-bottom:0.75rem;">
+                    Server rolls each character's Blood Potency as the dice pool (10-again). On a decisive result, the loser gains <strong>Shaken</strong>.
+                </p>
+
+                @if (_result == null)
+                {
+                    <label class="text-small" for="aura-defender">Defender</label>
+                    <select id="aura-defender" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_defenderId">
+                        <option value="0">— Choose Kindred —</option>
+                        @foreach (Character p in _peers)
+                        {
+                            <option value="@p.Id">@p.Name (BP @p.BloodPotency)</option>
+                        }
+                    </select>
+                }
+
+                <AuraContestResultDisplay Result="_result" />
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="text-small" style="color:var(--accent-warm);margin-top:0.5rem;">@_error</p>
+                }
+            </div>
+            <div class="edit-lineage-footer">
+                @if (_result != null)
+                {
+                    <button type="button" class="btn-primary-rn" @onclick="CloseAsync">Close</button>
+                }
+                else
+                {
+                    <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
+                    <button type="button" class="btn-primary-rn" disabled="@(_busy || _defenderId == 0)" @onclick="SubmitAsync">
+                        @(_busy ? "Rolling…" : "Roll contest")
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public int AttackerCharacterId { get; set; }
+
+    [Parameter]
+    public string CurrentUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnResolved { get; set; }
+
+    private int _defenderId;
+
+    private List<Character> _peers = [];
+
+    private string _error = string.Empty;
+
+    private bool _busy;
+
+    private PredatoryAuraContestResultDto? _result;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (!IsOpen || string.IsNullOrEmpty(CurrentUserId) || CampaignId <= 0 || AttackerCharacterId <= 0)
+        {
+            return;
+        }
+
+        _result = null;
+        _error = string.Empty;
+        _defenderId = 0;
+        await LoadPeersAsync();
+    }
+
+    private async Task LoadPeersAsync()
+    {
+        try
+        {
+            Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId, CurrentUserId);
+            _peers = campaign?.Characters
+                .Where(c => c.Id != AttackerCharacterId)
+                .OrderBy(c => c.Name)
+                .ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _peers = [];
+            _error = ex.Message;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        _result = null;
+        _error = string.Empty;
+        _defenderId = 0;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_defenderId == 0)
+        {
+            return;
+        }
+
+        _error = string.Empty;
+        _busy = true;
+        try
+        {
+            Result<PredatoryAuraContestResultDto> result = await PredatoryAuraService.ResolveLashOutAsync(
+                CampaignId,
+                AttackerCharacterId,
+                _defenderId,
+                CurrentUserId);
+
+            if (!result.IsSuccess || result.Value == null)
+            {
+                _error = result.Error ?? "Contest could not be resolved.";
+                return;
+            }
+
+            _result = result.Value;
+            ToastService.Show("Predatory Aura", "Contest resolved.", ToastType.Success);
+            await OnResolved.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            ToastService.Show("Predatory Aura", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

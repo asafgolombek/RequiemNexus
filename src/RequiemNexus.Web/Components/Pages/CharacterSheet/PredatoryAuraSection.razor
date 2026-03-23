@@ -1,0 +1,90 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Services
+@inject ICampaignService CampaignService
+@inject ToastService ToastService
+
+<section class="cs-section cs-predatory-aura">
+    <h2>Predatory Aura</h2>
+    @if (string.IsNullOrEmpty(CurrentUserId) || !CampaignId.HasValue)
+    {
+        <p class="text-muted text-small">Join a chronicle to use Predatory Aura contests.</p>
+    }
+    else if (_loading)
+    {
+        <p class="text-muted text-small"><em>Loading…</em></p>
+    }
+    else if (!_canInitiate)
+    {
+        <p class="text-muted text-small">Only this character's owner or the Storyteller may initiate a Lash Out.</p>
+    }
+    else
+    {
+        <p class="text-small text-muted-rn" style="margin-bottom:0.5rem;">
+            Challenge another Kindred in the chronicle. Rolls use Blood Potency directly; the loser gains Shaken by default.
+        </p>
+        <button type="button" class="btn-primary-rn" style="font-size:0.85em;" @onclick="() => _modalOpen = true">
+            Lash Out
+        </button>
+    }
+</section>
+
+<PredatoryAuraChallengeModal @bind-IsOpen="_modalOpen"
+                             CampaignId="CampaignId!.Value"
+                             AttackerCharacterId="CharacterId"
+                             CurrentUserId="@(CurrentUserId ?? string.Empty)"
+                             OnResolved="OnResolvedAsync" />
+
+@code {
+    [Parameter]
+    public int CharacterId { get; set; }
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    [Parameter]
+    public int? CampaignId { get; set; }
+
+    private bool _loading;
+
+    private bool _canInitiate;
+
+    private bool _modalOpen;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (string.IsNullOrEmpty(CurrentUserId) || !CampaignId.HasValue)
+        {
+            _canInitiate = false;
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId.Value, CurrentUserId);
+            if (campaign == null)
+            {
+                _canInitiate = false;
+                return;
+            }
+
+            bool isStoryteller = string.Equals(campaign.StoryTellerId, CurrentUserId, StringComparison.Ordinal);
+            bool isOwner = campaign.Characters.Any(c => c.Id == CharacterId && c.ApplicationUserId == CurrentUserId);
+            _canInitiate = isStoryteller || isOwner;
+        }
+        catch (Exception ex)
+        {
+            _canInitiate = false;
+            ToastService.Show("Predatory Aura", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Task OnResolvedAsync() => Task.CompletedTask;
+}

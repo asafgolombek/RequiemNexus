@@ -898,15 +898,15 @@ Work should be completed in the order listed. Complete each unit before moving t
 
 ### Subsystem C — Predatory Aura
 
-- [ ] **`PredatoryAuraRules`** (Domain) — `ResolveContest`.
-- [ ] **`PredatoryAuraOutcome` enum** (Domain).
-- [ ] **Domain unit tests** for `PredatoryAuraRules`.
-- [ ] **`IPredatoryAuraService` + `PredatoryAuraService`** (Application).
-- [ ] **`PredatoryAuraContestResultDto`** (Application Contracts).
-- [ ] **Application integration tests** for `IPredatoryAuraService` — attacker wins → defender gets `Shaken`; defender wins → attacker gets `Shaken`; tie broken by higher BP; **true draw** (equal successes + equal BP → `WinnerId = null`, no Condition applied to either party); non-participant cannot initiate; **cross-chronicle characters rejected**.
-- [ ] **`PredatoryAuraChallengeModal.razor`** (Web — character sheet action).
-- [ ] **`AuraContestResultDisplay.razor`** (Web — inline result display).
-- [ ] **Contest history accordion** in ST Glimpse.
+- [x] **`PredatoryAuraRules`** (Domain) — `ResolveContest`.
+- [x] **`PredatoryAuraOutcome` enum** (Domain).
+- [x] **Domain unit tests** for `PredatoryAuraRules`.
+- [x] **`IPredatoryAuraService` + `PredatoryAuraService`** (Application).
+- [x] **`PredatoryAuraContestResultDto`** (Application Contracts).
+- [x] **Application integration tests** for `IPredatoryAuraService` — attacker wins → defender gets `Shaken`; defender wins → attacker gets `Shaken`; tie broken by higher BP; **true draw** (equal successes + equal BP → `WinnerId = null`, no Condition applied to either party); non-participant cannot initiate; **cross-chronicle characters rejected**.
+- [x] **`PredatoryAuraChallengeModal.razor`** (Web — character sheet action).
+- [x] **`AuraContestResultDisplay.razor`** (Web — inline result display).
+- [x] **Contest history accordion** in ST Glimpse.
 
 ### Subsystem D — Ghoul Management
 
