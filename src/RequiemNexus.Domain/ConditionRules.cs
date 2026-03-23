@@ -44,6 +44,10 @@ public class ConditionRules : IConditionRules
             "A custom Condition defined by the Storyteller.",
         ConditionType.Inspired =>
             "You feel energized and capable after a breakthrough. Resolve: relinquish the bonus this Condition grants on a roll.",
+        ConditionType.Addicted =>
+            "The Vinculum has you craving your regnant's blood above all else (Blood Bond Stage 1). Resolves when the bond fades below this stage.",
+        ConditionType.Bound =>
+            "You are fully bound by the Vinculum (Blood Bond Stage 3) and cannot voluntarily act against your regnant. Resolves when the bond fully fades — you gain a Beat.",
         _ => type.ToString(),
     };
 
@@ -74,12 +78,18 @@ public class ConditionRules : IConditionRules
             "Character is paralysed by Rotschreck. They must flee or cower from the source.",
         TiltType.Custom =>
             "A custom Tilt defined by the Storyteller.",
+        TiltType.BeatenDown =>
+            "You are cowed by a stronger predator's aura. −2 to all attack and contested rolls. Resolve: spend an action and succeed at Resolve + Composure (difficulty 1).",
         _ => type.ToString(),
     };
 
     /// <inheritdoc />
-    public bool AwardsBeatOnResolve(ConditionType type)
-        => type != ConditionType.Custom;
+    public bool AwardsBeatOnResolve(ConditionType type) => type switch
+    {
+        ConditionType.Custom => false,
+        ConditionType.Addicted => false,
+        _ => true,
+    };
 
     /// <inheritdoc />
     public IReadOnlyList<string> GetTiltEffects(IEnumerable<TiltType> activeTilts)
@@ -122,6 +132,9 @@ public class ConditionRules : IConditionRules
                     break;
                 case TiltType.Rotschreck:
                     effects.Add("Must flee or cower from source (Rötschreck)");
+                    break;
+                case TiltType.BeatenDown:
+                    effects.Add("−2 to attack and contested rolls (Beaten Down)");
                     break;
             }
         }

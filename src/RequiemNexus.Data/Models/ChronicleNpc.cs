@@ -53,4 +53,10 @@ public class ChronicleNpc
     public string SkillsJson { get; set; } = "{}";
 
     public virtual ICollection<SocialManeuver> SocialManeuversTargeted { get; set; } = new List<SocialManeuver>();
+
+    public virtual ICollection<BloodBond> BloodBondsAsRegnant { get; set; } = new List<BloodBond>();
+
+    public virtual ICollection<Ghoul> GhoulsAsRegnant { get; set; } = new List<Ghoul>();
+
+    public virtual ICollection<Character> CharactersWithThisNpcSire { get; set; } = new List<Character>();
 }

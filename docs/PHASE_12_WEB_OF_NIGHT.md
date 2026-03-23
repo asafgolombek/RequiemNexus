@@ -866,11 +866,11 @@ Work should be completed in the order listed. Complete each unit before moving t
 
 ### Foundation
 
-- [ ] **`ConditionType` — add `Addicted` and `Bound` after `Inspired`** (Domain) with XML doc comments.
-- [ ] **`TiltType` — add `BeatenDown` after `Custom`** (Domain) with XML doc comment.
-- [ ] **Migration `Phase12WebOfNight`** (Data) — sire columns on Characters; `SourceTag` on CharacterConditions; BloodBonds (with `RegnantKey` and unique index); PredatoryAuraContests; Ghouls.
-- [ ] **Entity configurations** (Data) — `BloodBondConfiguration` (unique index on `RegnantKey`, cascade/restrict delete rules), `PredatoryAuraContestConfiguration`, `GhoulConfiguration`, update `CharacterConfiguration` for sire FKs, update `CharacterConditionConfiguration` (composite index on `CharacterId`, `ConditionType`, `IsResolved`, `SourceTag`).
-- [ ] **`TestDbInitializer` seed extension** — sample bond, ghoul, and sire linkage for integration tests.
+- [x] **`ConditionType` — add `Addicted` and `Bound` after `Inspired`** (Domain) with XML doc comments.
+- [x] **`TiltType` — add `BeatenDown` after `Custom`** (Domain) with XML doc comment.
+- [x] **Migration `Phase12WebOfNight`** (Data) — sire columns on Characters; `SourceTag` on CharacterConditions; BloodBonds (with `RegnantKey` and unique index); PredatoryAuraContests; Ghouls.
+- [x] **Entity configurations** (Data) — `BloodBondConfiguration` (unique index on `RegnantKey`, cascade/restrict delete rules), `PredatoryAuraContestConfiguration`, `GhoulConfiguration`, update `CharacterConfiguration` for sire FKs, update `CharacterConditionConfiguration` (composite index on `CharacterId`, `ConditionType`, `IsResolved`, `SourceTag`).
+- [x] **`TestDbInitializer` seed extension** — sample bond, ghoul, and sire linkage for integration tests.
 - [ ] **Observability** — every new service (`KindredLineageService`, `BloodBondService`, `PredatoryAuraService`, `GhoulManagementService`) emits structured Serilog log entries with correlation ID for all state-changing operations; emit OpenTelemetry metrics for bond stage changes and aura contest resolutions per project norms.
 
 ### Subsystem A — Blood Ties & Sympathy

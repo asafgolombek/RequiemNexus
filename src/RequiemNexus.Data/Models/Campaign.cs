@@ -38,4 +38,10 @@ public class Campaign
     public virtual ICollection<FactionRelationship> FactionRelationships { get; set; } = [];
 
     public virtual ICollection<SocialManeuver> SocialManeuvers { get; set; } = [];
+
+    public virtual ICollection<BloodBond> BloodBonds { get; set; } = [];
+
+    public virtual ICollection<PredatoryAuraContest> PredatoryAuraContests { get; set; } = [];
+
+    public virtual ICollection<Ghoul> Ghouls { get; set; } = [];
 }

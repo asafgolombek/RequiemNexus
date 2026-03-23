@@ -18,6 +18,6 @@ public sealed class CharacterConditionConfiguration : IEntityTypeConfiguration<C
             .HasForeignKey(c => c.CharacterId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(c => c.CharacterId);
+        builder.HasIndex(c => new { c.CharacterId, c.ConditionType, c.IsResolved, c.SourceTag });
     }
 }

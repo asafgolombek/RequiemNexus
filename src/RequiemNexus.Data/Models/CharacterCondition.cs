@@ -40,4 +40,8 @@ public class CharacterCondition
     /// <summary>UserId of the Storyteller or player who applied this condition. Null = system.</summary>
     [MaxLength(450)]
     public string? AppliedByUserId { get; set; }
+
+    /// <summary>Optional subsystem discriminator (e.g. <c>bloodbond:42</c>) for targeted resolution.</summary>
+    [MaxLength(100)]
+    public string? SourceTag { get; set; }
 }
