@@ -273,7 +273,7 @@ Testing validates that our Covenants hold without fragile setup.
 | `RequiemNexus.Application.Tests` | Application | Integration tests — use cases, authorization flows, service orchestration; in-memory or mocked infrastructure |
 | `RequiemNexus.Data.Tests` | Infrastructure | Integration tests — EF Core mappings and migrations against Dockerized PostgreSQL |
 | `RequiemNexus.PerformanceTests` | Cross-cutting | Load and latency tests enforcing performance budgets via NBomber |
-| E2E Tests | Presentation | End-to-end tests via Playwright (planned in Phase 13; see `mission.md`) |
+| E2E Tests | Presentation | End-to-end tests via Playwright (Phase 13; see `mission.md`). Active UI work is specified in `docs/UI_UX_FACELIFT.md` — coordinate selector and visual-regression updates with that plan. |
 
 ---
 

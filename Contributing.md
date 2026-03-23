@@ -190,7 +190,7 @@ Not sure where to start? Here's your path:
 1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
 2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
 3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
-4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next.
+4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next. UI work is currently guided by [UI_UX_FACELIFT.md](./docs/UI_UX_FACELIFT.md) (Phase 13 presentation layer).
 5. **Set up The Haven** — follow the Development Setup section above.
 6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
 

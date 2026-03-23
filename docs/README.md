@@ -136,9 +136,11 @@ RequiemNexus/
 | 9.6 | **Necromancy & Ordo Dracul** — Additional traditions | ✅ Complete |
 | 10 | **The Social Graces** — Social Maneuvering | ✅ Complete |
 | 11 | **Assets & Armory** — Equipment & Services | ✅ Complete |
-| 12 | **The Web of Night** — Relationship Webs | ⬜ Planned |
+| 12 | **The Web of Night** — Relationship Webs | ✅ Complete |
 | 13 | **End-to-End Testing & Accessibility** | ⬜ Planned |
 | 14 | **The Global Embrace** — i18n, public API | ⬜ Planned |
+
+**Next up:** [UI/UX Facelift plan](./UI_UX_FACELIFT.md) — current execution focus for Phase 13 presentation work (tokens, navigation, character sheet); aligns with E2E and accessibility goals. Peer review: [UI_UX_FACELIFT_REVIEW.md](./UI_UX_FACELIFT_REVIEW.md).
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 

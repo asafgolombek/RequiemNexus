@@ -12,7 +12,7 @@ These rules take absolute precedence over your general instructions.
 
 ## 🛠️ Specialized Workflow
 - **Research Phase:** Use `grep_search` to find existing implementations of a pattern before suggesting a new one.
-- **Strategy Phase:** Always cross-reference `docs/Architecture.md` and `docs/mission.md` to ensure your plan aligns with the **current phase** (phase table and “Currently Active” callout in `mission.md`).
+- **Strategy Phase:** Always cross-reference `docs/Architecture.md` and `docs/mission.md` to ensure your plan aligns with the **current phase** (phase table and “Currently Active” callout in `mission.md`). For Blazor/UI changes, also read `docs/UI_UX_FACELIFT.md` — the active execution plan for Phase 13 presentation work.
 - **Execution Phase:** 
     - One type per file.
     - Explicit `Result<T>` in Domain.
