@@ -55,6 +55,12 @@ Ghouls are modeled as a lightweight `Ghoul` entity managed by the Storyteller. T
 
 Blood Bond stage changes and Predatory Aura contest results directly affect another player's character. These mutations must broadcast a `ReceiveRelationshipUpdate` event to the affected player's client group in addition to the ST. The existing `SessionHub` / `ISessionClient` pattern is extended for this.
 
+**Separation from `ReceiveConditionNotification`:** `ISessionClient` already carries `ReceiveConditionNotification` for condition/tilt toasts. When a relationship event *also* applies a Condition (e.g., Bond Stage escalation → `Addicted`), **both events fire**:
+1. `ReceiveConditionNotification` — surfaces the condition toast to the player (existing behavior, unchanged).
+2. `ReceiveRelationshipUpdate` — signals the sheet/context to refresh its relationship state.
+
+These are distinct concerns. Implementors must not suppress either to avoid the other.
+
 ---
 
 ## 🩸 Subsystem A — Blood Ties & Sympathy
@@ -81,6 +87,12 @@ Navigation properties on `Character`:
 - `Childer` → `ICollection<Character>` (all characters whose `SireCharacterId` points here)
 
 **Rules:** At most one of (`SireCharacterId`, `SireNpcId`) is non-null. `SireDisplayName` is only meaningful when both FKs are null. These are **application-layer** constraints, not DB constraints (to allow partial linkage during chronicle creation).
+
+**Lineage integrity — explicit validation errors returned as `Result.Failure` by `IKindredLineageService`:**
+- **Self-sire**: `characterId == sireCharacterId` → rejected.
+- **Cycle**: sire's own sire chain already contains `characterId` → rejected. The service walks the existing chain up to depth 10 before returning failure (prevents infinite loops in corrupt data).
+- **Cross-chronicle**: the proposed sire character's `CampaignId` must match the subject character's `CampaignId` → rejected if different.
+- **NPC cross-chronicle**: the proposed sire NPC's `CampaignId` must match → rejected if different.
 
 ---
 
@@ -171,10 +183,12 @@ public record KinNodeDto(
 );
 ```
 
-**Authorization rules:**
-- Sire mutations: Storyteller only (chronicle owner verified via `AuthorizationHelper`).
-- Lineage read: any player in the chronicle OR the character's owner.
-- Blood Sympathy roll: character owner or Storyteller.
+**Blood Sympathy roll validation:** `RollBloodSympathyAsync` validates that both characters are in the same chronicle; if they are not, returns `Result.Failure`. It also validates that the effective range (`BloodSympathyRules.EffectiveRange`) covers the degree of separation between the two characters; if the target is out of range, returns `Result.Failure` with a descriptive message. There is no ST override path in the service — the Storyteller may bypass the range check by using the manual dice roller.
+
+**Authorization:**
+- Sire mutations: `RequireStorytellerAsync(campaignId, userId)`.
+- Lineage read: `RequireCampaignMemberAsync(campaignId, userId)`.
+- Blood Sympathy roll: `RequireCharacterAccessAsync(characterId, userId)`.
 
 ---
 
@@ -211,13 +225,33 @@ BloodBonds
 ├── RegnantCharacterId    int? FK → Characters.Id
 ├── RegnantNpcId          int? FK → ChronicleNpcs.Id
 ├── RegnantDisplayName    nvarchar(150)?
+├── RegnantKey            nvarchar(200) NOT NULL  ← synthetic uniqueness key (see below)
 ├── Stage                 int NOT NULL (1, 2, or 3)
 ├── LastFedAt             datetime? (UTC — when the thrall last drank from this regnant)
 ├── CreatedAt             datetime NOT NULL (UTC)
 ├── Notes                 nvarchar(1000)?
 ```
 
-**Unique constraint:** `(ChronicleId, ThrallCharacterId, RegnantCharacterId)` and `(ChronicleId, ThrallCharacterId, RegnantNpcId)` — one bond per regnant–thrall pair per chronicle. Two separate bonds from different regnants on the same thrall are allowed (and are independent).
+**`RegnantKey` — synthetic uniqueness column:**
+
+PostgreSQL and SQLite both treat `NULL != NULL` in unique indexes, so a DB-level unique constraint on the nullable FK columns would allow multiple display-name-only bonds from the same thrall to the "same" unlinked regnant. To make uniqueness enforceable at the DB level without a partial index, `RegnantKey` is a computed-at-write synthetic key set by the Application layer:
+
+| Regnant type | `RegnantKey` value | Max length |
+|---|---|---|
+| PC character | `"c:{RegnantCharacterId}"` | ~12 chars |
+| NPC | `"n:{RegnantNpcId}"` | ~12 chars |
+| Display name only | `"d:{RegnantDisplayName.Trim().ToLowerInvariant()}"` | 152 chars (`"d:"` + 150) |
+
+`nvarchar(200)` covers all cases with headroom. `nvarchar(50)` would silently truncate display-name keys.
+
+**Display-name deduplication:** Two display-name values that normalize to the same string (e.g. `"Mira"` and `"  mira  "`) are treated as the **same** regnant — the unique index will reject the second insert. This is intentional: if the ST enters the same name twice, it is treated as re-feeding on the same bond, not a separate one. Unicode normalization (combining characters, diacritics) is out of scope; names are normalized only with `Trim()` + `ToLowerInvariant()`.
+
+`BloodBondService` sets this key before insert/update. `BloodBondConfiguration` defines:
+```csharp
+builder.HasIndex(b => new { b.ChronicleId, b.ThrallCharacterId, b.RegnantKey })
+       .IsUnique();
+```
+This provides a single, unambiguous unique constraint regardless of which FK flavor is in use.
 
 **EF Entity Configuration:** `BloodBondConfiguration` — cascade delete on `ThrallCharacterId` (remove character → remove bonds); restrict on `RegnantCharacterId` (regnant leaving chronicle does not auto-delete bonds; ST must handle manually).
 
@@ -225,12 +259,31 @@ BloodBonds
 
 ### B2. New ConditionType Values
 
-Two new entries appended to `ConditionType` enum (appended after existing values to preserve ordinal stability):
+**`CharacterCondition.SourceTag` — new nullable column (added in `Phase12WebOfNight` migration):**
+
+`CharacterCondition` currently has no way to distinguish a `Swooned` row applied by Social Maneuvering from one applied by Blood Bond Stage 2. Without a discriminator, the Bond service cannot safely resolve its own Condition without risk of removing a socially-applied `Swooned` row, or leaving a stale bond `Swooned` when the bond fades.
+
+Add `SourceTag nvarchar(100)?` to `CharacterCondition`. The Bond service writes `"bloodbond:{bondId}"` into this column when applying bond-attributed Conditions. When the bond escalates or fades, the service queries:
+```sql
+WHERE CharacterId = @thrall AND ConditionType = @type AND IsResolved = false AND SourceTag = 'bloodbond:{bondId}'
+```
+This ensures only the bond's own Condition row is resolved, leaving any independently-applied Social Maneuvering `Swooned` rows untouched.
+
+**`SourceTag` contract:**
+- Bond service writes: `"bloodbond:{bondId}"`
+- All other callers leave `SourceTag = null` (no change to existing code)
+- The field is informational for existing services; no existing behavior changes
+
+**Re-feeding idempotency (same stage):**
+- Re-feeding when the bond is already at Stage 3: only updates `LastFedAt`. No new Condition row is created. No `ReceiveRelationshipUpdate` broadcast (nothing changed except the timestamp).
+- Re-feeding at Stage 1 or 2: escalates stage, resolves the prior Condition row (by `SourceTag`), applies the new stage Condition.
+
+Two new entries appended to `ConditionType` enum **after `Inspired`** to preserve stored ordinal values:
 
 ```csharp
 /// <summary>
 /// Vampire Blood Bond Stage 1. The thrall craves the regnant's blood above all else.
-/// Persistent: fades when the Blood Bond drops below Stage 1 (monthly if untreated).
+/// Persistent: fades when the Blood Bond drops below Stage 1 (every 30 days if untreated).
 /// Does not award a Beat on removal — it is an addiction, not a drama resolution.
 /// </summary>
 Addicted,
@@ -266,7 +319,7 @@ public static class BloodBondRules
     /// <summary>
     /// The bond begins fading if the thrall has not fed from the regnant
     /// for longer than <see cref="FadingThreshold"/>.
-    /// Interpretation: one calendar month (see rules-interpretations.md §Phase 12).
+    /// Interpretation: fixed 30-day interval (see rules-interpretations.md §Phase 12).
     /// </summary>
     public static readonly TimeSpan FadingThreshold = TimeSpan.FromDays(30);
 
@@ -352,10 +405,12 @@ public record BloodBondDto(
 );
 ```
 
+**`RecordFeedingAsync` is find-or-update, not insert-only.** The service must first look up any existing `BloodBond` by `(ChronicleId, ThrallCharacterId, RegnantKey)`. If found: escalate stage (or refresh `LastFedAt` at Stage 3). If not found: insert Stage 1. A blind insert on a repeat feeding will hit the unique index constraint. Implementors must never assume the feeding creates a new row.
+
 **Authorization:**
-- `RecordFeedingAsync`, `FadeBondAsync`: Storyteller (chronicle owner) only.
-- `GetBondsForThrallAsync`: character owner OR Storyteller of the chronicle.
-- `GetBondsInChronicleAsync`, `GetFadingAlertsAsync`: Storyteller only.
+- `RecordFeedingAsync`, `FadeBondAsync`: `RequireStorytellerAsync(chronicleId, userId)`.
+- `GetBondsForThrallAsync`: `RequireCharacterAccessAsync(characterId, userId)` (owner or ST).
+- `GetBondsInChronicleAsync`, `GetFadingAlertsAsync`: `RequireStorytellerAsync(chronicleId, userId)`.
 
 **SignalR broadcast:** After any stage mutation, broadcast `ReceiveRelationshipUpdate` (see §SignalR) to the thrall's player client group.
 
@@ -388,7 +443,7 @@ Automate the contested Blood Potency challenge between two vampires, applying `B
 
 ### C1. New TiltType Value
 
-Appended to `TiltType` enum:
+Appended **after `Custom`** in `TiltType` (preserves stored ordinal values — same pattern as `Inspired` in `ConditionType`):
 
 ```csharp
 /// <summary>
@@ -415,11 +470,23 @@ PredatoryAuraContests
 ├── DefenderBloodPotency  int NOT NULL
 ├── AttackerSuccesses     int NOT NULL
 ├── DefenderSuccesses     int NOT NULL
-├── WinnerId              int? FK → Characters.Id (null = tie, resolved by higher BP)
+├── WinnerId              int? FK → Characters.Id (null = true draw — both BP equal)
 ├── OutcomeApplied        nvarchar(50) NOT NULL  (e.g. "BeatenDown", "Shaken", "Draw")
 ├── ResolvedAt            datetime NOT NULL (UTC)
-├── IsLashOut             bool NOT NULL  (true = deliberate Lash Out; false = passive first-meeting contest)
+├── IsLashOut             bool NOT NULL DEFAULT true
 ```
+
+**`WinnerId` write contract:** `PredatoryAuraService` maps `PredatoryAuraOutcome` → `WinnerId` when persisting the audit row:
+
+| `PredatoryAuraOutcome` | `WinnerId` written |
+|---|---|
+| `AttackerWins` | `AttackerCharacterId` |
+| `DefenderWins` | `DefenderCharacterId` |
+| `Draw` | `null` |
+
+`Draw` only occurs when both rolled successes are equal **and** both Blood Potency values are equal. In a `Draw`, no Condition or Tilt is applied to either party.
+
+**`IsLashOut` — Phase 12 scope note:** In Phase 12 only deliberate Lash Out contests (`IsLashOut = true`) are implemented via `ResolveLashOutAsync`. The passive first-meeting encounter contest (where two vampires automatically lock auras on first sight) is **deferred**. All rows written in Phase 12 will have `IsLashOut = true`. The column is retained so a future passive-contest path does not require a migration.
 
 ---
 
@@ -486,10 +553,12 @@ This is an explicit exception to the TraitResolver pipeline. The reason: Blood P
 - Since automation must pick one deterministically: default to `Shaken` Condition for social/non-combat contexts. Storytellers can override by manually applying the `BeatenDown` Tilt via existing Tilt management UI.
 - Document this interpretation in `rules-interpretations.md`.
 
-**Authorization:**
-- Any player in the chronicle can initiate a Lash Out involving their own character as the attacker.
-- Storyteller can initiate any contest.
-- A player cannot initiate a contest where they are the defender (the aura is a challenge, not a punishment they impose on themselves).
+**Authorization and IDOR prevention:**
+- The service validates that **both** attacker and defender belong to `chronicleId` before rolling. A crafted request with characters from different campaigns must be rejected with `Result.Failure` — this is a BOLA/IDOR concern, not just a logic guard.
+- Attacker is the initiator's own character: `RequireCharacterOwnerAsync(attackerCharacterId, userId)`.
+- Storyteller can initiate any contest: also accepted if `RequireStorytellerAsync(chronicleId, userId)` passes.
+- A player cannot set themselves as the defender — the service rejects if the caller owns the defender character but not the attacker.
+- **Defender consent is narrative only.** The defender cannot refuse via the system. The code enforces only who may *initiate*; table consent is a social contract outside the application.
 
 ---
 
@@ -548,7 +617,7 @@ public static class GhoulAgingRules
 {
     /// <summary>
     /// The maximum time a ghoul can go without Vitae before aging begins.
-    /// Interpretation: one calendar month (see rules-interpretations.md §Phase 12).
+    /// Interpretation: fixed 30-day interval (see rules-interpretations.md §Phase 12).
     /// </summary>
     public static readonly TimeSpan FeedingInterval = TimeSpan.FromDays(30);
 
@@ -573,7 +642,7 @@ public static class GhoulAgingRules
 }
 ```
 
-**Aging damage application** is intentionally left to the Storyteller. The domain returns *how overdue* the ghoul is; the ST uses existing Character health tools to apply damage. This is documented in `rules-interpretations.md`.
+**Aging damage application** is intentionally left to the Storyteller as a narrative action. Ghouls are **not** `Character` entities and have no health track in the system — there is no character row to apply damage to. The domain returns *how overdue* the ghoul is via `OverdueMonths`; the ST uses the `Notes` field to track consequences, or applies damage to a linked PC character if the ghoul is played as a full character (outside this system's scope). This is documented in `rules-interpretations.md`.
 
 ---
 
@@ -599,7 +668,12 @@ public interface IGhoulManagementService
 
     /// <summary>
     /// Sets the Discipline IDs the ghoul can access (at rating 1).
-    /// Validates each ID is one of the regnant character's in-clan Disciplines.
+    /// Validation (Application layer, returns Result.Failure if violated):
+    /// - Each ID must be one of the regnant character's in-clan Disciplines.
+    /// - disciplineIds.Count must not exceed the regnant character's BloodPotency.
+    ///   (A ghoul gains access to up to [regnant BP] of the regnant's in-clan Disciplines.)
+    /// - If the regnant is an NPC or display-name-only, validation is skipped and
+    ///   the ST is trusted; no cap is enforced.
     /// </summary>
     Task<Result<Unit>> SetDisciplineAccessAsync(int ghoulId, IReadOnlyList<int> disciplineIds, string userId);
 
@@ -643,8 +717,9 @@ public record GhoulAgingAlertDto(
 ```
 
 **Authorization:**
-- All mutations: Storyteller (chronicle owner) only.
-- Reads: Storyteller OR regnant character's owner (can view their own ghouls).
+- All mutations: `RequireStorytellerAsync(chronicleId, userId)`.
+- Reads (chronicle list, aging alerts): `RequireStorytellerAsync(chronicleId, userId)`.
+- Reads (regnant's own ghouls, via character sheet): `RequireCharacterAccessAsync(regnantCharacterId, userId)`.
 
 ---
 
@@ -677,10 +752,26 @@ Add to `ISessionClient`:
 Task ReceiveRelationshipUpdate(RelationshipUpdateDto update);
 ```
 
+**`RelationshipUpdateType` enum** (new file: `RequiemNexus.Data/RealTime/RelationshipUpdateType.cs`):
+```csharp
+/// <summary>Discriminator for <see cref="RelationshipUpdateDto"/> to avoid stringly-typed hub events.</summary>
+public enum RelationshipUpdateType
+{
+    /// <summary>A Blood Bond stage changed for a character in this session.</summary>
+    BloodBond,
+
+    /// <summary>A Predatory Aura contest was resolved involving a character in this session.</summary>
+    PredatoryAura,
+
+    /// <summary>A character's sire or childer linkage changed.</summary>
+    Lineage,
+}
+```
+
 **`RelationshipUpdateDto`:**
 ```csharp
 public record RelationshipUpdateDto(
-    string UpdateType,              // "BloodBond" | "PredatoryAura" | "Lineage"
+    RelationshipUpdateType UpdateType,
     int? AffectedCharacterId,       // character whose state changed
     string Summary                  // human-readable description e.g. "Blood Bond with Mira advanced to Stage 2"
 );
@@ -702,11 +793,14 @@ The hub remains a thin relay; `IBloodBondService`, `IPredatoryAuraService`, and 
 **Changes:**
 1. Add `SireCharacterId`, `SireNpcId`, `SireDisplayName` columns to `Characters`.
 2. Add FK indexes for sire columns.
-3. Create `BloodBonds` table with all columns and indexes.
-4. Create `PredatoryAuraContests` table.
-5. Create `Ghouls` table.
+3. Add `SourceTag nvarchar(100)?` column to `CharacterConditions`. No data migration needed; all existing rows default to `NULL`.
+4. Create `BloodBonds` table with all columns (including `RegnantKey`) and the unique index on `(ChronicleId, ThrallCharacterId, RegnantKey)`.
+5. Create `PredatoryAuraContests` table.
+6. Create `Ghouls` table.
 
 **Single migration.** All Phase 12 schema changes ship in one migration named `Phase12WebOfNight`. If a breaking change is needed mid-phase, a corrective forward migration is created (never a rollback).
+
+**`CharacterConditionConfiguration` update:** Add a composite index on `(CharacterId, ConditionType, IsResolved, SourceTag)`. The bond service's resolution query filters on all four columns; the existing single-column `CharacterId` index would require a secondary filter pass. The query shape is known at design time — add the composite index in the Phase 12 migration, not as a follow-up optimization.
 
 **`DbInitializer` changes:**
 - No new seed data required for Phase 12 (no definition tables). The initializer needs no extension for this phase.
@@ -733,10 +827,10 @@ All domain tests are purely in-memory. No EF Core, no I/O. Every test is determi
 
 | Service | Key Scenarios |
 |---------|--------------|
-| `IKindredLineageService` | Set sire (PC → Character): verify FK set, clears prior sire. Set NPC sire. ST-only enforcement. Blood Sympathy roll returns correct pool size. |
-| `IBloodBondService` | First feeding creates Stage 1 + `Addicted` Condition. Second feeding same regnant → Stage 2 + `Swooned` (removes `Addicted`). Third → Stage 3 + `Bound`. `FadeBondAsync` on Stage 3 → Stage 2, resolves `Bound`, awards Beat. `FadeBondAsync` on Stage 1 → removes bond. Duplicate regnant–thrall pair → escalates, does not create duplicate. Different regnant → creates independent bond. |
-| `IPredatoryAuraService` | Contest where attacker wins → defender gets `Shaken`. Contest where defender wins → attacker gets `Shaken`. Tie broken by higher BP. Non-participant cannot initiate contest. |
-| `IGhoulManagementService` | Create ghoul. Feed ghoul → `LastFedAt` updated. `GetAgingAlertsAsync` returns overdue ghouls. Release ghoul → excluded from active list. Non-ST cannot mutate. Regnant owner can read their own ghouls. |
+| `IKindredLineageService` | Set sire (PC → Character): FK set, prior sire cleared. Set NPC sire. ST-only enforcement. Blood Sympathy roll returns correct pool size. Self-sire rejected. Cycle rejected. Cross-chronicle sire rejected. Out-of-range Blood Sympathy returns `Result.Failure`. |
+| `IBloodBondService` | First feeding creates Stage 1 + `Addicted`. Second feeding same regnant → Stage 2 + `Swooned` (removes `Addicted` by `SourceTag`). Third → Stage 3 + `Bound`. Re-feed at Stage 3 → only `LastFedAt` updated, no new Condition, no broadcast. `FadeBondAsync` on Stage 3 → Stage 2, resolves `Bound`, awards Beat. `FadeBondAsync` on Stage 1 → removes bond. `SourceTag` isolation: fading bond resolves only its own `Swooned`, not a Social Maneuvering `Swooned`. Display-name collision (`"Mira"` vs `"  mira  "`) → same `RegnantKey`, second insert rejected. Different regnant → independent bond. |
+| `IPredatoryAuraService` | Attacker wins → defender gets `Shaken`. Defender wins → attacker gets `Shaken`. Tie broken by higher BP. **True draw** (equal successes + equal BP) → `WinnerId = null`, no Condition applied. Cross-chronicle characters rejected. Non-participant cannot initiate. |
+| `IGhoulManagementService` | Create ghoul. Feed ghoul → `LastFedAt` updated. `GetAgingAlertsAsync` returns overdue ghouls. Release ghoul → excluded from active list. Non-ST cannot mutate. Regnant owner can read their own ghouls. Discipline cap enforced for linked PC regnant. |
 
 ### Infrastructure Tests (`RequiemNexus.Data.Tests`)
 
@@ -754,12 +848,15 @@ Document all of these in `docs/rules-interpretations.md` when implementing:
 |----------|---------------|
 | **Blood Sympathy — BP ÷ 2 minimum** | Characters with Blood Potency 0 or 1 have no active Blood Sympathy (rating 0). VtR 2e implies BP 2+ is required; we enforce strictly. |
 | **Blood Sympathy roll pool** | Pool = Wits + Empathy (Skill) + Blood Sympathy Rating, where the rating is a flat integer bonus injected by the Application layer *after* TraitResolver resolves Wits and Empathy. The resolver does not know about Blood Sympathy; the service adds it explicitly. |
-| **Blood Bond fading interval** | One calendar month (30 days) per stage. VtR 2e p. 154 states a year for full recovery; we interpret this as 4 stages × ~3 months, or ~1 month per stage, to keep the tracker actionable at chronicle scale. Document at table if using a different pacing. |
+| **Blood Bond fading interval** | Fixed 30-day interval per stage (not a calendar month — no DST or month-length variance). VtR 2e p. 154 states a year for full recovery; we interpret this as ~1 month per stage to keep the tracker actionable at chronicle scale. Table may use any pacing; this value is the default. |
 | **Blood Bond Stage 2 Condition** | `Swooned` is reused for Blood Bond Stage 2. In V:tR 2e, both social maneuvering success and Bond Stage 2 are described using similar obsession language. The existing `Swooned` Condition correctly models this. |
 | **Predatory Aura — Blood Potency pool bypass** | Predatory Aura contests use `Character.BloodPotency` directly as the dice count, not via `TraitResolver`. Blood Potency is a first-class Character scalar; routing through the resolver would require a special-case `TraitType.BloodPotency` that pollutes the generic contract for a single use case. |
 | **Predatory Aura — default outcome Shaken** | The rulebook gives the ST a choice between `Beaten Down` (Tilt) and `Shaken` (Condition). Automated resolution defaults to `Shaken`. ST can override by manually applying `BeatenDown` Tilt. Rationale: Shaken is a Condition (storable, narrative), while BeatenDown is a combat Tilt more appropriate for explicit combat encounters. |
-| **Ghoul aging damage** | `GhoulAgingRules.OverdueMonths` returns how overdue a ghoul is; the ST applies the damage to the character's health track manually. Automated damage application to a mortal health track is deferred until a full mortal character pipeline exists. |
-| **Ghoul Discipline access** | Ghouls can access one dot of any single in-clan Discipline of their regnant, up to the regnant's Blood Potency. We store accessible Discipline IDs at rating 1; multi-dot ghoul Disciplines are out of scope per Phase 12 non-goals. |
+| **Ghoul aging damage** | Ghouls have no health track in this system — they are not `Character` entities. `GhoulAgingRules.OverdueMonths` returns how overdue a ghoul is; the ST records consequences in the `Notes` field or outside the app. Automated damage application is not deferred — it is out of scope for a non-character entity. |
+| **Ghoul Discipline access** | Ghouls can access one dot of any single in-clan Discipline of their regnant, up to the regnant's Blood Potency. We store accessible Discipline IDs at rating 1; multi-dot ghoul Disciplines are out of scope per Phase 12 non-goals. The cap is only enforced when the regnant is a linked PC; NPC/display-name regnants are ST-trusted. |
+| **Predatory Aura — passive first-meeting contest** | The passive aura lock (V:tR 2e p.89 — two vampires contest on first encounter each evening) is deferred. Phase 12 implements deliberate Lash Out only. The `IsLashOut` column on `PredatoryAuraContest` is reserved for the future passive path. |
+| **Blood Bond `Swooned` disambiguation** | `Swooned` can be applied by both Social Maneuvering (Phase 10) and Blood Bond Stage 2. The bond service writes `SourceTag = "bloodbond:{bondId}"` to its Condition rows. Resolution targets only rows matching that `SourceTag`, leaving Social Maneuvering rows unaffected. |
+| **Ghoul aging interval** | Fixed 30-day interval (not a calendar month), matching the bond fading interval. Rationale: avoids DST and month-length edge cases; simpler to reason about in tests and UI. |
 
 ---
 
@@ -769,19 +866,20 @@ Work should be completed in the order listed. Complete each unit before moving t
 
 ### Foundation
 
-- [ ] **`ConditionType` — add `Addicted` and `Bound`** (Domain) with XML doc comments.
-- [ ] **`TiltType` — add `BeatenDown`** (Domain) with XML doc comment.
-- [ ] **Migration `Phase12WebOfNight`** (Data) — adds sire columns to Characters, and creates BloodBonds, PredatoryAuraContests, Ghouls tables.
-- [ ] **Entity configurations** (Data) — `BloodBondConfiguration`, `PredatoryAuraContestConfiguration`, `GhoulConfiguration`, update `CharacterConfiguration` for sire FK.
+- [ ] **`ConditionType` — add `Addicted` and `Bound` after `Inspired`** (Domain) with XML doc comments.
+- [ ] **`TiltType` — add `BeatenDown` after `Custom`** (Domain) with XML doc comment.
+- [ ] **Migration `Phase12WebOfNight`** (Data) — sire columns on Characters; `SourceTag` on CharacterConditions; BloodBonds (with `RegnantKey` and unique index); PredatoryAuraContests; Ghouls.
+- [ ] **Entity configurations** (Data) — `BloodBondConfiguration` (unique index on `RegnantKey`, cascade/restrict delete rules), `PredatoryAuraContestConfiguration`, `GhoulConfiguration`, update `CharacterConfiguration` for sire FKs, update `CharacterConditionConfiguration` (composite index on `CharacterId`, `ConditionType`, `IsResolved`, `SourceTag`).
 - [ ] **`TestDbInitializer` seed extension** — sample bond, ghoul, and sire linkage for integration tests.
+- [ ] **Observability** — every new service (`KindredLineageService`, `BloodBondService`, `PredatoryAuraService`, `GhoulManagementService`) emits structured Serilog log entries with correlation ID for all state-changing operations; emit OpenTelemetry metrics for bond stage changes and aura contest resolutions per project norms.
 
 ### Subsystem A — Blood Ties & Sympathy
 
 - [ ] **`BloodSympathyRules`** (Domain) — `ComputeRating`, `EffectiveRange`, `BonusDiceForDegree`.
 - [ ] **Domain unit tests** for `BloodSympathyRules`.
-- [ ] **`IKindredLineageService` + `KindredLineageService`** (Application).
+- [ ] **`IKindredLineageService` + `KindredLineageService`** (Application) — including self-sire, cycle, cross-chronicle, and Blood Sympathy range validation.
 - [ ] **`LineageGraphDto`, `KinNodeDto`** (Application Contracts).
-- [ ] **Application integration tests** for `IKindredLineageService`.
+- [ ] **Application integration tests** for `IKindredLineageService` — cover self-sire rejection, cycle rejection, cross-chronicle rejection, out-of-range Blood Sympathy roll failure.
 - [ ] **`LineageSection.razor`** (Web — character sheet, player read-only).
 - [ ] **`EditLineageModal.razor`** (Web — ST mutation modal).
 
@@ -791,7 +889,8 @@ Work should be completed in the order listed. Complete each unit before moving t
 - [ ] **Domain unit tests** for `BloodBondRules`.
 - [ ] **`IBloodBondService` + `BloodBondService`** (Application) — including Condition lifecycle management.
 - [ ] **`BloodBondDto`, `RecordFeedingRequest`** (Application Contracts).
-- [ ] **Application integration tests** for `IBloodBondService` (all stage transitions, fading, duplicates).
+- [ ] **Application integration tests** for `IBloodBondService` — all stage transitions, re-feed at same stage (idempotent), `SourceTag` isolation (bond `Swooned` not resolved by Social Maneuvering path), fading, `RegnantKey` duplicate prevention, **display-name collision** (`"Mira"` and `"  mira  "` resolve to the same `RegnantKey` → second insert rejected, not a new bond).
+- [ ] **`RelationshipUpdateType` enum** (Data/RealTime) — new file, one type per file rule.
 - [ ] **`ReceiveRelationshipUpdate`** added to `ISessionClient` and implemented in `SessionHub`.
 - [ ] **`BloodBondsPanel.razor`** (Web — ST Glimpse panel).
 - [ ] **`RecordFeedingModal.razor`** (Web — ST modal).
@@ -804,7 +903,7 @@ Work should be completed in the order listed. Complete each unit before moving t
 - [ ] **Domain unit tests** for `PredatoryAuraRules`.
 - [ ] **`IPredatoryAuraService` + `PredatoryAuraService`** (Application).
 - [ ] **`PredatoryAuraContestResultDto`** (Application Contracts).
-- [ ] **Application integration tests** for `IPredatoryAuraService`.
+- [ ] **Application integration tests** for `IPredatoryAuraService` — attacker wins → defender gets `Shaken`; defender wins → attacker gets `Shaken`; tie broken by higher BP; **true draw** (equal successes + equal BP → `WinnerId = null`, no Condition applied to either party); non-participant cannot initiate; **cross-chronicle characters rejected**.
 - [ ] **`PredatoryAuraChallengeModal.razor`** (Web — character sheet action).
 - [ ] **`AuraContestResultDisplay.razor`** (Web — inline result display).
 - [ ] **Contest history accordion** in ST Glimpse.
@@ -833,7 +932,7 @@ Work should be completed in the order listed. Complete each unit before moving t
 ## 🚫 Non-Goals (Phase 12)
 
 - Full playable ghoul characters with attribute sheets, XP, and skill advancement.
-- Automated aging damage application (ST applies manually via health track).
+- In-app health tracking for ghouls — ghouls are not `Character` entities; aging consequences are recorded by the ST in the `Notes` field or outside the application entirely.
 - Multi-dot ghoul Discipline access (only first dot of in-clan Disciplines).
 - Blood Sympathy passive combat bonus auto-injection into dice pools (ST tracks narratively; only the active roll is automated).
 - V:tR 2e Diablerie and soul-stealing mechanics (not in scope for this phase or any planned phase).
