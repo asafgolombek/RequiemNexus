@@ -871,17 +871,17 @@ Work should be completed in the order listed. Complete each unit before moving t
 - [x] **Migration `Phase12WebOfNight`** (Data) — sire columns on Characters; `SourceTag` on CharacterConditions; BloodBonds (with `RegnantKey` and unique index); PredatoryAuraContests; Ghouls.
 - [x] **Entity configurations** (Data) — `BloodBondConfiguration` (unique index on `RegnantKey`, cascade/restrict delete rules), `PredatoryAuraContestConfiguration`, `GhoulConfiguration`, update `CharacterConfiguration` for sire FKs, update `CharacterConditionConfiguration` (composite index on `CharacterId`, `ConditionType`, `IsResolved`, `SourceTag`).
 - [x] **`TestDbInitializer` seed extension** — sample bond, ghoul, and sire linkage for integration tests.
-- [ ] **Observability** — every new service (`KindredLineageService`, `BloodBondService`, `PredatoryAuraService`, `GhoulManagementService`) emits structured Serilog log entries with correlation ID for all state-changing operations; emit OpenTelemetry metrics for bond stage changes and aura contest resolutions per project norms.
+- [x] **Observability** — `RelationshipWebMetrics` (meter `RequiemNexus.Relationships`) registered in `Program.cs` with counters for lineage mutations, Blood Bond stage changes, Predatory Aura resolutions, and ghoul mutations. `KindredLineageService` wraps state-changing operations in `ILogger` scope plus structured `CorrelationId` (W3C trace id when `Activity.Current` exists, otherwise a per-operation id via `AmbientCorrelation.ForNewOperation`). **Wire-up when implemented:** call `RecordBloodBondStageChange`, `RecordPredatoryAuraContestResolved`, and `RecordGhoulMutation` from `BloodBondService`, `PredatoryAuraService`, and `GhoulManagementService` respectively, with the same logging pattern.
 
 ### Subsystem A — Blood Ties & Sympathy
 
-- [ ] **`BloodSympathyRules`** (Domain) — `ComputeRating`, `EffectiveRange`, `BonusDiceForDegree`.
-- [ ] **Domain unit tests** for `BloodSympathyRules`.
-- [ ] **`IKindredLineageService` + `KindredLineageService`** (Application) — including self-sire, cycle, cross-chronicle, and Blood Sympathy range validation.
-- [ ] **`LineageGraphDto`, `KinNodeDto`** (Application Contracts).
-- [ ] **Application integration tests** for `IKindredLineageService` — cover self-sire rejection, cycle rejection, cross-chronicle rejection, out-of-range Blood Sympathy roll failure.
-- [ ] **`LineageSection.razor`** (Web — character sheet, player read-only).
-- [ ] **`EditLineageModal.razor`** (Web — ST mutation modal).
+- [x] **`BloodSympathyRules`** (Domain) — `ComputeRating`, `EffectiveRange`, `BonusDiceForDegree`.
+- [x] **Domain unit tests** for `BloodSympathyRules`.
+- [x] **`IKindredLineageService` + `KindredLineageService`** (Application) — including self-sire, cycle, cross-chronicle, and Blood Sympathy range validation.
+- [x] **`LineageGraphDto`, `KinNodeDto`** (Application Contracts).
+- [x] **Application integration tests** for `IKindredLineageService` — cover self-sire rejection, cycle rejection, cross-chronicle rejection, out-of-range Blood Sympathy roll failure.
+- [x] **`LineageSection.razor`** (Web — character sheet, player read-only).
+- [x] **`EditLineageModal.razor`** (Web — ST mutation modal).
 
 ### Subsystem B — Blood Bond Tracker
 

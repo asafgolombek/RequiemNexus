@@ -1,0 +1,215 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Web.Services
+@inject IKindredLineageService KindredLineageService
+@inject ICampaignService CampaignService
+@inject ToastService ToastService
+
+<section class="cs-section cs-lineage">
+    <h2>Lineage</h2>
+    @if (string.IsNullOrEmpty(CurrentUserId))
+    {
+        <p class="text-muted text-small">Sign in to view lineage.</p>
+    }
+    else if (!CampaignId.HasValue)
+    {
+        <p class="text-muted text-small">Join a chronicle to track Kindred lineage and Blood Sympathy.</p>
+    }
+    else if (_loading)
+    {
+        <p class="text-muted text-small"><em>Loading lineage…</em></p>
+    }
+    else if (_graph == null)
+    {
+        <p class="text-muted text-small">Lineage could not be loaded.</p>
+    }
+    else
+    {
+        <div class="bloodline-info">
+            <div class="bloodline-detail-row">
+                <span class="trait-subheading">Blood Sympathy rating:</span>
+                <strong>@_graph.BloodSympathyRating</strong>
+                @if (_graph.BloodPotency < 2)
+                {
+                    <span class="text-muted text-small" style="display:block;margin-top:0.35rem;">
+                        Blood Sympathy inactive — Blood Potency must reach 2.
+                    </span>
+                }
+            </div>
+            <div class="bloodline-detail-row">
+                <span class="trait-subheading">Sire:</span>
+                @if (_graph.Sire == null)
+                {
+                    <span>—</span>
+                }
+                else
+                {
+                    <span>@_graph.Sire.DisplayName</span>
+                    @if (_graph.Sire.BloodPotency is int sbp)
+                    {
+                        <span class="text-muted text-small"> (BP @sbp)</span>
+                    }
+                }
+            </div>
+            <div class="bloodline-detail-row">
+                <span class="trait-subheading">Childer:</span>
+                @if (_graph.Childer.Count == 0)
+                {
+                    <span>None recorded in this chronicle.</span>
+                }
+                else
+                {
+                    <ul class="trait-list" style="margin:0.25rem 0 0;padding-left:1.1rem;">
+                        @foreach (var ch in _graph.Childer)
+                        {
+                            <li>@ch.DisplayName @if (ch.BloodPotency is int cbp) { <span class="text-muted text-small">(BP @cbp)</span> }</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        @if (_graph.BloodPotency >= 2 && _chroniclePeers.Count > 0)
+        {
+            <div class="award-panel" style="margin-top:0.75rem;">
+                <p class="text-small text-muted-rn" style="margin-bottom:0.35rem;">
+                    Roll Blood Sympathy to sense a chronicle Kindred you are related to (server validates lineage range).
+                </p>
+                <div class="award-row" style="flex-wrap:wrap;">
+                    <select class="form-control award-input" style="min-width:160px;" @bind="_sympathyTargetId">
+                        <option value="0">— Choose kin —</option>
+                        @foreach (var p in _chroniclePeers)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    </select>
+                    <button type="button"
+                            class="btn-primary-rn"
+                            style="font-size:0.85em;"
+                            disabled="@(_sympathyTargetId == 0 || _rollBusy)"
+                            @onclick="RollBloodSympathyAsync">
+                        @(_rollBusy ? "Rolling…" : "Roll Blood Sympathy")
+                    </button>
+                </div>
+            </div>
+        }
+        else if (_graph.BloodPotency >= 2 && _chroniclePeers.Count == 0)
+        {
+            <p class="text-muted text-small" style="margin-top:0.5rem;">No other player characters in this chronicle to target.</p>
+        }
+
+        <p class="text-xsmall text-muted-rn" style="margin-top:0.75rem;">
+            Your Storyteller sets or clears sire links from
+            <a href="/campaigns/@CampaignId/glimpse" style="color:var(--gold);text-decoration:underline;">Storyteller Glimpse</a>.
+        </p>
+    }
+</section>
+
+@code {
+    /// <summary>Character whose lineage is shown.</summary>
+    [Parameter]
+    public int CharacterId { get; set; }
+
+    /// <summary>Authenticated user id.</summary>
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    /// <summary>Campaign / chronicle id when the character is enrolled.</summary>
+    [Parameter]
+    public int? CampaignId { get; set; }
+
+    private LineageGraphDto? _graph;
+    private bool _loading;
+    private bool _rollBusy;
+    private int _sympathyTargetId;
+    private List<(int Id, string Name)> _chroniclePeers = [];
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (CharacterId <= 0 || string.IsNullOrEmpty(CurrentUserId) || !CampaignId.HasValue)
+        {
+            _graph = null;
+            _chroniclePeers = [];
+            return;
+        }
+
+        await LoadLineageAsync();
+    }
+
+    private async Task LoadLineageAsync()
+    {
+        _loading = true;
+        try
+        {
+            _graph = await KindredLineageService.GetLineageGraphAsync(CharacterId, CurrentUserId!);
+            var campaign = await CampaignService.GetCampaignByIdAsync(CampaignId!.Value, CurrentUserId!);
+            _chroniclePeers = campaign?.Characters
+                .Where(c => c.Id != CharacterId)
+                .OrderBy(c => c.Name)
+                .Select(c => (c.Id, c.Name))
+                .ToList() ?? [];
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _graph = null;
+            ToastService.Show("Lineage", "You do not have access to this character's lineage.", ToastType.Error);
+        }
+        catch (Exception ex)
+        {
+            _graph = null;
+            ToastService.Show("Lineage", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RollBloodSympathyAsync()
+    {
+        if (_sympathyTargetId == 0 || string.IsNullOrEmpty(CurrentUserId))
+        {
+            return;
+        }
+
+        _rollBusy = true;
+        try
+        {
+            Result<RollResult> result = await KindredLineageService.RollBloodSympathyAsync(
+                CharacterId,
+                _sympathyTargetId,
+                CurrentUserId);
+
+            if (!result.IsSuccess || result.Value == null)
+            {
+                ToastService.Show("Blood Sympathy", result.Error ?? "Roll failed.", ToastType.Warning);
+                return;
+            }
+
+            RollResult r = result.Value;
+            string msg = $"{r.Successes} success" + (r.Successes == 1 ? string.Empty : "es");
+            if (r.IsExceptionalSuccess)
+            {
+                msg += " — Exceptional success!";
+            }
+
+            if (r.IsDramaticFailure)
+            {
+                msg += " — Dramatic failure!";
+            }
+
+            ToastService.Show("Blood Sympathy", msg, r.IsDramaticFailure ? ToastType.Error : ToastType.Success);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Blood Sympathy", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _rollBusy = false;
+        }
+    }
+}

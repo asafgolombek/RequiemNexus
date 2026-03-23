@@ -27,6 +27,13 @@ public class Campaign
     /// </summary>
     public int SocialManeuverInvestigationSuccessesPerClue { get; set; } = 3;
 
+    /// <summary>
+    /// SHA-256 hash (64 hex chars) of the player join invite token. Null when invite links are disabled.
+    /// Plaintext token is never stored.
+    /// </summary>
+    [MaxLength(64)]
+    public string? InviteTokenHash { get; set; }
+
     public virtual ICollection<Character> Characters { get; set; } = new List<Character>();
 
     public virtual ICollection<CityFaction> Factions { get; set; } = [];

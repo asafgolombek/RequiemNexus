@@ -144,7 +144,10 @@
                          @ondrop="() => HandleDrop(v.CharacterId)">
                         <div class="glimpse-card-header">
                             <h4>@v.Name</h4>
-                            <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                            <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+                                <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                                <button type="button" class="btn-ghost" style="font-size:0.8em;" @onclick="() => OpenLineageEditor(v.CharacterId)">Lineage</button>
+                            </div>
                         </div>
 
                         <div class="vitals-grid">
@@ -225,4 +228,10 @@
         }
     }
 </div>
+
+<EditLineageModal @bind-IsOpen="_lineageModalOpen"
+                  CampaignId="Id"
+                  CharacterId="_lineageEditCharacterId"
+                  StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                  OnSaved="OnLineageSavedAsync" />
 

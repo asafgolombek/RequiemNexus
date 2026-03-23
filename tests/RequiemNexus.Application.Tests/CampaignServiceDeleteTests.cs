@@ -91,8 +91,10 @@ public class CampaignServiceDeleteTests
             ctx.Characters.Add(character);
             await ctx.SaveChangesAsync();
 
+            character.CampaignId = campaign.Id;
+            await ctx.SaveChangesAsync();
+
             CampaignService service = CreateCampaignService(ctx, options);
-            await service.AddCharacterToCampaignAsync(campaign.Id, character.Id, "player");
 
             ctx.BeatLedger.Add(new BeatLedgerEntry
             {

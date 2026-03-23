@@ -19,5 +19,7 @@ public sealed class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(c => c.StoryTellerId);
+
+        builder.Property(c => c.InviteTokenHash).HasMaxLength(64);
     }
 }

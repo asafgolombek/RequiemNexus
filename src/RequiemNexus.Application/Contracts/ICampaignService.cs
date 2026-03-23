@@ -1,3 +1,4 @@
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Application.Contracts;
@@ -22,9 +23,29 @@ public interface ICampaignService
     Task<Campaign> CreateCampaignAsync(string name, string description, string storytellerUserId);
 
     /// <summary>
-    /// Assigns a character to a campaign. The requesting user must be the Storyteller or the character's owner.
+    /// Assigns an unassigned character to a campaign. The caller must own the character and be the Storyteller
+    /// or already have another character in this campaign (use <see cref="JoinCampaignWithInviteAsync"/> for first join).
     /// </summary>
     Task AddCharacterToCampaignAsync(int campaignId, int characterId, string userId);
+
+    /// <summary>
+    /// Storyteller-only: replaces the join invite with a new random token and returns the plaintext token once (store only the hash in the database).
+    /// </summary>
+    Task<string> RegenerateJoinInviteAsync(int campaignId, string stUserId);
+
+    /// <summary>Storyteller-only: disables player invite links for the campaign.</summary>
+    Task ClearJoinInviteAsync(int campaignId, string stUserId);
+
+    /// <summary>
+    /// When <paramref name="inviteToken"/> matches the stored hash, returns minimal campaign info for the join UI; otherwise <c>null</c>.
+    /// Requires an authenticated <paramref name="userId"/>.
+    /// </summary>
+    Task<CampaignJoinPreviewDto?> GetJoinPreviewAsync(int campaignId, string inviteToken, string userId);
+
+    /// <summary>
+    /// Enrolls the caller's unassigned character using a valid invite token. Verifies ownership and invite hash.
+    /// </summary>
+    Task JoinCampaignWithInviteAsync(int campaignId, int characterId, string inviteToken, string userId);
 
     /// <summary>Removes a character from the campaign. Requires Storyteller or character-owner access.</summary>
     Task RemoveCharacterFromCampaignAsync(int campaignId, int characterId, string userId);

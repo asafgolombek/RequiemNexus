@@ -369,6 +369,7 @@ else
                         @if (_character.CampaignId.HasValue && !string.IsNullOrEmpty(_currentUserId))
                         {
                             <SocialManeuversSection CharacterId="Id" CurrentUserId="@_currentUserId" />
+                            <LineageSection CharacterId="Id" CurrentUserId="@_currentUserId" CampaignId="_character.CampaignId" />
                         }
 
                         <!-- DEVOTIONS -->

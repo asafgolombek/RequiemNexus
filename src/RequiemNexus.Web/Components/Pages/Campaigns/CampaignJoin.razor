@@ -1,0 +1,149 @@
+@page "/campaigns/{Id:int}/join"
+@rendermode InteractiveServer
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
+@inject ICampaignService CampaignService
+@inject ICharacterService CharacterService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Join campaign - Requiem Nexus</PageTitle>
+
+<div class="page-container fade-in">
+    @if (!_ready)
+    {
+        <p><em>Loading…</em></p>
+    }
+    else if (string.IsNullOrWhiteSpace(Invite))
+    {
+        <div class="alert-rn alert-danger" role="alert">
+            This invite link is missing the invite parameter. Ask your Storyteller for the full link.
+        </div>
+    }
+    else if (string.IsNullOrEmpty(_currentUserId))
+    {
+        <div class="card-rn" style="max-width: 32rem;">
+            <h2>Sign in to join</h2>
+            <p>You need an account to attach a character to this chronicle.</p>
+            <p><a class="btn-primary-rn" href="@_loginUrl">Sign in</a></p>
+            <p style="margin-top: 1rem;"><a href="/register">Create an account</a></p>
+        </div>
+    }
+    else if (_preview is null)
+    {
+        <div class="alert-rn alert-danger" role="alert">
+            This invite link is invalid or has been disabled. Ask your Storyteller for a new link.
+        </div>
+    }
+    else
+    {
+        <div class="card-rn" style="max-width: 36rem;">
+            <h2>Join @_preview.Name</h2>
+            <p>Choose one of your characters that is not already in a campaign.</p>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert-rn alert-danger" role="alert">@_errorMessage</div>
+            }
+
+            @if (!_availableCharacters.Any())
+            {
+                <p>You have no available characters. <a href="/character/create">Create a character</a> first, then open this invite link again.</p>
+            }
+            else
+            {
+                <EditForm Model="_joinModel" OnValidSubmit="SubmitJoin">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Character</label>
+                        <InputSelect @bind-Value="_joinModel.CharacterId" class="form-control">
+                            <option value="0">— Select —</option>
+                            @foreach (Character c in _availableCharacters)
+                            {
+                                <option value="@c.Id">@c.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <button type="submit" class="btn-primary-rn" disabled="@(_joinModel.CharacterId == 0 || _busy)">Join campaign</button>
+                </EditForm>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "invite")]
+    public string? Invite { get; set; }
+
+    private string? _currentUserId;
+    private CampaignJoinPreviewDto? _preview;
+    private List<Character> _availableCharacters = [];
+    private bool _ready;
+    private bool _busy;
+    private string? _errorMessage;
+    private string _loginUrl = "/";
+    private readonly JoinModel _joinModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrWhiteSpace(Invite))
+        {
+            string returnPath = $"campaigns/{Id}/join?invite={Uri.EscapeDataString(Invite)}";
+            _loginUrl = QueryHelpers.AddQueryString("/", "returnUrl", "/" + returnPath);
+        }
+
+        if (!string.IsNullOrEmpty(_currentUserId) && !string.IsNullOrWhiteSpace(Invite))
+        {
+            _preview = await CampaignService.GetJoinPreviewAsync(Id, Invite, _currentUserId);
+            if (_preview is not null)
+            {
+                List<Character> all = await CharacterService.GetCharactersByUserIdAsync(_currentUserId);
+                _availableCharacters = all.Where(c => c.CampaignId == null).ToList();
+            }
+        }
+
+        _ready = true;
+    }
+
+    private async Task SubmitJoin()
+    {
+        if (_joinModel.CharacterId <= 0 || string.IsNullOrEmpty(_currentUserId) || string.IsNullOrWhiteSpace(Invite))
+        {
+            return;
+        }
+
+        _busy = true;
+        _errorMessage = null;
+        try
+        {
+            await CampaignService.JoinCampaignWithInviteAsync(Id, _joinModel.CharacterId, Invite, _currentUserId);
+            NavigationManager.NavigateTo($"/campaigns/{Id}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (InvalidOperationException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private sealed class JoinModel
+    {
+        public int CharacterId { get; set; }
+    }
+}

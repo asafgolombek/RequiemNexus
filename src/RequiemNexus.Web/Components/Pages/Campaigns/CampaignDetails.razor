@@ -9,7 +9,9 @@
 @using System.Security.Claims
 @using System.Threading
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @inject ICampaignService CampaignService
+@inject IJSRuntime JSRuntime
 @inject IPerceptionRollService PerceptionRollService
 @inject ICharacterService CharacterService
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -34,7 +36,7 @@
     else if (_campaign == null)
     {
         <div class="alert-rn alert-danger">
-            This campaign does not exist, or your account is not part of it. You must be the Storyteller or own a character in the saga (same rules as joining a live session).
+            This campaign does not exist, or your account is not part of it. You must be the Storyteller or own a character in the saga (same rules as joining a live session). Ask your Storyteller for an invite link to join with your first character.
         </div>
     }
     else
@@ -97,6 +99,42 @@
                     <a href="/campaigns/@_campaign.Id/danse-macabre" class="btn-ghost">🌹 Danse Macabre</a>
                 }
             </div>
+
+            @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
+            {
+                <div class="card-rn" style="margin-top: 1rem; max-width: 44rem;">
+                    <h3 style="margin-top: 0;">Player invite link</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Share a link so players can attach their <strong>first</strong> character without already being on the roster. The secret is not stored in plain text; copy the full URL when you generate it.
+                    </p>
+                    @if (!string.IsNullOrEmpty(_campaign.InviteTokenHash))
+                    {
+                        <p style="font-size: 0.9rem;"><span class="badge-live" style="font-size:0.75rem;">Invite active</span> Players with the link can join while it stays enabled.</p>
+                    }
+                    else
+                    {
+                        <p style="font-size: 0.9rem;">No active invite. Generate a link to share with your players.</p>
+                    }
+                    @if (!string.IsNullOrEmpty(_inviteError))
+                    {
+                        <p class="feedback-error" style="font-size:0.9rem;">@_inviteError</p>
+                    }
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                        <button type="button" class="btn-primary-rn" disabled="@_inviteBusy" @onclick="RegenerateJoinInvite">Generate / regenerate link</button>
+                        <button type="button" class="btn-ghost" disabled="@(_inviteBusy || string.IsNullOrEmpty(_campaign.InviteTokenHash))" @onclick="ClearJoinInvite">Disable invite</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_lastGeneratedJoinUrl))
+                    {
+                        <div style="margin-top: 0.75rem;">
+                            <label style="font-size:0.85rem;display:block;margin-bottom:0.25rem;">Copy this URL (shown once until you regenerate):</label>
+                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                                <input class="form-control" style="flex:1;min-width:12rem;font-size:0.85rem;" readonly value="@_lastGeneratedJoinUrl" />
+                                <button type="button" class="btn-ghost" @onclick="CopyJoinUrl">Copy</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem;">
@@ -343,6 +381,9 @@
     private bool _sessionActive = false;
     private bool _campaignLoadComplete;
     private string? _sessionHubMessage;
+    private bool _inviteBusy;
+    private string? _inviteError;
+    private string? _lastGeneratedJoinUrl;
     private string? _cookieHeader;
     private PersistingComponentStateSubscription _persistingSubscription;
     private Timer? _heartbeatTimer;
@@ -699,6 +740,74 @@
             await CampaignService.AddCharacterToCampaignAsync(_campaign.Id, _addModel.CharacterId, _currentUserId);
             await LoadData();
             _showAddCharacter = false;
+        }
+    }
+
+    private async Task RegenerateJoinInvite()
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _inviteBusy = true;
+        _inviteError = null;
+        try
+        {
+            string token = await CampaignService.RegenerateJoinInviteAsync(_campaign.Id, _currentUserId);
+            string path = $"/campaigns/{_campaign.Id}/join?invite={Uri.EscapeDataString(token)}";
+            _lastGeneratedJoinUrl = NavigationManager.ToAbsoluteUri(path).AbsoluteUri;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            _inviteError = ex.Message;
+        }
+        finally
+        {
+            _inviteBusy = false;
+        }
+    }
+
+    private async Task ClearJoinInvite()
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _inviteBusy = true;
+        _inviteError = null;
+        try
+        {
+            await CampaignService.ClearJoinInviteAsync(_campaign.Id, _currentUserId);
+            _lastGeneratedJoinUrl = null;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            _inviteError = ex.Message;
+        }
+        finally
+        {
+            _inviteBusy = false;
+        }
+    }
+
+    private async Task CopyJoinUrl()
+    {
+        if (string.IsNullOrEmpty(_lastGeneratedJoinUrl))
+        {
+            return;
+        }
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _lastGeneratedJoinUrl);
+        }
+        catch (JSException)
+        {
+            // Clipboard may be unavailable; URL remains in the field for manual copy.
         }
     }
 

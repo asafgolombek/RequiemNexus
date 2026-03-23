@@ -1,0 +1,9 @@
+.lineage-mode-btn {
+    font-size: 0.8em;
+    opacity: 0.85;
+}
+
+.lineage-mode-btn.lineage-mode-active {
+    border: 1px solid var(--gold);
+    opacity: 1;
+}

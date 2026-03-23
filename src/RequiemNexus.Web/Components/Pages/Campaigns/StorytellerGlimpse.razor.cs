@@ -78,6 +78,10 @@ public partial class StorytellerGlimpse
 
     private int? _activeDropTargetId;
 
+    private bool _lineageModalOpen;
+
+    private int _lineageEditCharacterId;
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -250,5 +254,16 @@ public partial class StorytellerGlimpse
     private static int BarPct(int cur, int max)
     {
         return max <= 0 ? 0 : Math.Clamp(cur * 100 / max, 0, 100);
+    }
+
+    private void OpenLineageEditor(int characterId)
+    {
+        _lineageEditCharacterId = characterId;
+        _lineageModalOpen = true;
+    }
+
+    private async Task OnLineageSavedAsync()
+    {
+        await LoadVitals();
     }
 }
