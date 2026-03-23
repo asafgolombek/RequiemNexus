@@ -121,6 +121,7 @@ The Dice Nexus resolves pools from a single, unified source regardless of the co
 
 - **Phase 8**: Pools composed of Attributes, Skills, and Discipline ratings (additive only).
 - **Phase 9**: Extended to support **Contested Rolls** (`vs` format), **Penalty Dice** (`Pool - Stat`), and **Lower Discipline** logic.
+- **Phase 11**: **Equipment** modifiers from `ITraitResolver` / inventory (skill assists, weapon damage dice, strength under-requirement penalties) feed the same pool path as traits and sorcery-driven modifiers.
 
 **The resolver must treat all traits as first-class inputs.** A pool definition is a declarative list of typed references — `{ type: Attribute, name: "Wits" }`, `{ type: Skill, name: "Subterfuge" }`, `{ type: Discipline, name: "Obfuscate", minimumRating: 2 }` — and the resolver hydrates each from its respective domain, applies any active modifiers, and emits a `DicePool` value object. No caller constructs a raw integer pool directly.
 
@@ -130,7 +131,7 @@ This design ensures that Devotions (Phase 8), Blood Sorcery (Phase 9), and Equip
 
 ## ⚙️ Passive Modifier Engine (Phase 9+)
 
-Many advanced Kindred powers (Devotions, Coils, Covenant benefits) provide permanent or conditional stat deltas rather than active rolls.
+Many advanced Kindred powers (Devotions, Coils, Covenant benefits) and **equipped catalog gear (Phase 11)** provide permanent or conditional stat deltas rather than active rolls, where applicable.
 
 - **Stateless Aggregation**: Modifiers are never "applied" to a base stat permanently. Instead, an `IModifierService` aggregates all active `PassiveModifier` records for a character at the moment a stat is requested.
 - **Modifier Types**:
@@ -168,7 +169,7 @@ Security is an architectural concern, not a feature bolted on afterward.
 
 ### Authorization Boundaries
 
-- **Authentication** is handled by ASP.NET Core Identity in the Infrastructure Layer.
+- **Authentication** is handled by ASP.NET Core Identity in the Infrastructure Layer (cookie sessions for the Blazor app; JWT or other bearer schemes are out of scope until a separate public API is introduced).
 - **Authorization checks** live in the **Application Layer** — every use case verifies ownership before executing.
 - The Presentation Layer **never** makes authorization decisions; it only reflects the outcome.
 
@@ -251,7 +252,7 @@ Nothing important happens silently. If a behavior cannot be observed, the archit
 | **Tracing** | OpenTelemetry | Distributed trace spans across layers |
 | **Dashboards** | Grafana + AWS CloudWatch | Live visualization of metrics, traces, and alerts |
 | **Alerts** | CloudWatch Alarms | Threshold-based alerts for latency, error rate, and resource usage |
-| **Error Tracking** | Sentry / Raygun | Real-time exception alerts with stack traces and breadcrumbs |
+| **Error Tracking** | Sentry (optional, `Sentry:Dsn`) | Real-time exception alerts with stack traces when configured; Raygun or equivalents remain optional alternatives |
 
 ### Rules
 
@@ -272,7 +273,7 @@ Testing validates that our Covenants hold without fragile setup.
 | `RequiemNexus.Application.Tests` | Application | Integration tests — use cases, authorization flows, service orchestration; in-memory or mocked infrastructure |
 | `RequiemNexus.Data.Tests` | Infrastructure | Integration tests — EF Core mappings and migrations against Dockerized PostgreSQL |
 | `RequiemNexus.PerformanceTests` | Cross-cutting | Load and latency tests enforcing performance budgets via NBomber |
-| E2E Tests | Presentation | End-to-end tests via Playwright simulating real user interactions |
+| E2E Tests | Presentation | End-to-end tests via Playwright (planned in Phase 13; see `mission.md`) |
 
 ---
 
@@ -302,9 +303,10 @@ Lighthouse runs as a GitHub Actions step on every PR targeting `main`. It audits
 | `BloodlineDefinition` / `DevotionDefinition` | 24h | Seed data update |
 | `CovenantDefinition` / `SorceryRiteDefinition` | 24h | Seed data update |
 | `CoilDefinition` / `ScaleDefinition` | 24h | Seed data update |
+| `Asset` catalog (TPT: weapons, armor, equipment, services) | 24h | Seed data update |
 | SignalR backplane messages | Transient | Delivered and discarded |
 
-> **Note:** Reference data (Clans, Disciplines, Bloodlines, Devotions, Covenants, Rites) are defined in seed, change only on deploy, and are read-heavy. They must be cached at the same TTL and share the same invalidation trigger. Do not treat them as mutable character data.
+> **Note:** Reference data (Clans, Disciplines, Bloodlines, Devotions, Covenants, Rites, **Assets**) are defined in seed, change only on deploy, and are read-heavy. They must be cached at the same TTL and share the same invalidation trigger. Do not treat them as mutable character data.
 
 ### Query Rules
 
@@ -375,7 +377,7 @@ Deployment automation is part of the architecture: it must be explicit, reproduc
 
 ### AWS Service Map (Typical)
 
-Phase 5 infrastructure is expected to include:
+The **target** production topology (delivered via IaC across Phases 5–6) includes:
 
 - **Networking**: VPC, public/private subnets, security groups
 - **Compute & ingress**: ECS Fargate, ECR, ALB
@@ -402,8 +404,10 @@ From Phase 8 onward, the domain introduces a structural distinction that must be
 | What a Bloodline *does* | Domain engine (stateless service) | Applies substitutions, validates character, stacks Banes |
 | What a Devotion *is* | Seed data (`DevotionDefinition`) | Pool composition, XP cost, prerequisite Disciplines |
 | What a Devotion *does* | Unified Pool Resolver + `DiceService` | Hydrates pool, activates roll, registers passive modifier |
+| What catalog equipment *is* | Seed / DB rows (`Asset` + TPT: `WeaponAsset`, `ArmorAsset`, `EquipmentAsset`, `ServiceAsset`) | Stats, availability, capabilities (e.g. tool + weapon profile) |
+| What equipment *does* | `ITraitResolver`, procurement services, Pack UI | Modifiers to pools and sheet; procurement vs. Resources; Masquerade on mutations |
 
-A new Bloodline or Devotion from a sourcebook is a **migration + seed entry**, not a code change. An engine that handles a new *category* of mechanic is a code change requiring full review and testing.
+A new Bloodline, Devotion, or **catalog Asset** from a sourcebook is a **migration + seed entry**, not a code change. An engine that handles a new *category* of mechanic is a code change requiring full review and testing.
 
 This separation is the canonical pattern for all content-heavy phases (9 — Covenants, 11 — Equipment). Any deviation requires a documented inquisition.
 
@@ -433,7 +437,7 @@ RequiemNexus/
 │   └── RequiemNexus.PerformanceTests/    # Load and latency tests (NBomber)
 ├── .editorconfig                     # Code style enforcement
 ├── Directory.Packages.props          # Central NuGet package management
-├── CLAUDE.md                         # Agent entry point
+├── claude.md                         # Agent entry point (Cursor / Claude Code rules)
 ├── Contributing.md                   # Developer onboarding guide
 ├── README.md                         # Project overview
 └── SECURITY.md                       # Security policy and vulnerability reporting

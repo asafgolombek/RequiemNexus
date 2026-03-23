@@ -74,7 +74,7 @@ A new developer should be able to run the project locally in **under 10 minutes*
 | **Language** | C# 14 (Primary Constructors, Collection Expressions) |
 | **Architecture** | Modular Monolith — `Web`, `Application`, `Domain`, `Data` |
 | **Real-Time** | SignalR |
-| **Database** | PostgreSQL (production), SQLite (local dev) |
+| **Database** | PostgreSQL |
 | **Caching** | Redis |
 | **Orchestration** | .NET Aspire |
 | **Deployment** | Docker → AWS ECS Fargate (IaC via AWS CDK in Phase 5) |

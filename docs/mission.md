@@ -75,8 +75,8 @@ Every architectural choice is a learning milestone. We prioritize **Explicit Und
 - **Reactive Patterns** — Master real-time state changes without page refreshes using explicit C# state management.
 - **ORM Mastery** — Use **EF Core** to understand relational mapping, migrations, and performance tuning from SQLite to PostgreSQL.
 - **Modern Syntax (C# 14)** — Wield Primary Constructors and enhanced collection expressions as deliberate learning milestones, reducing boilerplate to sharpen intent.
-- **Identity & Security (The Masquerade)** — Deep dive into ASP.NET Core Identity, JWTs, and enterprise-grade data privacy.
-- **Data-Driven Domain Modeling** — Phases 8–9 introduce the pattern of separating content (seed data) from behavior (engine logic), a critical architectural distinction.
+- **Identity & Security (The Masquerade)** — Deep dive into ASP.NET Core Identity, cookie-based sessions for the first-party Blazor app, and enterprise-grade data privacy. Bearer tokens (e.g. JWT) are in scope when a public API ships (Phase 14), not for the primary UI today.
+- **Data-Driven Domain Modeling** — Phases 8–11 extend the pattern of separating content (seed data) from behavior (engine logic): Bloodlines/Devotions and Covenants/Sorcery (8–9), social maneuvers and clues (10), asset catalog and inventory (11).
 
 ### Learning Artifacts (Mandatory)
 
@@ -116,7 +116,7 @@ The application is **cloud-agnostic** by design and deployable to any sanctuary:
 
 ## 🛡️ 4. Security & Data Integrity
 
-- **Zero-Trust Identity** — Currently implemented via **ASP.NET Core Identity** with secure cookie authentication.
+- **Zero-Trust Identity** — Implemented via **ASP.NET Core Identity** with **secure cookie authentication** for the Blazor web app. There is no JWT bearer scheme for browser sessions today.
 - **BOLA / IDOR Prevention** — Strict ownership checks for characters and chronicles.
 - **Input Sanitization** — Strong typing and parameterized queries — no raw SQL.
 
@@ -376,7 +376,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - [x] **Dice Nexus Modifier Injection** — `DiceRollerModal` / sheet paths use `ITraitResolver` with equipment modifiers (skill cap, weapon damage, strength under-requirement penalty).
 - [x] **Armor Mitigation Logic** — General and ballistic ratings plus Defense/Speed from equipped armor on the sheet; **automated damage-type conversion** deferred until an attack pipeline exists (documented in rules log).
 - [x] **The Armory UI (The Pack)** — Pack tab with equip/structure/ready slots and procurement entry points.
-- [x] **Seed Catalog Integration** — JSON seeds under `SeedSource` for general items, weapons, armor, and services.
+- [x] **Seed Catalog Integration** — JSON seeds under [`src/RequiemNexus.Data/SeedSource/`](../src/RequiemNexus.Data/SeedSource/) for general items, weapons, armor, and services (copied with the Data assembly at build/publish). Any copies under `docs/` are optional mirrors for readability only; **SeedSource is authoritative** for runtime seeding.
 
 ---
 
@@ -395,7 +395,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **The Objective:** Harden the ecosystem for all users and ensure the Gothic aesthetic remains usable.
 
-- [ ] **Full E2E Playwright Suite** — Testing critical paths: Character Evolution (Phases 8–9) and Social Maneuvers (Phase 10)
+- [ ] **Full E2E Playwright Suite** — Testing critical paths: Character Evolution (Phases 8–9), Social Maneuvers (Phase 10), and **Pack / procurement / equipment** flows (Phase 11)
 - [ ] **Automated Accessibility Scanning** — WCAG 2.1 AA audit integrated into the CI pipeline
 - [ ] **Screen Reader Optimization** — Ensuring all real-time dice rolls and Blood Sorcery results are announced via ARIA live regions
 - [ ] **Visual Regression Baseline** — Catching UI drift in the "Bone-white and Crimson" palette across browser updates
@@ -407,7 +407,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 **The Objective:** Final polish and expansion into the international community.
 
 - [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
-- [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools
+- [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools; **external client auth** (typically JWT or OAuth2 access tokens) is introduced here. The first-party Blazor app remains cookie-based Identity.
 - [ ] **Discord Rich Presence** — Enhanced webhooks for detailed session summaries and "Coterie Status" updates
 - [ ] **Production Rollout** — Final optimization of SignalR hubs for high-concurrency public traffic
 
