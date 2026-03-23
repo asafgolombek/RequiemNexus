@@ -35,6 +35,17 @@ public class CharacterAsset
     /// <summary>Remaining Structure; null when not tracked. Zero means broken (no bonuses).</summary>
     public int? CurrentStructure { get; set; }
 
+    /// <summary>When true, allows the player to override the display name.</summary>
+    public bool IsCustom { get; set; }
+
+    /// <summary>Tracking for the once-per-chapter "Reach" acquisition rule.</summary>
+    public DateTimeOffset? LastProcurementDate { get; set; }
+
+    /// <summary>True when this row was acquired via the "Reach" tier (Resources == Availability). Used to scope the once-per-chapter check.</summary>
+    public bool WasAcquiredViaReach { get; set; }
+
     [MaxLength(200)]
     public string? Notes { get; set; }
+
+    public virtual ICollection<CharacterAssetModifier> Modifiers { get; set; } = new List<CharacterAssetModifier>();
 }

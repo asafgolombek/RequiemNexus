@@ -58,20 +58,42 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
             }
         }
 
-        int strengthRating = await dbContext.CharacterAttributes
+        // Batch Strength + Stamina into one round-trip.
+        var physAttribs = await dbContext.CharacterAttributes
             .AsNoTracking()
-            .Where(a => a.CharacterId == characterId && a.Name == nameof(AttributeId.Strength))
-            .Select(a => a.Rating)
-            .FirstOrDefaultAsync();
+            .Where(a => a.CharacterId == characterId
+                     && (a.Name == nameof(AttributeId.Strength) || a.Name == nameof(AttributeId.Stamina)))
+            .Select(a => new { a.Name, a.Rating })
+            .ToDictionaryAsync(a => a.Name);
+
+        int strengthRating = physAttribs.TryGetValue(nameof(AttributeId.Strength), out var str) ? str.Rating : 0;
         if (strengthRating <= 0)
         {
             strengthRating = 1;
+        }
+
+        int staminaRating = physAttribs.TryGetValue(nameof(AttributeId.Stamina), out var sta) ? sta.Rating : 0;
+        if (staminaRating <= 0)
+        {
+            staminaRating = 1;
+        }
+
+        int sizeRating = await dbContext.Characters
+            .AsNoTracking()
+            .Where(c => c.Id == characterId)
+            .Select(c => c.Size)
+            .FirstOrDefaultAsync();
+        if (sizeRating <= 0)
+        {
+            sizeRating = 5;
         }
 
         var equippedRows = await dbContext.CharacterAssets
             .AsNoTracking()
             .Include(ca => ca.Asset!)
                 .ThenInclude(a => a.Capabilities)
+            .Include(ca => ca.Modifiers)
+                .ThenInclude(m => m.AssetModifier)
             .Where(ca => ca.CharacterId == characterId && ca.IsEquipped)
             .ToListAsync();
 
@@ -93,24 +115,37 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
                 .Where(w => profileIds.Contains(w.Id))
                 .ToDictionaryAsync(w => w.Id);
 
-        bool anyWeaponTooHeavy = false;
+        int totalEquippedSize = 0;
 
         foreach (CharacterAsset ca in activeRows)
         {
             Asset asset = ca.Asset!;
+            int itemSize = 0;
+
             switch (asset)
             {
                 case EquipmentAsset eq:
                     AddSkillAssistEquipment(modifiers, eq.AssistsSkillName, eq.DiceBonusMin, eq.DiceBonusMax, eq.Name, eq.Id);
+                    itemSize = eq.ItemSize ?? 0;
                     break;
                 case ServiceAsset svc:
                     AddSkillAssistEquipment(modifiers, svc.AssistsSkillName, svc.DiceBonusMin, svc.DiceBonusMax, svc.Name, svc.Id);
+
+                    // Services don't have physical Size for encumbrance.
                     break;
                 case WeaponAsset w:
                     AddWeaponDamage(modifiers, w, w.Name, w.Id);
-                    ConsiderStrength(w.StrengthRequirement, strengthRating, ref anyWeaponTooHeavy);
+                    AddStrengthPenaltyIfNeeded(modifiers, w, strengthRating, w.Id);
+                    itemSize = w.ItemSize ?? 0;
+                    break;
+                case ArmorAsset ar:
+                    // Armor defense/speed penalties are applied via Character derived stats.
+                    // Track Size for encumbrance.
+                    itemSize = ar.ItemSize ?? 0;
                     break;
             }
+
+            totalEquippedSize += itemSize;
 
             foreach (AssetCapability cap in asset.Capabilities)
             {
@@ -119,7 +154,7 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
                     && weaponProfiles.TryGetValue(pid, out WeaponAsset? profile))
                 {
                     AddWeaponDamage(modifiers, profile, $"{asset.Name} ({profile.Name})", asset.Id);
-                    ConsiderStrength(profile.StrengthRequirement, strengthRating, ref anyWeaponTooHeavy);
+                    AddStrengthPenaltyIfNeeded(modifiers, profile, strengthRating, asset.Id);
                 }
                 else if (cap.Kind == AssetCapabilityKind.SkillAssist
                          && !string.IsNullOrEmpty(cap.AssistsSkillName))
@@ -127,40 +162,95 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
                     AddSkillAssistEquipment(modifiers, cap.AssistsSkillName, cap.DiceBonusMin, cap.DiceBonusMax, asset.Name, asset.Id);
                 }
             }
+
+            // --- Phase 11 Refinement: Apply AssetModifiers (Upgrades) ---
+            foreach (var cam in ca.Modifiers)
+            {
+                if (cam.AssetModifier?.ModifierEffectJson is { } modJson && !string.IsNullOrEmpty(modJson))
+                {
+                    try
+                    {
+                        var upgrades = JsonSerializer.Deserialize<List<PassiveModifier>>(modJson, _jsonOptions);
+                        if (upgrades != null)
+                        {
+                            foreach (var u in upgrades)
+                            {
+                                // Attach source info
+                                var enriched = u with { Source = new ModifierSource(ModifierSourceType.Equipment, ca.AssetId) };
+                                modifiers.Add(enriched);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Malformed ModifierEffectJson on AssetModifier {ModId}", cam.AssetModifier.Id);
+                    }
+                }
+            }
         }
 
-        if (anyWeaponTooHeavy)
+        // --- Phase 11 Refinement: Encumbrance (p. 179) ---
+        int encumbranceThreshold = strengthRating + staminaRating + sizeRating;
+        if (totalEquippedSize > encumbranceThreshold)
         {
-            const string heavyLabel = "Strength requirement (equipped weapons)";
+            const string encLabel = "Encumbrance (Overloaded)";
+
+            // -1 to all Physical pools (Fatigued condition effect)
+            SkillId[] physicalSkills = [SkillId.Brawl, SkillId.Athletics, SkillId.Weaponry, SkillId.Firearms, SkillId.Stealth, SkillId.Survival, SkillId.Drive, SkillId.Larceny];
+            foreach (var skill in physicalSkills)
+            {
+                modifiers.Add(new PassiveModifier(
+                    ModifierTarget.SkillPool,
+                    -1,
+                    ModifierType.Static,
+                    encLabel,
+                    new ModifierSource(ModifierSourceType.Equipment, 0))
+                {
+                    AppliesToSkill = skill,
+                });
+            }
+
+            // -2 to Speed
             modifiers.Add(new PassiveModifier(
-                ModifierTarget.Brawl,
-                -1,
+                ModifierTarget.Speed,
+                -2,
                 ModifierType.Static,
-                heavyLabel,
-                new ModifierSource(ModifierSourceType.Equipment, 0)));
-            modifiers.Add(new PassiveModifier(
-                ModifierTarget.Weaponry,
-                -1,
-                ModifierType.Static,
-                heavyLabel,
-                new ModifierSource(ModifierSourceType.Equipment, 0)));
-            modifiers.Add(new PassiveModifier(
-                ModifierTarget.Firearms,
-                -1,
-                ModifierType.Static,
-                heavyLabel,
+                encLabel,
                 new ModifierSource(ModifierSourceType.Equipment, 0)));
         }
 
         return modifiers.AsReadOnly();
     }
 
-    private static void ConsiderStrength(int? requirement, int strengthRating, ref bool anyTooHeavy)
+    /// <summary>
+    /// Emits a per-weapon Strength penalty to the weapon's specific pool (Brawl/Weaponry/Firearms).
+    /// Penalty = Strength - StrengthRequirement (a negative value). Each weapon is tracked independently
+    /// so the UI can show which item caused the shortfall.
+    /// </summary>
+    private static void AddStrengthPenaltyIfNeeded(
+        List<PassiveModifier> modifiers,
+        WeaponAsset w,
+        int strengthRating,
+        int sourceId)
     {
-        if (requirement.HasValue && strengthRating < requirement.Value)
+        if (!w.StrengthRequirement.HasValue || strengthRating >= w.StrengthRequirement.Value)
         {
-            anyTooHeavy = true;
+            return;
         }
+
+        int penalty = strengthRating - w.StrengthRequirement.Value; // negative
+        ModifierTarget target = w.IsRangedWeapon
+            ? ModifierTarget.Firearms
+            : w.UsesBrawlForAttacks
+                ? ModifierTarget.Brawl
+                : ModifierTarget.Weaponry;
+
+        modifiers.Add(new PassiveModifier(
+            target,
+            penalty,
+            ModifierType.Static,
+            $"Strength requirement ({w.Name})",
+            new ModifierSource(ModifierSourceType.Equipment, sourceId)));
     }
 
     private static void AddSkillAssistEquipment(

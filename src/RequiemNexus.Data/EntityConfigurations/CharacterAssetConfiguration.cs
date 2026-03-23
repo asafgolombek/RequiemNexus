@@ -26,5 +26,11 @@ public sealed class CharacterAssetConfiguration : IEntityTypeConfiguration<Chara
             .HasFilter("\"BackpackSlotIndex\" IS NOT NULL");
 
         builder.Property(ca => ca.IsEquipped).HasDefaultValue(true);
+
+        // IsEquipped and BackpackSlotIndex are mutually exclusive:
+        // a backpacked item is carried, not actively equipped.
+        builder.ToTable(t => t.HasCheckConstraint(
+            "CK_CharacterAsset_EquippedOrBackpack",
+            "(NOT \"IsEquipped\" OR \"BackpackSlotIndex\" IS NULL)"));
     }
 }

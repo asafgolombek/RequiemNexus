@@ -26,4 +26,7 @@ public class ArmorAsset : Asset
     public string? ArmorCoverage { get; set; }
 
     public bool ArmorIsConcealable { get; set; }
+
+    /// <summary>Physical bulk for encumbrance tracking (p. 179); null when not applicable.</summary>
+    public int? ItemSize { get; set; }
 }

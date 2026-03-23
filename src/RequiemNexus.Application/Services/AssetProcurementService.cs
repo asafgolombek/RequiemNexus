@@ -50,13 +50,23 @@ public class AssetProcurementService(
         string userId,
         string? playerNote)
     {
-        await authHelper.RequireCharacterAccessAsync(characterId, userId, "procure asset");
+        await authHelper.RequireCharacterAccessAsync(characterId, userId, "purchase catalog asset");
 
-        Character character = await dbContext.Characters
+        Character? character = await dbContext.Characters
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .FirstAsync(c => c.Id == characterId);
+            .FirstOrDefaultAsync(c => c.Id == characterId);
 
-        Asset asset = await dbContext.Assets.AsNoTracking().FirstAsync(a => a.Id == assetId);
+        if (character is null)
+        {
+            return new AssetProcurementStartResult(AssetProcurementOutcome.Blocked, null, "Character not found.");
+        }
+
+        Asset? asset = await dbContext.Assets.AsNoTracking().FirstOrDefaultAsync(a => a.Id == assetId);
+
+        if (asset is null)
+        {
+            return new AssetProcurementStartResult(AssetProcurementOutcome.Blocked, null, "Asset not found.");
+        }
 
         if (!asset.IsListedInCatalog)
         {
@@ -104,27 +114,64 @@ public class AssetProcurementService(
             .Where(m => m.Merit != null && string.Equals(m.Merit.Name, _resourcesMeritName, StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Rating);
 
-        if (resourcesDots >= asset.Availability)
+        // --- Phase 11 Refinement: Automatic vs. Reach vs. direct purchase (no table roll) ---
+
+        // 1. Automatic Acquisition (Resources > Availability)
+        if (resourcesDots > asset.Availability)
         {
             await characterAssetService.AddCharacterAssetAsync(characterId, assetId, quantity, userId);
             return new AssetProcurementStartResult(
                 AssetProcurementOutcome.AddedImmediately,
                 null,
-                "Item acquired using your Resources.");
+                "Item acquired using your surplus Resources.");
         }
 
+        // 2. The Reach (Resources == Availability) - Once per "Chapter" (12h heuristic)
+        if (resourcesDots == asset.Availability)
+        {
+            bool reachUsed = await dbContext.CharacterAssets
+                .AnyAsync(ca => ca.CharacterId == characterId
+                             && ca.WasAcquiredViaReach
+                             && ca.LastProcurementDate > DateTimeOffset.UtcNow.AddHours(-12));
+
+            if (!reachUsed)
+            {
+                CharacterAsset row = await characterAssetService.AddCharacterAssetAsync(characterId, assetId, quantity, userId);
+                row.WasAcquiredViaReach = true;
+                row.LastProcurementDate = DateTimeOffset.UtcNow;
+                await dbContext.SaveChangesAsync();
+
+                return new AssetProcurementStartResult(
+                    AssetProcurementOutcome.AddedByReach,
+                    null,
+                    "Item acquired using your 'Reach' for this chapter.");
+            }
+
+            await characterAssetService.AddCharacterAssetAsync(characterId, assetId, quantity, userId);
+            logger.LogInformation(
+                "Catalog purchase after Reach already used for chapter: character {CharacterId}, asset {AssetId}, quantity {Quantity}, user {UserId}",
+                characterId,
+                assetId,
+                quantity,
+                userId);
+            return new AssetProcurementStartResult(
+                AssetProcurementOutcome.AddedImmediately,
+                null,
+                "Item purchased and added to your pack. (Reach for this chapter was already used.)");
+        }
+
+        // 3. Resources < Availability — direct purchase (no dice roll)
         await characterAssetService.AddCharacterAssetAsync(characterId, assetId, quantity, userId);
         logger.LogInformation(
-            "Procurement granted below Resources threshold for character {CharacterId} asset {AssetId} qty {Quantity} by {UserId}",
+            "Catalog purchase when Resources below Availability: character {CharacterId}, asset {AssetId}, quantity {Quantity}, user {UserId}",
             characterId,
             assetId,
             quantity,
             userId);
-
         return new AssetProcurementStartResult(
             AssetProcurementOutcome.AddedImmediately,
             null,
-            "Item added to your inventory. (Availability is higher than your Resources dots — no table roll required.)");
+            "Item purchased and added to your pack. (Availability exceeds your Resources.)");
     }
 
     /// <inheritdoc />

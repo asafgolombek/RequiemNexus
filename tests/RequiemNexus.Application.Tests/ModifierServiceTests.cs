@@ -114,8 +114,9 @@ public class ModifierServiceTests
         var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance);
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
-        Assert.Contains(mods, m => m.Target == ModifierTarget.Brawl && m.Value == -1);
-        Assert.Contains(mods, m => m.Target == ModifierTarget.Weaponry && m.Value == -1);
-        Assert.Contains(mods, m => m.Target == ModifierTarget.Firearms && m.Value == -1);
+        // Weapon is Weaponry (IsRangedWeapon=false, UsesBrawlForAttacks=false), Str 2 vs Req 4 → penalty -2 on Weaponry only.
+        Assert.Contains(mods, m => m.Target == ModifierTarget.Weaponry && m.Value == -2);
+        Assert.DoesNotContain(mods, m => m.Target == ModifierTarget.Brawl && m.Value < 0 && m.Source.SourceType == ModifierSourceType.Equipment);
+        Assert.DoesNotContain(mods, m => m.Target == ModifierTarget.Firearms && m.Value < 0 && m.Source.SourceType == ModifierSourceType.Equipment);
     }
 }

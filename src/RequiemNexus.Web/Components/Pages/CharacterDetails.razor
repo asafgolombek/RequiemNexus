@@ -517,10 +517,10 @@ else
             {
                 <section class="cs-section cs-equipment" id="panel-pack" role="tabpanel" aria-labelledby="tab-pack">
                     <h2>The Pack</h2>
-                    <p class="pack-intro text-muted">Procure listed gear: when your Resources dots meet Availability the item is noted as bought with Resources; otherwise it is still added without a table roll. Illicit items require Storyteller approval.</p>
+                    <p class="pack-intro text-muted">Purchase listed gear and services from the catalog: surplus Resources buys outright; at your Availability tier you may use Reach once per chapter (12 hours); further purchases still add to your pack without a table roll. Illicit items require Storyteller approval.</p>
 
                     <div class="equipment-form">
-                        <select @bind="_selectedAssetId" class="equipment-select" aria-label="Asset to procure">
+                        <select @bind="_selectedAssetId" class="equipment-select" aria-label="Asset to purchase">
                             <option value="0">-- Select asset --</option>
                             @foreach (var g in _availableAssets.GroupBy(a => a.Kind).OrderBy(x => x.Key.ToString()))
                             {
@@ -532,25 +532,25 @@ else
                                 </optgroup>
                             }
                         </select>
-                        <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" aria-label="Quantity to procure" />
+                        <input type="number" min="1" @bind="_selectedAssetQuantity" class="equipment-quantity" aria-label="Quantity to purchase" />
                         <button class="btn-primary-rn"
                                 type="button"
-                                id="btn-procure-asset"
-                                disabled="@IsProcureButtonDisabled"
-                                aria-describedby="@((_availableAssets.Count == 0 || IsProcureButtonDisabled) ? "procure-hint" : null)"
-                                title="@ProcureButtonTitle"
-                                @onclick="ProcureSelectedAssetAsync">Procure</button>
+                                id="btn-purchase-asset"
+                                disabled="@IsPurchaseButtonDisabled"
+                                aria-describedby="@((_availableAssets.Count == 0 || IsPurchaseButtonDisabled) ? "purchase-hint" : null)"
+                                title="@PurchaseButtonTitle"
+                                @onclick="PurchaseSelectedAssetAsync">Purchase</button>
                     </div>
                     @if (_availableAssets.Count == 0)
                     {
-                        <p class="text-muted text-small mt-2" id="procure-hint" role="status">
-                            No listed assets are in the catalog, so Procure stays disabled.
+                        <p class="text-muted text-small mt-2" id="purchase-hint" role="status">
+                            No listed assets are in the catalog, so Purchase stays disabled.
                         </p>
                     }
-                    else if (IsProcureButtonDisabled)
+                    else if (IsPurchaseButtonDisabled)
                     {
-                        <p class="text-muted text-small mt-2" id="procure-hint" role="note">
-                            Select an item from the list and set quantity to at least 1 to enable Procure.
+                        <p class="text-muted text-small mt-2" id="purchase-hint" role="note">
+                            Select an item from the list and set quantity to at least 1 to enable Purchase.
                         </p>
                     }
 
@@ -642,8 +642,18 @@ else
                                             </select>
                                         </label>
                                     </div>
+                                    <div class="equipment-actions mt-1">
+                                        @if (broken)
+                                        {
+                                            <button type="button" class="btn-rn-action btn-sm" @onclick="() => OpenRepairRoller(ca)">Repair</button>
+                                        }
+                                        else if (!isService)
+                                        {
+                                            <button type="button" class="btn-rn-action btn-sm" @onclick="() => OpenForgeModal(ca)">Forge</button>
+                                        }
+                                        <button class="equipment-remove-btn ms-2" type="button" @onclick="() => RemoveCharacterAsset(ca.Id)">Remove</button>
+                                    </div>
                                 </div>
-                                <button class="equipment-remove-btn" type="button" @onclick="() => RemoveCharacterAsset(ca.Id)">Remove</button>
                             </li>
                         }
                     </ul>
@@ -674,6 +684,19 @@ else
     </div>
 
     <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" FixedDicePool="_rollerFixedDicePool" />
+
+    @if (_isForgeModalOpen)
+    {
+        @* Phase 11 Refinement: Forge Modal Placeholder *@
+        <div class="modal-overlay-rn" @onclick="() => _isForgeModalOpen = false">
+            <div class="modal-content-rn" @onclick:stopPropagation>
+                <h3>Forge: @(_forgeTarget?.Asset?.Name ?? "Item")</h3>
+                <p>Modifiers and upgrades for this item will appear here in the next content update.</p>
+                <button type="button" class="btn-primary-rn" @onclick="() => _isForgeModalOpen = false">Close</button>
+            </div>
+        </div>
+    }
+
     <ApplyBloodlineModal IsOpen="_isApplyBloodlineModalOpen"
                          IsOpenChanged="HandleApplyBloodlineModalClosed"
                          EligibleBloodlines="_eligibleBloodlines"

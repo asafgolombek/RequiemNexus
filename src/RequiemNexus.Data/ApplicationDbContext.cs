@@ -50,6 +50,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PendingAssetProcurement> PendingAssetProcurements { get; set; } = default!;
 
+    public DbSet<AssetModifier> AssetModifiers { get; set; } = default!;
+
+    public DbSet<CharacterAssetModifier> CharacterAssetModifiers { get; set; } = default!;
+
     public DbSet<CharacterAspiration> CharacterAspirations { get; set; } = default!;
 
     public DbSet<CharacterBane> CharacterBanes { get; set; } = default!;

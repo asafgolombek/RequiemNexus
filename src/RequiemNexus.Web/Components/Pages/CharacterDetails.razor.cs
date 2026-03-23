@@ -49,14 +49,14 @@ public partial class CharacterDetails : IAsyncDisposable
     private int _selectedAssetQuantity = 1;
 
     /// <summary>
-    /// Whether the Pack tab Procure action is inactive (no click is sent to the server while this is true).
+    /// Whether the Pack tab Purchase action is inactive (no click is sent to the server while this is true).
     /// </summary>
-    private bool IsProcureButtonDisabled => _selectedAssetId <= 0 || _selectedAssetQuantity < 1;
+    private bool IsPurchaseButtonDisabled => _selectedAssetId <= 0 || _selectedAssetQuantity < 1;
 
-    private string ProcureButtonTitle =>
+    private string PurchaseButtonTitle =>
         _availableAssets.Count == 0
             ? "No listed assets in the catalog."
-            : IsProcureButtonDisabled
+            : IsPurchaseButtonDisabled
                 ? "Select an item and set quantity to at least 1."
                 : "Add this item to your inventory.";
 
@@ -466,25 +466,25 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
-    private async Task ProcureSelectedAssetAsync()
+    private async Task PurchaseSelectedAssetAsync()
     {
         if (_character == null)
         {
-            Logger.LogWarning("Procure blocked: character not loaded for route {CharacterId}", Id);
+            Logger.LogWarning("Purchase blocked: character not loaded for route {CharacterId}", Id);
             ToastService.Show("Pack", "Character not loaded. Try refreshing the page.", ToastType.Warning);
             return;
         }
 
         if (string.IsNullOrEmpty(_currentUserId))
         {
-            Logger.LogWarning("Procure blocked: no authenticated user for character {CharacterId}", _character.Id);
-            ToastService.Show("Pack", "Sign in again to procure items.", ToastType.Warning);
+            Logger.LogWarning("Purchase blocked: no authenticated user for character {CharacterId}", _character.Id);
+            ToastService.Show("Pack", "Sign in again to purchase items.", ToastType.Warning);
             return;
         }
 
         if (_selectedAssetId <= 0)
         {
-            Logger.LogWarning("Procure blocked: no asset selected for character {CharacterId}", _character.Id);
+            Logger.LogWarning("Purchase blocked: no asset selected for character {CharacterId}", _character.Id);
             ToastService.Show("Pack", "Choose an item from the list first.", ToastType.Warning);
             return;
         }
@@ -492,18 +492,18 @@ public partial class CharacterDetails : IAsyncDisposable
         if (_selectedAssetQuantity <= 0)
         {
             Logger.LogWarning(
-                "Procure blocked: invalid quantity {Quantity} for character {CharacterId}",
+                "Purchase blocked: invalid quantity {Quantity} for character {CharacterId}",
                 _selectedAssetQuantity,
                 _character.Id);
             ToastService.Show("Pack", "Enter a quantity of at least 1.", ToastType.Warning);
             return;
         }
 
-        int procureCharacterId = _character.Id;
+        int purchaseCharacterId = _character.Id;
         try
         {
             AssetProcurementStartResult r = await AssetProcurementService.BeginProcurementAsync(
-                procureCharacterId,
+                purchaseCharacterId,
                 _selectedAssetId,
                 _selectedAssetQuantity,
                 _currentUserId,
@@ -513,7 +513,13 @@ public partial class CharacterDetails : IAsyncDisposable
             {
                 case AssetProcurementOutcome.AddedImmediately:
                     ToastService.Show("Acquired", r.Message ?? "Item added.", ToastType.Success);
-                    _character = await CharacterService.ReloadCharacterAsync(procureCharacterId, _currentUserId);
+                    _character = await CharacterService.ReloadCharacterAsync(purchaseCharacterId, _currentUserId);
+                    _selectedAssetId = 0;
+                    _selectedAssetQuantity = 1;
+                    break;
+                case AssetProcurementOutcome.AddedByReach:
+                    ToastService.Show("The Reach", r.Message ?? "Item acquired using your Reach for this chapter.", ToastType.Success);
+                    _character = await CharacterService.ReloadCharacterAsync(purchaseCharacterId, _currentUserId);
                     _selectedAssetId = 0;
                     _selectedAssetQuantity = 1;
                     break;
@@ -523,15 +529,15 @@ public partial class CharacterDetails : IAsyncDisposable
                     _selectedAssetQuantity = 1;
                     break;
                 case AssetProcurementOutcome.Blocked:
-                    ToastService.Show("Procurement", r.Message ?? "This action cannot be completed.", ToastType.Warning);
+                    ToastService.Show("Purchase", r.Message ?? "This action cannot be completed.", ToastType.Warning);
                     break;
                 default:
                     Logger.LogWarning(
                         "Unhandled procurement outcome {Outcome} for character {CharacterId}",
                         r.Outcome,
-                        procureCharacterId);
+                        purchaseCharacterId);
                     ToastService.Show(
-                        "Procurement",
+                        "Purchase",
                         "Something went wrong. Try again or contact support.",
                         ToastType.Error);
                     break;
@@ -539,17 +545,48 @@ public partial class CharacterDetails : IAsyncDisposable
         }
         catch (UnauthorizedAccessException ex)
         {
-            Logger.LogWarning(ex, "Procurement denied for character {CharacterId}", procureCharacterId);
+            Logger.LogWarning(ex, "Purchase denied for character {CharacterId}", purchaseCharacterId);
             ToastService.Show(
-                "Procurement",
-                "You can only procure on your own character (or as Storyteller where allowed).",
+                "Purchase",
+                "You can only purchase on your own character (or as Storyteller where allowed).",
                 ToastType.Error);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Procurement failed for character {CharacterId}", procureCharacterId);
-            ToastService.Show("Procurement", ex.Message, ToastType.Error);
+            Logger.LogError(ex, "Purchase failed for character {CharacterId}", purchaseCharacterId);
+            ToastService.Show("Purchase", ex.Message, ToastType.Error);
         }
+    }
+
+    private bool _isForgeModalOpen = false;
+    private CharacterAsset? _forgeTarget;
+    private List<AssetModifier> _availableModifiers = [];
+
+    private void OpenRepairRoller(CharacterAsset ca)
+    {
+        if (_character == null)
+        {
+            return;
+        }
+
+        _rollerTraitName = $"Repair {ca.Asset?.Name} (Wits + Crafts)";
+        _rollerBaseDice = _character.GetAttributeRating(AttributeId.Wits) + _character.GetSkillRating(SkillId.Crafts);
+        _rollerFixedDicePool = null;
+        _isRollerOpen = true;
+    }
+
+    private async Task OpenForgeModal(CharacterAsset ca)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _forgeTarget = ca;
+
+        // In a real implementation, we'd fetch modifiers from a service.
+        // For now, we'll just open the modal.
+        _isForgeModalOpen = true;
     }
 
     private async Task OpenDevotionRollerAsync(CharacterDevotion cd)

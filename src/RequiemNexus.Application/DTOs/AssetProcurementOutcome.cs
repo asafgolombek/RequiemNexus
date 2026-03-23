@@ -1,16 +1,19 @@
 namespace RequiemNexus.Application.DTOs;
 
 /// <summary>
-/// High-level procurement path.
+/// Status returned to the UI after attempting to purchase a catalog item (Phase 11).
 /// </summary>
 public enum AssetProcurementOutcome
 {
-    /// <summary>Item was added immediately (listed, not illicit).</summary>
+    /// <summary>Resources dots > Availability; item added.</summary>
     AddedImmediately,
 
-    /// <summary>Storyteller must approve in Glimpse (illicit).</summary>
+    /// <summary>Resources dots == Availability; once per chapter.</summary>
+    AddedByReach,
+
+    /// <summary>Illicit flag or ST-only item.</summary>
     AwaitingStorytellerApproval,
 
-    /// <summary>Cannot proceed; UI should show the start result message only (no roll, no pending row).</summary>
+    /// <summary>Validation failed (e.g. no chronicle for illicit item).</summary>
     Blocked,
 }

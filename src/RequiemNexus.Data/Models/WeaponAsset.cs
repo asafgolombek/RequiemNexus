@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using RequiemNexus.Data.Models.Enums;
 
 namespace RequiemNexus.Data.Models;
 
@@ -8,6 +9,8 @@ namespace RequiemNexus.Data.Models;
 public class WeaponAsset : Asset
 {
     public int Damage { get; set; }
+
+    public DamageType DamageType { get; set; } = DamageType.Lethal;
 
     public int? InitiativeModifier { get; set; }
 
@@ -36,6 +39,12 @@ public class WeaponAsset : Asset
 
     /// <summary>Optional weapon Size from the book.</summary>
     public int? ItemSize { get; set; }
+
+    /// <summary>
+    /// Derived concealment rating p. 178 (e.g., Pocket, Jacket).
+    /// </summary>
+    [MaxLength(60)]
+    public string? ConcealmentRating { get; set; }
 
     /// <summary>Occupied weapon carry slots when equipped (e.g. 2 for long guns, 1 for sidearms).</summary>
     public int WeaponSlotPoints { get; set; } = 1;
