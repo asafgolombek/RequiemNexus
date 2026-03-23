@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
- 
   <ItemGroup>
     <PackageReference Include="QuestPDF"/>
   </ItemGroup>
@@ -13,10 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\RequiemNexus.Data\RequiemNexus.Data.csproj" />
     <ProjectReference Include="..\RequiemNexus.Domain\RequiemNexus.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
   </ItemGroup>
 
 </Project>

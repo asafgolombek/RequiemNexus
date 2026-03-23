@@ -1,5 +1,5 @@
 <Project>
-  <!-- MSBuild imports only the nearest Directory.Build.props; projects under src/ do not merge repo root. -->
+  <!-- Projects under src/ use src/Directory.Build.props only (nearest wins). Tests and infra inherit this file. -->
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>latest</LangVersion>
@@ -10,7 +10,4 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
-  </ItemGroup>
 </Project>
