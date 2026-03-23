@@ -322,9 +322,9 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 11 — Assets & Armory.** Phase 10 (Social Maneuvering, clues, social Conditions) is complete. Phases 9.5–9.6 (sacrifice mechanics, Necromancy/Ordo rites) are complete.
+**Phase 12 — The Web of Night (Relationship Webs).** Phase 11 (Assets & Armory — equipment, services, Pack UI, procurement) is complete. Phases 9–10 and 9.5–9.6 are complete.
 
-See [`docs/mission.md`](./docs/mission.md) for the feature list and exit criteria.
+See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 
 ---

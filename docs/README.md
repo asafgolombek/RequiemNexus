@@ -131,12 +131,14 @@ RequiemNexus/
 | 6 | **CI/CD Hardening & Supply Chain** | ✅ Complete |
 | 7 | **The Blood Communion** — Realtime play | ✅ Complete |
 | 8 | **The Hidden Blood** — Bloodlines & Devotions | ✅ Complete |
-| 9 | **The Accord of Power** — Covenants & Blood Sorcery | 🔄 In Progress |
-| 10 | **The Social Graces** — Social Maneuvering | ⬚ Planned |
-| 11 | **Assets & Armory** — Equipment & Services | ⬚ Planned |
-| 12 | **The Web of Night** — Relationship Webs | ⬚ Planned |
-| 13 | **End-to-End Testing & Accessibility** | ⬚ Planned |
-| 14 | **The Global Embrace** — i18n, public API | ⬚ Planned |
+| 9 | **The Accord of Power** — Covenants & Blood Sorcery | ✅ Complete |
+| 9.5 | **Sacrifice Mechanics** — Blood Sorcery | ✅ Complete |
+| 9.6 | **Necromancy & Ordo Dracul** — Additional traditions | ✅ Complete |
+| 10 | **The Social Graces** — Social Maneuvering | ✅ Complete |
+| 11 | **Assets & Armory** — Equipment & Services | ✅ Complete |
+| 12 | **The Web of Night** — Relationship Webs | ⬜ Planned |
+| 13 | **End-to-End Testing & Accessibility** | ⬜ Planned |
+| 14 | **The Global Embrace** — i18n, public API | ⬜ Planned |
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 
