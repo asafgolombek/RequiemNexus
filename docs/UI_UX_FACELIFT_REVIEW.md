@@ -27,13 +27,13 @@ The facelift plan is strong and usable as an implementation roadmap.
 
 | # | Question | Status |
 |---|----------|--------|
-| 1 | **Icon system:** Custom `<Icon>` vs Lucide? | ⏳ Open — default is Option A (zero dependencies) unless team approves NuGet. AGENTS.md approval requirement documented in Track 3.1. |
-| 2 | **Gold accent:** In brand scope? | ⏳ Open — see Track 1.1: `--color-gold` / `--color-gold-dim` are `EXPERIMENTAL` until WCAG AA contrast is verified; this question decides whether gold ever leaves experimental use in the product. |
-| 3 | **Avatar system:** Initials only vs roadmap for character art? | ⏳ Open — initials avatar is the implementation target; the empty `char-avatar` div leaves a future upload slot. |
-| 4 | **Tab grouping:** Acceptable to collapse to CORE/KINDRED/CHRONICLE? | ⏳ Open — preferred mobile pattern documented as horizontal scroll + right-edge fade (Track 4.2). Tab grouping flagged as the recommended path pending team sign-off. |
-| 5 | **Animation intensity / performance mode?** | ⏳ Open — Track 6.4 adds `prefers-reduced-motion` as the baseline; a manual toggle remains a future option. |
+| 1 | **Icon system:** Custom `<Icon>` vs Lucide? | ✅ Resolved — **Option A:** first-party [`Icon.razor`](../src/RequiemNexus.Web/Components/UI/Icon.razor) + [`IconName`](../src/RequiemNexus.Web/Components/UI/IconName.cs) enum with inline SVG paths copied from [Lucide](https://lucide.dev) (MIT). No NuGet; Lucide remains the path source of truth. Home dashboard widgets use `IconName.Users`, `BookOpen`, `Droplet`. |
+| 2 | **Gold accent:** In brand scope? | ✅ Resolved — **in scope** for achievements / special states. Tokens remain **`EXPERIMENTAL`** until WCAG AA on surfaces passes (Q10 / Track 6.2); see [UI_UX_FACELIFT.md](./UI_UX_FACELIFT.md) Team decisions table. |
+| 3 | **Avatar system:** Initials only vs user-uploaded art? | ✅ Resolved — **roadmap: user-uploaded portrait** per character; **near-term: initials** (or placeholder) until storage/pipeline exists (Track 4.1). |
+| 4 | **Tab grouping:** Acceptable to collapse to CORE/KINDRED/CHRONICLE? | ⏳ **Open** — deferred until character sheet facelift is far enough to judge in context; Track 4.2 documents flat tabs + horizontal scroll until then. |
+| 5 | **Animation intensity / performance mode?** | ✅ Resolved — **add user-facing performance mode** in addition to `prefers-reduced-motion` (Track 6.4). |
 
-**Q2 vs Q10:** Question **2** is the *brand / product* call (whether gold accent belongs in the product beyond experiments). Question **10** in the table below is the *engineering verification* track (WCAG contrast + keeping tokens `EXPERIMENTAL` until checks pass). They work together: Q10 can be satisfied while Q2 remains open, and resolving Q2 “out of brand” may retire gold usage regardless of contrast passes.
+**Q2 vs Q10:** Question **2** (brand scope for gold) is **resolved — in scope**. Question **10** is still the *engineering* gate: contrast verification and keeping `--color-gold` / `--color-gold-dim` marked **`EXPERIMENTAL`** in CSS until checks pass. Q10 satisfied does not imply removing `EXPERIMENTAL` until documented sign-off on contrast results.
 
 ### Additional engineering / product questions — resolution status
 
@@ -42,7 +42,7 @@ The facelift plan is strong and usable as an implementation roadmap.
 | 6 | **Dependencies / NuGet approval** | ✅ Resolved — Track 3.1 now notes the AGENTS.md approval requirement and states Option A (inline SVG) is the default if zero-dependency constraint applies. |
 | 7 | **Cmd+K platform label + aria-label** | ✅ Resolved — Track 2.3 updated: shortcut label is platform-aware (⌘K / Ctrl+K via JS interop), button requires explicit `aria-label="Open command palette"`. |
 | 8 | **Session sidebar connection quality signal** | ✅ Resolved — Track 4.6 now gates the indicator on a real backend metric from `ISessionService` / `SessionClientService`. Fallback is a simple "Live" / "Reconnecting" label from the existing `IsConnected` flag. |
-| 9 | **Mobile tab UX pattern** | ✅ Resolved — Track 4.2 documents preferred pattern: horizontal scroll with right-edge fade mask. Tab grouping (question 4) is the recommended upgrade path if approved. |
+| 9 | **Mobile tab UX pattern** | ✅ Resolved — Track 4.2 documents preferred pattern: horizontal scroll with right-edge fade mask. Tab grouping (question 4) remains **open** until evaluated after broader sheet facelift. |
 | 10 | **Gold token contrast** | ✅ Resolved — `--color-gold` and `--color-gold-dim` marked `EXPERIMENTAL` in Track 1.1 tokens block until WCAG AA contrast is verified against all target surfaces. |
 
 ---
@@ -89,7 +89,7 @@ The facelift plan is strong and usable as an implementation roadmap.
 | **Platform shortcut (Track 2.3)** | `navigator.platform` is legacy and unreliable. Prefer User-Agent Client Hints or a Blazor helper. | ✅ Resolved — Track 2.3 explicitly bans `navigator.platform`, specifies `navigator.userAgentData.platform` with `userAgent` string fallback, and describes caching the result in `MainLayout`. |
 | **Header vs Bootstrap (Track 2.1)** | Clarify that header chrome uses scoped CSS only while page layout keeps Bootstrap 5 grid. | ✅ Resolved — Track 2.1 now has an explicit "Scope boundary" paragraph: scoped CSS for `<header>` chrome only; Bootstrap 5 grid utilities for page layout are out of scope for this task. |
 | **DotScale ARIA (Track 6.1)** | `role="slider"` only for keyboard-adjustable dots; read-only views should use `role="img"` + accessible name. | ✅ Resolved — Track 6.1 DotScale entry now distinguishes interactive vs read-only contexts, specifies `role="img"` with an example label (`"Strength 3 out of 5"`), and notes that roles must be confirmed per view. |
-| **Question 2 vs tokens** | Gold scope (Q2) and Track 1.1 `EXPERIMENTAL` comments should stay linked so they cannot drift. | ✅ Resolved — `--color-gold` and `--color-gold-dim` token comments now reference Q2 by name; Q2 in the questions table references Track 1.1. |
+| **Question 2 vs tokens** | Gold scope (Q2) and Track 1.1 `EXPERIMENTAL` comments should stay linked so they cannot drift. | ✅ Resolved — Q2 is **in brand**; tokens stay `EXPERIMENTAL` until WCAG (Q10). Comments in [design-tokens.css](../src/RequiemNexus.Web/wwwroot/css/design-tokens.css) and Track 1.1 align with the Team decisions table. |
 
 ---
 

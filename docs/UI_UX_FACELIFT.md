@@ -104,8 +104,8 @@ Per-level shadow opacity above is intentional (stronger lift for higher layers).
 --color-surface-2: var(--charcoal);        /* Primary panels */
 --color-surface-3: var(--ash-gray);        /* Nested panels, inputs */
 --color-surface-4: var(--muted-gray);      /* Borders, dividers */
---color-gold: #C9A84C;                     /* EXPERIMENTAL — see Q2 in "Questions for the Team" */
---color-gold-dim: #8A6F32;                 /* EXPERIMENTAL — verify WCAG AA + brand approval (Q2) before promoting */
+--color-gold: #C9A84C;                     /* EXPERIMENTAL — in brand for achievements/special states (Q2 resolved); drop EXPERIMENTAL after WCAG AA on surfaces (Q10) */
+--color-gold-dim: #8A6F32;                 /* EXPERIMENTAL — verify WCAG AA on target surfaces before promoting */
 --color-info: #2563EB;                     /* Info state */
 --color-info-dim: rgba(37, 99, 235, 0.15);
 --color-warning-dim: rgba(184, 134, 11, 0.15);
@@ -252,7 +252,8 @@ The character sheet is the heart of the app. It's currently functional but visua
 **Current issue:** `<div class="char-avatar"></div>` is an empty div — it renders nothing.
 
 **Fix:**
-- Replace with an **initials avatar**: display the first letter of the character's name in a styled circle (dark crimson with bone-white text, gothic font)
+- **Near term:** **initials avatar** (or clear placeholder when no image): first letter of the character's name in a styled circle (dark crimson with bone-white text, gothic font)
+- **Roadmap:** **user-uploaded portrait** per character (storage, validation, Masquerade ownership, and CDN/cache strategy to be designed in application/data layers — not blocked on facelift markup alone)
 - For Clan affiliation, add a **clan glyph placeholder** (SVG slot or first-letter icon in a different style)
 - Add a **status indicator dot** next to the name: green pulsing if in an active session, gray if not
 
@@ -273,7 +274,8 @@ The character sheet likely uses a tab system for sections (Attributes, Skills, D
 - Active tab: Use **bold + crimson underline + slightly brighter background** (currently too subtle)
 - Tab list: Allow **horizontal scroll** on mobile with a fade-out on the right edge to hint at scrollability
 - Consider **tab grouping**: "CORE" (Attributes, Skills) | "KINDRED" (Disciplines, Blood Sorcery, Lineage) | "CHRONICLE" (Conditions, Notes, Beats, Ghouls)
-- **Preferred mobile pattern (pending team sign-off):** Horizontal scroll with a right-edge fade mask to signal overflow — no additional nesting, no toggle menu. This keeps the tab count visible and avoids a two-level navigation pattern on small screens. Tab grouping (see question 4) would halve the scroll range and is the recommended path if approved.
+- **Tab grouping decision:** ⏳ **Open** — ship visual/tab polish first; decide whether to group into CORE/KINDRED/CHRONICLE after the character sheet facelift is far enough along to judge in context.
+- **Preferred mobile pattern:** Horizontal scroll with a right-edge fade mask to signal overflow — no additional nesting, no toggle menu. This keeps the tab count visible and avoids a two-level navigation pattern on small screens. If tab grouping is later approved, it would shorten the scroll range; until then, keep the flat tab strip.
 
 ### 4.3 — Section Cards
 
@@ -429,13 +431,15 @@ Run WCAG 2.1 AA contrast checks on:
 - Modal close: return focus to the trigger element
 - Command palette: focus the search input on open
 
-### 6.4 — Reduced Motion
+### 6.4 — Reduced Motion & Performance Mode
 
-Add `@media (prefers-reduced-motion: reduce)` overrides for:
+**System preference:** Add `@media (prefers-reduced-motion: reduce)` overrides for:
 - Particle background animation (disable)
 - `bloodSpread` / `dotFillPulse` (instant, no animation)
 - Page fade-in transitions (instant)
 - Card hover lift (disable transform)
+
+**User setting (approved):** Add a **performance mode** (or equivalent name) in settings that **reduces motion globally** for users who do not have OS reduced-motion enabled — same class of overrides as above, plus any other heavy visuals (e.g. particle density) the team ties to this flag. Persist preference server- or client-side per product standards; respect both `prefers-reduced-motion` **and** performance mode (either one on = reduced visuals).
 
 ---
 
@@ -454,7 +458,7 @@ Hour estimates below are **relative sizing hints**, not fixed commitments.
 | P1 | 1 | Expand design-tokens.css with spacing/type/elevation scales | 2h |
 | P1 | 2 | Add mobile navigation drawer (incl. a11y requirements) | 3h |
 | P1 | 6 | ARIA + focus management audit — baseline before large visual PRs | 3h |
-| P1 | 4 | Character sheet header (initials avatar + status dot) | 2h |
+| P1 | 4 | Character sheet header (initials/placeholder + status dot; portrait upload per roadmap) | 2h |
 | P1 | 5 | Consolidate button system (deprecation map, batch migration) | 2h |
 | P2 | 3 | Home dashboard — replace emoji icons with SVG | 2h |
 | P2 | 3 | Welcome banner with real data | 2h |
@@ -464,26 +468,22 @@ Hour estimates below are **relative sizing hints**, not fixed commitments.
 | P3 | 4 | Section collapsibility on mobile | 2h |
 | P3 | 5 | Toast improvements | 1h |
 | P3 | 5 | Empty state elevations | 1h |
-| P3 | 6 | Reduced motion media queries | 1h |
+| P3 | 6 | Reduced motion (`prefers-reduced-motion`) + user performance mode setting | 2h |
 | P4 | 4 | DotScale fractional fill states | 2h |
 | P4 | 4 | Blood pool liquid animation | 3h |
 | P4 | 2 | Brand mark pulse animation | 1h |
 
 ---
 
-## Questions for the Team
+## Team decisions (formerly “Questions for the Team”)
 
-Before implementation begins, alignment is needed on:
-
-1. **Icon system:** Build a custom SVG component (`<Icon>`) or integrate Lucide Icons? Custom keeps zero dependencies; Lucide saves design time and has great gothic-compatible icons (skull, flame, eye, etc.)
-
-2. **Gold accent:** The `--color-gold` token is proposed for achievements/special states (e.g., Discipline mastery, Elder status). Is this in scope or out of brand?
-
-3. **Avatar system:** Just initials, or eventually support user-uploaded artwork per character? The empty `char-avatar` div suggests this was planned.
-
-4. **Tab grouping on character sheet:** Grouping tabs into "CORE / KINDRED / CHRONICLE" would reduce tab count from ~12 to ~6 but changes navigation behavior — is this acceptable?
-
-5. **Animation intensity:** The particle background + card hovers + dot pulses are already layered. On low-end devices this can cause janking. Should we add a "performance mode" setting that reduces motion globally?
+| # | Topic | Decision |
+|---|--------|----------|
+| 1 | **Icon system** | First-party `<Icon>` + inline Lucide-derived paths, no NuGet (see implementation in `RequiemNexus.Web` / [UI_UX_FACELIFT_REVIEW.md](./UI_UX_FACELIFT_REVIEW.md)). |
+| 2 | **Gold accent** | **In brand scope** for achievements and special states (e.g. Discipline mastery, Elder). **`--color-gold` / `--color-gold-dim` stay `EXPERIMENTAL` in CSS until WCAG AA is verified** on target surfaces (Track 6.2 / review Q10). |
+| 3 | **Avatar system** | **Roadmap: user-uploaded artwork** per character. **Near-term UI:** initials (or placeholder) until upload/storage pipeline exists. |
+| 4 | **Tab grouping (CORE / KINDRED / CHRONICLE)** | **Open** — defer until the character sheet facelift is far enough along to evaluate look-and-feel; no commitment to grouping yet. |
+| 5 | **Animation / performance** | **Yes — add a user-facing performance mode** that reduces motion and related heavy visuals globally, in addition to `prefers-reduced-motion` (Track 6.4). |
 
 ---
 

@@ -21,7 +21,7 @@
 .welcome-banner h2 {
     font-size: 2.2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(to right, #ff4d4d, #ffffff);
+    background: linear-gradient(to right, var(--crimson-glow), var(--bone-white));
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -50,10 +50,20 @@
 }
 
 .widget-icon {
-    font-size: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
     margin-bottom: 0.5rem;
+    color: inherit;
     transition: transform var(--transition-fast);
     filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+
+.widget-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 .widget-card:hover .widget-icon {

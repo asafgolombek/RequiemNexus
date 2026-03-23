@@ -1,0 +1,51 @@
+@* SVG paths derived from Lucide (MIT): https://lucide.dev *@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 24 24"
+     fill="none"
+     stroke="currentColor"
+     stroke-width="2"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     class="@Class"
+     aria-hidden="@(Title == null ? "true" : "false")"
+     focusable="false"
+     @attributes="AdditionalAttributes">
+    @if (Title is not null)
+    {
+        <title>@Title</title>
+    }
+    @switch (Name)
+    {
+        case IconName.Users:
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            break;
+        case IconName.BookOpen:
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            break;
+        case IconName.Droplet:
+            <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+            break;
+    }
+</svg>
+
+@code {
+    /// <summary>Which built-in glyph to render.</summary>
+    [Parameter]
+    public IconName Name { get; set; }
+
+    /// <summary>Optional CSS classes (e.g. sizing via w-100 h-100 from parent).</summary>
+    [Parameter]
+    public string? Class { get; set; }
+
+    /// <summary>When set, the icon is exposed to assistive tech with this label; otherwise it is decorative (<c>aria-hidden</c>).</summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>Additional attributes merged onto the root <c>svg</c> element.</summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}
