@@ -1,0 +1,17 @@
+@* Visual 1–3 stage indicator for Blood Bond (Vinculum). *@
+
+<span class="blood-bond-dots" title="@($"Blood Bond stage {Stage} of 3")" aria-label="@($"Blood Bond stage {Stage} of 3")">
+    @for (int i = 1; i <= 3; i++)
+    {
+        <span class="@DotClass(i)">●</span>
+    }
+</span>
+
+@code {
+    /// <summary>Bond stage from 1 to 3.</summary>
+    [Parameter]
+    public int Stage { get; set; } = 1;
+
+    private string DotClass(int index) =>
+        index <= Stage ? "blood-bond-dot blood-bond-dot-filled" : "blood-bond-dot blood-bond-dot-empty";
+}

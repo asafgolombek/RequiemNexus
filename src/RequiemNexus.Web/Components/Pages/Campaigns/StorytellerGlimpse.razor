@@ -87,6 +87,11 @@
             AssetProcurements="_pendingAssetProcurements"
             OnChanged="LoadVitals" />
 
+        <BloodBondsPanel CampaignId="Id"
+                         StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                         Vitals="_vitals"
+                         Npcs="_npcs" />
+
         @* ── Pinned NPCs ────────────────────────────────────────────────────── *@
         @if (_pinnedNpcIds.Any())
         {

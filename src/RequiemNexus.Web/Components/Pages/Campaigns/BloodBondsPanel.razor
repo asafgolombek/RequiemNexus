@@ -1,0 +1,154 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Services
+@inject IBloodBondService BloodBondService
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+
+<div class="card-rn glimpse-card blood-bonds-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <h3 class="section-header">
+            Blood Bonds
+            @if (_fadingCount > 0)
+            {
+                <span class="bond-fading-badge" title="Bonds past the 30-day feeding threshold">@_fadingCount fading</span>
+            }
+        </h3>
+        <button type="button" class="btn-primary-rn btn-align-small" @onclick="() => _feedingOpen = true" disabled="@_loading">
+            Record feeding
+        </button>
+    </div>
+
+    @if (_loading)
+    {
+        <p class="text-small text-muted-rn"><em>Loading bonds…</em></p>
+    }
+    else if (!_bonds.Any())
+    {
+        <p class="text-small text-muted-rn">No Blood Bonds in this chronicle yet.</p>
+    }
+    else
+    {
+        <div class="blood-bonds-table-wrap">
+            <table class="blood-bonds-table">
+                <thead>
+                    <tr>
+                        <th>Thrall</th>
+                        <th>Regnant</th>
+                        <th>Stage</th>
+                        <th>Last fed</th>
+                        <th>Condition</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in _bonds)
+                    {
+                        <tr class="@(b.IsFading ? "bond-row-fading" : null)">
+                            <td>@b.ThrallName</td>
+                            <td>@b.RegnantDisplayName</td>
+                            <td><BloodBondStageIndicator Stage="b.Stage" /></td>
+                            <td class="text-xsmall">@(b.LastFedAt?.ToLocalTime().ToString("g") ?? "—")</td>
+                            <td class="text-xsmall">@b.ActiveConditionName</td>
+                            <td>
+                                <button type="button" class="btn-ghost btn-align-small" @onclick="() => FadeAsync(b)" disabled="@_busyId.HasValue">
+                                    Fade
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<RecordFeedingModal @bind-IsOpen="_feedingOpen"
+                    CampaignId="CampaignId"
+                    StorytellerUserId="StorytellerUserId"
+                    Vitals="Vitals"
+                    Npcs="Npcs"
+                    OnRecorded="ReloadAsync" />
+
+@code {
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<CharacterVitalsDto> Vitals { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<ChronicleNpc> Npcs { get; set; } = [];
+
+    private List<BloodBondDto> _bonds = [];
+
+    private bool _loading = true;
+
+    private bool _feedingOpen;
+
+    private int? _busyId;
+
+    private int _fadingCount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CampaignId > 0 && !string.IsNullOrEmpty(StorytellerUserId))
+        {
+            await ReloadAsync();
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (string.IsNullOrEmpty(StorytellerUserId))
+        {
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _bonds = (await BloodBondService.GetBondsInChronicleAsync(CampaignId, StorytellerUserId)).ToList();
+            _fadingCount = _bonds.Count(b => b.IsFading);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Blood Bonds", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task FadeAsync(BloodBondDto bond)
+    {
+        bool ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Fade the Blood Bond between {bond.ThrallName} and {bond.RegnantDisplayName} by one stage?");
+        if (!ok)
+        {
+            return;
+        }
+
+        _busyId = bond.Id;
+        try
+        {
+            var result = await BloodBondService.FadeBondAsync(bond.Id, StorytellerUserId);
+            if (!result.IsSuccess)
+            {
+                ToastService.Show("Blood Bond", result.Error ?? "Fade failed.", ToastType.Error);
+                return;
+            }
+
+            ToastService.Show("Blood Bond", "Bond faded.", ToastType.Success);
+            await ReloadAsync();
+        }
+        finally
+        {
+            _busyId = null;
+        }
+    }
+}

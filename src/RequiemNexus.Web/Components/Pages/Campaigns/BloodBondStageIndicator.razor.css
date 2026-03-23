@@ -1,0 +1,22 @@
+.blood-bond-dots {
+    display: inline-flex;
+    gap: 0.15rem;
+    align-items: center;
+    letter-spacing: 0;
+    user-select: none;
+}
+
+.blood-bond-dot {
+    font-size: 0.65rem;
+    line-height: 1;
+}
+
+.blood-bond-dot-filled {
+    color: var(--accent-blood, #c44);
+    opacity: 1;
+}
+
+.blood-bond-dot-empty {
+    color: var(--text-muted, #666);
+    opacity: 0.35;
+}

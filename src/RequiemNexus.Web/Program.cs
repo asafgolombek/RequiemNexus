@@ -161,6 +161,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterPrepServ
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.INpcCombatService, RequiemNexus.Application.Services.NpcCombatService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterTemplateService, RequiemNexus.Application.Services.EncounterTemplateService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IKindredLineageService, RequiemNexus.Application.Services.KindredLineageService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IBloodBondService, RequiemNexus.Application.Services.BloodBondService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPerceptionRollService, RequiemNexus.Application.Services.PerceptionRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICityFactionService, RequiemNexus.Application.Services.CityFactionService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IChronicleNpcService, RequiemNexus.Application.Services.ChronicleNpcService>();

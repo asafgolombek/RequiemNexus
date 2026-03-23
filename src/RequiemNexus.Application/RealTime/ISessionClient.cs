@@ -85,4 +85,10 @@ public interface ISessionClient
     /// </summary>
     /// <param name="update">Current maneuver summary.</param>
     Task ReceiveSocialManeuverUpdate(SocialManeuverUpdateDto update);
+
+    /// <summary>
+    /// Pushed when relationship state affecting session participants changes (Blood Bond, Predatory Aura, lineage).
+    /// </summary>
+    /// <param name="update">Discriminated summary for UI or logs.</param>
+    Task ReceiveRelationshipUpdate(RelationshipUpdateDto update);
 }

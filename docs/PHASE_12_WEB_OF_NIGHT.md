@@ -885,16 +885,16 @@ Work should be completed in the order listed. Complete each unit before moving t
 
 ### Subsystem B — Blood Bond Tracker
 
-- [ ] **`BloodBondRules`** (Domain) — `IsFading`, `ConditionForStage`, `StageResolutionAwardsBeat`.
-- [ ] **Domain unit tests** for `BloodBondRules`.
-- [ ] **`IBloodBondService` + `BloodBondService`** (Application) — including Condition lifecycle management.
-- [ ] **`BloodBondDto`, `RecordFeedingRequest`** (Application Contracts).
-- [ ] **Application integration tests** for `IBloodBondService` — all stage transitions, re-feed at same stage (idempotent), `SourceTag` isolation (bond `Swooned` not resolved by Social Maneuvering path), fading, `RegnantKey` duplicate prevention, **display-name collision** (`"Mira"` and `"  mira  "` resolve to the same `RegnantKey` → second insert rejected, not a new bond).
-- [ ] **`RelationshipUpdateType` enum** (Data/RealTime) — new file, one type per file rule.
-- [ ] **`ReceiveRelationshipUpdate`** added to `ISessionClient` and implemented in `SessionHub`.
-- [ ] **`BloodBondsPanel.razor`** (Web — ST Glimpse panel).
-- [ ] **`RecordFeedingModal.razor`** (Web — ST modal).
-- [ ] **Blood Bonds section on character sheet** (Web — thrall read-only view).
+- [x] **`BloodBondRules`** (Domain) — `IsFading`, `ConditionForStage`, `StageResolutionAwardsBeat`.
+- [x] **Domain unit tests** for `BloodBondRules`.
+- [x] **`IBloodBondService` + `BloodBondService`** (Application) — including Condition lifecycle management.
+- [x] **`BloodBondDto`, `RecordFeedingRequest`** (Application Contracts).
+- [x] **Application integration tests** for `IBloodBondService` — all stage transitions, re-feed at same stage (idempotent), `SourceTag` isolation (bond `Swooned` not resolved by Social Maneuvering path), fading, `RegnantKey` duplicate prevention, **display-name collision** (`"Mira"` and `"  mira  "` resolve to the same `RegnantKey` → second insert rejected, not a new bond).
+- [x] **`RelationshipUpdateType` enum** (Data/RealTime) — new file, one type per file rule.
+- [x] **`ReceiveRelationshipUpdate`** added to `ISessionClient` and implemented in `SessionHub`.
+- [x] **`BloodBondsPanel.razor`** (Web — ST Glimpse panel).
+- [x] **`RecordFeedingModal.razor`** (Web — ST modal).
+- [x] **Blood Bonds section on character sheet** (Web — thrall read-only view).
 
 ### Subsystem C — Predatory Aura
 

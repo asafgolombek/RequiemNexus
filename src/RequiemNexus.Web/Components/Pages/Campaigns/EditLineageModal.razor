@@ -10,13 +10,13 @@
 
 @if (IsOpen)
 {
-    <div class="modal-backdrop" @onclick="CloseAsync">
-        <div class="modal-panel" style="max-width:480px;" @onclick:stopPropagation>
-            <div class="modal-header">
-                <h3>Edit lineage — @_characterName</h3>
-                <button type="button" class="close-btn" @onclick="CloseAsync">&times;</button>
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="lineage-modal-title">
+            <div class="rn-modal-header">
+                <h2 id="lineage-modal-title" class="rn-modal-title">Edit lineage — @_characterName</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
             </div>
-            <div class="modal-body">
+            <div class="rn-modal-body">
                 @if (_loading)
                 {
                     <p><em>Loading…</em></p>
@@ -65,7 +65,7 @@
                     }
                 }
             </div>
-            <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid rgba(255,255,255,0.08);">
+            <div class="edit-lineage-footer">
                 <button type="button" class="btn-ghost" @onclick="CloseAsync" disabled="@_busy">Cancel</button>
                 <button type="button" class="btn-primary-rn" disabled="@(_loading || _busy || !CanApply)" @onclick="ApplyAsync">
                     @(_busy ? "Saving…" : "Save")

@@ -99,4 +99,11 @@ public interface ISessionService
     /// <param name="targetUserId">Character owner's AspNetUsers id.</param>
     /// <param name="notification">Payload for the client toast.</param>
     Task NotifyConditionToastAsync(string targetUserId, ConditionNotificationDto notification);
+
+    /// <summary>
+    /// Broadcasts a relationship-web update to everyone in the chronicle SignalR group.
+    /// </summary>
+    /// <param name="chronicleId">Campaign id.</param>
+    /// <param name="update">Typed payload (Blood Bond, aura, lineage).</param>
+    Task BroadcastRelationshipUpdateAsync(int chronicleId, RelationshipUpdateDto update);
 }
