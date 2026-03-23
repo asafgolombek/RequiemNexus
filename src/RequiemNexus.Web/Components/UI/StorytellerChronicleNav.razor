@@ -1,0 +1,20 @@
+<nav class="tab-bar campaign-chronicle-nav" aria-label="Chronicle storyteller tools">
+    <NavLink class="tab-btn" href="@RosterHref" Match="NavLinkMatch.All" ActiveClass="active">Roster</NavLink>
+    <NavLink class="tab-btn" href="@GlimpseHref" ActiveClass="active">🔮 Glimpse Dashboard</NavLink>
+    <NavLink class="tab-btn" href="@EncountersHref" ActiveClass="active">⚔️ Encounters</NavLink>
+    <NavLink class="tab-btn" href="@DanseHref" ActiveClass="active">🌹 Danse Macabre</NavLink>
+</nav>
+
+@code {
+    /// <summary>Campaign id for chronicle tool routes.</summary>
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    private string RosterHref => $"/campaigns/{CampaignId}";
+
+    private string GlimpseHref => $"/campaigns/{CampaignId}/glimpse";
+
+    private string EncountersHref => $"/campaigns/{CampaignId}/encounters";
+
+    private string DanseHref => $"/campaigns/{CampaignId}/danse-macabre";
+}

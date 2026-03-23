@@ -980,6 +980,21 @@ h1:focus {
     border-bottom-color: var(--crimson-glow);
 }
 
+/* Campaign details: chronicle NavLink bar + nested roster tab bar */
+.campaign-chronicle-nav {
+    margin-top: 1rem;
+}
+
+.campaign-roster-tab-bar {
+    margin-top: 0.5rem;
+}
+
+/* Player invite modal — comfortable width for URL field */
+.player-invite-modal.modal-panel {
+    max-width: 36rem;
+    width: calc(100% - 2rem);
+}
+
 /* Space between full-width Skills and the two-column row below (sheet / view-only / advancement) */
 .cs-grid > .cs-section.cs-skills {
     margin-bottom: 1.5rem;
