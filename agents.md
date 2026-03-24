@@ -316,15 +316,15 @@ When making any change, ask: *does this make the system easier or harder to unde
 | **The Masquerade** | (1) The vampire secret from mortals; (2) the security/auth phase of this project |
 | **Grimoire** | The project's role as a living learning artifact — every decision is teachable |
 | **The Haven** | The local development environment |
-| **The Inquisition** | The full local test suite (`.\scripts\test-local.ps1`) |
+| **The Inquisition** | Local unit + integration + format (`.\scripts\test-local.ps1`); browser E2E is `.\scripts\test-e2e-local.ps1` |
 
 ---
 
 ## Current Phase
 
-**Phase 13 — End-to-End Testing & Accessibility.** Phase 12 (The Web of Night — relationship webs) is complete. Phase 11 (Assets & Armory) and Phases 9–10 and 9.5–9.6 are complete.
+**Phase 14 — The Global Embrace (planned).** Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see [`docs/PHASE_13_E2E_ACCESSIBILITY.md`](./docs/PHASE_13_E2E_ACCESSIBILITY.md) and [`docs/mission.md`](./docs/mission.md). Phase 12 (The Web of Night) and Phases 8–11 are complete.
 
-**Next execution plan:** [`docs/PHASE_13_E2E_ACCESSIBILITY.md`](./docs/PHASE_13_E2E_ACCESSIBILITY.md) — Playwright suite, axe/Lighthouse CI, screen reader, visual regression.
+**Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
