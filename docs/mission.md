@@ -31,7 +31,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 13 | End-to-End Testing & Accessibility | ✅ Complete |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → Phase 14 — The Global Embrace (planned).** Phase 13 (E2E, accessibility, screen-reader announcer, CI) is delivered — see [PHASE_13_E2E_ACCESSIBILITY.md](PHASE_13_E2E_ACCESSIBILITY.md). Phase 12 (The Web of Night) is delivered; see phase table above.
+> **Currently active → Phase 14 — The Global Embrace (planned).** Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — summary and exit criteria are in **Phase 13** below; run local browser tests with `scripts/test-e2e-local.ps1`. Phase 12 (The Web of Night) is delivered; see phase table above.
 
 ---
 
@@ -391,16 +391,16 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 13: End-to-End Testing & Accessibility
+## 📅 Phase 13: End-to-End Testing & Accessibility ✅
 
 **The Objective:** Harden the ecosystem for all users and ensure the Gothic aesthetic remains usable.
 
-**Execution plan:** See **[PHASE_13_E2E_ACCESSIBILITY.md](PHASE_13_E2E_ACCESSIBILITY.md)** for the full four-track implementation plan (E2E suite, a11y CI, screen reader, visual regression). The UI/UX Facelift (design tokens, `SharedHeader` / mobile nav, home dashboard, character sheet polish) runs in parallel and is a prerequisite for Track 3 (screen reader) and Track 4 (visual regression).
+**Delivered:** Playwright E2E tests in `tests/RequiemNexus.E2E.Tests` (smoke, accessibility page scans, and critical-path coverage as implemented in that project). CI runs **axe**-based scans and **Lighthouse** audits via `.github/workflows/e2e.yml` and `.github/workflows/lighthouse.yml`. Real-time dice and Blood Sorcery feedback is announced through **ARIA live regions** (screen-reader announcer). **Visual regression** baselines live in `tests/RequiemNexus.VisualRegression.Tests` and run in the E2E workflow; refresh snapshots as documented in `Contributing.md`. Shared layout chrome and design tokens were aligned with this work so a11y and visual checks stay meaningful.
 
-- [ ] **Full E2E Playwright Suite** — Testing critical paths: Character Evolution (Phases 8–9), Social Maneuvers (Phase 10), and **Pack / procurement / equipment** flows (Phase 11)
-- [ ] **Automated Accessibility Scanning** — WCAG 2.1 AA audit integrated into the CI pipeline
-- [ ] **Screen Reader Optimization** — Ensuring all real-time dice rolls and Blood Sorcery results are announced via ARIA live regions
-- [ ] **Visual Regression Baseline** — Catching UI drift in the "Bone-white and Crimson" palette across browser updates
+- [x] **Full E2E Playwright Suite** — Critical paths including character advancement, social maneuvers, and pack / procurement / equipment flows (as covered by the E2E project)
+- [x] **Automated Accessibility Scanning** — WCAG-oriented audits integrated into CI (axe page scans and Lighthouse)
+- [x] **Screen Reader Optimization** — Real-time dice rolls and Blood Sorcery results announced via ARIA live regions
+- [x] **Visual Regression Baseline** — Playwright snapshot workflow for UI drift in the bone-white and crimson palette (see `Contributing.md` for optional baseline updates)
 
 ---
 

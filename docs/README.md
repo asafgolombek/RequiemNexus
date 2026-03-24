@@ -112,9 +112,13 @@ RequiemNexus/
 │   ├── RequiemNexus.Domain/      # Domain — game rules, models, invariants
 │   └── RequiemNexus.Web/         # Presentation — Blazor components, SignalR hubs, gothic design system
 └── tests/
-    ├── RequiemNexus.Domain.Tests/       # Unit tests
-    ├── RequiemNexus.Data.Tests/         # Integration tests
-    └── RequiemNexus.PerformanceTests/   # Load & latency tests
+    ├── RequiemNexus.Domain.Tests/             # Unit tests
+    ├── RequiemNexus.Application.Tests/        # Application integration tests
+    ├── RequiemNexus.Data.Tests/               # Integration tests (PostgreSQL)
+    ├── RequiemNexus.Web.Tests/                # Presentation tests
+    ├── RequiemNexus.E2E.Tests/                # Playwright E2E + accessibility (Phase 13)
+    ├── RequiemNexus.VisualRegression.Tests/   # UI snapshot regression (Phase 13)
+    └── RequiemNexus.PerformanceTests/         # Load & latency tests
 ```
 
 ---
@@ -137,10 +141,10 @@ RequiemNexus/
 | 10 | **The Social Graces** — Social Maneuvering | ✅ Complete |
 | 11 | **Assets & Armory** — Equipment & Services | ✅ Complete |
 | 12 | **The Web of Night** — Relationship Webs | ✅ Complete |
-| 13 | **End-to-End Testing & Accessibility** | ⬜ Planned |
+| 13 | **End-to-End Testing & Accessibility** | ✅ Complete |
 | 14 | **The Global Embrace** — i18n, public API | ⬜ Planned |
 
-**Next up:** [Phase 13 — E2E Testing & Accessibility](./PHASE_13_E2E_ACCESSIBILITY.md) — full execution plan (Playwright suite, axe/Lighthouse CI, screen reader, visual regression).
+**Next up:** Phase 14 — **The Global Embrace** (i18n, public API, Discord presence, production SignalR polish). See the [Mission](./mission.md) phase table and Phase 14 section for criteria.
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 

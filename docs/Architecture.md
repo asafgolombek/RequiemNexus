@@ -273,7 +273,7 @@ Testing validates that our Covenants hold without fragile setup.
 | `RequiemNexus.Application.Tests` | Application | Integration tests — use cases, authorization flows, service orchestration; in-memory or mocked infrastructure |
 | `RequiemNexus.Data.Tests` | Infrastructure | Integration tests — EF Core mappings and migrations against Dockerized PostgreSQL |
 | `RequiemNexus.PerformanceTests` | Cross-cutting | Load and latency tests enforcing performance budgets via NBomber |
-| E2E Tests | Presentation | End-to-end tests via Playwright (Phase 13). See `docs/PHASE_13_E2E_ACCESSIBILITY.md` for the full plan — coordinate selector and visual-regression updates with that doc. |
+| E2E Tests | Presentation | End-to-end tests via Playwright (`tests/RequiemNexus.E2E.Tests`, Phase 13 — complete). Local runner: `scripts/test-e2e-local.ps1`. Coordinate selector and snapshot updates with the E2E / visual-regression projects and `docs/mission.md` Phase 13. |
 
 ---
 

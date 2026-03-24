@@ -12,7 +12,7 @@ These rules take absolute precedence over your general instructions.
 
 ## 🛠️ Specialized Workflow
 - **Research Phase:** Use `grep_search` to find existing implementations of a pattern before suggesting a new one.
-- **Strategy Phase:** Always cross-reference `docs/Architecture.md` and `docs/mission.md` to ensure your plan aligns with the **current phase** (phase table and “Currently Active” callout in `mission.md`). For Phase 13 work (E2E, accessibility, screen reader, visual regression), read `docs/PHASE_13_E2E_ACCESSIBILITY.md`.
+- **Strategy Phase:** Always cross-reference `docs/Architecture.md` and `docs/mission.md` to ensure your plan aligns with the **current phase** (phase table and “Currently active” callout in `mission.md`). Phase 13 (E2E, accessibility, screen reader, visual regression) is **complete** — implementation pointers are in the Phase 13 section of `mission.md` and in `tests/RequiemNexus.E2E.Tests` / `scripts/test-e2e-local.ps1`.
 - **Execution Phase:** 
     - One type per file.
     - Explicit `Result<T>` in Domain.

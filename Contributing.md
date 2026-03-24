@@ -200,7 +200,7 @@ Not sure where to start? Here's your path:
 1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
 2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
 3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
-4. **Check the mission roadmap** — the phase table in `mission.md` shows what's shipped. Phase 13 (E2E infra, axe, Lighthouse, announcer, visual-regression CI) is documented in [PHASE_13_E2E_ACCESSIBILITY.md](./docs/PHASE_13_E2E_ACCESSIBILITY.md).
+4. **Check the mission roadmap** — the phase table in [`mission.md`](./docs/mission.md) shows what's shipped, including **Phase 13** (E2E infra, axe, Lighthouse, announcer, visual-regression CI).
 5. **Set up The Haven** — follow the Development Setup section above.
 6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
 

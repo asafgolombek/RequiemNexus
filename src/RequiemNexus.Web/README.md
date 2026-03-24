@@ -56,6 +56,6 @@ Do **NOT** inject exactly what you want (like the DbContext) into the UI to bypa
 **Why it's wrong:**
 When business logic (e.g., character health caps, healing rules) lives in the UI component, it cannot be reused (what if an API needs to heal the character?). Injecting `DbContext` directly into the presentation layer destroys traceability, leading to "magic" data changes that other developers cannot trace safely.
 
-## Current UI execution plan
+## UI and accessibility (Phase 13)
 
-Presentation-layer priorities (tokens, layout chrome, character sheet) are defined in [`docs/UI_UX_FACELIFT.md`](../../docs/UI_UX_FACELIFT.md). Peer review notes: [`docs/UI_UX_FACELIFT_REVIEW.md`](../../docs/UI_UX_FACELIFT_REVIEW.md). See also `docs/mission.md` Phase 13.
+Phase 13 delivered shared chrome, design tokens, and accessibility-oriented presentation work alongside the Playwright E2E and visual-regression pipelines. For roadmap context, see [`docs/mission.md`](../../docs/mission.md) (Phase 13). Implementation lives in this project’s components, layouts, and styles.

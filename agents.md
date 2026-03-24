@@ -322,7 +322,7 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 14 — The Global Embrace (planned).** Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see [`docs/PHASE_13_E2E_ACCESSIBILITY.md`](./docs/PHASE_13_E2E_ACCESSIBILITY.md) and [`docs/mission.md`](./docs/mission.md). Phase 12 (The Web of Night) and Phases 8–11 are complete.
+**Phase 14 — The Global Embrace (planned).** Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see the **Phase 13** section in [`docs/mission.md`](./docs/mission.md). Phase 12 (The Web of Night) and Phases 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
