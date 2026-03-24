@@ -140,7 +140,7 @@ RequiemNexus/
 | 13 | **End-to-End Testing & Accessibility** | ⬜ Planned |
 | 14 | **The Global Embrace** — i18n, public API | ⬜ Planned |
 
-**Next up:** [UI/UX Facelift plan](./UI_UX_FACELIFT.md) — current execution focus for Phase 13 presentation work (tokens, navigation, character sheet); aligns with E2E and accessibility goals. Peer review: [UI_UX_FACELIFT_REVIEW.md](./UI_UX_FACELIFT_REVIEW.md).
+**Next up:** [Phase 13 — E2E Testing & Accessibility](./PHASE_13_E2E_ACCESSIBILITY.md) — full execution plan (Playwright suite, axe/Lighthouse CI, screen reader, visual regression).
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 
