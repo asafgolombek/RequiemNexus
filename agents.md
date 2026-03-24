@@ -322,7 +322,7 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 14 — The Global Embrace (planned).** Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see the **Phase 13** section in [`docs/mission.md`](./docs/mission.md). Phase 12 (The Web of Night) and Phases 8–11 are complete.
+**Phase 15 — The Danse Macabre (Combat & Wounds, in progress).** Phases 15–20 close the V:tR 2e playability gaps — see [`docs/PLAYABILITY_GAP_PLAN.md`](./docs/PLAYABILITY_GAP_PLAN.md) and [`docs/mission.md`](./docs/mission.md). **Phase 21 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see **Phase 13** in `docs/mission.md`. Phase 12 (The Web of Night) and Phases 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 

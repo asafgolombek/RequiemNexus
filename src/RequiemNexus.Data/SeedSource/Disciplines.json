@@ -1,0 +1,881 @@
+[
+  {
+    "name": "Dominate",
+    "clans": [
+      "Ventrue"
+    ],
+    "covenant": "",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition",
+    "powers": [
+      {
+        "name": "The Lying Mind",
+        "ranking": "4",
+        "description": "Allows the vampire to alter, erase, or rewrite the victim's memories.",
+        "roll": "Intelligence + Subterfuge + Dominate vs. Resolve + Blood Potency",
+        "cost": "None"
+      }
+    ]
+  },
+  {
+    "name": "Majesty",
+    "clans": [
+      "Daeva"
+    ],
+    "covenant": "",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition",
+    "powers": [
+      {
+        "name": "Confidant",
+        "ranking": "2",
+        "description": "Draws a subject into the vampire's confidence, making them eager to share secrets and trust the vampire implicitly.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Green Eyes",
+        "ranking": "4",
+        "description": "Inspires intense jealousy and covetous desire in others towards a target of the vampire's choosing.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Idol",
+        "ranking": "5",
+        "description": "Inspires cult-like devotion and overwhelming worship from the masses.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      }
+    ]
+  },
+  {
+    "name": "Nightmare",
+    "clans": [
+      "Nosferatu"
+    ],
+    "covenant": "",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition",
+    "powers": [
+      {
+        "name": "Mortal Terror",
+        "ranking": "3",
+        "description": "Strikes the victim with an overwhelming, irrational fear that forces them to flee in pure panic.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Waking Nightmare",
+        "ranking": "4",
+        "description": "Forces the victim to experience their worst fears manifested in their waking life.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "The Grand Delusion",
+        "ranking": "5",
+        "description": "Plunges the victim into a persistent, terrifying delusion shaped by the vampire's design.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      }
+    ]
+  },
+  {
+    "name": "Obfuscate",
+    "clans": [
+      "Mekhet",
+      "Nosferatu"
+    ],
+    "covenant": "",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition",
+    "powers": [
+      {
+        "name": "Face in the Crowd",
+        "ranking": "4",
+        "description": "Allows the vampire to seamlessly blend into any group or crowd, becoming an indistinguishable part of the background.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      }
+    ]
+  },
+  {
+    "name": "Protean",
+    "clans": [
+      "Gangrel"
+    ],
+    "covenant": "",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition",
+    "powers": [
+      {
+        "name": "Beast's Skin",
+        "ranking": "3",
+        "description": "Transforms the vampire into a specific predatory animal, such as a wolf or bat.",
+        "roll": "Not detailed in source text",
+        "cost": "1 Vitae"
+      },
+      {
+        "name": "Unnatural Aspect",
+        "ranking": "4",
+        "description": "Morphs the vampire's body with terrifying, monstrous physical traits (e.g., membranous wings, hardened skin).",
+        "roll": "None",
+        "cost": "1 Vitae"
+      },
+      {
+        "name": "Primeval Miasma",
+        "ranking": "5",
+        "description": "Allows the vampire to dissipate into an intangible cloud of vapor or merge wholly into the earth.",
+        "roll": "Not detailed in source text",
+        "cost": "1 Vitae"
+      }
+    ]
+  },
+  {
+    "name": "Dead Signal",
+    "clans": [],
+    "covenant": "",
+    "bloodline": "Jharana",
+    "source book": "Night Horrors: Spilled Blood",
+    "powers": [
+      {
+        "name": "Configure Receiver",
+        "ranking": "5",
+        "description": "Allows the vampire to reconfigure a target's connection to the God-Machine or manipulate their Radio Sickness in advanced ways.",
+        "roll": "Not detailed in source text",
+        "cost": "Not detailed in source text"
+      },
+      {
+        "name": "Broadcast",
+        "ranking": "5",
+        "description": "Allows the vampire to transmit the dead signal to multiple targets or over a wide area.",
+        "roll": "Not detailed in source text",
+        "cost": "Not detailed in source text"
+      }
+    ]
+  },
+  {
+    "name": "Perfidy",
+    "clans": [],
+    "covenant": "",
+    "bloodline": "Kallisti",
+    "source book": "Bloodlines: The Devoted",
+    "powers": [
+      {
+        "name": "Whisper Campaign",
+        "ranking": "1",
+        "description": "Sows seeds of doubt and paranoia about the victim among their peers.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Friend to Foe",
+        "ranking": "2",
+        "description": "Twists a victim's perceptions so they view their friends and loved ones with suspicion and hostility.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      }
+    ]
+  },
+  {
+    "name": "Crúac (Rites)",
+    "clans": [],
+    "covenant": "Circle of the Crone",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition / Secrets of the Covenants",
+    "powers": [
+      {
+        "name": "Pangs of Proserpina",
+        "ranking": "None",
+        "description": "A destructive Crúac rite that inflicts deep internal suffering.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Rigor Mortis",
+        "ranking": "None",
+        "description": "Freezes or paralyzes the victim by seizing their blood.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Touch of the Morrigan",
+        "ranking": "None",
+        "description": "The ritualist pours the tearing force of his Beast into his hands, inflicting lethal wounds upon striking an opponent.",
+        "roll": "Dexterity + Brawl to touch (Target Successes: 6)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Blood Price",
+        "ranking": "None",
+        "description": "A destructive Crúac rite.",
+        "roll": "Contested by Composure + Blood Potency (Target Successes: 8)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Blood Blight",
+        "ranking": "None",
+        "description": "A destructive Crúac rite that ruins the purity of blood.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Cheval",
+        "ranking": "None",
+        "description": "Allows the ritualist to see and hear what the subject does, no matter how far away she is, for the rest of the night.",
+        "roll": "Resisted by Composure (Target Successes: 5)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "The Hydra's Vitae",
+        "ranking": "None",
+        "description": "A destructive Crúac rite that turns blood to venom.",
+        "roll": "Resolve + Occult + Crúac (Target Successes: 5)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Feeding the Crone",
+        "ranking": "None",
+        "description": "A Crúac rite honoring the Mother.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Deflection of the Wooden Doom",
+        "ranking": "None",
+        "description": "A protective rite that shields the vampire from being staked.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Willful Vitae",
+        "ranking": "None",
+        "description": "A rite that grants independent action or life-like qualities to spilled blood.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "The Mantle of Amorous Fire",
+        "ranking": "None",
+        "description": "The Acolyte dances into an ecstatic Condition, transmuting their form.",
+        "roll": "Resolve + Occult + Crúac (Target Successes: 5)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "The Pool of Forbidden Truths",
+        "ranking": "None",
+        "description": "The Acolyte spills blood into a vessel and uses a vector for prophecy to divine secrets.",
+        "roll": "Wits + Investigation + Crúac (Target Successes: 5)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Mantle of the Glorious Dervish",
+        "ranking": "None",
+        "description": "The Acolyte enters a trance granting a point of armor, increased attack damage, and immunity to being ambushed.",
+        "roll": "Resolve + Occult + Crúac (Target Successes: 5)",
+        "cost": "1 Vitae per dot + 1 Willpower"
+      },
+      {
+        "name": "Manananggal's Working",
+        "ranking": "None",
+        "description": "A Crúac rite to separate or manipulate parts of the body.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Gwydion's Curse",
+        "ranking": "None",
+        "description": "A curse rite invoking pagan lore.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Scapegoat",
+        "ranking": "None",
+        "description": "Transfers suffering, banes, or conditions onto a ritual victim.",
+        "roll": "Resolve + Occult + Crúac",
+        "cost": "1 Vitae per dot"
+      }
+    ]
+  },
+  {
+    "name": "Theban Sorcery (Miracles)",
+    "clans": [],
+    "covenant": "Lancea et Sanctum",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition / Secrets of the Covenants",
+    "powers": [
+      {
+        "name": "Blood Scourge",
+        "ranking": "None",
+        "description": "Transforms a portion of the ritualist's blood into a stinging whip weapon (2L) that lasts until the end of the scene or sunrise.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 6)",
+        "cost": "1 Willpower + Sacrament (At least 1 Vitae)"
+      },
+      {
+        "name": "Vitae Reliquary",
+        "ranking": "None",
+        "description": "Stores or preserves Vitae in an object.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 5)",
+        "cost": "1 Willpower + Sacrament (any object up to size 3)"
+      },
+      {
+        "name": "Curse of Babel",
+        "ranking": "None",
+        "description": "Renders the victim unable to speak or write until the next sunrise.",
+        "roll": "Resisted by Resolve (Target Successes: 6)",
+        "cost": "1 Willpower + Sacrament (an animal or human tongue)"
+      },
+      {
+        "name": "Liar's Plague",
+        "ranking": "None",
+        "description": "Curses a victim to not tell falsehoods; if he lies, beetles swarm from his mouth.",
+        "roll": "Contested by Resolve + Blood Potency (Target Successes: 5)",
+        "cost": "1 Willpower + Sacrament (an insect carapace)"
+      },
+      {
+        "name": "Malediction of Despair",
+        "ranking": "None",
+        "description": "Curses the victim so the next time he engages in a specific action, he suffers a -5 dice penalty.",
+        "roll": "Contested by Resolve + Blood Potency (Target Successes: 13)",
+        "cost": "1 Willpower + Sacrament (a lock of the victim's hair)"
+      },
+      {
+        "name": "Gift of Lazarus",
+        "ranking": "None",
+        "description": "A restorative or reanimating Theban miracle.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 8)",
+        "cost": "1 Willpower + Sacrament"
+      },
+      {
+        "name": "Blandishment of Sin",
+        "ranking": "None",
+        "description": "A Theban miracle related to temptation and moral failing.",
+        "roll": "Intelligence + Academics + Theban Sorcery",
+        "cost": "1 Willpower + Sacrament"
+      },
+      {
+        "name": "Transubstantiation",
+        "ranking": "None",
+        "description": "A Theban miracle that alters the properties of blood or other substances.",
+        "roll": "Intelligence + Academics + Theban Sorcery",
+        "cost": "1 Willpower + Sacrament"
+      },
+      {
+        "name": "Apple of Eden",
+        "ranking": "None",
+        "description": "Enchants an apple that grants a mortal temporary dots in Intelligence and Wits upon consumption.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 5)",
+        "cost": "1 Willpower + Sacrament (An apple, a drop of Vitae)"
+      },
+      {
+        "name": "Aaron's Rod",
+        "ranking": "None",
+        "description": "Enchants a rod or staff so that it can be activated later to become a venomous serpent.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 8)",
+        "cost": "1 Willpower + Sacrament (A rod or staff)"
+      },
+      {
+        "name": "The Guiding Star",
+        "ranking": "None",
+        "description": "Enchants a star and gold coins; holders of the coin intuitively know the direction to a designated safe haven.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 8)",
+        "cost": "1 Willpower + Sacrament (Hand-crafted star chart, gold coins)"
+      },
+      {
+        "name": "Curse of Isolation",
+        "ranking": "None",
+        "description": "Severs the bonds between a subject and a vampire, making the mortal subject the ritualist's Touchstone instead.",
+        "roll": "Contested by Resolve + Blood Potency (Target Successes: 15)",
+        "cost": "1 Willpower + Sacrament (any bladed weapon)"
+      },
+      {
+        "name": "Orison of Voices",
+        "ranking": "None",
+        "description": "Allows the ritualist to hear whenever any voice in the world speaks her name, along with context, for three nights.",
+        "roll": "Intelligence + Academics + Theban Sorcery (Target Successes: 8)",
+        "cost": "1 Willpower + Sacrament (rosary beads)"
+      },
+      {
+        "name": "Sins of the Ancestors",
+        "ranking": "None",
+        "description": "A punitive Theban miracle targeting the lineages of Kindred or mortals.",
+        "roll": "Intelligence + Academics + Theban Sorcery",
+        "cost": "1 Willpower + Sacrament"
+      },
+      {
+        "name": "Miracle of the Dead Sun",
+        "ranking": "None",
+        "description": "A Theban miracle allowing limited resistance or interaction with the day.",
+        "roll": "Intelligence + Academics + Theban Sorcery",
+        "cost": "1 Willpower + Sacrament"
+      }
+    ]
+  },
+  {
+    "name": "Scales of the Dragon",
+    "clans": [],
+    "covenant": "Ordo Dracul",
+    "bloodline": "",
+    "source book": "Vampire: The Requiem Second Edition / Night Horrors / Thousand Years of Night",
+    "powers": [
+      {
+        "name": "Day-Wake Conditioning",
+        "ranking": "None",
+        "description": "Reverses the subject's sleep cycle, causing them to wake at dawn and slumber at night in a brightly lit chamber.",
+        "roll": "None",
+        "cost": "None"
+      },
+      {
+        "name": "Epidermal Shielding Bath",
+        "ranking": "None",
+        "description": "Submerges a Kindred subject in an alchemical bath of blood and fat to shield them from the sun/fire.",
+        "roll": "None",
+        "cost": "Variable Vitae"
+      },
+      {
+        "name": "Augmented Vitae Draught",
+        "ranking": "None",
+        "description": "Drains the Dragon's Vitae into a container that augments the physical attributes of anyone who drinks it.",
+        "roll": "None",
+        "cost": "Action equivalent to Physical Intensity"
+      },
+      {
+        "name": "Kindred Sense Endowment",
+        "ranking": "None",
+        "description": "Sickens the subject but grants the ability to see and smell blood as though they were a vampire.",
+        "roll": "None",
+        "cost": "None"
+      },
+      {
+        "name": "Surgical Heart Removal",
+        "ranking": "None",
+        "description": "Surgically removes a Kindred subject's heart to prevent staking and alter the Beast's connection.",
+        "roll": "Extended Intelligence + Medicine (Target: 10 successes)",
+        "cost": "None"
+      },
+      {
+        "name": "Stage-One Blood Cleansing Ritual",
+        "ranking": "None",
+        "description": "Develops blood sympathy towards those the Dragon has blood bound by washing them in a mixture of Vitae and animal viscera.",
+        "roll": "None",
+        "cost": "Multiple draughts of Vitae"
+      },
+      {
+        "name": "Codependency",
+        "ranking": "None",
+        "description": "Buries ghouls to seed Vitae into the earth, altering the domain's personality to reflect the master's will.",
+        "roll": "None",
+        "cost": "Full Vitae pool, sacrifice of multiple ghouls"
+      },
+      {
+        "name": "Cold of the Grave",
+        "ranking": "None",
+        "description": "Extinguishes a central pyre with a mixture of Vitae and corpse dust to grant the effects of Smother to all vampires in the domain.",
+        "roll": "None",
+        "cost": "Full Vitae pool + extorted Vitae"
+      },
+      {
+        "name": "Psychic Lobotomy",
+        "ranking": "None",
+        "description": "Removes a part of the subject's brain to protect him from supernatural mental influence at the cost of an Attribute dot.",
+        "roll": "None",
+        "cost": "None"
+      },
+      {
+        "name": "Grafting Unholy Flesh",
+        "ranking": "None",
+        "description": "Alters the flesh of a subject; must be performed within a Wyrm's Nest.",
+        "roll": "None",
+        "cost": "None"
+      },
+      {
+        "name": "Fealty's Reward",
+        "ranking": "None",
+        "description": "Manipulates the blood bond to reward a thrall or alter the terms of servitude.",
+        "roll": "None",
+        "cost": "None"
+      },
+      {
+        "name": "Mass Embrace",
+        "ranking": "None",
+        "description": "An experimental procedure used to efficiently Embrace or augment multiple subjects simultaneously.",
+        "roll": "None",
+        "cost": "None"
+      },
+      {
+        "name": "Spirit Tether",
+        "ranking": "None",
+        "description": "Ingesting a hallucinogenic Vitae mixture allows the vampire to lay their body to rest while projecting their mind (functions as Twilight Projection).",
+        "roll": "None",
+        "cost": "Variable Vitae"
+      },
+      {
+        "name": "Psychic Leech",
+        "ranking": "None",
+        "description": "A Scale that allows the Dragon to siphon mental energy or secrets from a subject.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Beseech the Sleeping",
+        "ranking": "None",
+        "description": "A Scale used to communicate with or influence slumbering/torpid entities.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Command the Mind",
+        "ranking": "None",
+        "description": "A Scale that exercises direct control over a subject's thoughts or actions.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      },
+      {
+        "name": "Sanguinary Invigoration",
+        "ranking": "None",
+        "description": "Empowers the physical or supernatural attributes of the subject using specialized blood alchemy.",
+        "roll": "Not detailed in source text",
+        "cost": "None"
+      }
+    ]
+  },
+  {
+    "name": "Kindred Necromancy (Rituals)",
+    "clans": [],
+    "covenant": "",
+    "bloodline": "Burakumin, Sangiovanni, Apollinaire, Rexroth",
+    "source book": "Bloodlines: The Resurrected",
+    "powers": [
+      {
+        "name": "Drain Understanding",
+        "ranking": "None",
+        "description": "Steals knowledge and experience from a victim, lowering a random Skill dot from the victim and transferring it to the necromancer.",
+        "roll": "Resolve + Occult + Kindred Necromancy vs. Resolve + Blood Potency (Target Successes: 8)",
+        "cost": "1 Vitae + Sacrifice (A dot of Humanity)"
+      },
+      {
+        "name": "Quicken Corpse",
+        "ranking": "None",
+        "description": "Imbues a humanoid corpse with necromantic power, animating it and creating a mindless but obedient zombie follower.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy (Target Successes: 8)",
+        "cost": "1 Vitae + Material Focus (An intact humanoid corpse)"
+      },
+      {
+        "name": "Corpse Preservation",
+        "ranking": "None",
+        "description": "Preserves a dead body from decay and rot.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Eyes of the Deceased",
+        "ranking": "None",
+        "description": "Allows the necromancer to see through a corpse's eyes or view its final moments.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Flesh-Born Servitor",
+        "ranking": "None",
+        "description": "Constructs and animates a specialized servitor out of flesh and bone.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Infuse Undead",
+        "ranking": "None",
+        "description": "Grants heightened power or specific instructions to a reanimated entity.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Soul Jar",
+        "ranking": "None",
+        "description": "Traps a ghost or soul within a prepared receptacle.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Open Avernian Gateway",
+        "ranking": "None",
+        "description": "Forces open a gateway to the Underworld.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Destroy Avernian Gateway",
+        "ranking": "None",
+        "description": "Seals and destroys an existing gateway to the Underworld.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Create Avernian Gateway",
+        "ranking": "None",
+        "description": "Rips a brand new, permanent gateway into the Underworld.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Spiritual Sight",
+        "ranking": "None",
+        "description": "Attunes the necromancer's vision to perceive ghosts and Twilight entities.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Return to the Dust",
+        "ranking": "None",
+        "description": "Banishes a ghost or forcefully destroys an undead construct.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Appraise the Dead",
+        "ranking": "None",
+        "description": "A clinical appraisal ritual to understand the cause of death or residual energies of a corpse.",
+        "roll": "Intelligence + Medicine + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Corpse Repair",
+        "ranking": "None",
+        "description": "Knits together the flesh of a ruined corpse to make it presentable or functional.",
+        "roll": "Intelligence + Medicine + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      },
+      {
+        "name": "Corrosive Touch",
+        "ranking": "None",
+        "description": "Channels necrotic energy to rot flesh or break down physical matter with a touch.",
+        "roll": "Resolve/Presence/Composure + Occult + Kindred Necromancy",
+        "cost": "1 Vitae + Sacrifice/Focus"
+      }
+    ]
+  },
+  {
+    "name": "Lithopedia (Rites)",
+    "clans": [],
+    "covenant": "",
+    "bloodline": "Család",
+    "source book": "Strange Shades: Mekhet",
+    "powers": [
+      {
+        "name": "Lair of the Beast",
+        "ranking": "None",
+        "description": "Extends the vampire's Predatory Aura over the marked territory, allowing her to feel trespassing predators and lash out at them from a distance.",
+        "roll": "Resolve + Occult + Lithopedia (Target Successes: 4)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Territory's Wisdom",
+        "ranking": "None",
+        "description": "The vampire feeds on an employee of a business in her territory, gaining a sympathetic link allowing her to spend Vitae on an appropriate Skill.",
+        "roll": "Resolve + Occult + Lithopedia (Target Successes: 5)",
+        "cost": "Blood from an employee"
+      },
+      {
+        "name": "Prince's Wrath",
+        "ranking": "None",
+        "description": "A devastating territorial ritual requiring the Család to stab her shadow and bleed her power directly onto the ground.",
+        "roll": "Resolve + Occult + Lithopedia (Target Successes: 10)",
+        "cost": "1 Vitae per dot + (5 - Blood Potency) lethal damage"
+      },
+      {
+        "name": "Nowhere to Run",
+        "ranking": "None",
+        "description": "For the rest of the night, all Stealth actions made in the territory automatically fail, and Obfuscate provokes a Clash of Wills.",
+        "roll": "Resolve + Occult + Lithopedia (Target Successes: 10)",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Taste the Land",
+        "ranking": "None",
+        "description": "A ritual that connects the Család to the history and happenings of the territory.",
+        "roll": "Resolve + Occult + Lithopedia",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Territory's Mark",
+        "ranking": "None",
+        "description": "A ritual to cement a domain's boundaries or impose the vampire's presence over the area.",
+        "roll": "Resolve + Occult + Lithopedia",
+        "cost": "1 Vitae per dot"
+      },
+      {
+        "name": "Urban Unrest",
+        "ranking": "None",
+        "description": "Agitates the population or environment within the territory to cause disruption and chaos.",
+        "roll": "Resolve + Occult + Lithopedia",
+        "cost": "1 Vitae per dot"
+      }
+    ]
+  },
+  {
+    "name": "Suikast / Kimiya (Formulae)",
+    "clans": [],
+    "covenant": "Jaliniyya",
+    "bloodline": "Azerkatil",
+    "source book": "Bloodlines: The Devoted / Dark Eras 2",
+    "powers": [
+      {
+        "name": "Dragon's Own Fire",
+        "ranking": "None",
+        "description": "Makes the blood running through her dead veins acidic, causing unarmed attacks to deal lethal damage.",
+        "roll": "Intelligence + Science + Destruction (Target Successes: 5)",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Taste of the Dragon",
+        "ranking": "None",
+        "description": "Mixes blood with toxic reagents to create a poison that deals lethal damage nightly and mystically binds the victim for tracking.",
+        "roll": "Intelligence + Science + Destruction/Divination (Target Successes: 5)",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Pasha's Vision",
+        "ranking": "None",
+        "description": "Anoints her brow with blood to see an aura around the eyes of everyone she meets, showing their intents.",
+        "roll": "Wits + Investigation + Divination (Target Successes: 6)",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Kale-Koh",
+        "ranking": "None",
+        "description": "An explosive alchemy designed to rend fortifications and smash physical barriers.",
+        "roll": "Wits + Occult + Destruction (Target Successes: 6)",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Spider's Hijra",
+        "ranking": "None",
+        "description": "A Kimiya formula involving Creation themes.",
+        "roll": "Intelligence + Science + Creation",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Sayih's Kohl",
+        "ranking": "None",
+        "description": "A Kimiya formula involving Transmutation themes.",
+        "roll": "Intelligence + Academics + Transmutation",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "al-Ajsad",
+        "ranking": "None",
+        "description": "A Kimiya formula involving Creation themes.",
+        "roll": "Intelligence + Science + Creation",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Ebony Horse",
+        "ranking": "None",
+        "description": "A Kimiya formula involving Transmutation themes.",
+        "roll": "Intelligence + Academics + Transmutation",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Intikam",
+        "ranking": "None",
+        "description": "A Kimiya formula involving both Destruction and Transmutation themes.",
+        "roll": "Wits + Occult + Destruction / Intelligence + Academics + Transmutation",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Burn the Dragon's Blood",
+        "ranking": "None",
+        "description": "A devastating Kimiya formula focused purely on Destruction themes.",
+        "roll": "Wits + Occult + Destruction",
+        "cost": "Kimiya Reagents / Vitae"
+      },
+      {
+        "name": "Curse of the Monkey Prince",
+        "ranking": "None",
+        "description": "A Kimiya formula involving Transmutation themes.",
+        "roll": "Intelligence + Academics + Transmutation",
+        "cost": "Kimiya Reagents / Vitae"
+      }
+    ]
+  },
+  {
+    "name": "Triadic Evolution (Manifestations)",
+    "clans": [],
+    "covenant": "Belial's Brood",
+    "bloodline": "Therion",
+    "source book": "Night Horrors: Spilled Blood",
+    "powers": [
+      {
+        "name": "Animal Magnetism",
+        "ranking": "None",
+        "description": "The Brood may add her level of Triadic Evolution to any mundane Expression, Persuasion, or Socialize challenge for one hour.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Don't Look It in the Eye",
+        "ranking": "None",
+        "description": "The Claimed may add his level of Triadic Evolution to any mundane Animal Ken, Intimidation, or Streetwise challenge for one hour.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Merely a Flesh Wound",
+        "ranking": "None",
+        "description": "A manifestation that allows the Brood to shrug off damage or ignore severe wounds temporarily.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Sprint",
+        "ranking": "None",
+        "description": "The vampire may add his level of Triadic Evolution to his running speed or non-combative Athletics maneuvers for one hour.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Acidic Blood",
+        "ranking": "None",
+        "description": "Transforms blood into acid; vampires/Strix suffer 1 lethal per Vitae and gain no nourishment, mortals suffer 2 lethal damage.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Fight or Flight",
+        "ranking": "None",
+        "description": "For the next hour, the Claimed cannot be surprised.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Perfect Ambush",
+        "ranking": "None",
+        "description": "The Claimed may add her level of Triadic Evolution to their Dexterity + Stealth rolls for determining surprise for one hour.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Trophy",
+        "ranking": "None",
+        "description": "Allows the Brood to preserve any Size 1 body part from a Kindred for a number of years equal to his level of Triadic Evolution.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Instinctual Conversation",
+        "ranking": "None",
+        "description": "Engage in line of sight telepathic communication via images with anyone who currently has a Bestial Condition.",
+        "roll": "Contested by Composure + Blood Potency",
+        "cost": "1 Willpower"
+      },
+      {
+        "name": "Riding the Man",
+        "ranking": "None",
+        "description": "The character may add his level of Triadic Evolution to any one Intelligence or Wits roll for one hour.",
+        "roll": "None",
+        "cost": "1 Willpower"
+      }
+    ]
+  }
+]
