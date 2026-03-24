@@ -241,6 +241,17 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
+    private async Task ReloadCharacterAfterHealAsync()
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        await InvokeAsync(StateHasChanged);
+    }
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {

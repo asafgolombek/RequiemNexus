@@ -37,6 +37,8 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
             }
         }
 
+        total -= CountUntrainedSkillDicePenalty(character, pool);
+
         return Math.Max(0, total);
     }
 
@@ -201,5 +203,22 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
                 : 0,
             _ => 0,
         };
+    }
+
+    /// <summary>
+    /// House rule: each distinct skill in the pool with zero dots applies a −1 die penalty (VtR-style untrained).
+    /// </summary>
+    private static int CountUntrainedSkillDicePenalty(Character character, PoolDefinition pool)
+    {
+        int penalty = 0;
+        foreach (SkillId skillId in CollectPoolSkillIds(pool))
+        {
+            if (character.GetSkillRating(skillId) == 0)
+            {
+                penalty++;
+            }
+        }
+
+        return penalty;
     }
 }

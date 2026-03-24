@@ -1,0 +1,124 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain
+@using RequiemNexus.Domain.Enums
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade-in" style="z-index: 1200;" @onclick="CloseAsync"></div>
+    <div class="modal-rn fade-in" style="z-index: 1201; max-width: 32rem;" @onclick:stopPropagation="true">
+        <div class="modal-rn-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="margin:0;">Melee attack</h3>
+            <button type="button" class="btn-rn-ghost" @onclick="CloseAsync">Close</button>
+        </div>
+        <div class="modal-rn-body" style="font-size:0.9rem;">
+            @if (_attacker == null)
+            {
+                <p class="text-muted-rn">Loading attacker…</p>
+            }
+            else
+            {
+                <p class="text-muted-rn" style="margin-top:0;">@_attacker.Name</p>
+
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+                    <div>
+                        <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Trait 1</label>
+                        <select class="form-control" style="min-width:10rem;font-size:0.85em;" value="@_trait1" @onchange="OnTrait1ChangedAsync" disabled="@_busy">
+                            <option value="">—</option>
+                            @foreach (AttributeId a in TraitMetadata.AllAttributes)
+                            {
+                                <option value="@a.ToString()">@TraitMetadata.GetDisplayName(a) (Attribute)</option>
+                            }
+                            @foreach (SkillId s in TraitMetadata.AllSkills)
+                            {
+                                <option value="@s.ToString()">@TraitMetadata.GetDisplayName(s)</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Trait 2</label>
+                        <select class="form-control" style="min-width:10rem;font-size:0.85em;" value="@_trait2" @onchange="OnTrait2ChangedAsync" disabled="@_busy">
+                            <option value="">—</option>
+                            @foreach (AttributeId a in TraitMetadata.AllAttributes)
+                            {
+                                <option value="@a.ToString()">@TraitMetadata.GetDisplayName(a) (Attribute)</option>
+                            }
+                            @foreach (SkillId s in TraitMetadata.AllSkills)
+                            {
+                                <option value="@s.ToString()">@TraitMetadata.GetDisplayName(s)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                @if (_resolvedPool is int rp)
+                {
+                    <p style="margin:0 0 0.75rem;">Resolved pool: <strong>@rp</strong> dice</p>
+                }
+
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Weapon (equipped)</label>
+                    <select class="form-control" style="font-size:0.85em;" @bind="_weaponRowId" disabled="@_busy">
+                        <option value="">Unarmed (no weapon damage dice)</option>
+                        @foreach (CharacterAsset ca in EquippedWeapons)
+                        {
+                            if (ca.Asset is WeaponAsset w)
+                            {
+                                <option value="@ca.Id.ToString()">@ca.Asset.Name — @w.Damage dice</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Defender</label>
+                    <select class="form-control" style="font-size:0.85em;" @bind="_defenderEntryId" disabled="@_busy">
+                        @foreach (InitiativeEntry e in DefenderOptions)
+                        {
+                            string label = e.Character?.Name ?? e.NpcName ?? $"Entry {e.Id}";
+                            <option value="@e.Id">@label</option>
+                        }
+                    </select>
+                </div>
+
+                @if (SelectedDefender != null && SelectedDefender.CharacterId == null)
+                {
+                    <div style="margin-bottom:0.75rem;">
+                        <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Defense vs this attack (NPC)</label>
+                        <input type="number" class="form-control" style="max-width:6rem;" min="0" max="20" @bind="_manualNpcDefense" disabled="@_busy" />
+                    </div>
+                }
+
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.72em;color:var(--gothic-muted);display:block;">Damage source</label>
+                    <select class="form-control" style="font-size:0.85em;" @bind="_damageSource" disabled="@_busy">
+                        @foreach (DamageSource ds in new[] { DamageSource.Bashing, DamageSource.Lethal, DamageSource.Weapon, DamageSource.Aggravated })
+                        {
+                            <option value="@ds">@ds</option>
+                        }
+                    </select>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+                    <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="ResolveAsync">Resolve attack</button>
+                    <button type="button" class="btn-rn-ghost" disabled="@(_busy || _lastResult == null)" @onclick="ApplyDamageAsync">Apply damage</button>
+                </div>
+
+                @if (_lastResult != null)
+                {
+                    <div class="result-box" style="padding:0.65rem;border:1px solid var(--gothic-border);border-radius:6px;background:var(--gothic-surface-alt);">
+                        <div>Attack successes: <strong>@_lastResult.AttackSuccesses</strong></div>
+                        <div>Defense applied: <strong>@_lastResult.DefenseApplied</strong></div>
+                        <div>Net hits: <strong>@_lastResult.NetAttackSuccesses</strong></div>
+                        <div>Weapon damage successes: <strong>@_lastResult.WeaponDamageSuccesses</strong></div>
+                        <div>Total damage instances: <strong>@_lastResult.TotalDamageInstances</strong></div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="text-danger" style="margin-top:0.5rem;">@_error</p>
+                }
+            }
+        </div>
+    </div>
+}

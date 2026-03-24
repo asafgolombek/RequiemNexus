@@ -362,6 +362,16 @@
                                 }
                                 else
                                 {
+                                    @if (_isSt && _encounter.IsActive && !_encounter.IsDraft && entry.CharacterId.HasValue)
+                                    {
+                                        <button type="button"
+                                                class="btn-rn-ghost"
+                                                style="font-size:0.75em;align-self:flex-start;"
+                                                disabled="@_busy"
+                                                @onclick="() => OpenMeleeAttackModal(entry.CharacterId!.Value)">
+                                            Attack
+                                        </button>
+                                    }
                                     <button type="button" class="btn-rn-ghost"
                                             style="font-size:0.75em;align-self:flex-start;"
                                             disabled="@_busy"
@@ -385,6 +395,14 @@
         }
     }
 </div>
+
+<MeleeAttackResolveModal IsOpen="_meleeAttackModalOpen"
+                         IsOpenChanged="OnMeleeAttackModalOpenChanged"
+                         CampaignId="CampaignId"
+                         EncounterId="EncounterId"
+                         AttackerCharacterId="_meleeAttackAttackerCharacterId"
+                         StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                         InitiativeEntries="SortedEntries" />
 
 @code {
     [Parameter] public int CampaignId { get; set; }
@@ -443,6 +461,8 @@
     }
     private int? _defeatConfirmEntryId;
     private int? _npcRollEntryId;
+    private bool _meleeAttackModalOpen;
+    private int _meleeAttackAttackerCharacterId;
     private string _addError = string.Empty;
     private string _actionFeedback = string.Empty;
     private string? _cookieHeader;
@@ -593,6 +613,21 @@
 
         InitiativeEntry? row = _encounter.InitiativeEntries.FirstOrDefault(e => e.CharacterId == characterId);
         return row?.Character?.Name ?? row?.NpcName ?? row?.MaskedDisplayName ?? "a character";
+    }
+
+    private void OpenMeleeAttackModal(int attackerCharacterId)
+    {
+        _meleeAttackAttackerCharacterId = attackerCharacterId;
+        _meleeAttackModalOpen = true;
+    }
+
+    private async Task OnMeleeAttackModalOpenChanged(bool open)
+    {
+        _meleeAttackModalOpen = open;
+        if (!open)
+        {
+            await LoadEncounter(showFullPageSpinner: false);
+        }
     }
 
     private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)

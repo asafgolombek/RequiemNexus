@@ -5,6 +5,7 @@ namespace RequiemNexus.Application.Contracts;
 /// <summary>
 /// Resolves a <see cref="PoolDefinition"/> to a dice pool integer by hydrating each trait from a character.
 /// Phase 9: supports additive pools, penalty dice, lower-of, and modifier injection.
+/// Untrained skills (0 dots) in the pool each apply −1 die before modifiers in <see cref="ResolvePool"/> (and thus in <see cref="ResolvePoolAsync"/>).
 /// </summary>
 public interface ITraitResolver
 {

@@ -21,6 +21,9 @@ public record CharacterVitalsDto
     /// <summary>Total Health track length.</summary>
     public required int MaxHealth { get; init; }
 
+    /// <summary>Structured health track (bashing/lethal/aggravated symbols); used for Vitae heal preview.</summary>
+    public required string HealthDamage { get; init; }
+
     /// <summary>Current Willpower.</summary>
     public required int CurrentWillpower { get; init; }
 

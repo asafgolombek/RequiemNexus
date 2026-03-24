@@ -27,7 +27,7 @@ public class AttackService(
         int attackerCharacterId,
         int defenderDefense,
         PoolDefinition attackPool,
-        int weaponDamageDice,
+        int? weaponCharacterAssetId,
         DamageSource damageSource,
         CancellationToken cancellationToken = default)
     {
@@ -56,6 +56,42 @@ public class AttackService(
 
         int attackPoolSize = await traitResolver.ResolvePoolAsync(attacker, attackPool);
         RollResult attackRoll = diceService.Roll(attackPoolSize);
+
+        int weaponDamageDice = 0;
+        if (weaponCharacterAssetId is int weaponRowId)
+        {
+            CharacterAsset? weaponRow = await dbContext.CharacterAssets
+                .Include(ca => ca.Asset)
+                .FirstOrDefaultAsync(ca => ca.Id == weaponRowId, cancellationToken);
+
+            if (weaponRow == null)
+            {
+                throw new InvalidOperationException("Weapon inventory row not found.");
+            }
+
+            if (weaponRow.CharacterId != attackerCharacterId)
+            {
+                throw new InvalidOperationException("The selected weapon does not belong to the attacker.");
+            }
+
+            if (!weaponRow.IsEquipped || !CharacterAssetActiveHelper.IsEquippedAndActive(weaponRow))
+            {
+                throw new InvalidOperationException("The weapon must be equipped and functional to deal weapon damage.");
+            }
+
+            if (weaponRow.Asset is not WeaponAsset weaponProfile)
+            {
+                throw new InvalidOperationException("The selected inventory row is not a weapon.");
+            }
+
+            if (weaponProfile.Damage <= 0)
+            {
+                throw new InvalidOperationException(
+                    "This weapon has no damage dice; use unarmed (no weapon selected) for attacks without a weapon pool.");
+            }
+
+            weaponDamageDice = weaponProfile.Damage;
+        }
 
         int weaponSuccesses = 0;
         if (weaponDamageDice > 0)

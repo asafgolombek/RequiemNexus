@@ -55,13 +55,14 @@ This document maps every identified gap between the current Requiem Nexus implem
 
 - [x] **`DamageSource` enum** — Domain: Bashing, Lethal, Aggravated, Fire, Sunlight, Weapon. Added to `AttackResult` from day one; Phase 15 `FrenzyService` reuses `Fire` and `Sunlight` tags for Rötschreck triggers.
 - [x] **`AttackResult` value object** — Domain: attack successes, defense applied, net hits, weapon damage successes, `DamageSource`, total damage instances. No EF dependency.
-- [x] **`AttackService`** — Application: resolves attacker pool via `TraitResolver`, rolls weapon damage; defense is a parameter. Masquerade: Storyteller + encounter membership + attacker access. **UI wiring deferred.**
+- [x] **`AttackService`** — Application: resolves attacker pool via `TraitResolver`, rolls attack + optional weapon damage from an equipped `CharacterAsset` (`weaponCharacterAssetId`); unarmed passes null (no weapon dice). Defense is a parameter. Masquerade: Storyteller + encounter membership + attacker access.
 - [x] **Damage application (`CharacterHealthService`)** — B/L/A overflow via `HealthTrackMutator` (documented in `rules-interpretations.md`).
 - [x] **`WoundPenaltyResolver`** — Domain: reads health track + max length; `IsIncapacitated` + penalty dice 0 / −1 / −2 / −3 aligned with vitals tooltips.
 - [x] **`ModifierService` + `TraitResolver`** — Wound penalty injected in `ModifierService`; `TraitResolver` applies `WoundPenalty` when the pool includes a Physical skill.
 - [x] **Healing (`HealingReason` + Vitae)** — `CharacterHealthService.TryFastHealBashingWithVitaeAsync` + `VitaeHealingCosts`; lethal/aggravated paths return structured failure until implemented.
-- [ ] **Combat UI — Attack Panel** — Storyteller Glimpse: "Roll Attack" per initiative entry → choose pool → open `DiceRollerModal` → on confirm, call `AttackService` → damage applied automatically.
-- [ ] **Combat UI — Heal Panel** — Character sheet and Glimpse: "Spend Vitae to Heal" button with cost preview.
+- [x] **Combat UI — Attack Panel** — Storyteller Glimpse (active encounter) and Initiative Tracker: **Roll attack** / **Attack** opens `MeleeAttackResolveModal` (trait pool + equipped weapon or unarmed). **Single server resolution** via `IAttackService` (not `DiceRollerModal`, which would double-roll). **Apply damage** applies to a PC (`CharacterHealthService`) or NPC row (`INpcCombatService.ApplyNpcDamageBatchAsync`).
+- [x] **Combat UI — Heal Panel** — `VitaeFastHealPanel` on the character sheet and Storyteller Glimpse vitals: fast bashing heal with live Vitae cost preview (`VitaeHealingCosts`).
+- [x] **Untrained skill (−1 die)** — `TraitResolver` and NPC encounter trait-built pools: −1 die per distinct skill at 0 dots in the pool.
 - [x] **Rules Interpretation Log** — Phase 14 section in `docs/rules-interpretations.md` (MVP scope, `DamageSource` mapping, defense caller-supplied, overflow edge case).
 
 ---

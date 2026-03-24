@@ -152,7 +152,10 @@ else
             {
                 <div class="cs-grid" id="panel-sheet" role="tabpanel" aria-labelledby="tab-sheet">
                     <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
-                    <CharacterVitals Character="_character" OnChanged="SaveCharacter" />
+                    <CharacterVitals Character="_character"
+                                       OnChanged="SaveCharacter"
+                                       ActingUserId="@_currentUserId"
+                                       OnVitaeHealCompleted="ReloadCharacterAfterHealAsync" />
 
                     <!-- ATTRIBUTES -->
                     <section class="cs-section cs-attributes">

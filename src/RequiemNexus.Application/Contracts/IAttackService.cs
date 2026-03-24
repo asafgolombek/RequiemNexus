@@ -16,7 +16,11 @@ public interface IAttackService
     /// <param name="attackerCharacterId">Attacking player character in the encounter.</param>
     /// <param name="defenderDefense">Defense total already computed for the defender (PC or NPC).</param>
     /// <param name="attackPool">Pool definition (e.g. Strength + Weaponry).</param>
-    /// <param name="weaponDamageDice">Size of the weapon damage dice pool (0 skips the roll).</param>
+    /// <param name="weaponCharacterAssetId">
+    /// When null, the attack is unarmed: no weapon damage dice are rolled (only net hits from the attack roll apply).
+    /// When set, must reference the attacker's equipped, active <see cref="RequiemNexus.Data.Models.CharacterAsset"/> row
+    /// whose catalog item is a <see cref="RequiemNexus.Data.Models.WeaponAsset"/> with <c>Damage &gt; 0</c>; dice count is taken from the weapon profile.
+    /// </param>
     /// <param name="damageSource">Damage classification tag.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<AttackResult> ResolveMeleeAttackAsync(
@@ -25,7 +29,7 @@ public interface IAttackService
         int attackerCharacterId,
         int defenderDefense,
         PoolDefinition attackPool,
-        int weaponDamageDice,
+        int? weaponCharacterAssetId,
         DamageSource damageSource,
         CancellationToken cancellationToken = default);
 }
