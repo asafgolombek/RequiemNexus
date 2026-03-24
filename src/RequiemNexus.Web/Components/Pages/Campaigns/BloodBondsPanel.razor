@@ -4,6 +4,7 @@
 @using RequiemNexus.Web.Services
 @inject IBloodBondService BloodBondService
 @inject ToastService ToastService
+@inject ScreenReaderAnnouncer Announcer
 @inject IJSRuntime JSRuntime
 
 <div class="card-rn glimpse-card blood-bonds-panel">
@@ -94,6 +95,10 @@
 
     private int _fadingCount;
 
+    private readonly Dictionary<int, int> _lastAnnouncedStageByBondId = new();
+
+    private bool _bondSnapshotPrimed;
+
     protected override async Task OnParametersSetAsync()
     {
         if (CampaignId > 0 && !string.IsNullOrEmpty(StorytellerUserId))
@@ -114,6 +119,25 @@
         {
             _bonds = (await BloodBondService.GetBondsInChronicleAsync(CampaignId, StorytellerUserId)).ToList();
             _fadingCount = _bonds.Count(b => b.IsFading);
+
+            if (_bondSnapshotPrimed)
+            {
+                foreach (BloodBondDto b in _bonds)
+                {
+                    if (_lastAnnouncedStageByBondId.TryGetValue(b.Id, out int prev) && b.Stage > prev)
+                    {
+                        await Announcer.AnnounceAsync(
+                            $"Blood Bond with {b.ThrallName} advanced to stage {b.Stage}");
+                    }
+                }
+            }
+
+            foreach (BloodBondDto b in _bonds)
+            {
+                _lastAnnouncedStageByBondId[b.Id] = b.Stage;
+            }
+
+            _bondSnapshotPrimed = true;
         }
         catch (Exception ex)
         {

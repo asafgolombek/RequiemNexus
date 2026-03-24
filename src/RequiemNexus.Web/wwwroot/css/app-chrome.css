@@ -508,7 +508,8 @@ h1:focus {
     font-size: 0.7rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--crimson);
+    /* Small caps on dark panels: crimson shades fail WCAG AA; use high-contrast tier */
+    color: var(--text-bright);
 }
 
 .divider { height:2px; background:linear-gradient(90deg,transparent 0%,var(--muted-gray) 20%,var(--muted-gray) 80%,transparent 100%); position:relative; margin:2rem 0; }

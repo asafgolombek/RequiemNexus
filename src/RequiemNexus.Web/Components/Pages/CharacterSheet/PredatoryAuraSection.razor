@@ -8,15 +8,15 @@
     <h2>Predatory Aura</h2>
     @if (string.IsNullOrEmpty(CurrentUserId) || !CampaignId.HasValue)
     {
-        <p class="text-muted text-small">Join a chronicle to use Predatory Aura contests.</p>
+        <p class="text-muted-rn text-small">Join a chronicle to use Predatory Aura contests.</p>
     }
     else if (_loading)
     {
-        <p class="text-muted text-small"><em>Loading…</em></p>
+        <p class="text-muted-rn text-small"><em>Loading…</em></p>
     }
     else if (!_canInitiate)
     {
-        <p class="text-muted text-small">Only this character's owner or the Storyteller may initiate a Lash Out.</p>
+        <p class="text-muted-rn text-small">Only this character's owner or the Storyteller may initiate a Lash Out.</p>
     }
     else
     {

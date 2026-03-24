@@ -10,6 +10,17 @@
 
 <div id="app" class="h-full overflow-auto grimoire-bg">
 
+    <div id="rn-polite-announcer"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true"
+         class="visually-hidden"></div>
+    <div id="rn-assertive-announcer"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true"
+         class="visually-hidden"></div>
+
     <div class="particles" aria-hidden="true">
         @for (int i = 1; i <= 12; i++)
         {

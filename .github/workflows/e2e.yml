@@ -1,0 +1,147 @@
+name: E2E & Accessibility
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: requiem_nexus_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5.2.0
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore
+        run: dotnet restore tests/RequiemNexus.Tests.slnx
+
+      - name: Build E2E (Release)
+        run: dotnet build tests/RequiemNexus.E2E.Tests/RequiemNexus.E2E.Tests.csproj --no-restore --configuration Release
+
+      - name: Install Playwright browsers
+        shell: pwsh
+        run: |
+          & "$env:GITHUB_WORKSPACE/tests/RequiemNexus.E2E.Tests/bin/Release/net10.0/playwright.ps1" install --with-deps chromium
+
+      - name: Run E2E Tests (functional + accessibility)
+        run: >
+          dotnet test tests/RequiemNexus.E2E.Tests/RequiemNexus.E2E.Tests.csproj
+          --no-build
+          --configuration Release
+          --filter "Category!=VisualRegression"
+          --logger "trx;LogFileName=e2e-results.trx"
+          --results-directory ./test-results
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
+          ConnectionStrings__DefaultConnection: >-
+            Host=localhost;Port=5432;Database=requiem_nexus_e2e;
+            Username=postgres;Password=postgres
+          PLAYWRIGHT_RETRIES: "2"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v7.0.0
+        if: always()
+        with:
+          name: e2e-results-${{ github.run_number }}
+          path: |
+            test-results/**/*.trx
+            test-results/videos/
+          retention-days: 14
+
+  visual-regression:
+    name: Visual Regression (non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: requiem_nexus_vr
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5.2.0
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore
+        run: dotnet restore tests/RequiemNexus.Tests.slnx
+
+      - name: Build Visual Regression (Release)
+        run: dotnet build tests/RequiemNexus.VisualRegression.Tests/RequiemNexus.VisualRegression.Tests.csproj --no-restore --configuration Release
+
+      - name: Install Playwright browsers
+        shell: pwsh
+        run: |
+          & "$env:GITHUB_WORKSPACE/tests/RequiemNexus.VisualRegression.Tests/bin/Release/net10.0/playwright.ps1" install --with-deps chromium
+
+      - name: Run Visual Regression Tests
+        run: >
+          dotnet test tests/RequiemNexus.VisualRegression.Tests/RequiemNexus.VisualRegression.Tests.csproj
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=vr-results.trx"
+          --results-directory ./test-results
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
+          ConnectionStrings__DefaultConnection: >-
+            Host=localhost;Port=5432;Database=requiem_nexus_vr;
+            Username=postgres;Password=postgres
+
+      - name: Upload Snapshot Diffs
+        uses: actions/upload-artifact@v7.0.0
+        if: failure()
+        with:
+          name: snapshot-diffs-${{ github.run_number }}
+          path: tests/RequiemNexus.VisualRegression.Tests/test-results/**/*-actual.png
+          retention-days: 7

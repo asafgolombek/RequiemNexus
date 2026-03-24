@@ -190,7 +190,19 @@ Not sure where to start? Here's your path:
 1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
 2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
 3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
-4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next. Phase 13 work is guided by [PHASE_13_E2E_ACCESSIBILITY.md](./docs/PHASE_13_E2E_ACCESSIBILITY.md) (E2E, accessibility, screen reader, visual regression).
+4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next. Phase 13 delivery includes E2E (Playwright + Kestrel), axe scans, Lighthouse CI, screen-reader announcer regions, and a visual-regression job; see [PHASE_13_E2E_ACCESSIBILITY.md](./docs/PHASE_13_E2E_ACCESSIBILITY.md).
+
+### Visual regression snapshots (optional baseline PNG)
+
+The `RequiemNexus.VisualRegression.Tests` project captures a full-page PNG of the login route. To refresh the committed file under `tests/RequiemNexus.VisualRegression.Tests/Snapshots/login-chromium.png`:
+
+```powershell
+$env:PLAYWRIGHT_UPDATE_SNAPSHOTS = '1'
+dotnet test tests/RequiemNexus.VisualRegression.Tests --configuration Release
+Remove-Item Env:\PLAYWRIGHT_UPDATE_SNAPSHOTS
+```
+
+Requires local PostgreSQL (same as E2E) and Chromium installed via the Playwright CLI. The GitHub Actions `e2e.yml` **visual-regression** job runs with `continue-on-error: true` so merges are not blocked by visual drift.
 5. **Set up The Haven** — follow the Development Setup section above.
 6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
 

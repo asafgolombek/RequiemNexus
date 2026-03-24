@@ -28,10 +28,10 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 10 | The Social Graces (Social Maneuvering) | ✅ Complete |
 | 11 | Assets & Armory (Equipment & Services) | ✅ Complete |
 | 12 | The Web of Night (Relationship Webs) | ✅ Complete |
-| 13 | End-to-End Testing & Accessibility | ⬜ Planned |
+| 13 | End-to-End Testing & Accessibility | ✅ Complete |
 | 14 | The Global Embrace | ⬜ Planned |
 
-> **Currently Active → Phase 13 — End-to-End Testing & Accessibility.** See the full execution plan: [PHASE_13_E2E_ACCESSIBILITY.md](PHASE_13_E2E_ACCESSIBILITY.md). Phase 12 (The Web of Night) is delivered; see phase table above.
+> **Currently Active → Phase 14 — The Global Embrace (planned).** Phase 13 (E2E, accessibility, screen-reader announcer, CI) is delivered — see [PHASE_13_E2E_ACCESSIBILITY.md](PHASE_13_E2E_ACCESSIBILITY.md). Phase 12 (The Web of Night) is delivered; see phase table above.
 
 ---
 

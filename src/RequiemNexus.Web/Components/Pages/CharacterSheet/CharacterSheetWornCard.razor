@@ -17,9 +17,9 @@
             .ToList();
         int wpUsed = weapons.Sum(ca => ca.Asset is WeaponAsset w ? Math.Max(1, w.WeaponSlotPoints) : 0);
 
-        <p class="text-small text-muted mb-1">Armor</p>
+        <p class="text-small text-muted-rn mb-1">Armor</p>
         <p class="mb-2">@(armor?.Asset?.Name ?? "None")</p>
-        <p class="text-small text-muted mb-1">Weapons (@wpUsed / @EquipmentCarryRules.MaxWeaponSlotPoints slots)</p>
+        <p class="text-small text-muted-rn mb-1">Weapons (@wpUsed / @EquipmentCarryRules.MaxWeaponSlotPoints slots)</p>
         @if (weapons.Count == 0)
         {
             <p class="none-note">None equipped</p>
@@ -33,7 +33,7 @@
                         <span>@ca.Asset?.Name</span>
                         @if (ca.Asset is WeaponAsset ww)
                         {
-                            <span class="text-muted text-small">(@(Math.Max(1, ww.WeaponSlotPoints)) slot(s))</span>
+                            <span class="text-muted-rn text-small">(@(Math.Max(1, ww.WeaponSlotPoints)) slot(s))</span>
                         }
                     </li>
                 }

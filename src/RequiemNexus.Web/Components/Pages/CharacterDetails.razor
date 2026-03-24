@@ -73,6 +73,7 @@ else
                     <div class="char-title-row">
                         <h1 @onclick="() => _isEditingName = true" class="edit-name-trigger" title="Click to edit name">@_character.Name <i class="edit-icon">✎</i></h1>
                         <span class="char-session-status @(SessionClient.IsConnected ? "char-session-status-live" : "char-session-status-idle")"
+                              role="img"
                               title="@(SessionClient.IsConnected ? "Connected to a live session" : "Not in a live session")"
                               aria-label="@(SessionClient.IsConnected ? "Live session connected" : "No live session")"></span>
                     </div>
@@ -135,10 +136,10 @@ else
         </header>
 
         <div class="tab-bar" role="tablist" aria-label="Character sheet sections">
-            <button type="button" class="tab-btn @(_activeTab == "sheet" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "sheet")" aria-controls="panel-sheet" id="tab-sheet" @onclick='() => SelectTab("sheet")' @onkeydown="HandleTabKeydown">Character Sheet</button>
-            <button type="button" class="tab-btn @(_activeTab == "pack" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "pack")" aria-controls="panel-pack" id="tab-pack" @onclick='() => SelectTab("pack")' @onkeydown="HandleTabKeydown">The Pack</button>
-            <button type="button" class="tab-btn @(_activeTab == "identity" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "identity")" aria-controls="panel-identity" id="tab-identity" @onclick='() => SelectTab("identity")' @onkeydown="HandleTabKeydown">Identity &amp; Backstory</button>
-            <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history")" aria-controls="panel-history" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
+            <button type="button" class="tab-btn @(_activeTab == "sheet" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "sheet" ? "true" : "false")" id="tab-sheet" @onclick='() => SelectTab("sheet")' @onkeydown="HandleTabKeydown">Character Sheet</button>
+            <button type="button" class="tab-btn @(_activeTab == "pack" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "pack" ? "true" : "false")" id="tab-pack" @onclick='() => SelectTab("pack")' @onkeydown="HandleTabKeydown">The Pack</button>
+            <button type="button" class="tab-btn @(_activeTab == "identity" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "identity" ? "true" : "false")" id="tab-identity" @onclick='() => SelectTab("identity")' @onkeydown="HandleTabKeydown">Identity &amp; Backstory</button>
+            <button type="button" class="tab-btn @(_activeTab == "history" ? "active" : "")" role="tab" aria-selected="@(_activeTab == "history" ? "true" : "false")" id="tab-history" @onclick='() => SelectTab("history")' @onkeydown="HandleTabKeydown">XP History</button>
         </div>
 
         @if (_character.CampaignId is int chronicleId)
@@ -149,7 +150,7 @@ else
         <CascadingValue Value="@(_isAdvancementMode || _isFreeEditMode)" Name="IsEditable">
             @if (_activeTab == "sheet")
             {
-                <div class="cs-grid">
+                <div class="cs-grid" id="panel-sheet" role="tabpanel" aria-labelledby="tab-sheet">
                     <!-- VITALS / ADVANTAGES BARS (Top Grid Layer) -->
                     <CharacterVitals Character="_character" OnChanged="SaveCharacter" />
 
@@ -526,7 +527,7 @@ else
             {
                 <section class="cs-section cs-equipment" id="panel-pack" role="tabpanel" aria-labelledby="tab-pack">
                     <h2>The Pack</h2>
-                    <p class="pack-intro text-muted">Purchase listed gear and services from the catalog: surplus Resources buys outright; at your Availability tier you may use Reach once per chapter (12 hours); further purchases still add to your pack without a table roll. Illicit items require Storyteller approval.</p>
+                    <p class="pack-intro text-muted-rn">Purchase listed gear and services from the catalog: surplus Resources buys outright; at your Availability tier you may use Reach once per chapter (12 hours); further purchases still add to your pack without a table roll. Illicit items require Storyteller approval.</p>
 
                     <div class="equipment-form">
                         <select @bind="_selectedAssetId" class="equipment-select" aria-label="Asset to purchase">
@@ -552,13 +553,13 @@ else
                     </div>
                     @if (_availableAssets.Count == 0)
                     {
-                        <p class="text-muted text-small mt-2" id="purchase-hint" role="status">
+                        <p class="text-muted-rn text-small mt-2" id="purchase-hint" role="status">
                             No listed assets are in the catalog, so Purchase stays disabled.
                         </p>
                     }
                     else if (IsPurchaseButtonDisabled)
                     {
-                        <p class="text-muted text-small mt-2" id="purchase-hint" role="note">
+                        <p class="text-muted-rn text-small mt-2" id="purchase-hint" role="note">
                             Select an item from the list and set quantity to at least 1 to enable Purchase.
                         </p>
                     }
@@ -570,18 +571,18 @@ else
                         int wpUsed = wornWeapons.Sum(ca => ca.Asset is WeaponAsset w ? Math.Max(1, w.WeaponSlotPoints) : 0);
                     }
                     <h3 class="mt-3">Worn</h3>
-                    <p class="text-muted text-small">At most one armor. Weapons share @EquipmentCarryRules.MaxWeaponSlotPoints slot points (e.g. two 1-slot sidearms or one 2-slot long gun).</p>
+                    <p class="text-muted-rn text-small">At most one armor. Weapons share @EquipmentCarryRules.MaxWeaponSlotPoints slot points (e.g. two 1-slot sidearms or one 2-slot long gun).</p>
                     <p class="text-small mb-2">Weapon slot points used: <strong>@wpUsed / @EquipmentCarryRules.MaxWeaponSlotPoints</strong></p>
 
                     <h3 class="mt-3">Backpack (@EquipmentCarryRules.MaxBackpackSlots slots)</h3>
-                    <p class="text-muted text-small">Carried on your person but not worn. Assign slots from each inventory row below.</p>
+                    <p class="text-muted-rn text-small">Carried on your person but not worn. Assign slots from each inventory row below.</p>
                     <div class="backpack-grid">
                         @for (int i = 0; i < EquipmentCarryRules.MaxBackpackSlots; i++)
                         {
                             int slot = i;
                             var occ = _character.CharacterAssets.FirstOrDefault(ca => ca.BackpackSlotIndex == slot);
                             <div class="backpack-cell">
-                                <span class="text-muted text-small">Slot @(slot + 1)</span>
+                                <span class="text-muted-rn text-small">Slot @(slot + 1)</span>
                                 @if (occ?.Asset != null)
                                 {
                                     <div class="backpack-cell-body">
@@ -591,14 +592,14 @@ else
                                 }
                                 else
                                 {
-                                    <span class="text-muted">Empty</span>
+                                    <span class="text-muted-rn">Empty</span>
                                 }
                             </div>
                         }
                     </div>
 
                     <h3 class="mt-3">Inventory</h3>
-                    <p class="text-muted text-small">Rows not worn and not in a backpack slot are off-person stash (haven, safehouse, etc.).</p>
+                    <p class="text-muted-rn text-small">Rows not worn and not in a backpack slot are off-person stash (haven, safehouse, etc.).</p>
                     <ul class="equipment-grid">
                         @foreach (var ca in PackInventoryOrder(_character.CharacterAssets))
                         {
@@ -629,7 +630,7 @@ else
                                     }
                                     @if (isService)
                                     {
-                                        <p class="text-muted text-small">Services cannot be worn.</p>
+                                        <p class="text-muted-rn text-small">Services cannot be worn.</p>
                                     }
                                     else
                                     {
@@ -670,11 +671,15 @@ else
             }
             else if (_activeTab == "identity")
             {
-        <CharacterIdentityTab Character="_character" OnChanged="SaveCharacter" />
+                <div id="panel-identity" role="tabpanel" aria-labelledby="tab-identity">
+                    <CharacterIdentityTab Character="_character" OnChanged="SaveCharacter" />
+                </div>
             }
             else if (_activeTab == "history")
             {
-        <BeatLedgerSection CharacterId="_character.Id" />
+                <div id="panel-history" role="tabpanel" aria-labelledby="tab-history">
+                    <BeatLedgerSection CharacterId="_character.Id" />
+                </div>
             }
         </CascadingValue>
         </div>

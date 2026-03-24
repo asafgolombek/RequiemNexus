@@ -119,7 +119,7 @@ else
                 <section class="cs-section cs-advantages">
                     <h2>Add New Merit (Rating x 1 XP)</h2>
                     <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <select @bind="_selectedMeritId" class="equipment-select" style="min-width: 200px;">
+                        <select @bind="_selectedMeritId" class="equipment-select" style="min-width: 200px;" aria-label="Merit to purchase">
                             <option value="0">-- Select Merit --</option>
                             @foreach (var m in _availableMerits)
                             {
@@ -129,12 +129,12 @@ else
 
                         @if (SelectedMeritRequiresSpec)
                         {
-                            <input type="text" @bind="_newMeritSpecification" placeholder="Specification..." class="char-meta-input" style="width: 150px;" />
+                            <input type="text" @bind="_newMeritSpecification" placeholder="Specification..." class="char-meta-input" style="width: 150px;" aria-label="Merit specification" />
                         }
 
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <span>Rating:</span>
-                            <input type="number" min="1" max="5" @bind="_newMeritRating" class="equipment-quantity" style="width: 60px;" />
+                            <label for="new-merit-rating">Rating:</label>
+                            <input id="new-merit-rating" type="number" min="1" max="5" @bind="_newMeritRating" class="equipment-quantity" style="width: 60px;" />
                         </div>
 
                         <button class="btn-rn-primary" @onclick="AddNewMerit" disabled="@(_selectedMeritId == 0)">Add</button>
@@ -156,7 +156,7 @@ else
                 <section class="cs-section cs-disciplines">
                     <h2>Add New Discipline</h2>
                     <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <select @bind="_selectedDisciplineId" class="equipment-select" style="min-width: 200px;">
+                        <select @bind="_selectedDisciplineId" class="equipment-select" style="min-width: 200px;" aria-label="Discipline to add">
                             <option value="0">-- Select Discipline --</option>
                             @foreach (var d in _availableDisciplines.Where(ad => !_character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
                             {
@@ -166,8 +166,8 @@ else
                         </select>
 
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <span>Starting Rating:</span>
-                            <input type="number" min="1" max="5" @bind="_newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
+                            <label for="new-discipline-rating">Starting Rating:</label>
+                            <input id="new-discipline-rating" type="number" min="1" max="5" @bind="_newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
                         </div>
 
                         <button class="btn-rn-primary" @onclick="AddNewDiscipline" disabled="@(_selectedDisciplineId == 0)">Add</button>
@@ -180,7 +180,7 @@ else
                     @if (_eligibleDevotions.Any())
                     {
                         <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <select @bind="_selectedDevotionId" class="equipment-select" style="min-width: 200px;">
+                            <select @bind="_selectedDevotionId" class="equipment-select" style="min-width: 200px;" aria-label="Devotion to purchase">
                                 <option value="0">-- Select Devotion --</option>
                                 @foreach (var d in _eligibleDevotions)
                                 {
@@ -209,7 +209,7 @@ else
                     }
                     else
                     {
-                        <p style="color: #808080; font-size: 0.9em;">No new devotions eligible for purchase at this time.</p>
+                        <p class="text-muted-rn" style="font-size: 0.9em;">No new devotions eligible for purchase at this time.</p>
                     }
                 </section>
 
@@ -231,7 +231,7 @@ else
                         }
                         else
                         {
-                            <p style="color: #808080; font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, Necromancy, or Ordo rituals you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
+                            <p class="text-muted-rn" style="font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, Necromancy, or Ordo rituals you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
                             <button class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Request rite</button>
                         }
                     </section>

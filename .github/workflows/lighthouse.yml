@@ -1,0 +1,33 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # workflow_run on Deploy when auto-deploy is re-enabled (see docs/PHASE_13_E2E_ACCESSIBILITY.md)
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  lighthouse:
+    if: ${{ vars.STAGING_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            ${{ vars.STAGING_URL }}/
+            ${{ vars.STAGING_URL }}/register
+          configPath: .github/lighthouse/config.json
+          uploadArtifacts: true
+          temporaryPublicStorage: false
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

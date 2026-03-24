@@ -31,19 +31,19 @@
             {
                 <ul class="welcome-stat-chips font-body" role="list">
                     <li>
-                        <span class="stat-chip" aria-label="@CountPhrase(_characterCount, "character", "characters")">
+                        <span class="stat-chip" role="group" aria-label="@CountPhrase(_characterCount, "character", "characters")">
                             <span class="stat-chip-value" aria-hidden="true">@_characterCount</span>
                             <span class="stat-chip-label" aria-hidden="true">@Plural(_characterCount, "Character", "Characters")</span>
                         </span>
                     </li>
                     <li>
-                        <span class="stat-chip" aria-label="@CountPhrase(_campaignCount, "campaign", "campaigns")">
+                        <span class="stat-chip" role="group" aria-label="@CountPhrase(_campaignCount, "campaign", "campaigns")">
                             <span class="stat-chip-value" aria-hidden="true">@_campaignCount</span>
                             <span class="stat-chip-label" aria-hidden="true">@Plural(_campaignCount, "Campaign", "Campaigns")</span>
                         </span>
                     </li>
                     <li>
-                        <span class="stat-chip" aria-label="@CountPhrase(_liveSessionCount, "live session", "live sessions")">
+                        <span class="stat-chip" role="group" aria-label="@CountPhrase(_liveSessionCount, "live session", "live sessions")">
                             <span class="stat-chip-value" aria-hidden="true">@_liveSessionCount</span>
                             <span class="stat-chip-label" aria-hidden="true">@Plural(_liveSessionCount, "Live session", "Live sessions")</span>
                         </span>

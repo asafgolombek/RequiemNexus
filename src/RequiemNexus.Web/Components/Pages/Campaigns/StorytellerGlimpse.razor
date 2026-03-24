@@ -54,6 +54,7 @@
             <div class="coterie-beat-award">
                 <input class="form-control coterie-reason-input"
                        placeholder="Reason for coterie Beat…"
+                       aria-label="Reason for coterie-wide Beat award"
                        @bind="_coteReason" />
                 <button class="btn-rn-primary"
                         disabled="@(string.IsNullOrWhiteSpace(_coteReason) || _awarding)"
@@ -202,6 +203,7 @@
                             <div class="award-row">
                                 <input class="form-control award-input"
                                        placeholder="Beat reason…"
+                                       aria-label="@($"Beat reason for {v.Name}")"
                                        @bind="_beatReasons[v.CharacterId]" />
                                 <button class="btn-rn-primary"
                                         style="font-size:0.85em;"
@@ -218,9 +220,11 @@
                                 <input type="number"
                                        class="form-control xp-amount-input"
                                        min="1"
+                                       aria-label="@($"Experience points to award to {v.Name}")"
                                        @bind="_xpAmounts[v.CharacterId]" />
                                 <input class="form-control award-input"
                                        placeholder="XP reason…"
+                                       aria-label="@($"Experience point reason for {v.Name}")"
                                        @bind="_xpReasons[v.CharacterId]" />
                                 <button class="btn-rn-ghost"
                                         style="font-size:0.85em;"

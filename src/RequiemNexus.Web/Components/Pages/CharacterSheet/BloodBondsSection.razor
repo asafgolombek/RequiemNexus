@@ -6,15 +6,15 @@
     <h2>Blood Bonds</h2>
     @if (string.IsNullOrEmpty(CurrentUserId))
     {
-        <p class="text-muted text-small">Sign in to view Blood Bonds.</p>
+        <p class="text-muted-rn text-small">Sign in to view Blood Bonds.</p>
     }
     else if (_loading)
     {
-        <p class="text-muted text-small"><em>Loading…</em></p>
+        <p class="text-muted-rn text-small"><em>Loading…</em></p>
     }
     else if (_bonds.Count == 0)
     {
-        <p class="text-muted text-small">No active Blood Bonds recorded for this character as thrall.</p>
+        <p class="text-muted-rn text-small">No active Blood Bonds recorded for this character as thrall.</p>
     }
     else
     {

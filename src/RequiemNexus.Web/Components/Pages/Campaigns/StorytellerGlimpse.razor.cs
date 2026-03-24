@@ -89,7 +89,7 @@ public partial class StorytellerGlimpse
 
         if (string.IsNullOrEmpty(_currentUserId))
         {
-            NavigationManager.NavigateTo("/login");
+            NavigationManager.NavigateTo("/");
             return;
         }
 

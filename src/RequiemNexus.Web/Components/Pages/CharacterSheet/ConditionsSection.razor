@@ -52,7 +52,7 @@
         @if (CanEdit)
         {
             <div class="add-condition-row">
-                <select @bind="_newConditionType" class="form-control condition-select">
+                <select @bind="_newConditionType" class="form-control condition-select" aria-label="Condition type to add">
                     @foreach (ConditionType type in Enum.GetValues<ConditionType>())
                     {
                         <option value="@type">@type</option>
@@ -60,7 +60,7 @@
                 </select>
                 @if (_newConditionType == ConditionType.Custom)
                 {
-                    <input @bind="_newCustomName" placeholder="Custom name" class="form-control" maxlength="100" />
+                    <input @bind="_newCustomName" placeholder="Custom name" class="form-control" maxlength="100" aria-label="Custom condition name" />
                 }
                 <button class="btn-rn-primary btn-sm" @onclick="AddCondition">+ Add</button>
             </div>
@@ -106,7 +106,7 @@
         @if (CanEdit)
         {
             <div class="add-condition-row">
-                <select @bind="_newTiltType" class="form-control condition-select">
+                <select @bind="_newTiltType" class="form-control condition-select" aria-label="Tilt type to add">
                     @foreach (TiltType type in Enum.GetValues<TiltType>())
                     {
                         <option value="@type">@type</option>
@@ -114,7 +114,7 @@
                 </select>
                 @if (_newTiltType == TiltType.Custom)
                 {
-                    <input @bind="_newTiltCustomName" placeholder="Custom name" class="form-control" maxlength="100" />
+                    <input @bind="_newTiltCustomName" placeholder="Custom name" class="form-control" maxlength="100" aria-label="Custom tilt name" />
                 }
                 <button class="btn-rn-primary btn-sm" @onclick="AddTilt">+ Add</button>
             </div>

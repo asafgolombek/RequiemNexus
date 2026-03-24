@@ -1,6 +1,7 @@
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
 @inject SessionClientService SessionService
+@inject ScreenReaderAnnouncer Announcer
 @implements IDisposable
 
 @if (_players.Any() || SessionActive)
@@ -37,6 +38,10 @@
 
     private List<PlayerPresenceDto> _players = new();
 
+    private readonly Dictionary<string, string> _userDisplayNames = new();
+
+    private HashSet<string> _previousUserIds = new();
+
     protected override void OnInitialized()
     {
         SessionService.PresenceUpdated += HandlePresenceUpdated;
@@ -44,8 +49,41 @@
 
     private void HandlePresenceUpdated(IEnumerable<PlayerPresenceDto> players)
     {
-        _players = players.OrderBy(p => p.UserName).ToList();
-        InvokeAsync(StateHasChanged);
+        List<PlayerPresenceDto> next = players.OrderBy(p => p.UserName).ToList();
+        HashSet<string> nextIds = next.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
+
+        foreach (PlayerPresenceDto p in next)
+        {
+            _userDisplayNames[p.UserId] = p.UserName;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            bool hadPriorSnapshot = _previousUserIds.Count > 0;
+
+            if (hadPriorSnapshot)
+            {
+                foreach (PlayerPresenceDto p in next)
+                {
+                    if (!_previousUserIds.Contains(p.UserId))
+                    {
+                        await Announcer.AnnounceAsync($"{p.UserName} joined the session");
+                    }
+                }
+
+                foreach (string id in _previousUserIds)
+                {
+                    if (!nextIds.Contains(id) && _userDisplayNames.TryGetValue(id, out string? name))
+                    {
+                        await Announcer.AnnounceAsync($"{name} left the session");
+                    }
+                }
+            }
+
+            _players = next;
+            _previousUserIds = nextIds;
+            StateHasChanged();
+        });
     }
 
     private string GetInitials(string name)
