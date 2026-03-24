@@ -14,6 +14,7 @@ namespace RequiemNexus.Data.RealTime;
 /// <param name="Humanity">Updated Humanity rating.</param>
 /// <param name="Armor">Updated total Armor value.</param>
 /// <param name="ActiveConditions">Full list of current Condition names.</param>
+/// <param name="HealthDamage">Updated health track string (bashing/lethal/aggravated symbols).</param>
 public record CharacterUpdateDto(
     int CharacterId,
     int? CurrentHealth = null,
@@ -24,4 +25,5 @@ public record CharacterUpdateDto(
     int? MaxVitae = null,
     int? Humanity = null,
     int? Armor = null,
-    IEnumerable<string>? ActiveConditions = null);
+    IEnumerable<string>? ActiveConditions = null,
+    string? HealthDamage = null);

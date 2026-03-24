@@ -80,6 +80,16 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
                 continue;
             }
 
+            if (m.Target == ModifierTarget.WoundPenalty)
+            {
+                if (PoolIncludesPhysicalSkill(poolSkills))
+                {
+                    delta += m.Value;
+                }
+
+                continue;
+            }
+
             if (m.Target == ModifierTarget.SkillPool
                 && m.AppliesToSkill.HasValue
                 && poolSkills.Contains(m.AppliesToSkill.Value))
@@ -111,6 +121,19 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
         delta += equipmentSkillBonusSum;
 
         return Math.Max(0, basePool + delta);
+    }
+
+    private static bool PoolIncludesPhysicalSkill(HashSet<SkillId> poolSkills)
+    {
+        foreach (SkillId s in TraitMetadata.PhysicalSkills)
+        {
+            if (poolSkills.Contains(s))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static HashSet<SkillId> CollectPoolSkillIds(PoolDefinition pool)

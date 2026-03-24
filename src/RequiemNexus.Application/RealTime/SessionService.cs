@@ -173,7 +173,8 @@ public class SessionService(
                 MaxVitae: character.MaxVitae,
                 Humanity: character.Humanity,
                 Armor: character.Armor,
-                ActiveConditions: combinedConditions);
+                ActiveConditions: combinedConditions,
+                HealthDamage: character.HealthDamage);
 
             await _publisher.Group(character.CampaignId.Value).ReceiveCharacterUpdate(update);
         }

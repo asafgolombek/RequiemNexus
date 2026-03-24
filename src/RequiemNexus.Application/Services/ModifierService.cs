@@ -78,15 +78,19 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
             staminaRating = 1;
         }
 
-        int sizeRating = await dbContext.Characters
+        var characterRow = await dbContext.Characters
             .AsNoTracking()
             .Where(c => c.Id == characterId)
-            .Select(c => c.Size)
+            .Select(c => new { c.Size, c.HealthDamage })
             .FirstOrDefaultAsync();
+
+        int sizeRating = characterRow?.Size ?? 0;
         if (sizeRating <= 0)
         {
             sizeRating = 5;
         }
+
+        string healthDamage = characterRow?.HealthDamage ?? string.Empty;
 
         var equippedRows = await dbContext.CharacterAssets
             .AsNoTracking()
@@ -187,6 +191,18 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
                     }
                 }
             }
+        }
+
+        int maxHealthTrack = Math.Max(1, sizeRating + staminaRating);
+        int woundPenaltyDice = WoundPenaltyResolver.GetWoundPenaltyDice(healthDamage, maxHealthTrack);
+        if (woundPenaltyDice != 0)
+        {
+            modifiers.Add(new PassiveModifier(
+                ModifierTarget.WoundPenalty,
+                woundPenaltyDice,
+                ModifierType.Static,
+                "Wound penalty",
+                new ModifierSource(ModifierSourceType.WoundTrack, characterId)));
         }
 
         // --- Phase 11 Refinement: Encumbrance (p. 179) ---

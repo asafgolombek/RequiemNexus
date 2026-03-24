@@ -100,6 +100,7 @@
         {
             if (patch.CurrentHealth.HasValue) { Character.CurrentHealth = patch.CurrentHealth.Value; await TriggerPulse("health"); }
             if (patch.MaxHealth.HasValue) Character.MaxHealth = patch.MaxHealth.Value;
+            if (patch.HealthDamage != null) { Character.HealthDamage = patch.HealthDamage; await TriggerPulse("health"); }
             if (patch.CurrentWillpower.HasValue) { Character.CurrentWillpower = patch.CurrentWillpower.Value; await TriggerPulse("willpower"); }
             if (patch.MaxWillpower.HasValue) Character.MaxWillpower = patch.MaxWillpower.Value;
             if (patch.CurrentVitae.HasValue) { Character.CurrentVitae = patch.CurrentVitae.Value; await TriggerPulse("vitae"); }

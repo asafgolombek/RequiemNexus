@@ -19,4 +19,7 @@ public enum ModifierSourceType
 
     /// <summary>Catalog equipment or services (Phase 11 — Assets &amp; Armory).</summary>
     Equipment,
+
+    /// <summary>Derived from the character health track (Phase 14 — wound penalties).</summary>
+    WoundTrack,
 }
