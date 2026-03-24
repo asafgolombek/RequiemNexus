@@ -62,37 +62,46 @@ public class AccountDeletionCleanupService(
         {
             try
             {
-                // Step 1: Delete all campaigns the user storytells.
-                // This nulls out CampaignId on all enrolled characters before removing the campaign row.
-                List<Campaign> storytoldCampaigns = await campaignService.GetStorytoldCampaignsAsync(user.Id);
-                foreach (Campaign campaign in storytoldCampaigns)
-                {
-                    await campaignService.DeleteCampaignAsync(campaign.Id, user.Id);
-                }
-
-                // Step 2: Delete all remaining characters owned by the user.
-                List<Character> characters = await characterService.GetCharactersByUserIdAsync(user.Id);
-                foreach (Character character in characters)
-                {
-                    await characterService.DeleteCharacterAsync(character.Id, user.Id);
-                }
-
-                // Step 3: Delete the identity record.
-                IdentityResult result = await userManager.DeleteAsync(user);
-                if (result.Succeeded)
-                {
-                    logger.LogInformation("Permanently deleted account for user {UserId}.", user.Id);
-                }
-                else
-                {
-                    string errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                    logger.LogError("Failed to delete account for user {UserId}: {Errors}", user.Id, errors);
-                }
+                await DeleteStorytoldCampaignsAsync(campaignService, user);
+                await DeleteCharactersAsync(characterService, user);
+                await DeleteIdentityUserAsync(userManager, user);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error purging account for user {UserId}.", user.Id);
             }
+        }
+    }
+
+    private async Task DeleteIdentityUserAsync(UserManager<ApplicationUser> userManager, ApplicationUser user)
+    {
+        IdentityResult result = await userManager.DeleteAsync(user);
+        if (result.Succeeded)
+        {
+            logger.LogInformation("Permanently deleted account for user {UserId}.", user.Id);
+        }
+        else
+        {
+            string errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            logger.LogError("Failed to delete account for user {UserId}: {Errors}", user.Id, errors);
+        }
+    }
+
+    private async Task DeleteCharactersAsync(ICharacterService characterService, ApplicationUser user)
+    {
+        List<Character> characters = await characterService.GetCharactersByUserIdAsync(user.Id);
+        foreach (Character character in characters)
+        {
+            await characterService.DeleteCharacterAsync(character.Id, user.Id);
+        }
+    }
+
+    private async Task DeleteStorytoldCampaignsAsync(ICampaignService campaignService, ApplicationUser user)
+    {
+        List<Campaign> storytoldCampaigns = await campaignService.GetStorytoldCampaignsAsync(user.Id);
+        foreach (Campaign campaign in storytoldCampaigns)
+        {
+            await campaignService.DeleteCampaignAsync(campaign.Id, user.Id);
         }
     }
 }

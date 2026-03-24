@@ -1,0 +1,99 @@
+@using RequiemNexus.Application.Contracts
+@inject IFeedingTerritoryService TerritoryService
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="create-territory-title">
+            <div class="rn-modal-header">
+                <h2 id="create-territory-title" class="rn-modal-title">Create territory</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                <label class="text-small" for="create-territory-name">Name</label>
+                <input id="create-territory-name" type="text" class="form-control" @bind="_name" style="margin:0.35rem 0 0.75rem;" />
+
+                <label class="text-small" for="create-territory-desc">Description</label>
+                <input id="create-territory-desc" type="text" class="form-control" @bind="_description" style="margin:0.35rem 0 0.75rem;" />
+
+                <label class="text-small" for="create-territory-rating">Rating (1–5)</label>
+                <input id="create-territory-rating" type="number" class="form-control" min="1" max="5" style="max-width:8rem;margin:0.35rem 0 0;" @bind="_rating" />
+            </div>
+            <div class="edit-lineage-footer">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Discard</button>
+                <button type="button" class="btn-rn-primary" disabled="@(_busy || !CanSubmit)" @onclick="SubmitAsync">
+                    @(_busy ? "Saving…" : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnCreated { get; set; }
+
+    private string _name = string.Empty;
+
+    private string _description = string.Empty;
+
+    private int _rating = 3;
+
+    private bool _busy;
+
+    private bool CanSubmit =>
+        !string.IsNullOrWhiteSpace(_name) && !string.IsNullOrEmpty(StorytellerUserId);
+
+    private async Task CloseAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        _name = string.Empty;
+        _description = string.Empty;
+        _rating = 3;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!CanSubmit)
+        {
+            return;
+        }
+
+        int rating = Math.Clamp(_rating, 1, 5);
+        _busy = true;
+        try
+        {
+            await TerritoryService.CreateTerritoryAsync(
+                CampaignId,
+                _name.Trim(),
+                _description,
+                rating,
+                null,
+                StorytellerUserId);
+            await OnCreated.InvokeAsync();
+            await CloseAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

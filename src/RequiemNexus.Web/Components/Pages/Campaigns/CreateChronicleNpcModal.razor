@@ -1,0 +1,105 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Data.Models.Enums
+@inject IChronicleNpcService NpcService
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="create-npc-title">
+            <div class="rn-modal-header">
+                <h2 id="create-npc-title" class="rn-modal-title">Create NPC</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                <label class="text-small" for="create-npc-name">Name</label>
+                <input id="create-npc-name" type="text" class="form-control" @bind="_name" style="margin:0.35rem 0 0.75rem;" />
+
+                <label class="text-small" for="create-npc-title">Title (optional)</label>
+                <input id="create-npc-title" type="text" class="form-control" @bind="_title" style="margin:0.35rem 0 0.75rem;" />
+
+                <label class="text-small" for="create-npc-creature">Type</label>
+                <select id="create-npc-creature" class="form-control" style="margin:0.35rem 0 0;" @bind="_creatureType">
+                    <option value="@CreatureType.Mortal">Mortal</option>
+                    <option value="@CreatureType.Vampire">Vampire</option>
+                    <option value="@CreatureType.Ghoul">Ghoul</option>
+                </select>
+            </div>
+            <div class="edit-lineage-footer">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync" disabled="@_busy">Discard</button>
+                <button type="button" class="btn-rn-primary" disabled="@(_busy || !CanSubmit)" @onclick="SubmitAsync">
+                    @(_busy ? "Saving…" : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string StorytellerUserId { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnCreated { get; set; }
+
+    private string _name = string.Empty;
+
+    private string _title = string.Empty;
+
+    private CreatureType _creatureType = CreatureType.Mortal;
+
+    private bool _busy;
+
+    private bool CanSubmit =>
+        !string.IsNullOrWhiteSpace(_name) && !string.IsNullOrEmpty(StorytellerUserId);
+
+    private async Task CloseAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        _name = string.Empty;
+        _title = string.Empty;
+        _creatureType = CreatureType.Mortal;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!CanSubmit)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await NpcService.CreateNpcAsync(
+                CampaignId,
+                _name.Trim(),
+                string.IsNullOrWhiteSpace(_title) ? null : _title.Trim(),
+                null,
+                null,
+                string.Empty,
+                _creatureType,
+                StorytellerUserId);
+            await OnCreated.InvokeAsync();
+            await CloseAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
