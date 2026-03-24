@@ -14,6 +14,8 @@ $DomainTests      = Join-Path $RootDir "tests\RequiemNexus.Domain.Tests\RequiemN
 $DataTests        = Join-Path $RootDir "tests\RequiemNexus.Data.Tests\RequiemNexus.Data.Tests.csproj"
 $ApplicationTests = Join-Path $RootDir "tests\RequiemNexus.Application.Tests\RequiemNexus.Application.Tests.csproj"
 $WebTests         = Join-Path $RootDir "tests\RequiemNexus.Web.Tests\RequiemNexus.Web.Tests.csproj"
+$E2ETests         = Join-Path $RootDir "tests\RequiemNexus.E2E.Tests\RequiemNexus.E2E.Tests.csproj"
+$VisualRegressionTests = Join-Path $RootDir "tests\RequiemNexus.VisualRegression.Tests\RequiemNexus.VisualRegression.Tests.csproj"
 # NBomber console app (not xUnit) — use .\scripts\run-performance.ps1 or dotnet run --project $PerformanceTests.
 $PerformanceTests = Join-Path $RootDir "tests\RequiemNexus.PerformanceTests\RequiemNexus.PerformanceTests.csproj"
 

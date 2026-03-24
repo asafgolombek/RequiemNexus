@@ -63,9 +63,11 @@ src/
 ├── RequiemNexus.Domain/    # Domain Layer — game rules, models, invariants
 └── RequiemNexus.Web/       # Presentation Layer — Blazor components, SignalR hubs
 tests/
-├── RequiemNexus.Domain.Tests/       # Unit tests
-├── RequiemNexus.Data.Tests/         # Integration tests
-└── RequiemNexus.PerformanceTests/   # Load and latency tests
+├── RequiemNexus.Domain.Tests/            # Unit tests
+├── RequiemNexus.Data.Tests/              # Integration tests
+├── RequiemNexus.E2E.Tests/               # Playwright + in-process host (PostgreSQL)
+├── RequiemNexus.VisualRegression.Tests/  # Optional screenshot / palette smoke
+└── RequiemNexus.PerformanceTests/       # Load and latency tests
 ```
 
 ### Local Startup
@@ -83,8 +85,16 @@ scripts/build-release.ps1
 Before submitting a Pull Request, your code must survive the Inquisition locally:
 
 ```powershell
-# Runs full unit, integration, and E2E validations
+# Unit + integration tests + dotnet format (same scope as CI unit/integration gates)
 scripts/test-local.ps1
+```
+
+Playwright E2E and axe scans need PostgreSQL and Chromium; run when you touch Blazor flows or a11y:
+
+```powershell
+scripts/test-e2e-local.ps1
+# Optional: include visual regression project
+scripts/test-e2e-local.ps1 -VisualRegression
 ```
 
 If any tests fail, **cleanse them before opening the PR**. PRs with failing tests will be rejected without review.
@@ -190,9 +200,21 @@ Not sure where to start? Here's your path:
 1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
 2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
 3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
-4. **Check the mission roadmap** — the Phase checklist in `mission.md` shows what's in progress and what's coming next. UI work is currently guided by [UI_UX_FACELIFT.md](./docs/UI_UX_FACELIFT.md) (Phase 13 presentation layer).
+4. **Check the mission roadmap** — the phase table in `mission.md` shows what's shipped. Phase 13 (E2E infra, axe, Lighthouse, announcer, visual-regression CI) is documented in [PHASE_13_E2E_ACCESSIBILITY.md](./docs/PHASE_13_E2E_ACCESSIBILITY.md).
 5. **Set up The Haven** — follow the Development Setup section above.
 6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
+
+### Visual regression snapshots (optional baseline PNG)
+
+The `RequiemNexus.VisualRegression.Tests` project can write a full-page PNG of the login route when updating baselines. To refresh the file under `tests/RequiemNexus.VisualRegression.Tests/Snapshots/login-chromium.png`:
+
+```powershell
+$env:PLAYWRIGHT_UPDATE_SNAPSHOTS = '1'
+dotnet test tests/RequiemNexus.VisualRegression.Tests --configuration Release
+Remove-Item Env:\PLAYWRIGHT_UPDATE_SNAPSHOTS
+```
+
+Or use `scripts/test-e2e-local.ps1 -VisualRegression` after setting the same environment variable if you want the script to install browsers and use your local PostgreSQL. Requires Chromium via the Playwright CLI. The GitHub Actions `e2e.yml` **visual-regression** job runs with `continue-on-error: true` so merges are not blocked by visual drift.
 
 ---
 

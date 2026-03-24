@@ -35,21 +35,62 @@
     {
         <div class="campaign-header">
             <h2>Encounter Manager</h2>
-            <a href="/campaigns/@Id" class="btn-rn-ghost">← Back to Campaign</a>
+            <StorytellerChronicleNav CampaignId="Id" />
         </div>
 
         @* Create encounter (prep) *@
-        <div class="card-rn" style="margin-bottom:1.5rem;">
-            <h3 style="margin-bottom:0.75rem;">Create encounter</h3>
-            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-                <input class="form-control" style="flex:1;min-width:200px;" placeholder="Encounter name…" @bind="_newEncounterName" />
-                <button type="button" class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newEncounterName) || _busy)" @onclick="CreateDraft">Create</button>
+        @if (!_showCreateEncounterForm)
+        {
+            <div class="flex-row flex-wrap items-center gap-sm" style="margin-bottom:1.5rem; justify-content:flex-end;">
+                <button type="button" class="btn-rn-primary" @onclick="OpenCreateEncounterForm">Create encounter</button>
             </div>
-            @if (!string.IsNullOrEmpty(_createError))
-            {
-                <p class="text-danger" style="margin-top:0.5rem;">@_createError</p>
-            }
-        </div>
+        }
+        else
+        {
+            <div class="card-rn" style="margin-bottom:1.5rem;">
+                <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                    <label class="font-sm" for="create-enc-name">Encounter name</label>
+                    <input id="create-enc-name" class="form-control" @bind="_formEncounterName" placeholder="Encounter name…" maxlength="200" autocomplete="off" />
+                    <label class="font-sm" for="create-enc-notes">Notes (ST only)</label>
+                    <textarea id="create-enc-notes" class="form-control" rows="4" @bind="_formEncounterNotes" placeholder="Scene goals, reminders, etc." maxlength="4000"></textarea>
+                    <div>
+                        <p class="font-sm" style="margin:0 0 0.35rem 0;color:var(--gothic-muted);">NPCs</p>
+                        @if (FormDraftEncounter?.NpcTemplates is { } formNpcList && formNpcList.Count > 0)
+                        {
+                            <div class="character-grid" style="margin:0.5rem 0;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0.5rem;">
+                                @foreach (EncounterNpcTemplate row in formNpcList)
+                                {
+                                    <div class="character-card card-rn" style="padding:0.65rem;">
+                                        <h4 class="char-name" style="font-size:1rem;margin:0 0 0.35rem 0;">@row.Name</h4>
+                                        <div class="stats" style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8em;color:var(--gothic-muted);">
+                                            <span>Init mod: @row.InitiativeMod</span>
+                                            <span>Health: @row.HealthBoxes</span>
+                                        </div>
+                                        <div class="card-actions" style="margin-top:0.5rem;">
+                                            <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => RemoveTemplateRow(row.Id)">Remove</button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">No NPCs yet. Add from a stat block, Danse Macabre, or an improvised NPC.</p>
+                        }
+                        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-top:0.5rem;" disabled="@_busy" @onclick="OpenAddNpcForCreateFormAsync">+ Add NPC</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_createError))
+                    {
+                        <p class="text-danger" style="margin:0;">@_createError</p>
+                    }
+                    <div class="flex-row flex-wrap gap-sm" style="margin-top:0.25rem;">
+                        <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="CreateFormStartNowAsync">Start now</button>
+                        <button type="button" class="btn-rn-ghost" disabled="@_busy" @onclick="CreateFormSaveForLaterAsync">Save for later</button>
+                        <button type="button" class="btn-rn-ghost" disabled="@_busy" @onclick="DiscardCreateEncounterFormAsync">Discard</button>
+                    </div>
+                </div>
+            </div>
+        }
 
         @* From template *@
         @if (_templates.Count > 0)
@@ -71,19 +112,19 @@
         }
 
         @* Encounters in prep *@
-        @if (DraftEncounters.Any())
+        @if (DraftEncountersForList.Any())
         {
             @if (!string.IsNullOrEmpty(_prepFeedback))
             {
                 <p class="card-rn" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.9em;color:var(--gothic-muted);">@_prepFeedback</p>
             }
             <h3 style="margin-bottom:0.75rem;">Encounters in prep</h3>
-            @if (!string.IsNullOrEmpty(_createError))
+            @if (!string.IsNullOrEmpty(_createError) && !_showCreateEncounterForm)
             {
                 <p class="text-danger" style="margin-bottom:0.75rem;">@_createError</p>
             }
             <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in DraftEncounters)
+                @foreach (CombatEncounter enc in DraftEncountersForList)
                 {
                     <div class="card-rn">
                         @if (_renamingEncounterId == enc.Id)
@@ -107,6 +148,10 @@
                             </div>
                         }
                         <p style="font-size:0.85em;color:var(--gothic-muted);">NPC lines: @(enc.NpcTemplates?.Count ?? 0)</p>
+                        @if (!string.IsNullOrEmpty(enc.PrepNotes))
+                        {
+                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.35rem 0;white-space:pre-wrap;">@enc.PrepNotes</p>
+                        }
                         @if (enc.NpcTemplates == null || !enc.NpcTemplates.Any())
                         {
                             <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.5rem 0;">No NPCs yet — add from a stat block, Danse Macabre, or an Improvised NPC.</p>
@@ -248,10 +293,10 @@
             </div>
         }
 
-        @if (!DraftEncounters.Any() && !LaunchedEncounters.Any() && !PausedEncounters.Any())
+        @if (!DraftEncountersForList.Any() && !LaunchedEncounters.Any() && !PausedEncounters.Any() && !_showCreateEncounterForm)
         {
             <div class="empty-state-rn" style="margin-bottom:1.5rem;">
-                <p>No encounters yet. Create one above, add NPCs (stat block, Danse Macabre, or Improvised), then use <strong>Start</strong> when play begins or <strong>Save for later</strong> to keep prepping.</p>
+                <p>No encounters yet. Use <strong>Create encounter</strong>, add NPCs (stat block, Danse Macabre, or improvised), then <strong>Start now</strong> or <strong>Save for later</strong>.</p>
             </div>
         }
 
@@ -435,8 +480,11 @@
     private bool _accessDenied;
     private bool _busy;
     private string? _currentUserId;
-    private string _newEncounterName = string.Empty;
     private string _createError = string.Empty;
+    private bool _showCreateEncounterForm;
+    private string _formEncounterName = string.Empty;
+    private string _formEncounterNotes = string.Empty;
+    private int? _formDraftEncounterId;
     private int? _activeEncounterForNpc;
     private bool _npcPickerIsDraft;
     private int _selectedBlockId;
@@ -468,6 +516,13 @@
     private string _renameEncounterError = string.Empty;
 
     private List<CombatEncounter> DraftEncounters => _encounters.Where(e => e.IsDraft).ToList();
+
+    private IEnumerable<CombatEncounter> DraftEncountersForList =>
+        DraftEncounters.Where(e => !_showCreateEncounterForm || _formDraftEncounterId != e.Id);
+
+    private CombatEncounter? FormDraftEncounter =>
+        _formDraftEncounterId is int formId ? _encounters.FirstOrDefault(e => e.Id == formId) : null;
+
     private List<CombatEncounter> LaunchedEncounters => _encounters.Where(e => e.IsActive && !e.IsDraft).ToList();
     private List<CombatEncounter> PausedEncounters => _encounters.Where(e => e.IsPaused && !e.IsDraft && e.ResolvedAt == null).ToList();
     private List<CombatEncounter> PastEncounters => _encounters.Where(e => e.ResolvedAt != null).ToList();
@@ -479,7 +534,7 @@
 
         if (string.IsNullOrEmpty(_currentUserId))
         {
-            NavigationManager.NavigateTo("/login");
+            NavigationManager.NavigateTo("/");
             return;
         }
 
@@ -517,29 +572,128 @@
         }
     }
 
-    private async Task CreateDraft()
+    private void OpenCreateEncounterForm()
     {
-        if (string.IsNullOrWhiteSpace(_newEncounterName) || _busy)
+        _showCreateEncounterForm = true;
+        _formEncounterName = string.Empty;
+        _formEncounterNotes = string.Empty;
+        _formDraftEncounterId = null;
+        _createError = string.Empty;
+    }
+
+    private void CloseCreateEncounterForm()
+    {
+        _showCreateEncounterForm = false;
+        _formEncounterName = string.Empty;
+        _formEncounterNotes = string.Empty;
+        _formDraftEncounterId = null;
+        _createError = string.Empty;
+    }
+
+    private async Task<bool> EnsureDraftForFormAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_formEncounterName))
         {
-            return;
+            _createError = "Encounter name is required.";
+            return false;
+        }
+
+        if (_formDraftEncounterId.HasValue)
+        {
+            return true;
         }
 
         _busy = true;
         _createError = string.Empty;
         try
         {
-            await EncounterPrepService.CreateDraftEncounterAsync(Id, _newEncounterName.Trim(), _currentUserId!);
-            _newEncounterName = string.Empty;
+            CombatEncounter enc = await EncounterPrepService.CreateDraftEncounterAsync(
+                Id,
+                _formEncounterName.Trim(),
+                _currentUserId!,
+                _formEncounterNotes);
+            _formDraftEncounterId = enc.Id;
             await LoadEncounters();
+            return true;
         }
         catch (Exception ex)
         {
             _createError = ex.Message;
+            return false;
         }
         finally
         {
             _busy = false;
         }
+    }
+
+    private async Task PersistFormDraftAsync(int encounterId)
+    {
+        await EncounterPrepService.UpdateDraftEncounterNameAsync(encounterId, _formEncounterName.Trim(), _currentUserId!);
+        await EncounterPrepService.UpdateDraftEncounterPrepNotesAsync(encounterId, _formEncounterNotes, _currentUserId!);
+        await LoadEncounters();
+    }
+
+    private async Task OpenAddNpcForCreateFormAsync()
+    {
+        if (!await EnsureDraftForFormAsync())
+        {
+            return;
+        }
+
+        await OpenNpcPickerAsync(_formDraftEncounterId!.Value, isDraft: true, SourcePicker);
+    }
+
+    private async Task CreateFormSaveForLaterAsync()
+    {
+        if (!await EnsureDraftForFormAsync())
+        {
+            return;
+        }
+
+        int encId = _formDraftEncounterId!.Value;
+        await PersistFormDraftAsync(encId);
+        AckSaveForLater();
+        CloseCreateEncounterForm();
+    }
+
+    private async Task CreateFormStartNowAsync()
+    {
+        if (!await EnsureDraftForFormAsync())
+        {
+            return;
+        }
+
+        int encId = _formDraftEncounterId!.Value;
+        await PersistFormDraftAsync(encId);
+        CloseCreateEncounterForm();
+        OpenSmartLaunch(encId, prepStart: true);
+    }
+
+    private async Task DiscardCreateEncounterFormAsync()
+    {
+        if (_formDraftEncounterId.HasValue)
+        {
+            _busy = true;
+            _createError = string.Empty;
+            try
+            {
+                await EncounterPrepService.DeleteDraftEncounterAsync(_formDraftEncounterId.Value, _currentUserId!);
+                await LoadEncounters();
+            }
+            catch (Exception ex)
+            {
+                _createError = ex.Message;
+                return;
+            }
+            finally
+            {
+                _busy = false;
+            }
+        }
+
+        CancelSmartLaunch();
+        CloseCreateEncounterForm();
     }
 
     private async Task CreateFromTemplate()

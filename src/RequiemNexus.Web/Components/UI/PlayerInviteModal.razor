@@ -1,0 +1,82 @@
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="CloseAsync">
+        <div class="modal-panel player-invite-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="player-invite-modal-title">
+            <div class="modal-header">
+                <h3 id="player-invite-modal-title">Player invite link</h3>
+                <button type="button" class="close-btn" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: var(--text-muted);">
+                    Share a link so players can attach their <strong>first</strong> character without already being on the roster. The secret is not stored in plain text; copy the full URL when you generate it.
+                </p>
+                @if (InviteActive)
+                {
+                    <p style="font-size: 0.9rem;"><span class="badge-live" style="font-size:0.75rem;">Invite active</span> Players with the link can join while it stays enabled.</p>
+                }
+                else
+                {
+                    <p style="font-size: 0.9rem;">No active invite. Generate a link to share with your players.</p>
+                }
+                @if (!string.IsNullOrEmpty(InviteError))
+                {
+                    <p class="feedback-error" style="font-size:0.9rem;">@InviteError</p>
+                }
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button type="button" class="btn-rn-primary" disabled="@Busy" @onclick="OnRegenerateClicked">Generate / regenerate link</button>
+                    <button type="button" class="btn-rn-ghost" disabled="@(Busy || !InviteActive)" @onclick="OnClearClicked">Disable invite</button>
+                </div>
+                @if (!string.IsNullOrEmpty(LastGeneratedJoinUrl))
+                {
+                    <div style="margin-top: 0.75rem;">
+                        <label style="font-size:0.85rem;display:block;margin-bottom:0.25rem;">Copy this URL (shown once until you regenerate):</label>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                            <input class="form-control" style="flex:1;min-width:12rem;font-size:0.85rem;" readonly value="@LastGeneratedJoinUrl" />
+                            <button type="button" class="btn-rn-ghost" @onclick="OnCopyClicked">Copy</button>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public bool InviteActive { get; set; }
+
+    [Parameter]
+    public string? InviteError { get; set; }
+
+    [Parameter]
+    public string? LastGeneratedJoinUrl { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnRegenerate { get; set; }
+
+    [Parameter]
+    public EventCallback OnClear { get; set; }
+
+    [Parameter]
+    public EventCallback OnCopy { get; set; }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+
+    private Task OnRegenerateClicked() => OnRegenerate.InvokeAsync();
+
+    private Task OnClearClicked() => OnClear.InvokeAsync();
+
+    private Task OnCopyClicked() => OnCopy.InvokeAsync();
+}

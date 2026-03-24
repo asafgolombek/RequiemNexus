@@ -41,6 +41,7 @@ jobs:
           dotnet test tests/RequiemNexus.Tests.slnx
           --no-build
           --configuration Release
+          --filter "FullyQualifiedName!~RequiemNexus.E2E.Tests&FullyQualifiedName!~RequiemNexus.VisualRegression.Tests"
           --collect:"XPlat Code Coverage"
           --results-directory ./coverage
           --

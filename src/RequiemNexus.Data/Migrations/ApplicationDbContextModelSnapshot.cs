@@ -1568,6 +1568,10 @@ namespace RequiemNexus.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("PrepNotes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("timestamp with time zone");
 

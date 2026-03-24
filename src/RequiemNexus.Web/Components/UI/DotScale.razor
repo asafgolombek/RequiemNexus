@@ -1,4 +1,4 @@
-<div class="dot-scale-container">
+<div class="dot-scale-container" role="radiogroup" aria-label="@($"{Label}: {Value} of {Max}")">
     @if (!string.IsNullOrEmpty(Label))
     {
         <button type="button" class="dot-label-btn" @onclick="HandleLabelClick" title="Quick Reference: @Label">
@@ -6,12 +6,17 @@
         </button>
     }
     
-    <div class="dots-wrapper">
+    <div class="dots-wrapper"
+         tabindex="@(IsEditable ? 0 : -1)"
+         @onkeydown="OnDotsKeyDownAsync">
         @for (int i = 1; i <= Max; i++)
         {
             var dotValue = i;
-            <button type="button" 
-                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= _hoveredValue ? "hover-filled" : "") @(dotValue == _bleedingDot ? "bleeding" : "")" 
+            <button type="button"
+                    role="radio"
+                    aria-checked="@(dotValue == Value ? "true" : "false")"
+                    aria-label="@($"{Label} {dotValue} of {Max}")"
+                    class="dot @(dotValue <= Value ? "filled" : "empty") @(IsEditable && dotValue <= _hoveredValue ? "hover-filled" : "") @(dotValue == _bleedingDot ? "bleeding" : "")"
                     @onclick="() => SetValueAsync(dotValue)"
                     @onmouseover="() => { if (IsEditable) _hoveredValue = dotValue; }"
                     @onmouseout="() => { if (IsEditable) _hoveredValue = 0; }"
@@ -23,7 +28,7 @@
 
     @if (ShowRollButton)
     {
-        <button type="button" class="roll-btn" @onclick="HandleRollClick" title="Roll @Label">
+        <button type="button" class="roll-btn" @onclick="HandleRollClick" title="Roll @Label" aria-label="Roll @Label">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dice-5" viewBox="0 0 16 16">
                 <!-- Simple 6-sided die icon placeholder for D10 -->
                 <path d="M13 1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zM3 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V3a3 3 0 0 0-3-3z"/>
@@ -32,6 +37,8 @@
         </button>
     }
 </div>
+
+@using Microsoft.AspNetCore.Components.Web
 
 @code {
     [Parameter]
@@ -104,6 +111,39 @@
         if (OnRollClick.HasDelegate)
         {
             await OnRollClick.InvokeAsync(Label);
+        }
+    }
+
+    private async Task OnDotsKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (!IsEditable)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case "ArrowRight":
+            case "ArrowUp":
+                if (Value < Max)
+                {
+                    await SetValueAsync(Value + 1);
+                }
+
+                break;
+            case "ArrowLeft":
+            case "ArrowDown":
+                if (Value > 1)
+                {
+                    await SetValueAsync(Value - 1);
+                }
+                else if (Value == 1)
+                {
+                    Value = 0;
+                    await ValueChanged.InvokeAsync(0);
+                }
+
+                break;
         }
     }
 }

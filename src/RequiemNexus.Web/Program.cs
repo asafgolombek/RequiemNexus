@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
@@ -22,6 +23,12 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 bool isMigrateOnly = args.Contains("--migrate-only");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Playwright / WebApplicationFactory run the app from the test output directory; load the Web project's static web asset manifest so Blazor and scoped CSS resolve.
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
+}
 
 var sentryDsn = builder.Configuration["Sentry:Dsn"];
 if (!string.IsNullOrEmpty(sentryDsn))
@@ -192,6 +199,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewClanServi
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewPackService, RequiemNexus.Application.Services.HomebrewPackService>();
 
 builder.Services.AddSingleton<RequiemNexus.Web.Services.ToastService>();
+builder.Services.AddScoped<RequiemNexus.Web.Services.ScreenReaderAnnouncer>();
 builder.Services.AddSingleton<RequiemNexus.Web.Services.CommandPaletteService>();
 builder.Services.AddScoped<RequiemNexus.Web.Services.PlatformShortcutHintService>();
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
@@ -259,78 +267,104 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<RequiemNexus.Web.Services.SmtpEmailSender>();
-builder.Services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
-builder.Services.AddScoped<RequiemNexus.Web.Services.IRequiemEmailService>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
-
-builder.Services.AddRateLimiter(options =>
+if (builder.Environment.IsEnvironment("Testing"))
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    builder.Services.AddSingleton<RequiemNexus.Web.Services.TestEmailSink>();
+    builder.Services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.TestEmailSink>());
+    builder.Services.AddScoped<RequiemNexus.Web.Services.IRequiemEmailService>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.TestEmailSink>());
+}
+else
+{
+    builder.Services.AddScoped<RequiemNexus.Web.Services.SmtpEmailSender>();
+    builder.Services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
+    builder.Services.AddScoped<RequiemNexus.Web.Services.IRequiemEmailService>(sp => sp.GetRequiredService<RequiemNexus.Web.Services.SmtpEmailSender>());
+}
 
-    // Login: 10 attempts per 15 minutes per IP
-    options.AddSlidingWindowLimiter("login", opt =>
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    // E2E hits the login route many times from one IP; keep policy names so endpoint metadata resolves, but do not throttle.
+    builder.Services.AddRateLimiter(options =>
     {
-        opt.Window = TimeSpan.FromMinutes(15);
-        opt.SegmentsPerWindow = 3;
-        opt.PermitLimit = 10;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.AddPolicy("login", _ => RateLimitPartition.GetNoLimiter("test"));
+        options.AddPolicy("forgot-password", _ => RateLimitPartition.GetNoLimiter("test"));
+        options.AddPolicy("register", _ => RateLimitPartition.GetNoLimiter("test"));
+        options.AddPolicy("account-recovery", _ => RateLimitPartition.GetNoLimiter("test"));
+        options.AddPolicy("signalr", _ => RateLimitPartition.GetNoLimiter("test"));
+        options.AddPolicy("public-rolls", _ => RateLimitPartition.GetNoLimiter("test"));
     });
-
-    // Password reset: 5 requests per hour per IP to prevent email flooding
-    options.AddSlidingWindowLimiter("forgot-password", opt =>
+}
+else
+{
+    builder.Services.AddRateLimiter(options =>
     {
-        opt.Window = TimeSpan.FromHours(1);
-        opt.SegmentsPerWindow = 4;
-        opt.PermitLimit = 5;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
-    });
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Registration: 10 attempts per hour per IP
-    options.AddSlidingWindowLimiter("register", opt =>
-    {
-        opt.Window = TimeSpan.FromHours(1);
-        opt.SegmentsPerWindow = 4;
-        opt.PermitLimit = 10;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
-    });
+        // Login: 10 attempts per 15 minutes per IP
+        options.AddSlidingWindowLimiter("login", opt =>
+        {
+            opt.Window = TimeSpan.FromMinutes(15);
+            opt.SegmentsPerWindow = 3;
+            opt.PermitLimit = 10;
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
 
-    // Account recovery: 3 attempts per hour per IP
-    options.AddSlidingWindowLimiter("account-recovery", opt =>
-    {
-        opt.Window = TimeSpan.FromHours(1);
-        opt.SegmentsPerWindow = 4;
-        opt.PermitLimit = 3;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
-    });
+        // Password reset: 5 requests per hour per IP to prevent email flooding
+        options.AddSlidingWindowLimiter("forgot-password", opt =>
+        {
+            opt.Window = TimeSpan.FromHours(1);
+            opt.SegmentsPerWindow = 4;
+            opt.PermitLimit = 5;
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
 
-    // SignalR Hub: 30 requests per minute per authenticated user (fallback: per client IP for negotiate).
-    options.AddPolicy("signalr", context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? context.Connection.RemoteIpAddress?.ToString()
-                ?? "anonymous",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                Window = TimeSpan.FromMinutes(1),
-                PermitLimit = 30,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0,
-            }));
+        // Registration: 10 attempts per hour per IP
+        options.AddSlidingWindowLimiter("register", opt =>
+        {
+            opt.Window = TimeSpan.FromHours(1);
+            opt.SegmentsPerWindow = 4;
+            opt.PermitLimit = 10;
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
 
-    // Public Rolls: 10 requests per minute
-    options.AddFixedWindowLimiter("public-rolls", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 10;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
+        // Account recovery: 3 attempts per hour per IP
+        options.AddSlidingWindowLimiter("account-recovery", opt =>
+        {
+            opt.Window = TimeSpan.FromHours(1);
+            opt.SegmentsPerWindow = 4;
+            opt.PermitLimit = 3;
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
+
+        // SignalR Hub: 30 requests per minute per authenticated user (fallback: per client IP for negotiate).
+        options.AddPolicy("signalr", context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? context.Connection.RemoteIpAddress?.ToString()
+                    ?? "anonymous",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = 30,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0,
+                }));
+
+        // Public Rolls: 10 requests per minute
+        options.AddFixedWindowLimiter("public-rolls", opt =>
+        {
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.PermitLimit = 10;
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 0;
+        });
     });
-});
+}
 
 WebApplication app = builder.Build();
 
@@ -340,7 +374,10 @@ using (IServiceScope scope = app.Services.CreateScope())
 {
     ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await DbInitializer.InitializeAsync(context, roleManager, runMigrations);
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        await DbInitializer.InitializeAsync(context, roleManager, runMigrations);
+    }
 
     if (app.Environment.IsDevelopment())
     {

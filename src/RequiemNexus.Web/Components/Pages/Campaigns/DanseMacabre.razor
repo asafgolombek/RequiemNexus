@@ -1,9 +1,7 @@
 @page "/campaigns/{CampaignId:int}/danse-macabre"
 @rendermode InteractiveServer
 @using RequiemNexus.Data.Models
-@using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Application.Contracts
-@using RequiemNexus.Domain.Enums
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ICityFactionService FactionService
@@ -30,8 +28,8 @@
     else
     {
         <div class="campaign-header">
-            <a href="/campaigns/@CampaignId" class="btn-rn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Campaign</a>
             <h2>🌹 Danse Macabre</h2>
+            <StorytellerChronicleNav CampaignId="CampaignId" />
         </div>
 
         <div class="tabs" style="margin-bottom:1.5rem;">
@@ -43,33 +41,15 @@
         @if (_activeTab == 0)
         {
             <div class="tab-panel">
-                <div class="section-header">
-                    <h3>Feeding Territories</h3>
+                <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+                    <h3 style="margin:0;">Feeding Territories</h3>
+                    <button type="button" class="btn-rn-primary" @onclick="() => _territoryModalOpen = true">Create territory</button>
                 </div>
 
                 @if (!string.IsNullOrEmpty(_feedbackMessage))
                 {
                     <p class="feedback-ok">@_feedbackMessage</p>
                 }
-
-                <div class="add-form card-rn" style="margin-bottom:1.5rem;">
-                    <h4>Add Territory</h4>
-                    <div class="form-row" style="align-items:flex-end;">
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:2;">
-                            Name
-                            <input class="form-control" @bind="_newTerritoryName" />
-                        </label>
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:3;">
-                            Description
-                            <input class="form-control" @bind="_newTerritoryDesc" />
-                        </label>
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                            Rating (1–5)
-                            <input class="form-control" type="number" min="1" max="5" style="width:80px;" @bind="_newTerritoryRating" />
-                        </label>
-                        <button class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newTerritoryName) || _busy)" @onclick="AddTerritory">Add</button>
-                    </div>
-                </div>
 
                 @if (!_territories.Any())
                 {
@@ -87,7 +67,7 @@
                                 {
                                     <p>Controlled by: <a href="/campaigns/@CampaignId/factions/@territory.ControlledByFactionId">@territory.ControlledByFaction.Name</a></p>
                                 }
-                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => DeleteTerritory(territory.Id)">🗑 Delete</button>
+                                <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" disabled="@_busy" @onclick="() => DeleteTerritory(territory.Id)">🗑 Delete</button>
                             </div>
                         }
                     </div>
@@ -98,38 +78,15 @@
         @if (_activeTab == 1)
         {
             <div class="tab-panel">
-                <div class="section-header">
-                    <h3>Power Structure</h3>
+                <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+                    <h3 style="margin:0;">Power Structure</h3>
+                    <button type="button" class="btn-rn-primary" @onclick="() => _factionModalOpen = true">Create faction</button>
                 </div>
 
                 @if (!string.IsNullOrEmpty(_feedbackMessage))
                 {
                     <p class="feedback-ok">@_feedbackMessage</p>
                 }
-
-                <div class="add-form card-rn" style="margin-bottom:1.5rem;">
-                    <h4>Add Faction</h4>
-                    <div class="form-row" style="align-items:flex-end;">
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:2;">
-                            Faction Name
-                            <input class="form-control" @bind="_newFactionName" />
-                        </label>
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);flex:1;">
-                            Type
-                            <select class="form-control" @bind="_newFactionType">
-                                @foreach (FactionType ft in Enum.GetValues<FactionType>())
-                                {
-                                    <option value="@ft">@ft</option>
-                                }
-                            </select>
-                        </label>
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                            Influence (1–5)
-                            <input class="form-control" type="number" min="1" max="5" style="width:80px;" @bind="_newFactionInfluence" />
-                        </label>
-                        <button class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newFactionName) || _busy)" @onclick="AddFaction">Add</button>
-                    </div>
-                </div>
 
                 @if (!_factions.Any())
                 {
@@ -158,34 +115,20 @@
         @if (_activeTab == 2)
         {
             <div class="tab-panel">
-                <div class="section-header">
-                    <h3>Chronicle NPCs</h3>
-                    <label style="font-size:0.85em;">
-                        <input type="checkbox" @bind="_showDeceased" @bind:after="LoadNpcs" /> Show deceased
-                    </label>
+                <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+                    <h3 style="margin:0;">Chronicle NPCs</h3>
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.75rem;">
+                        <label style="font-size:0.85em;">
+                            <input type="checkbox" @bind="_showDeceased" @bind:after="LoadNpcs" /> Show deceased
+                        </label>
+                        <button type="button" class="btn-rn-primary" @onclick="() => _npcModalOpen = true">Create NPC</button>
+                    </div>
                 </div>
 
                 @if (!string.IsNullOrEmpty(_feedbackMessage))
                 {
                     <p class="feedback-ok">@_feedbackMessage</p>
                 }
-
-                <div class="add-form card-rn" style="margin-bottom:1.5rem;">
-                    <h4>Add NPC</h4>
-                    <div class="form-row" style="align-items:flex-end;flex-wrap:wrap;gap:0.5rem;">
-                        <input class="form-control" placeholder="Name" @bind="_newNpcName" style="min-width:150px;" />
-                        <input class="form-control" placeholder="Title (optional)" @bind="_newNpcTitle" style="min-width:120px;" />
-                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                            Type
-                            <select class="form-control" @bind="_newNpcCreatureType" style="min-width:100px;">
-                                <option value="@CreatureType.Mortal">Mortal</option>
-                                <option value="@CreatureType.Vampire">Vampire</option>
-                                <option value="@CreatureType.Ghoul">Ghoul</option>
-                            </select>
-                        </label>
-                        <button class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(_newNpcName) || _busy)" @onclick="AddNpc">Add</button>
-                    </div>
-                </div>
 
                 @if (!_npcs.Any())
                 {
@@ -211,13 +154,26 @@
                                 {
                                     <p>Faction: <a href="/campaigns/@CampaignId/factions/@npc.PrimaryFactionId">@npc.PrimaryFaction.Name</a></p>
                                 }
-                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => DeleteNpc(npc.Id)">🗑 Delete</button>
+                                <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" disabled="@_busy" @onclick="() => DeleteNpc(npc.Id)">🗑 Delete</button>
                             </div>
                         }
                     </div>
                 }
             </div>
         }
+
+        <CreateFeedingTerritoryModal @bind-IsOpen="_territoryModalOpen"
+                                     CampaignId="CampaignId"
+                                     StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                                     OnCreated="OnTerritoryCreatedAsync" />
+        <CreateCityFactionModal @bind-IsOpen="_factionModalOpen"
+                                CampaignId="CampaignId"
+                                StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                                OnCreated="OnFactionCreatedAsync" />
+        <CreateChronicleNpcModal @bind-IsOpen="_npcModalOpen"
+                                 CampaignId="CampaignId"
+                                 StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                                 OnCreated="OnNpcCreatedAsync" />
     }
 </div>
 
@@ -246,20 +202,12 @@
     private List<CityFaction> _factions = [];
     private List<ChronicleNpc> _npcs = [];
 
-    // New territory form
-    private string _newTerritoryName = string.Empty;
-    private string _newTerritoryDesc = string.Empty;
-    private int _newTerritoryRating = 3;
+    private bool _territoryModalOpen;
 
-    // New faction form
-    private string _newFactionName = string.Empty;
-    private FactionType _newFactionType = FactionType.Other;
-    private int _newFactionInfluence = 1;
+    private bool _factionModalOpen;
 
-    // New NPC form
-    private string _newNpcName = string.Empty;
-    private string _newNpcTitle = string.Empty;
-    private CreatureType _newNpcCreatureType = CreatureType.Mortal;
+    private bool _npcModalOpen;
+
     private bool _showDeceased = false;
 
     protected override async Task OnInitializedAsync()
@@ -300,27 +248,10 @@
 
     private string TabClass(int tab) => _activeTab == tab ? "btn-rn-primary" : "btn-rn-ghost";
 
-    private async Task AddTerritory()
+    private async Task OnTerritoryCreatedAsync()
     {
-        if (string.IsNullOrWhiteSpace(_newTerritoryName) || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await TerritoryService.CreateTerritoryAsync(CampaignId, _newTerritoryName, _newTerritoryDesc, _newTerritoryRating, null, _currentUserId);
-            _newTerritoryName = string.Empty;
-            _newTerritoryDesc = string.Empty;
-            _newTerritoryRating = 3;
-            _territories = await TerritoryService.GetTerritoriesAsync(CampaignId);
-            SetFeedback("Territory added.");
-        }
-        finally
-        {
-            _busy = false;
-        }
+        _territories = await TerritoryService.GetTerritoriesAsync(CampaignId);
+        SetFeedback("Territory added.");
     }
 
     private async Task DeleteTerritory(int id)
@@ -343,26 +274,10 @@
         }
     }
 
-    private async Task AddFaction()
+    private async Task OnFactionCreatedAsync()
     {
-        if (string.IsNullOrWhiteSpace(_newFactionName) || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await FactionService.CreateFactionAsync(CampaignId, _newFactionName, _newFactionType, _newFactionInfluence, string.Empty, _currentUserId);
-            _newFactionName = string.Empty;
-            _newFactionInfluence = 1;
-            _factions = await FactionService.GetFactionsAsync(CampaignId);
-            SetFeedback("Faction added.");
-        }
-        finally
-        {
-            _busy = false;
-        }
+        _factions = await FactionService.GetFactionsAsync(CampaignId);
+        SetFeedback("Faction added.");
     }
 
     private async Task DeleteNpc(int id)
@@ -385,25 +300,9 @@
         }
     }
 
-    private async Task AddNpc()
+    private async Task OnNpcCreatedAsync()
     {
-        if (string.IsNullOrWhiteSpace(_newNpcName) || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await NpcService.CreateNpcAsync(CampaignId, _newNpcName, string.IsNullOrWhiteSpace(_newNpcTitle) ? null : _newNpcTitle, null, null, string.Empty, _newNpcCreatureType, _currentUserId);
-            _newNpcName = string.Empty;
-            _newNpcTitle = string.Empty;
-            await LoadNpcs();
-            SetFeedback("NPC added.");
-        }
-        finally
-        {
-            _busy = false;
-        }
+        await LoadNpcs();
+        SetFeedback("NPC added.");
     }
 }

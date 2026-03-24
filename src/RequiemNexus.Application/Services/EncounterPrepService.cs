@@ -24,14 +24,32 @@ public class EncounterPrepService(
     private readonly ICharacterCreationRules _creationRules = creationRules;
 
     /// <inheritdoc />
-    public async Task<CombatEncounter> CreateDraftEncounterAsync(int campaignId, string name, string storyTellerUserId)
+    public async Task<CombatEncounter> CreateDraftEncounterAsync(
+        int campaignId,
+        string name,
+        string storyTellerUserId,
+        string? prepNotes = null)
     {
         await _authHelper.RequireStorytellerAsync(campaignId, storyTellerUserId, "manage encounters");
+
+        string trimmedName = (name ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(trimmedName))
+        {
+            throw new ArgumentException("Encounter name is required.", nameof(name));
+        }
+
+        if (trimmedName.Length > 200)
+        {
+            throw new ArgumentException("Encounter name must be at most 200 characters.", nameof(name));
+        }
+
+        string? notes = NormalizePrepNotes(prepNotes);
 
         CombatEncounter encounter = new()
         {
             CampaignId = campaignId,
-            Name = name,
+            Name = trimmedName,
+            PrepNotes = notes,
             IsDraft = true,
             IsActive = false,
             IsPaused = false,
@@ -44,7 +62,7 @@ public class EncounterPrepService(
 
         _logger.LogInformation(
             "Draft encounter {EncounterName} (Id={EncounterId}) created in campaign {CampaignId} by ST {UserId}",
-            name,
+            trimmedName,
             encounter.Id,
             campaignId,
             storyTellerUserId);
@@ -89,6 +107,49 @@ public class EncounterPrepService(
             "Draft encounter {EncounterId} renamed to '{Name}' by ST {UserId}",
             encounterId,
             trimmed,
+            storyTellerUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateDraftEncounterPrepNotesAsync(int encounterId, string? prepNotes, string storyTellerUserId)
+    {
+        CombatEncounter encounter = await LoadDraftEncounterAsync(encounterId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+
+        encounter.PrepNotes = NormalizePrepNotes(prepNotes);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Draft encounter {EncounterId} prep notes updated by ST {UserId}",
+            encounterId,
+            storyTellerUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteDraftEncounterAsync(int encounterId, string storyTellerUserId)
+    {
+        CombatEncounter encounter = await _dbContext.CombatEncounters
+            .FirstOrDefaultAsync(e => e.Id == encounterId)
+            ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
+
+        if (!encounter.IsDraft)
+        {
+            throw new InvalidOperationException($"Encounter {encounterId} is not a draft and cannot be deleted this way.");
+        }
+
+        if (encounter.ResolvedAt != null)
+        {
+            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
+        }
+
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+
+        _dbContext.CombatEncounters.Remove(encounter);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Draft encounter {EncounterId} deleted by ST {UserId}",
+            encounterId,
             storyTellerUserId);
     }
 
@@ -281,6 +342,17 @@ public class EncounterPrepService(
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
+    private static string? NormalizePrepNotes(string? prepNotes)
+    {
+        string? trimmed = string.IsNullOrWhiteSpace(prepNotes) ? null : prepNotes.Trim();
+        if (trimmed != null && trimmed.Length > 4000)
+        {
+            throw new ArgumentException("Prep notes must be at most 4000 characters.", nameof(prepNotes));
+        }
+
+        return trimmed;
+    }
+
     private static int ClampNpcHealthBoxes(int healthBoxes) => Math.Clamp(healthBoxes, 1, 50);
 
     private static int ClampNpcMaxWillpower(int maxWillpower) => Math.Clamp(maxWillpower, 1, 20);

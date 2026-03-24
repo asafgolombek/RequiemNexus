@@ -11,12 +11,35 @@ public interface IEncounterPrepService
     /// <summary>
     /// Creates a draft encounter (prep). Launch activates it when the table is ready.
     /// </summary>
-    Task<CombatEncounter> CreateDraftEncounterAsync(int campaignId, string name, string storyTellerUserId);
+    /// <param name="campaignId">Campaign to attach the draft to.</param>
+    /// <param name="name">Encounter display name.</param>
+    /// <param name="storyTellerUserId">Authenticated Storyteller user id.</param>
+    /// <param name="prepNotes">Optional ST-only prep notes (trimmed, max 4000 characters).</param>
+    Task<CombatEncounter> CreateDraftEncounterAsync(
+        int campaignId,
+        string name,
+        string storyTellerUserId,
+        string? prepNotes = null);
 
     /// <summary>
     /// Renames a draft encounter in prep. Only the Storyteller may call this.
     /// </summary>
     Task UpdateDraftEncounterNameAsync(int encounterId, string name, string storyTellerUserId);
+
+    /// <summary>
+    /// Updates prep notes on a draft encounter. Only the Storyteller may call this.
+    /// </summary>
+    /// <param name="encounterId">Draft encounter id.</param>
+    /// <param name="prepNotes">Notes text, or null/whitespace to clear.</param>
+    /// <param name="storyTellerUserId">Authenticated Storyteller user id.</param>
+    Task UpdateDraftEncounterPrepNotesAsync(int encounterId, string? prepNotes, string storyTellerUserId);
+
+    /// <summary>
+    /// Deletes a draft encounter and its NPC template rows. Only the Storyteller may call this.
+    /// </summary>
+    /// <param name="encounterId">Draft encounter id.</param>
+    /// <param name="storyTellerUserId">Authenticated Storyteller user id.</param>
+    Task DeleteDraftEncounterAsync(int encounterId, string storyTellerUserId);
 
     /// <summary>
     /// Returns suggested initiative modifier and health for a chronicle NPC, or <c>null</c> if not found.

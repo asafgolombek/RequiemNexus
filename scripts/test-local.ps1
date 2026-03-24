@@ -6,6 +6,7 @@
 .NOTES
     Performance/load tests (NBomber) are a separate console app — not run here.
     With the app reachable: .\scripts\run-performance.ps1
+    Playwright E2E + axe scans require PostgreSQL: .\scripts\test-e2e-local.ps1 (not part of this script).
 #>
 param(
     [switch]$Coverage,
@@ -119,3 +120,4 @@ if ($GlobalFail) {
 }
 
 Write-Host "`n  All tests passed!" -ForegroundColor Green
+Write-Host "  (E2E / Playwright: run scripts\test-e2e-local.ps1 when PostgreSQL is available.)" -ForegroundColor DarkGray

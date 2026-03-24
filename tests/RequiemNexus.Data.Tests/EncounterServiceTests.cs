@@ -257,6 +257,36 @@ public class EncounterServiceTests
         Assert.Null(stored.ResolvedAt);
     }
 
+    [Fact]
+    public async Task CreateDraftEncounterAsync_PersistsPrepNotes_WhenProvided()
+    {
+        var (ctx, options) = CreateContext(nameof(CreateDraftEncounterAsync_PersistsPrepNotes_WhenProvided));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        var (_, prep, _) = CreateServices(ctx, options);
+
+        CombatEncounter encounter = await prep.CreateDraftEncounterAsync(campaign.Id, "Ambush", "st-1", "Use the alley choke point.");
+
+        CombatEncounter? stored = await ctx.CombatEncounters.FindAsync(encounter.Id);
+        Assert.NotNull(stored);
+        Assert.Equal("Use the alley choke point.", stored!.PrepNotes);
+    }
+
+    [Fact]
+    public async Task DeleteDraftEncounterAsync_Removes_Encounter_And_NpcTemplates()
+    {
+        var (ctx, options) = CreateContext(nameof(DeleteDraftEncounterAsync_Removes_Encounter_And_NpcTemplates));
+        Campaign campaign = await SeedCampaignAsync(ctx);
+        var (_, prep, _) = CreateServices(ctx, options);
+
+        CombatEncounter draft = await prep.CreateDraftEncounterAsync(campaign.Id, "Scratch", "st-1");
+        await prep.AddNpcTemplateAsync(draft.Id, "Grunt", 0, 7, 4, null, true, null, "st-1");
+
+        await prep.DeleteDraftEncounterAsync(draft.Id, "st-1");
+
+        Assert.Null(await ctx.CombatEncounters.FindAsync(draft.Id));
+        Assert.Empty(ctx.EncounterNpcTemplates.Where(t => t.EncounterId == draft.Id));
+    }
+
     // ── Initiative Sorting ───────────────────────────────────────────────────
 
     [Fact]

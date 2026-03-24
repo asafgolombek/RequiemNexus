@@ -15,7 +15,7 @@
                 int slot = i;
                 var row = Character.CharacterAssets.FirstOrDefault(ca => ca.BackpackSlotIndex == slot);
                 <li class="backpack-summary-cell text-small">
-                    <span class="text-muted">@(slot + 1).</span>
+                    <span class="text-muted-rn">@(slot + 1).</span>
                     @(row?.Asset?.Name ?? "—")
                 </li>
             }

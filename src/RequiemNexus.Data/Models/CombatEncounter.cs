@@ -20,6 +20,10 @@ public class CombatEncounter
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>Optional storyteller-only prep notes for this encounter (draft or reference while running).</summary>
+    [MaxLength(4000)]
+    public string? PrepNotes { get; set; }
+
     /// <summary>True for a running fight (launched). Drafts use <see cref="IsDraft"/> and stay inactive until launch.</summary>
     public bool IsActive { get; set; }
 

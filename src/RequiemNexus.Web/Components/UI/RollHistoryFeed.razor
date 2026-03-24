@@ -1,6 +1,7 @@
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
 @inject SessionClientService SessionService
+@inject ScreenReaderAnnouncer Announcer
 @inject IJSRuntime JS
 @implements IDisposable
 
@@ -53,6 +54,8 @@
             StateHasChanged();
             // Wait a tiny bit for the DOM to update before scrolling
             await Task.Yield();
+            await Announcer.AnnounceAsync(
+                $"{roll.PlayerName} rolled {roll.Successes} success(es) on {roll.PoolDescription}");
             await ScrollToBottom();
         });
     }

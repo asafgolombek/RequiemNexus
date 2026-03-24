@@ -10,19 +10,19 @@
     <h2>Lineage</h2>
     @if (string.IsNullOrEmpty(CurrentUserId))
     {
-        <p class="text-muted text-small">Sign in to view lineage.</p>
+        <p class="text-muted-rn text-small">Sign in to view lineage.</p>
     }
     else if (!CampaignId.HasValue)
     {
-        <p class="text-muted text-small">Join a chronicle to track Kindred lineage and Blood Sympathy.</p>
+        <p class="text-muted-rn text-small">Join a chronicle to track Kindred lineage and Blood Sympathy.</p>
     }
     else if (_loading)
     {
-        <p class="text-muted text-small"><em>Loading lineage…</em></p>
+        <p class="text-muted-rn text-small"><em>Loading lineage…</em></p>
     }
     else if (_graph == null)
     {
-        <p class="text-muted text-small">Lineage could not be loaded.</p>
+        <p class="text-muted-rn text-small">Lineage could not be loaded.</p>
     }
     else
     {
@@ -32,7 +32,7 @@
                 <strong>@_graph.BloodSympathyRating</strong>
                 @if (_graph.BloodPotency < 2)
                 {
-                    <span class="text-muted text-small" style="display:block;margin-top:0.35rem;">
+                    <span class="text-muted-rn text-small" style="display:block;margin-top:0.35rem;">
                         Blood Sympathy inactive — Blood Potency must reach 2.
                     </span>
                 }
@@ -48,7 +48,7 @@
                     <span>@_graph.Sire.DisplayName</span>
                     @if (_graph.Sire.BloodPotency is int sbp)
                     {
-                        <span class="text-muted text-small"> (BP @sbp)</span>
+                        <span class="text-muted-rn text-small"> (BP @sbp)</span>
                     }
                 }
             </div>
@@ -63,7 +63,7 @@
                     <ul class="trait-list" style="margin:0.25rem 0 0;padding-left:1.1rem;">
                         @foreach (var ch in _graph.Childer)
                         {
-                            <li>@ch.DisplayName @if (ch.BloodPotency is int cbp) { <span class="text-muted text-small">(BP @cbp)</span> }</li>
+                            <li>@ch.DisplayName @if (ch.BloodPotency is int cbp) { <span class="text-muted-rn text-small">(BP @cbp)</span> }</li>
                         }
                     </ul>
                 }
@@ -96,7 +96,7 @@
         }
         else if (_graph.BloodPotency >= 2 && _chroniclePeers.Count == 0)
         {
-            <p class="text-muted text-small" style="margin-top:0.5rem;">No other player characters in this chronicle to target.</p>
+            <p class="text-muted-rn text-small" style="margin-top:0.5rem;">No other player characters in this chronicle to target.</p>
         }
 
         <p class="text-xsmall text-muted-rn" style="margin-top:0.75rem;">
