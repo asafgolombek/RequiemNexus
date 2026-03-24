@@ -29,16 +29,16 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 11 | Assets & Armory (Equipment & Services) | ✅ Complete |
 | 12 | The Web of Night (Relationship Webs) | ✅ Complete |
 | 13 | End-to-End Testing & Accessibility | ✅ Complete |
-| 15 | The Danse Macabre — Combat & Wounds | 🔄 In progress |
-| 16 | The Beast Within — Frenzy & Torpor | ⬜ Planned |
-| 17a | The Hunting Ground — Feeding | ⬜ Planned |
-| 17b | The Discipline Engine — Power Activation | ⬜ Planned |
-| 18 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
-| 19 | The Wider Web — Edge Systems & Content | ⬜ Planned |
-| 20 | The Blood Lineage — Discipline Acquisition Rules | ⬜ Planned |
-| 21 | The Global Embrace | ⬜ Planned |
+| 14 | The Danse Macabre — Combat & Wounds | 🔄 In progress |
+| 15 | The Beast Within — Frenzy & Torpor | ⬜ Planned |
+| 16a | The Hunting Ground — Feeding | ⬜ Planned |
+| 16b | The Discipline Engine — Power Activation | ⬜ Planned |
+| 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
+| 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
+| 19 | The Blood Lineage — Discipline Acquisition Rules | ⬜ Planned |
+| 20 | The Global Embrace | ⬜ Planned |
 
-> **Currently active → Phase 15 — The Danse Macabre (Combat & Wounds).** Phases 15–20 are the **V:tR 2e Playability Gap** — full scope, dependency graph, and task breakdown in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 21 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** and follows after playability work. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — summary and exit criteria are in **Phase 13** below; run local browser tests with `scripts/test-e2e-local.ps1`. Phase 12 (The Web of Night) is delivered; see phase table above.
+> **Currently active → Phase 14 — The Danse Macabre (Combat & Wounds).** Phases 14–19 are the **V:tR 2e Playability Gap** — full scope, dependency graph, and task breakdown in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** and follows after playability work. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — summary and exit criteria are in **Phase 13** below; run local browser tests with `scripts/test-e2e-local.ps1`. Phase 12 (The Web of Night) is delivered; see phase table above.
 
 ---
 
@@ -82,7 +82,7 @@ Every architectural choice is a learning milestone. We prioritize **Explicit Und
 - **Reactive Patterns** — Master real-time state changes without page refreshes using explicit C# state management.
 - **ORM Mastery** — Use **EF Core** to understand relational mapping, migrations, and performance tuning from SQLite to PostgreSQL.
 - **Modern Syntax (C# 14)** — Wield Primary Constructors and enhanced collection expressions as deliberate learning milestones, reducing boilerplate to sharpen intent.
-- **Identity & Security (The Masquerade)** — Deep dive into ASP.NET Core Identity, cookie-based sessions for the first-party Blazor app, and enterprise-grade data privacy. Bearer tokens (e.g. JWT) are in scope when a public API ships (Phase 21 — The Global Embrace), not for the primary UI today.
+- **Identity & Security (The Masquerade)** — Deep dive into ASP.NET Core Identity, cookie-based sessions for the first-party Blazor app, and enterprise-grade data privacy. Bearer tokens (e.g. JWT) are in scope when a public API ships (Phase 20 — The Global Embrace), not for the primary UI today.
 - **Data-Driven Domain Modeling** — Phases 8–11 extend the pattern of separating content (seed data) from behavior (engine logic): Bloodlines/Devotions and Covenants/Sorcery (8–9), social maneuvers and clues (10), asset catalog and inventory (11).
 
 ### Learning Artifacts (Mandatory)
@@ -411,13 +411,13 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 15: The Danse Macabre — Combat & Wounds
+## 📅 Phase 14: The Danse Macabre — Combat & Wounds
 
 **The Objective:** Build the attack-to-damage pipeline so initiative resolution produces real mechanical outcomes.
 
 **Status:** 🔄 **In progress** — this is the current engineering focus.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 15](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 14](./PLAYABILITY_GAP_PLAN.md)
 
 - [ ] `AttackResult` value object — successes, weapon dice, `DamageSource` (Bashing / Lethal / Aggravated / Fire / Sunlight / Weapon)
 - [ ] `AttackService` — melee-first MVP; reads existing `character.Defense` derived stat
@@ -429,11 +429,11 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 16: The Beast Within — Frenzy & Torpor
+## 📅 Phase 15: The Beast Within — Frenzy & Torpor
 
 **The Objective:** Give the Beast teeth — automated frenzy saves and torpor state tracking.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 15](./PLAYABILITY_GAP_PLAN.md)
 
 - [ ] `FrenzyTrigger` enum — Hunger, Rage, Rotschreck, Starvation
 - [ ] `FrenzyService` — `Resolve + Blood Potency` save; tilt application atomic via unique index on `(CharacterId, TiltType, IsActive)`
@@ -445,11 +445,11 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 17a: The Hunting Ground — Feeding
+## 📅 Phase 16a: The Hunting Ground — Feeding
 
 **The Objective:** First-class hunting rolls wired to Predator Type, with resonance outcomes.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 17a](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16a](./PLAYABILITY_GAP_PLAN.md)
 
 - [ ] `HuntingPoolDefinition` seed — one row per Predator Type (`PoolDefinitionJson`, Vitae gain, description)
 - [ ] `HuntingService` — `ExecuteHuntAsync`; optional territory bonus; `VitaeService` credit; resonance result
@@ -459,13 +459,13 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 17b: The Discipline Engine — Power Activation
+## 📅 Phase 16b: The Discipline Engine — Power Activation
 
 **The Objective:** Activate Discipline powers with cost enforcement and pool resolution.
 
-**Dependency:** Phase 20 must ship `DisciplinePower.PoolDefinitionJson` first.
+**Dependency:** Phase 19 must ship `DisciplinePower.PoolDefinitionJson` first.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 17b](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16b](./PLAYABILITY_GAP_PLAN.md)
 
 - [ ] `DisciplineActivationService` — reads `PoolDefinitionJson`, deducts `ActivationCost`, posts result to dice feed
 - [ ] `ActivationCost` value object — parses `DisciplinePower.Cost` string
@@ -473,13 +473,13 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 18: The Fog of Eternity — Humanity & Condition Wiring
+## 📅 Phase 17: The Fog of Eternity — Humanity & Condition Wiring
 
 **The Objective:** Automate degeneration rolls and wire all Condition penalties into the dice pool.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 18](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 17](./PLAYABILITY_GAP_PLAN.md)
 
-**Shared event (defined once, used by Phase 18 and Phase 20):**
+**Shared event (defined once, used by Phase 17 and Phase 19):**
 
 ```csharp
 record DegenerationCheckRequired(int CharacterId, DegenerationReason Reason);
@@ -494,11 +494,11 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 
 ---
 
-## 📅 Phase 19: The Wider Web — Edge Systems & Content
+## 📅 Phase 18: The Wider Web — Edge Systems & Content
 
 **The Objective:** Close low-priority mechanical gaps and fill the core-book content catalog.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 19](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 18](./PLAYABILITY_GAP_PLAN.md)
 
 - [ ] `PassiveAuraService` — `IsLashOut = false` path; auto-triggers on `CombatEncounter` + ST manual toggle from Glimpse NPC panel
 - [ ] `BloodSympathyService.RollBloodSympathyAsync` — `Wits + Empathy + BloodSympathyRating`; posts to dice feed
@@ -507,13 +507,13 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 
 ---
 
-## 📅 Phase 20: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline
+## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline
 
-**The Objective:** Enforce the acquisition rules from `DisciplinesRules.txt`, promote `Disciplines.json` to authoritative seed source, and add `PoolDefinitionJson` to unblock Phase 17b.
+**The Objective:** Enforce the acquisition rules from `DisciplinesRules.txt`, promote `Disciplines.json` to authoritative seed source, and add `PoolDefinitionJson` to unblock Phase 16b.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 20](./PLAYABILITY_GAP_PLAN.md)
+> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 19](./PLAYABILITY_GAP_PLAN.md)
 
-- [ ] Enrich `Discipline` entity — `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId`, `IsBloodlineDiscipline`, `BloodlineId`, `IsNecromancy`; migration `Phase20DisciplineAcquisitionMetadata`
+- [ ] Enrich `Discipline` entity — `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId`, `IsBloodlineDiscipline`, `BloodlineId`, `IsNecromancy`; migration `Phase19DisciplineAcquisitionMetadata`
 - [ ] Add `PoolDefinitionJson` to `DisciplinePower` (same migration)
 - [ ] `DisciplineJsonImporter` — replaces `DisciplineSeedData.cs`; idempotent upsert by name
 - [ ] Hard gates: bloodline restriction, Theban Humanity floor — `Result.Failure`, no override
@@ -524,9 +524,9 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 
 ---
 
-## 📅 Phase 21: The Global Embrace
+## 📅 Phase 20: The Global Embrace
 
-**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 15–20.
+**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–19.
 
 - [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
 - [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools; **external client auth** (typically JWT or OAuth2 access tokens) is introduced here. The first-party Blazor app remains cookie-based Identity.
