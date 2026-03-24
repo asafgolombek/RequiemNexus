@@ -35,7 +35,8 @@
 .sidebar-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: var(--crimson);
+    /* --crimson on --ash-gray fails WCAG AA (~1.4:1); glow red meets ~4.5:1 (axe: CharacterBloodSorcerySection) */
+    color: var(--crimson-glow);
 }
 
 .sidebar-content {
