@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data.RealTime;
 
@@ -187,6 +188,56 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         bool isRote)
     {
         await SafeInvokeAsync("RollDice", chronicleId, characterId, pool, description, tenAgain, nineAgain, eightAgain, isRote);
+    }
+
+    /// <summary>
+    /// Owner rolls encounter weapon damage with a server-resolved pool and broadcasts to the chronicle.
+    /// </summary>
+    public async Task<EncounterWeaponDamageRollOutcomeDto?> RollEncounterWeaponDamageAsync(
+        int chronicleId,
+        int encounterId,
+        int characterId,
+        int? weaponCharacterAssetId)
+    {
+        if (!IsConnected || _hubConnection == null)
+        {
+            toastService.Show("Not connected", "Connect to the live session to broadcast this roll.", ToastType.Warning);
+            return null;
+        }
+
+        try
+        {
+            EncounterWeaponDamageRollOutcomeDto result = await _hubConnection.InvokeAsync<EncounterWeaponDamageRollOutcomeDto>(
+                "RollEncounterWeaponDamage",
+                chronicleId,
+                encounterId,
+                characterId,
+                weaponCharacterAssetId);
+
+            toastService.Show(
+                "Weapon damage",
+                $"{result.Successes} success(es) on {result.PoolDescription}",
+                result.IsDramaticFailure ? ToastType.Error : result.IsExceptionalSuccess ? ToastType.Success : ToastType.Info);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            if (IsRateLimited(ex))
+            {
+                toastService.Show("Slow Down", "You are sending messages too quickly. The Masquerade requires patience.", ToastType.Warning);
+            }
+            else if (ex is HubException)
+            {
+                toastService.Show("Roll denied", ex.Message, ToastType.Error);
+            }
+            else
+            {
+                toastService.Show("Link Failure", "The real-time link encountered an error.", ToastType.Error);
+            }
+
+            return null;
+        }
     }
 
     public async Task StartSessionAsync()

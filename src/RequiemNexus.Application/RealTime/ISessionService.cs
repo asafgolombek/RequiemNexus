@@ -1,4 +1,5 @@
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.RealTime;
 
@@ -52,6 +53,18 @@ public interface ISessionService
     /// <param name="eightAgain">True for 8-again rules.</param>
     /// <param name="isRote">True for rote actions.</param>
     Task RollDiceAsync(string userId, int chronicleId, int? characterId, int pool, string description, bool tenAgain, bool nineAgain, bool eightAgain, bool isRote);
+
+    /// <summary>
+    /// Persists and broadcasts a dice result already produced by trusted server logic (e.g. encounter weapon damage).
+    /// Resolves the roller display name from the database. Does not roll dice.
+    /// </summary>
+    /// <remarks>Call only from hub or application code that computed <paramref name="rollResult"/> using server-side dice logic.</remarks>
+    /// <param name="userId">AspNetUsers Id of the player who rolled.</param>
+    /// <param name="chronicleId">Campaign / chronicle id.</param>
+    /// <param name="characterId">Character associated with the roll, if any.</param>
+    /// <param name="poolDescription">Short label for the dice pool (max 100 chars recommended).</param>
+    /// <param name="rollResult">Outcome to publish.</param>
+    Task PublishDiceRollAsync(string userId, int chronicleId, int? characterId, string poolDescription, RollResult rollResult);
 
     /// <summary>
     /// Updates the shared initiative tracker. Validates Storyteller role.

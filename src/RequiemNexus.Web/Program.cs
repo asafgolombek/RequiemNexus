@@ -193,6 +193,7 @@ builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDerivedStatServic
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ITraitResolver, RequiemNexus.Application.Services.TraitResolver>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.ICharacterHealthService, RequiemNexus.Application.Services.CharacterHealthService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IAttackService, RequiemNexus.Application.Services.AttackService>();
+builder.Services.AddScoped<RequiemNexus.Application.Contracts.IEncounterWeaponDamageRollService, RequiemNexus.Application.Services.EncounterWeaponDamageRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IDiceMacroService, RequiemNexus.Application.Services.DiceMacroService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IPublicRollService, RequiemNexus.Application.Services.PublicRollService>();
 builder.Services.AddScoped<RequiemNexus.Application.Contracts.IHomebrewDisciplineService, RequiemNexus.Application.Services.HomebrewDisciplineService>();

@@ -13,7 +13,6 @@
 @inject ICampaignService CampaignService
 @inject ISocialManeuveringService SocialManeuveringService
 @inject IChronicleNpcService ChronicleNpcService
-@inject IEncounterService EncounterService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject RequiemNexus.Web.Services.ToastService ToastService
@@ -44,33 +43,6 @@
             <h2>Storyteller Glimpse</h2>
             <StorytellerChronicleNav CampaignId="Id" />
         </div>
-
-        @if (_activeEncounter != null)
-        {
-            <div class="card-rn glimpse-card">
-                <h3 class="section-header">Danse Macabre (active)</h3>
-                <p class="text-small text-muted-rn" style="margin-bottom:0.75rem;">
-                    <a href="/campaigns/@Id/encounter/@_activeEncounter.Id">Open initiative tracker</a>
-                </p>
-                <ul class="text-small" style="list-style:none;padding:0;margin:0;">
-                    @foreach (InitiativeEntry row in _activeEncounter.InitiativeEntries.OrderBy(i => i.Order))
-                    {
-                        @if (row.CharacterId is int cid && row.Character != null)
-                        {
-                            <li style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.35rem;">
-                                <span>@row.Character.Name</span>
-                                <button type="button"
-                                        class="btn-rn-ghost"
-                                        style="font-size:0.78em;"
-                                        @onclick="() => OpenMeleeAttackModal(cid)">
-                                    Roll attack
-                                </button>
-                            </li>
-                        }
-                    }
-                </ul>
-            </div>
-        }
 
         @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
         <div class="card-rn glimpse-card">
@@ -285,14 +257,6 @@
         }
     }
 </div>
-
-<MeleeAttackResolveModal IsOpen="_meleeAttackModalOpen"
-                         IsOpenChanged="OnMeleeAttackModalOpenChanged"
-                         CampaignId="Id"
-                         EncounterId="@(_activeEncounter?.Id ?? 0)"
-                         AttackerCharacterId="_meleeAttackAttackerCharacterId"
-                         StorytellerUserId="@(_currentUserId ?? string.Empty)"
-                         InitiativeEntries="@(_activeEncounter?.InitiativeEntries.OrderBy(i => i.Order).ToList() ?? [])" />
 
 <EditLineageModal @bind-IsOpen="_lineageModalOpen"
                   CampaignId="Id"

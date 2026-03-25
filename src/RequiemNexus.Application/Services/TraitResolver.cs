@@ -206,17 +206,19 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
     }
 
     /// <summary>
-    /// House rule: each distinct skill in the pool with zero dots applies a −1 die penalty (VtR-style untrained).
+    /// VtR-style untrained skills: Mental skills at 0 dots apply −3 dice; Physical and Social at 0 apply −1 each (distinct skills in pool).
     /// </summary>
     private static int CountUntrainedSkillDicePenalty(Character character, PoolDefinition pool)
     {
         int penalty = 0;
         foreach (SkillId skillId in CollectPoolSkillIds(pool))
         {
-            if (character.GetSkillRating(skillId) == 0)
+            if (character.GetSkillRating(skillId) != 0)
             {
-                penalty++;
+                continue;
             }
+
+            penalty += TraitMetadata.IsMentalSkill(skillId) ? 3 : 1;
         }
 
         return penalty;

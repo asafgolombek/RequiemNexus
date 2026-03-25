@@ -8,7 +8,6 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
-using RequiemNexus.Domain.Models;
 using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Components.Pages.Campaigns;
@@ -82,12 +81,6 @@ public partial class StorytellerGlimpse
 
     private int _lineageEditCharacterId;
 
-    private CombatEncounter? _activeEncounter;
-
-    private bool _meleeAttackModalOpen;
-
-    private int _meleeAttackAttackerCharacterId;
-
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -109,8 +102,6 @@ public partial class StorytellerGlimpse
         {
             _campaign = await CampaignService.GetCampaignByIdAsync(Id, _currentUserId!)
                 ?? throw new UnauthorizedAccessException();
-
-            _activeEncounter = await EncounterService.GetActiveEncounterForCampaignAsync(Id, _currentUserId!);
 
             _vitals = await GlimpseService.GetCampaignVitalsAsync(Id, _currentUserId!);
             _pendingBloodlines = await BloodlineService.GetPendingBloodlineApplicationsAsync(Id, _currentUserId!);
@@ -273,20 +264,5 @@ public partial class StorytellerGlimpse
     private async Task OnLineageSavedAsync()
     {
         await LoadVitals();
-    }
-
-    private void OpenMeleeAttackModal(int attackerCharacterId)
-    {
-        _meleeAttackAttackerCharacterId = attackerCharacterId;
-        _meleeAttackModalOpen = true;
-    }
-
-    private async Task OnMeleeAttackModalOpenChanged(bool open)
-    {
-        _meleeAttackModalOpen = open;
-        if (!open)
-        {
-            await LoadVitals();
-        }
     }
 }

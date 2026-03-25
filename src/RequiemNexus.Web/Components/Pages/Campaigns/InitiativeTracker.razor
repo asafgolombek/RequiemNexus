@@ -23,6 +23,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject PersistentComponentState ApplicationState
 @inject ScreenReaderAnnouncer Announcer
+@using RequiemNexus.Web.Components.UI
 @implements IAsyncDisposable
 
 <PageTitle>Initiative Tracker - Requiem Nexus</PageTitle>
@@ -288,6 +289,19 @@
                                 Initiative: <strong>@entry.Total</strong>
                                 <span style="font-size:0.8em;color:var(--gothic-muted);">(@entry.InitiativeMod + @entry.RollResult)</span>
                             </span>
+
+                            @if (!_isSt && _encounter.IsActive && !_encounter.IsDraft && entry.CharacterId is int ownedPid && PlayerOwnedCharacterId == ownedPid)
+                            {
+                                <div style="margin-top:0.35rem;">
+                                    <button type="button"
+                                            class="btn-rn-ghost"
+                                            style="font-size:0.75em;"
+                                            disabled="@_busy"
+                                            @onclick="() => OpenPlayerWeaponDamageModal(ownedPid)">
+                                        Weapon damage
+                                    </button>
+                                </div>
+                            }
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 1.5rem;">
@@ -404,6 +418,13 @@
                          StorytellerUserId="@(_currentUserId ?? string.Empty)"
                          InitiativeEntries="SortedEntries" />
 
+<PlayerWeaponDamageRollModal IsOpen="_playerWeaponDamageModalOpen"
+                             IsOpenChanged="OnPlayerWeaponDamageModalOpenChanged"
+                             CampaignId="CampaignId"
+                             EncounterId="EncounterId"
+                             CharacterId="_playerWeaponDamageCharacterId"
+                             UserId="@(_currentUserId ?? string.Empty)" />
+
 @code {
     [Parameter] public int CampaignId { get; set; }
     [Parameter] public int EncounterId { get; set; }
@@ -424,6 +445,13 @@
 
     private InitiativeEntry? CurrentActor =>
         _encounter is { ResolvedAt: null } ? SortedEntries.FirstOrDefault(i => !i.HasActed) : null;
+
+    private int? PlayerOwnedCharacterId =>
+        _encounter?.InitiativeEntries
+            .FirstOrDefault(e => e.CharacterId.HasValue
+                && e.Character != null
+                && e.Character.ApplicationUserId == _currentUserId)
+            ?.CharacterId;
 
     private string _addType = "character";
     private int _addCharacterId;
@@ -463,6 +491,8 @@
     private int? _npcRollEntryId;
     private bool _meleeAttackModalOpen;
     private int _meleeAttackAttackerCharacterId;
+    private bool _playerWeaponDamageModalOpen;
+    private int _playerWeaponDamageCharacterId;
     private string _addError = string.Empty;
     private string _actionFeedback = string.Empty;
     private string? _cookieHeader;
@@ -628,6 +658,18 @@
         {
             await LoadEncounter(showFullPageSpinner: false);
         }
+    }
+
+    private void OpenPlayerWeaponDamageModal(int characterId)
+    {
+        _playerWeaponDamageCharacterId = characterId;
+        _playerWeaponDamageModalOpen = true;
+    }
+
+    private Task OnPlayerWeaponDamageModalOpenChanged(bool open)
+    {
+        _playerWeaponDamageModalOpen = open;
+        return Task.CompletedTask;
     }
 
     private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)
@@ -1116,7 +1158,7 @@
     }
 
     private bool ShowPlayerHealth(InitiativeEntry entry) =>
-        entry.Character != null && (_isSt || entry.Character.ApplicationUserId == _currentUserId);
+        entry.Character != null && _isSt;
 
     private string GetNpcDamageClass(string damage, int index)
     {

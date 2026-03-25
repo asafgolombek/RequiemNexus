@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
@@ -15,6 +16,7 @@ namespace RequiemNexus.Web.Hubs;
 public class SessionHub(
     ISessionService sessionService,
     ISessionAuthorizationService authService,
+    IEncounterWeaponDamageRollService encounterWeaponDamageRollService,
     IAuditLogService auditLog) : Hub<ISessionClient>
 {
     private string UserId => Context.UserIdentifier ?? throw new HubException("Unauthenticated");
@@ -141,6 +143,57 @@ public class SessionHub(
 
         // Note: The service validates that the pool is non-negative and performs the actual roll.
         await sessionService.RollDiceAsync(UserId, chronicleId, characterId, pool, description, tenAgain, nineAgain, eightAgain, isRote);
+    }
+
+    /// <summary>
+    /// Character owner rolls melee weapon damage during an active encounter; pool is resolved on the server and broadcast to the chronicle.
+    /// </summary>
+    public async Task<EncounterWeaponDamageRollOutcomeDto> RollEncounterWeaponDamage(
+        int chronicleId,
+        int encounterId,
+        int characterId,
+        int? weaponCharacterAssetId)
+    {
+        if (chronicleId <= 0 || encounterId <= 0 || characterId <= 0)
+        {
+            throw new HubException("Invalid parameters.");
+        }
+
+        if (!await authService.IsMemberAsync(UserId, chronicleId))
+        {
+            await LogFailure(nameof(RollEncounterWeaponDamage), chronicleId, "Not a member");
+            throw new HubException("Forbidden: Not a member of this chronicle");
+        }
+
+        if (!await authService.IsCharacterOwnerAsync(UserId, characterId))
+        {
+            await LogFailure(nameof(RollEncounterWeaponDamage), chronicleId, $"Not owner of character {characterId}");
+            throw new HubException("Forbidden: You do not own this character");
+        }
+
+        if (!await authService.IsCharacterInChronicleAsync(characterId, chronicleId))
+        {
+            await LogFailure(nameof(RollEncounterWeaponDamage), chronicleId, $"Character {characterId} not in chronicle");
+            throw new HubException("Forbidden: Character does not belong to this chronicle");
+        }
+
+        try
+        {
+            return await encounterWeaponDamageRollService.RollAndPublishAsync(
+                UserId,
+                chronicleId,
+                encounterId,
+                characterId,
+                weaponCharacterAssetId);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new HubException(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new HubException(ex.Message);
+        }
     }
 
     /// <summary>

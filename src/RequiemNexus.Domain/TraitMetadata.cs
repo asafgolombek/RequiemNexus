@@ -35,6 +35,11 @@ public static class TraitMetadata
         [.. MentalSkills, .. PhysicalSkills, .. SocialSkills];
 
     /// <summary>
+    /// Returns true if the skill is a Mental skill on the VtR character sheet (untrained penalty −3 dice in pool resolution).
+    /// </summary>
+    public static bool IsMentalSkill(SkillId id) => MentalSkills.AsSpan().Contains(id);
+
+    /// <summary>
     /// Returns the display name for an Attribute.
     /// </summary>
     public static string GetDisplayName(AttributeId id) => GetEnumDescription(id);

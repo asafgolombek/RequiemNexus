@@ -1,0 +1,47 @@
+@using RequiemNexus.Data.Models
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop fade-in" @onclick="CloseAsync">
+        <div class="rn-modal-panel fade-in" style="max-width: 28rem;" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="player-weapon-dmg-title">
+            <div class="rn-modal-header">
+                <h2 id="player-weapon-dmg-title" class="rn-modal-title">Weapon damage</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body" style="font-size: 0.9rem;">
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="text-danger">@_error</p>
+                }
+                else if (_character == null)
+                {
+                    <p class="text-muted-rn">Loading…</p>
+                }
+                else
+                {
+                    <p class="text-muted-rn" style="margin-top: 0;">@_character.Name</p>
+                    <p class="text-small text-muted-rn" style="margin-bottom: 0.75rem;">
+                        Pool size comes from your equipped weapon (or chance die if unarmed). The result is sent to the chronicle dice log.
+                    </p>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-size: 0.72em; color: var(--gothic-muted); display: block;">Weapon</label>
+                        <select class="form-control" style="font-size: 0.85em;" @bind="_weaponRowId" disabled="@_busy">
+                            <option value="">Unarmed (chance die)</option>
+                            @foreach (CharacterAsset ca in EquippedWeapons)
+                            {
+                                if (ca.Asset is WeaponAsset w)
+                                {
+                                    <option value="@ca.Id.ToString()">@ca.Asset.Name — @w.Damage dice</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="RollAsync">Roll</button>
+                        <button type="button" class="btn-rn-ghost" disabled="@_busy" @onclick="CloseAsync">Cancel</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
