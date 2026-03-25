@@ -143,7 +143,7 @@ RequiemNexus/
 | 12 | **The Web of Night** — Relationship Webs | ✅ Complete |
 | 13 | **End-to-End Testing & Accessibility** | ✅ Complete |
 | 14 | **The Danse Macabre** — Combat & Wounds | 🔄 In progress |
-| 15 | **The Beast Within** — Frenzy & Torpor | ⬜ Planned |
+| 15 | **The Beast Within** — Frenzy & Torpor | ⬜ Planned ([spec](./PHASE_15_THE_BEAST_WITHIN.md), [review](./PHASE_15_THE_BEAST_WITHIN_REVIEW.md)) |
 | 16a | **The Hunting Ground** — Feeding | ⬜ Planned |
 | 16b | **The Discipline Engine** — Power Activation | ⬜ Planned |
 | 17 | **The Fog of Eternity** — Humanity & Conditions | ⬜ Planned |
