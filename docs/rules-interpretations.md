@@ -37,9 +37,24 @@ Deliberate mechanics choices where the table text is ambiguous or automation req
 
 - **MVP scope:** Automated pipeline covers **melee** attack dice resolution (Storyteller encounter), structured damage application to `Character.HealthDamage`, bashing overflow (bashing → lethal → aggravated when the track is full), **wound penalty** on **Physical** skill pools via `ModifierTarget.WoundPenalty`, and **fast bashing heal** (1 Vitae per bashing box). Ranged firearms, improvised weapons, touch attacks, dodge actions, and armor mitigation rolls remain ST-facing or deferred.
 - **Damage symbols:** `HealthDamage` uses `/` (bashing), `X` (lethal), `*` (aggravated), space (empty), matching the character sheet vitals UI.
-- **`DamageSource` mapping:** `Weapon`, `Lethal` → lethal on the track; `Bashing` → bashing; `Aggravated`, `Fire`, `Sunlight` → aggravated (fire/sunlight reserved for Phase 15 tilt/frenzy hooks).
+- **`DamageSource` mapping:** `Weapon`, `Lethal` → lethal on the track; `Bashing` → bashing; `Aggravated`, `Fire`, `Sunlight` → aggravated (`Fire` / `Sunlight` tie to Rötschreck and frenzy UI in Phase 15 — see Phase 15 section below).
 - **Attack aggregation (MVP):** Total damage instances = **net attack successes** (successes minus Defense, floor 0) **plus** **weapon damage pool successes**. This is a deliberate automation shortcut; tables may use different damage steps — ST can apply manual adjustments outside this path.
 - **Defense:** `AttackService` consumes a **defense total** supplied by the caller (typically a PC’s sheet `Defense` or an NPC value). Firearms vs. Defense and unaware-target rules are not automated in Phase 14.
 - **Wound penalty tiers:** Penalty dice match vitals tooltips: damage in health box **max−3** → −1, **max−2** → −2, **max−1** → −3. **Incapacitated** when every box in the normalized track holds damage.
 - **Vitae healing:** Only **fast bashing** heal is automated (structured cost via `VitaeHealingCosts`). Lethal/aggravated Vitae costs return a **player-safe failure** until a later slice implements full resting rules.
 - **B/L/A overflow automation:** When the track is already full, the mutator repeatedly upgrades rightmost bashing → lethal → aggravated until either a space opens or the track is **all aggravated** (no further upgrades). On very small tracks an extra hit can therefore end as `***` with nowhere left to mark a new bash — ST adjudication for “damage past destruction” remains manual.
+
+## Phase 15 — The Beast Within (frenzy & torpor)
+
+Mechanical choices for automated frenzy saves, Vitae-zero handling, torpor intervals, and tilt exclusivity. Full tasking lives in [`PHASE_15_THE_BEAST_WITHIN.md`](./PHASE_15_THE_BEAST_WITHIN.md).
+
+- **Frenzy pool:** `Resolve + Blood Potency` for all frenzy save types including Rötschreck (VtR 2e p. 99). No separate pool is specified in the text.
+- **Rötschreck vs. Frenzy tilt:** `Rotschreck` trigger maps to `TiltType.Rotschreck`; all other frenzy triggers map to `TiltType.Frenzy`. Both are **Beast** tilts; **only one Beast tilt** may be active at a time (application guard plus unique index on active same-type tilts).
+- **Hunger trigger — manual ST:** The Storyteller may manually trigger a `Hunger` save for narrative edge cases (e.g. off-screen Vitae loss). This is a direct `FrenzyService` call and does **not** re-fire `VitaeDepletedEvent`. `Starvation` is never a manual UI trigger (torpor interval / Advance Time only).
+- **Vitae-zero when Rotschreck active:** If the character already has any active Beast tilt (including `Rotschreck`) when Vitae reaches 0, the automatic `Hunger` save from `VitaeDepletedEvent` is **suppressed** — the character is already in a Beast state.
+- **Willpower die subtraction:** Spending Willpower to resist frenzy removes **1 die** from the pool (VtR 2e p. 92 general Willpower rule). If the pool reaches 0 after subtraction, use a **chance die** (1 die). This is not a bonus to successes.
+- **Torpor awakening cost:** “One Vitae, or an anchor moment” (p. 165). Automation: `narrativeAwakening = false` deducts 1 Vitae; `narrativeAwakening = true` is ST-confirmed narrative awakening with no Vitae cost.
+- **Torpor duration table:** VtR 2e p. 165 table encoded as days; month = 30 days, year = 365 days. Blood Potency 10 (“indefinitely”) is represented as `int.MaxValue` in code — **no automatic starvation notification** for that tier.
+- **Hunger escalation in torpor:** Book: Hunger increases by 1 at each torpor interval milestone. The app fires Storyteller notifications on interval; the **Hunger track update** remains a manual ST action until Phase 16a (feeding mechanics).
+- **Starvation notification deduplication:** One notification per elapsed interval per character, tracked with `LastStarvationNotifiedAt` so the background ticker does not spam repeat notifications.
+- **Dice feed without active session:** If `PublishDiceRollAsync` fails (no live session, no `CampaignId`, Redis error), the roll outcome and tilt application still succeed; failure is logged and the ST sees the tilt on next Glimpse load.
