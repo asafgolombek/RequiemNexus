@@ -1,4 +1,5 @@
 using RequiemNexus.Application.DTOs;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Application.Contracts;
 
@@ -11,6 +12,15 @@ public interface INpcCombatService
     /// Appends one damage box to an NPC initiative entry.
     /// </summary>
     Task ApplyNpcDamageAsync(int entryId, char damageType, string storyTellerUserId);
+
+    /// <summary>
+    /// Appends multiple damage boxes of the same severity in one transaction (e.g. melee resolution).
+    /// </summary>
+    /// <param name="entryId">NPC initiative row.</param>
+    /// <param name="kind">Bashing, lethal, or aggravated (maps to track symbols).</param>
+    /// <param name="instances">Number of boxes to append; must fit on the remaining track.</param>
+    /// <param name="storyTellerUserId">Campaign Storyteller.</param>
+    Task ApplyNpcDamageBatchAsync(int entryId, HealthDamageKind kind, int instances, string storyTellerUserId);
 
     /// <summary>
     /// Removes the last damage mark from an NPC track.

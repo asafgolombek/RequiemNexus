@@ -52,6 +52,15 @@
             </div>
         </div>
     </div>
+
+    <VitaeFastHealPanel CharacterId="Character.Id"
+                        ActingUserId="ActingUserId"
+                        CurrentVitae="Character.CurrentVitae"
+                        MaxVitae="Character.MaxVitae"
+                        HealthDamage="@Character.HealthDamage"
+                        TrackLength="Character.CalculatedMaxHealth"
+                        OnHealed="OnVitaeHealCompleted" />
+
     <div class="derived-stats @(_humanityPulse ? "animate-pulse" : "")" style="margin-top: 20px; display: flex; gap: 20px; font-family: 'Cinzel', serif; color: #d0c0b0; border-top: 1px solid #330000; padding-top: 15px;">
         <div class="stat-item" style="text-align: center; flex: 1;">
             <div class="text-muted-rn" style="font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px;">Size</div>
@@ -79,6 +88,12 @@
     [Parameter]
     public EventCallback OnChanged { get; set; }
 
+    [Parameter]
+    public string? ActingUserId { get; set; }
+
+    [Parameter]
+    public EventCallback OnVitaeHealCompleted { get; set; }
+
     private string _clipId = Guid.NewGuid().ToString("N");
     private ElementReference _vitaeContainer;
 
@@ -100,6 +115,7 @@
         {
             if (patch.CurrentHealth.HasValue) { Character.CurrentHealth = patch.CurrentHealth.Value; await TriggerPulse("health"); }
             if (patch.MaxHealth.HasValue) Character.MaxHealth = patch.MaxHealth.Value;
+            if (patch.HealthDamage != null) { Character.HealthDamage = patch.HealthDamage; await TriggerPulse("health"); }
             if (patch.CurrentWillpower.HasValue) { Character.CurrentWillpower = patch.CurrentWillpower.Value; await TriggerPulse("willpower"); }
             if (patch.MaxWillpower.HasValue) Character.MaxWillpower = patch.MaxWillpower.Value;
             if (patch.CurrentVitae.HasValue) { Character.CurrentVitae = patch.CurrentVitae.Value; await TriggerPulse("vitae"); }

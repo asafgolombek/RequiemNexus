@@ -20,6 +20,7 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Domain.Enums
+@using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using Microsoft.JSInterop
 @using System.Linq
 
@@ -187,6 +188,17 @@
                                 <span class="vital-value">@v.CurrentVitae / @v.MaxVitae</span>
                             </div>
                         </div>
+
+                        @if (v.MaxVitae > 0)
+                        {
+                            <VitaeFastHealPanel CharacterId="v.CharacterId"
+                                                ActingUserId="@_currentUserId"
+                                                CurrentVitae="v.CurrentVitae"
+                                                MaxVitae="v.MaxVitae"
+                                                HealthDamage="@v.HealthDamage"
+                                                TrackLength="v.MaxHealth"
+                                                OnHealed="LoadVitals" />
+                        }
 
                         <div class="glimpse-stats">
                             <span>🕊️ Humanity: @v.Humanity</span>

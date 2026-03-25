@@ -226,6 +226,79 @@ public class TraitResolverTests
     }
 
     [Fact]
+    public void ResolvePool_UntrainedPhysicalSkill_SubtractsOneDie()
+    {
+        var character = CreateCharacterWithTraits();
+        character.Attributes.Add(new CharacterAttribute { Name = "Strength", Rating = 3 });
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Attribute, AttributeId.Strength, null, null),
+            new TraitReference(TraitType.Skill, null, SkillId.Brawl, null),
+        ]);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(2, result);
+    }
+
+    [Fact]
+    public void ResolvePool_MentalUntrained_SubtractsThreeDice()
+    {
+        var character = CreateCharacterWithTraits();
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Attribute, AttributeId.Intelligence, null, null),
+            new TraitReference(TraitType.Skill, null, SkillId.Investigation, null),
+        ]);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void ResolvePool_MentalUntrained_LeavesPositivePoolWhenAttributeHighEnough()
+    {
+        var character = CreateCharacterWithTraits();
+        character.Attributes.First(a => a.Name == "Intelligence").Rating = 5;
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Attribute, AttributeId.Intelligence, null, null),
+            new TraitReference(TraitType.Skill, null, SkillId.Investigation, null),
+        ]);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(2, result);
+    }
+
+    [Fact]
+    public void ResolvePool_TwoUntrainedPhysicalSkills_SubtractsTwoDice()
+    {
+        var character = new Character
+        {
+            Id = 1,
+            Name = "Test",
+            Attributes = [new CharacterAttribute { Name = "Strength", Rating = 3 }],
+            Skills = [],
+        };
+
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Skill, null, SkillId.Brawl, null),
+            new TraitReference(TraitType.Skill, null, SkillId.Weaponry, null),
+        ]);
+
+        var resolver = CreateTraitResolver();
+        int result = resolver.ResolvePool(character, pool);
+
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
     public async Task ResolvePoolAsync_EquipmentSkillPoolBonuses_SumCappedAtFive()
     {
         var character = CreateCharacterWithTraits();

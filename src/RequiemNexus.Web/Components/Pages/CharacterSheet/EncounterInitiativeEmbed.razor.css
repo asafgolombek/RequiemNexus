@@ -1,0 +1,62 @@
+.encounter-embed-initiative-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+}
+
+.encounter-embed-initiative-card {
+    background: var(--charcoal);
+    border: 1px solid var(--muted-gray);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    min-width: 7.5rem;
+    max-width: 12rem;
+    flex: 1 1 7.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.encounter-embed-initiative-card.encounter-embed-initiative-current {
+    border-left: 4px solid var(--crimson);
+    background: linear-gradient(90deg, rgba(139, 0, 0, 0.12), var(--charcoal));
+    box-shadow: 0 0 16px rgba(139, 0, 0, 0.1);
+}
+
+.encounter-embed-initiative-card.encounter-embed-initiative-acted {
+    opacity: 0.6;
+}
+
+.encounter-embed-initiative-order {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    color: var(--crimson);
+    line-height: 1.2;
+}
+
+.encounter-embed-initiative-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.encounter-embed-initiative-total {
+    font-size: 0.95rem;
+    color: var(--text-secondary, var(--bone-white));
+    margin-top: 0.1rem;
+}
+
+.encounter-embed-initiative-total strong {
+    font-size: 1.05rem;
+    color: var(--bone-white);
+}
+
+.encounter-embed-initiative-breakdown {
+    font-size: 0.78rem;
+    color: var(--gothic-muted);
+    line-height: 1.3;
+}

@@ -1,0 +1,130 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Domain
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Domain.Models
+@inject ICharacterHealthService CharacterHealthService
+
+@if (MaxVitae > 0 && !string.IsNullOrEmpty(ActingUserId))
+{
+    <div class="vitae-fast-heal" style="margin-top:0.75rem;padding-top:0.65rem;border-top:1px solid rgba(80,40,40,0.35);">
+        <div style="font-size:0.78em;text-transform:uppercase;letter-spacing:0.06em;color:var(--gothic-muted);margin-bottom:0.35rem;">
+            Spend Vitae to heal bashing
+        </div>
+        @if (BashingBoxCount == 0)
+        {
+            <p class="text-muted-rn" style="font-size:0.82em;margin:0;">No bashing damage on the track.</p>
+        }
+        else
+        {
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+                <label style="font-size:0.8em;">Boxes</label>
+                <input type="number" class="form-control" style="width:4.5rem;font-size:0.85em;" min="1" max="@BashingBoxCount"
+                       @bind="_boxesToHeal" disabled="@_busy" />
+                <span class="text-muted-rn" style="font-size:0.8em;">Max @BashingBoxCount — costs <strong>@PreviewVitaeCost</strong> Vitae</span>
+            </div>
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <p class="text-danger" style="font-size:0.82em;margin:0.35rem 0 0;">@_error</p>
+            }
+            <button type="button" class="btn-rn-primary" style="font-size:0.82em;margin-top:0.45rem;" disabled="@(_busy || PreviewVitaeCost <= 0 || CurrentVitae < PreviewVitaeCost)" @onclick="HealAsync">
+                Heal @Math.Min(_boxesToHeal, BashingBoxCount) bashing
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private int _boxesToHeal = 1;
+
+    private bool _busy;
+
+    private string _error = string.Empty;
+
+    [Parameter]
+    public int CharacterId { get; set; }
+
+    [Parameter]
+    public string? ActingUserId { get; set; }
+
+    [Parameter]
+    public int CurrentVitae { get; set; }
+
+    [Parameter]
+    public int MaxVitae { get; set; }
+
+    [Parameter]
+    public string HealthDamage { get; set; } = string.Empty;
+
+    [Parameter]
+    public int TrackLength { get; set; }
+
+    [Parameter]
+    public EventCallback OnHealed { get; set; }
+
+    private int BashingBoxCount
+    {
+        get
+        {
+            int max = Math.Max(1, TrackLength);
+            string t = HealthDamage ?? string.Empty;
+            if (t.Length < max)
+            {
+                t = t.PadRight(max);
+            }
+            else if (t.Length > max)
+            {
+                t = t[..max];
+            }
+
+            return t.Count(c => c == '/');
+        }
+    }
+
+    private int PreviewVitaeCost
+    {
+        get
+        {
+            int n = Math.Clamp(_boxesToHeal, 1, Math.Max(1, BashingBoxCount));
+            int planned = Math.Min(n, BashingBoxCount);
+            Result<int> r = VitaeHealingCosts.TryGetVitaeCost(HealingReason.FastHealBashing, planned);
+            return r.IsSuccess ? r.Value : 0;
+        }
+    }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _boxesToHeal = Math.Clamp(_boxesToHeal, 1, Math.Max(1, BashingBoxCount));
+    }
+
+    private async Task HealAsync()
+    {
+        if (string.IsNullOrEmpty(ActingUserId))
+        {
+            return;
+        }
+
+        _error = string.Empty;
+        _busy = true;
+        try
+        {
+            int n = Math.Min(Math.Max(1, _boxesToHeal), BashingBoxCount);
+            Result<int> result = await CharacterHealthService.TryFastHealBashingWithVitaeAsync(CharacterId, ActingUserId, n);
+            if (!result.IsSuccess)
+            {
+                _error = result.Error ?? "Could not heal.";
+                return;
+            }
+
+            if (OnHealed.HasDelegate)
+            {
+                await OnHealed.InvokeAsync();
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

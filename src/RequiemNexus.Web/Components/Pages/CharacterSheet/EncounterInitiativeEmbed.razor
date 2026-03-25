@@ -13,42 +13,32 @@
             <h3 style="margin:0;font-size:1rem;">⚔️ Initiative — @_encounter.Name</h3>
             <span style="font-size:0.85em;color:var(--gothic-muted);">Round @_encounter.CurrentRound</span>
         </div>
-        <div class="initiative-list" style="margin-top:0.75rem;">
+        <div class="encounter-embed-initiative-list">
             @foreach (InitiativeEntry entry in Sorted)
             {
                 bool isCurrent = Current?.Id == entry.Id;
                 string name = entry.Character?.Name ?? entry.NpcName ?? "Unknown";
-                <div class="initiative-row @(isCurrent ? "initiative-current" : "") @(entry.HasActed ? "initiative-acted" : "")"
-                     style="padding:0.35rem 0;">
-                    <div class="initiative-order">@entry.Order</div>
-                    <div class="initiative-info">
-                        <span class="initiative-name">
-                            @if (isCurrent)
-                            {
-                                <strong>▶ @name</strong>
-                            }
-                            else
-                            {
-                                @name
-                            }
-                        </span>
-                        @if (entry.CharacterId == CharacterId && entry.Character != null)
+                <div class="encounter-embed-initiative-card @(isCurrent ? "encounter-embed-initiative-current" : "") @(entry.HasActed ? "encounter-embed-initiative-acted" : "")">
+                    <div class="encounter-embed-initiative-order">@entry.Order</div>
+                    <div class="encounter-embed-initiative-name">
+                        @if (isCurrent)
                         {
-                            <div class="mini-health-track">
-                                @for (int i = 0; i < entry.Character.CalculatedMaxHealth; i++)
-                                {
-                                    <span class="health-box-mini @DamageClass(entry.Character, i)"></span>
-                                }
-                            </div>
+                            <strong>▶ @name</strong>
                         }
-                        <span class="initiative-total" style="font-size:0.85em;">
-                            Init <strong>@entry.Total</strong>
-                        </span>
+                        else
+                        {
+                            @name
+                        }
+                    </div>
+                    <div class="encounter-embed-initiative-total">
+                        Init <strong>@entry.Total</strong>
+                    </div>
+                    <div class="encounter-embed-initiative-breakdown">
+                        mod @entry.InitiativeMod + roll @entry.RollResult
                     </div>
                 </div>
             }
         </div>
-        <a href="/campaigns/@CampaignId/encounter/@_encounter.Id" class="btn-rn-ghost" style="font-size:0.8em;margin-top:0.5rem;display:inline-block;">Open full tracker</a>
     </section>
 }
 
@@ -102,22 +92,6 @@
         }
 
         StateHasChanged();
-    }
-
-    private static string DamageClass(Character character, int index)
-    {
-        if (string.IsNullOrEmpty(character.HealthDamage) || index >= character.HealthDamage.Length)
-        {
-            return string.Empty;
-        }
-
-        return character.HealthDamage[index] switch
-        {
-            '/' => "bashing",
-            'X' => "lethal",
-            '*' => "aggravated",
-            _ => string.Empty,
-        };
     }
 
     /// <inheritdoc />

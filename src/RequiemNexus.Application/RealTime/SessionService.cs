@@ -4,6 +4,7 @@ using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.RealTime;
 
@@ -131,6 +132,30 @@ public class SessionService(
     }
 
     /// <inheritdoc />
+    public async Task PublishDiceRollAsync(string userId, int chronicleId, int? characterId, string poolDescription, RollResult rollResult)
+    {
+        string userName = await _db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.UserName)
+            .FirstOrDefaultAsync() ?? "Unknown Player";
+
+        var rollDto = new DiceRollResultDto(
+            userName,
+            userId,
+            characterId,
+            poolDescription,
+            rollResult.Successes,
+            rollResult.IsExceptionalSuccess,
+            rollResult.IsDramaticFailure,
+            rollResult.DiceRolled,
+            DateTimeOffset.UtcNow);
+
+        await _repository.AddRollAsync(chronicleId, rollDto);
+        _metrics.RecordRoll();
+        await _publisher.Group(chronicleId).ReceiveDiceRoll(rollDto);
+    }
+
+    /// <inheritdoc />
     public async Task UpdateInitiativeAsync(string userId, int chronicleId, IEnumerable<InitiativeEntryDto> entries)
     {
         await _repository.UpdateInitiativeAsync(chronicleId, entries);
@@ -173,7 +198,8 @@ public class SessionService(
                 MaxVitae: character.MaxVitae,
                 Humanity: character.Humanity,
                 Armor: character.Armor,
-                ActiveConditions: combinedConditions);
+                ActiveConditions: combinedConditions,
+                HealthDamage: character.HealthDamage);
 
             await _publisher.Group(character.CampaignId.Value).ReceiveCharacterUpdate(update);
         }

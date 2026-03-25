@@ -64,6 +64,49 @@ public class NpcCombatService(
     }
 
     /// <inheritdoc />
+    public async Task ApplyNpcDamageBatchAsync(int entryId, HealthDamageKind kind, int instances, string storyTellerUserId)
+    {
+        if (instances <= 0)
+        {
+            return;
+        }
+
+        InitiativeEntry entry = await _dbContext.InitiativeEntries
+            .FirstOrDefaultAsync(i => i.Id == entryId)
+            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
+
+        if (entry.CharacterId != null)
+        {
+            throw new InvalidOperationException("NPC damage tracking applies to NPC rows only.");
+        }
+
+        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
+
+        string damage = entry.NpcHealthDamage ?? string.Empty;
+        int remaining = entry.NpcHealthBoxes - damage.Length;
+        if (remaining < instances)
+        {
+            throw new InvalidOperationException(
+                $"NPC health track has only {remaining} empty box(es); cannot apply {instances} instance(s).");
+        }
+
+        char symbol = kind.ToTrackSymbol();
+        entry.NpcHealthDamage = damage + new string(symbol, instances);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "ST {UserId} applied {Count}×{Kind} to NPC '{NpcName}' in encounter {EncounterId}",
+            storyTellerUserId,
+            instances,
+            kind,
+            entry.NpcName,
+            entry.EncounterId);
+
+        await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
+    }
+
+    /// <inheritdoc />
     public async Task HealNpcDamageAsync(int entryId, string storyTellerUserId)
     {
         InitiativeEntry entry = await _dbContext.InitiativeEntries
@@ -274,6 +317,17 @@ public class NpcCombatService(
             int v1 = ChronicleNpcTraitJsonReader.ReadTraitRating(t1, t1Attr, npc.AttributesJson, npc.SkillsJson);
             int v2 = ChronicleNpcTraitJsonReader.ReadTraitRating(t2, t2Attr, npc.AttributesJson, npc.SkillsJson);
             pool = v1 + v2;
+            if (!t1Attr && v1 == 0)
+            {
+                pool--;
+            }
+
+            if (!t2Attr && v2 == 0)
+            {
+                pool--;
+            }
+
+            pool = Math.Max(0, pool);
             string d1 = TraitMetadata.GetDisplayName(t1);
             string d2 = TraitMetadata.GetDisplayName(t2);
             poolDescription = $"{d1} + {d2} ({pool})";

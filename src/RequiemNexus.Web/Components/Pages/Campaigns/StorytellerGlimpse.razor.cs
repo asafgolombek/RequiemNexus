@@ -8,7 +8,6 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
-using RequiemNexus.Domain.Models;
 using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Components.Pages.Campaigns;

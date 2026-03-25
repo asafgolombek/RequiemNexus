@@ -37,6 +37,8 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
             }
         }
 
+        total -= CountUntrainedSkillDicePenalty(character, pool);
+
         return Math.Max(0, total);
     }
 
@@ -80,6 +82,16 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
                 continue;
             }
 
+            if (m.Target == ModifierTarget.WoundPenalty)
+            {
+                if (PoolIncludesPhysicalSkill(poolSkills))
+                {
+                    delta += m.Value;
+                }
+
+                continue;
+            }
+
             if (m.Target == ModifierTarget.SkillPool
                 && m.AppliesToSkill.HasValue
                 && poolSkills.Contains(m.AppliesToSkill.Value))
@@ -111,6 +123,19 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
         delta += equipmentSkillBonusSum;
 
         return Math.Max(0, basePool + delta);
+    }
+
+    private static bool PoolIncludesPhysicalSkill(HashSet<SkillId> poolSkills)
+    {
+        foreach (SkillId s in TraitMetadata.PhysicalSkills)
+        {
+            if (poolSkills.Contains(s))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static HashSet<SkillId> CollectPoolSkillIds(PoolDefinition pool)
@@ -178,5 +203,24 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
                 : 0,
             _ => 0,
         };
+    }
+
+    /// <summary>
+    /// VtR-style untrained skills: Mental skills at 0 dots apply −3 dice; Physical and Social at 0 apply −1 each (distinct skills in pool).
+    /// </summary>
+    private static int CountUntrainedSkillDicePenalty(Character character, PoolDefinition pool)
+    {
+        int penalty = 0;
+        foreach (SkillId skillId in CollectPoolSkillIds(pool))
+        {
+            if (character.GetSkillRating(skillId) != 0)
+            {
+                continue;
+            }
+
+            penalty += TraitMetadata.IsMentalSkill(skillId) ? 3 : 1;
+        }
+
+        return penalty;
     }
 }
