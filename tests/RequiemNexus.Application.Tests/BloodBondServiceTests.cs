@@ -50,6 +50,16 @@ public class BloodBondServiceTests
             .Options;
     }
 
+    private static BloodBondQueryService CreateQueryService(
+        DbContextOptions<ApplicationDbContext> options,
+        IAuthorizationHelper? auth = null)
+    {
+        return new BloodBondQueryService(
+            new TestApplicationDbContextFactory(options),
+            auth ?? CreatePermissiveAuthMock().Object,
+            new ConditionRules());
+    }
+
     private static BloodBondService CreateService(
         DbContextOptions<ApplicationDbContext> options,
         IAuthorizationHelper? auth = null,
@@ -324,7 +334,7 @@ public class BloodBondServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        BloodBondService sut = CreateService(options);
+        BloodBondQueryService sut = CreateQueryService(options);
         IReadOnlyList<BloodBondDto> fading = await sut.GetFadingAlertsAsync(1, "st");
 
         Assert.Single(fading);

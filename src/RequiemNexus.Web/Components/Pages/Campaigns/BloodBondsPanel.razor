@@ -3,6 +3,7 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Web.Services
 @inject IBloodBondService BloodBondService
+@inject IBloodBondQueryService BloodBondQueryService
 @inject ToastService ToastService
 @inject ScreenReaderAnnouncer Announcer
 @inject IJSRuntime JSRuntime
@@ -117,7 +118,7 @@
         _loading = true;
         try
         {
-            _bonds = (await BloodBondService.GetBondsInChronicleAsync(CampaignId, StorytellerUserId)).ToList();
+            _bonds = (await BloodBondQueryService.GetBondsInChronicleAsync(CampaignId, StorytellerUserId)).ToList();
             _fadingCount = _bonds.Count(b => b.IsFading);
 
             if (_bondSnapshotPrimed)

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data.SeedData;
@@ -14,30 +15,15 @@ public static class CoilSeedData
     /// Returns a list of (Scale, Coils) tuples with prerequisite chain constructed in-memory.
     /// Scales and Coils do not yet have database Ids when returned — caller assigns them on insert.
     /// </summary>
-    public static List<(ScaleDefinition Scale, List<CoilDefinition> Coils)> LoadFromDocs()
+    public static List<(ScaleDefinition Scale, List<CoilDefinition> Coils)> LoadFromDocs(ILogger logger)
     {
-        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
-        if (seedDir == null)
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson("coils_info.json", logger);
+        if (doc == null)
         {
             return GetMinimalSeed();
         }
 
-        string coilsPath = Path.Combine(seedDir, "coils_info.json");
-        if (!File.Exists(coilsPath))
-        {
-            return GetMinimalSeed();
-        }
-
-        try
-        {
-            string json = File.ReadAllText(coilsPath);
-            using var doc = JsonDocument.Parse(json);
-            return ParseCoils(doc.RootElement);
-        }
-        catch
-        {
-            return GetMinimalSeed();
-        }
+        return ParseCoils(doc.RootElement);
     }
 
     private static List<(ScaleDefinition Scale, List<CoilDefinition> Coils)> ParseCoils(JsonElement root)

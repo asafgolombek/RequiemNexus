@@ -9,6 +9,8 @@
 @using RequiemNexus.Web.Services
 @using System.Threading
 @inject ISocialManeuveringService SocialManeuveringService
+@inject ISocialManeuverQueryService SocialManeuverQueryService
+@inject ISocialManeuverRollService SocialManeuverRollService
 @inject SessionClientService SessionClient
 @inject ToastService ToastService
 @inject IJSRuntime JSRuntime
@@ -180,7 +182,7 @@
             _loading = true;
             try
             {
-                _maneuvers = (await SocialManeuveringService.ListForInitiatorAsync(CharacterId, CurrentUserId)).ToList();
+                _maneuvers = (await SocialManeuverQueryService.ListForInitiatorAsync(CharacterId, CurrentUserId)).ToList();
                 foreach (SocialManeuver m in _maneuvers)
                 {
                     _openDoorPoolByManeuverId.TryAdd(m.Id, 5);
@@ -335,7 +337,7 @@
         try
         {
             int pool = GetOpenPool(maneuverId);
-            (_, RollResult roll, int opened) = await SocialManeuveringService.RollOpenDoorAsync(maneuverId, pool, CurrentUserId);
+            (_, RollResult roll, int opened) = await SocialManeuverRollService.RollOpenDoorAsync(maneuverId, pool, CurrentUserId);
             ToastService.Show(
                 "Open Door",
                 $"{opened} door(s). Successes: {roll.Successes}",
@@ -366,7 +368,7 @@
         try
         {
             int pool = GetForcePool(maneuverId);
-            (_, RollResult roll, bool forcedOk) = await SocialManeuveringService.RollForceDoorsAsync(
+            (_, RollResult roll, bool forcedOk) = await SocialManeuverRollService.RollForceDoorsAsync(
                 maneuverId,
                 pool,
                 GetForceHard(maneuverId),

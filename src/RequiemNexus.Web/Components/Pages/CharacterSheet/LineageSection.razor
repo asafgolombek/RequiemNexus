@@ -3,6 +3,7 @@
 @using RequiemNexus.Domain.Models
 @using RequiemNexus.Web.Services
 @inject IKindredLineageService KindredLineageService
+@inject IBloodSympathyRollService BloodSympathyRollService
 @inject ICampaignService CampaignService
 @inject ToastService ToastService
 
@@ -178,7 +179,7 @@
         _rollBusy = true;
         try
         {
-            Result<RollResult> result = await KindredLineageService.RollBloodSympathyAsync(
+            Result<RollResult> result = await BloodSympathyRollService.RollBloodSympathyAsync(
                 CharacterId,
                 _sympathyTargetId,
                 CurrentUserId);

@@ -16,7 +16,7 @@ using Xunit;
 namespace RequiemNexus.Application.Tests;
 
 /// <summary>
-/// Tests for <see cref="SorceryService"/> — paid rite activation and resource deduction.
+/// Tests for <see cref="SorceryActivationService"/> — paid rite activation and resource deduction.
 /// </summary>
 public class SorceryServiceTests
 {
@@ -31,19 +31,18 @@ public class SorceryServiceTests
         return authHelper;
     }
 
-    private static SorceryService CreateService(
+    private static SorceryActivationService CreateService(
         ApplicationDbContext ctx,
         ITraitResolver traitResolver,
         IAuthorizationHelper? authHelper = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
-        var beatLedger = new Mock<IBeatLedgerService>();
         var sessionService = new Mock<ISessionService>();
         sessionService
             .Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>()))
             .Returns(Task.CompletedTask);
-        var logger = new Mock<ILogger<SorceryService>>().Object;
-        return new SorceryService(ctx, auth, beatLedger.Object, sessionService.Object, traitResolver, logger);
+        var logger = new Mock<ILogger<SorceryActivationService>>().Object;
+        return new SorceryActivationService(ctx, auth, sessionService.Object, traitResolver, logger);
     }
 
     /// <summary>SQLite in-memory so bulk <c>ExecuteUpdateAsync</c> is exercised (not supported on EF InMemory).</summary>

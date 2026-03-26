@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
@@ -106,95 +107,80 @@ public static class DevotionSeedData
     /// Parses prerequisites (e.g. "Resilience •••, Vigor •") and dice_pool (e.g. "Stamina + Survival + Resilience").
     /// Skips devotions with unknown disciplines. Falls back to <see cref="GetSampleDevotions"/> when file is missing.
     /// </summary>
-    public static List<DevotionDefinition> LoadFromDocs(List<Discipline> disciplines)
+    public static List<DevotionDefinition> LoadFromDocs(List<Discipline> disciplines, ILogger logger)
     {
-        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
-        if (seedDir == null)
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson("devotions.json", logger);
+        if (doc == null)
         {
             return GetSampleDevotions(disciplines);
         }
 
-        var path = Path.Combine(seedDir, "devotions.json");
-        if (!File.Exists(path))
-        {
-            return GetSampleDevotions(disciplines);
-        }
+        var result = new List<DevotionDefinition>();
+        var disciplineByName = disciplines.ToDictionary(d => d.Name, d => d, StringComparer.OrdinalIgnoreCase);
 
-        try
+        foreach (var el in doc.RootElement.EnumerateArray())
         {
-            string json = File.ReadAllText(path);
-            using var doc = JsonDocument.Parse(json);
-            var result = new List<DevotionDefinition>();
-            var disciplineByName = disciplines.ToDictionary(d => d.Name, d => d, StringComparer.OrdinalIgnoreCase);
+            string name = el.TryGetProperty("name", out var nEl) ? nEl.GetString() ?? string.Empty : string.Empty;
+            string description = el.TryGetProperty("description", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
+            string xpStr = el.TryGetProperty("xp", out var xEl) ? xEl.GetString() ?? "1" : "1";
+            string cost = el.TryGetProperty("cost", out var cEl) ? cEl.GetString() ?? "—" : "—";
+            string dicePool = el.TryGetProperty("dice_pool", out var dpEl) ? dpEl.GetString() ?? "None" : "None";
+            string prereqStr = el.TryGetProperty("prerequisites", out var pEl) ? pEl.GetString() ?? string.Empty : string.Empty;
+            string source = el.TryGetProperty("source", out var sEl) ? sEl.GetString() ?? string.Empty : string.Empty;
 
-            foreach (var el in doc.RootElement.EnumerateArray())
+            if (string.IsNullOrEmpty(name))
             {
-                string name = el.TryGetProperty("name", out var nEl) ? nEl.GetString() ?? string.Empty : string.Empty;
-                string description = el.TryGetProperty("description", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
-                string xpStr = el.TryGetProperty("xp", out var xEl) ? xEl.GetString() ?? "1" : "1";
-                string cost = el.TryGetProperty("cost", out var cEl) ? cEl.GetString() ?? "—" : "—";
-                string dicePool = el.TryGetProperty("dice_pool", out var dpEl) ? dpEl.GetString() ?? "None" : "None";
-                string prereqStr = el.TryGetProperty("prerequisites", out var pEl) ? pEl.GetString() ?? string.Empty : string.Empty;
-                string source = el.TryGetProperty("source", out var sEl) ? sEl.GetString() ?? string.Empty : string.Empty;
-
-                if (string.IsNullOrEmpty(name))
-                {
-                    continue;
-                }
-
-                if (!int.TryParse(xpStr, out int xpCost) || xpCost < 0)
-                {
-                    xpCost = 1;
-                }
-
-                var prereqs = ParsePrerequisites(prereqStr, disciplineByName);
-                if (prereqs == null)
-                {
-                    continue;
-                }
-
-                bool isPassive = string.Equals(dicePool, "None", StringComparison.OrdinalIgnoreCase);
-                PoolDefinition? pool = null;
-                if (!isPassive && !string.IsNullOrWhiteSpace(dicePool))
-                {
-                    pool = TryParseDicePool(dicePool, disciplines);
-                }
-
-                var def = new DevotionDefinition
-                {
-                    Name = name,
-                    Description = description,
-                    XpCost = xpCost,
-                    ActivationCostDescription = cost,
-                    IsPassive = isPassive,
-                    PoolDefinitionJson = pool != null ? JsonSerializer.Serialize(pool, _jsonOptions) : null,
-                    Source = source,
-                };
-
-                foreach (var (disciplineId, minLevel, orGroupId) in prereqs)
-                {
-                    def.Prerequisites.Add(new DevotionPrerequisite
-                    {
-                        DisciplineId = disciplineId,
-                        MinimumLevel = minLevel,
-                        OrGroupId = orGroupId,
-                    });
-                }
-
-                result.Add(def);
+                continue;
             }
 
-            if (result.Count < 4)
+            if (!int.TryParse(xpStr, out int xpCost) || xpCost < 0)
             {
-                return GetSampleDevotions(disciplines);
+                xpCost = 1;
             }
 
-            return result;
+            var prereqs = ParsePrerequisites(prereqStr, disciplineByName);
+            if (prereqs == null)
+            {
+                continue;
+            }
+
+            bool isPassive = string.Equals(dicePool, "None", StringComparison.OrdinalIgnoreCase);
+            PoolDefinition? pool = null;
+            if (!isPassive && !string.IsNullOrWhiteSpace(dicePool))
+            {
+                pool = TryParseDicePool(dicePool, disciplines);
+            }
+
+            var def = new DevotionDefinition
+            {
+                Name = name,
+                Description = description,
+                XpCost = xpCost,
+                ActivationCostDescription = cost,
+                IsPassive = isPassive,
+                PoolDefinitionJson = pool != null ? JsonSerializer.Serialize(pool, _jsonOptions) : null,
+                Source = source,
+            };
+
+            foreach (var (disciplineId, minLevel, orGroupId) in prereqs)
+            {
+                def.Prerequisites.Add(new DevotionPrerequisite
+                {
+                    DisciplineId = disciplineId,
+                    MinimumLevel = minLevel,
+                    OrGroupId = orGroupId,
+                });
+            }
+
+            result.Add(def);
         }
-        catch
+
+        if (result.Count < 4)
         {
             return GetSampleDevotions(disciplines);
         }
+
+        return result;
     }
 
     private static List<(int DisciplineId, int MinLevel, int OrGroupId)>? ParsePrerequisites(

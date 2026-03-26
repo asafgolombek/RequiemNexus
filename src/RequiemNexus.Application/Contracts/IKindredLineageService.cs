@@ -26,7 +26,4 @@ public interface IKindredLineageService
 
     /// <summary>Returns the lineage graph (sire + childer) for a character.</summary>
     Task<LineageGraphDto> GetLineageGraphAsync(int characterId, string userId);
-
-    /// <summary>Rolls the Blood Sympathy pool for a character attempting to locate kin.</summary>
-    Task<Result<RollResult>> RollBloodSympathyAsync(int characterId, int targetCharacterId, string userId);
 }
