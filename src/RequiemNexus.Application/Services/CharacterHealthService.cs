@@ -16,6 +16,7 @@ namespace RequiemNexus.Application.Services;
 public class CharacterHealthService(
     ApplicationDbContext dbContext,
     IAuthorizationHelper authorizationHelper,
+    IVitaeService vitaeService,
     ISessionService sessionService,
     ILogger<CharacterHealthService> logger) : ICharacterHealthService
 {
@@ -120,7 +121,18 @@ public class CharacterHealthService(
         }
 
         int vitaeSpent = healed * VitaeHealingCosts.VitaePerBashingBox;
-        character.CurrentVitae -= vitaeSpent;
+        Result<int> spend = await vitaeService.SpendVitaeAsync(
+            characterId,
+            userId,
+            vitaeSpent,
+            "Fast heal bashing",
+            cancellationToken);
+
+        if (!spend.IsSuccess)
+        {
+            return Result<int>.Failure(spend.Error ?? "Could not spend Vitae.");
+        }
+
         character.HealthDamage = track;
         character.CurrentHealth = HealthTrackMutator.CountDamagedBoxes(track, max);
 

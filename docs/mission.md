@@ -30,7 +30,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 12 | The Web of Night (Relationship Webs) | ✅ Complete |
 | 13 | End-to-End Testing & Accessibility | ✅ Complete |
 | 14 | The Danse Macabre — Combat & Wounds | 🔄 In progress |
-| 15 | The Beast Within — Frenzy & Torpor | ⬜ Planned |
+| 15 | The Beast Within — Frenzy & Torpor | 🔄 In progress |
 | 16a | The Hunting Ground — Feeding | ⬜ Planned |
 | 16b | The Discipline Engine — Power Activation | ⬜ Planned |
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |

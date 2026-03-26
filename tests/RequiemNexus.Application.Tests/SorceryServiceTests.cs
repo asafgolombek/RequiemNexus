@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.Events;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
@@ -28,6 +29,9 @@ public class SorceryServiceTests
         authHelper
             .Setup(a => a.RequireCharacterOwnerAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
+        authHelper
+            .Setup(a => a.RequireCharacterAccessAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
         return authHelper;
     }
 
@@ -42,10 +46,27 @@ public class SorceryServiceTests
             .Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>()))
             .Returns(Task.CompletedTask);
         var logger = new Mock<ILogger<SorceryActivationService>>().Object;
-        return new SorceryActivationService(ctx, auth, sessionService.Object, traitResolver, logger);
+        var dispatcher = new Mock<IDomainEventDispatcher>();
+        var vitaeService = new VitaeService(
+            ctx,
+            auth,
+            dispatcher.Object,
+            new Mock<ILogger<VitaeService>>().Object);
+        var willpowerService = new WillpowerService(
+            ctx,
+            auth,
+            new Mock<ILogger<WillpowerService>>().Object);
+        return new SorceryActivationService(
+            ctx,
+            auth,
+            sessionService.Object,
+            traitResolver,
+            vitaeService,
+            willpowerService,
+            logger);
     }
 
-    /// <summary>SQLite in-memory so bulk <c>ExecuteUpdateAsync</c> is exercised (not supported on EF InMemory).</summary>
+    /// <summary>SQLite in-memory so relational transactions and Vitae/Willpower services are exercised.</summary>
     private static async Task<(ApplicationDbContext Context, IAsyncDisposable Teardown)> CreateSqliteContextAsync()
     {
         var connection = new SqliteConnection("DataSource=:memory:");

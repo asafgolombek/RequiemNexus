@@ -4,7 +4,7 @@
 
 ## Overview
 
-**Status:** ⬜ Planned
+**Status:** 🔄 In progress
 **Depends on:** Phase 14 (Combat & Wounds) — `DamageSource.Fire` / `DamageSource.Sunlight`, `CharacterHealthService`, `ModifierService` with `WoundPenaltyResolver`
 **Unlocks:** Phase 17 (Humanity & Condition Wiring) — `DegenerationCheckRequired` event UI + wound-penalty path already in `ModifierService`
 
