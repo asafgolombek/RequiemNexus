@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data.SeedData;
@@ -24,79 +25,64 @@ public static class MeritSeedData
     /// Injects the five covenant Status merits if not present in the file.
     /// Falls back to <see cref="GetAllMerits"/> when file is missing or invalid.
     /// </summary>
-    public static List<Merit> LoadFromDocs()
+    public static List<Merit> LoadFromDocs(ILogger logger)
     {
-        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
-        if (seedDir == null)
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson("merits.json", logger);
+        if (doc == null)
         {
             return GetAllMerits();
         }
 
-        var path = Path.Combine(seedDir, "merits.json");
-        if (!File.Exists(path))
-        {
-            return GetAllMerits();
-        }
+        var result = new List<Merit>();
+        var nameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        try
+        foreach (var el in doc.RootElement.EnumerateArray())
         {
-            string json = File.ReadAllText(path);
-            using var doc = JsonDocument.Parse(json);
-            var result = new List<Merit>();
-            var nameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var el in doc.RootElement.EnumerateArray())
+            string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+            if (string.IsNullOrEmpty(name))
             {
-                string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
-                if (string.IsNullOrEmpty(name))
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                string description = el.TryGetProperty("description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
-                string rating = el.TryGetProperty("rating", out var rEl) ? rEl.GetString() ?? string.Empty : string.Empty;
-                string prerequisites = el.TryGetProperty("prerequisites", out var pEl) ? pEl.GetString() ?? string.Empty : string.Empty;
-                string rollInfo = el.TryGetProperty("roll info", out var rollEl) ? rollEl.GetString() ?? string.Empty : string.Empty;
-                string drawback = el.TryGetProperty("drawback", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
-                string sourceBook = el.TryGetProperty("source book", out var sEl) ? sEl.GetString() ?? string.Empty : string.Empty;
+            string description = el.TryGetProperty("description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
+            string rating = el.TryGetProperty("rating", out var rEl) ? rEl.GetString() ?? string.Empty : string.Empty;
+            string prerequisites = el.TryGetProperty("prerequisites", out var pEl) ? pEl.GetString() ?? string.Empty : string.Empty;
+            string rollInfo = el.TryGetProperty("roll info", out var rollEl) ? rollEl.GetString() ?? string.Empty : string.Empty;
+            string drawback = el.TryGetProperty("drawback", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
+            string sourceBook = el.TryGetProperty("source book", out var sEl) ? sEl.GetString() ?? string.Empty : string.Empty;
 
-                var fullDescription = BuildDescription(description, prerequisites, rollInfo, drawback, sourceBook);
-                var validRatings = MapRatingToBullets(rating);
+            var fullDescription = BuildDescription(description, prerequisites, rollInfo, drawback, sourceBook);
+            var validRatings = MapRatingToBullets(rating);
 
+            result.Add(new Merit
+            {
+                Name = name,
+                Description = fullDescription,
+                ValidRatings = validRatings,
+                RequiresSpecification = false,
+                CanBePurchasedMultipleTimes = false,
+                IsHomebrew = false,
+            });
+            nameSet.Add(name);
+        }
+
+        foreach (var statusName in _statusMeritNames)
+        {
+            if (!nameSet.Contains(statusName))
+            {
                 result.Add(new Merit
                 {
-                    Name = name,
-                    Description = fullDescription,
-                    ValidRatings = validRatings,
+                    Name = statusName,
+                    Description = "Your standing within the covenant.",
+                    ValidRatings = "\u2022 to \u2022\u2022\u2022\u2022\u2022",
                     RequiresSpecification = false,
                     CanBePurchasedMultipleTimes = false,
                     IsHomebrew = false,
                 });
-                nameSet.Add(name);
             }
-
-            foreach (var statusName in _statusMeritNames)
-            {
-                if (!nameSet.Contains(statusName))
-                {
-                    result.Add(new Merit
-                    {
-                        Name = statusName,
-                        Description = "Your standing within the covenant.",
-                        ValidRatings = "\u2022 to \u2022\u2022\u2022\u2022\u2022",
-                        RequiresSpecification = false,
-                        CanBePurchasedMultipleTimes = false,
-                        IsHomebrew = false,
-                    });
-                }
-            }
-
-            return result.Count > 0 ? result : GetAllMerits();
         }
-        catch
-        {
-            return GetAllMerits();
-        }
+
+        return result.Count > 0 ? result : GetAllMerits();
     }
 
     /// <summary>Returns the full list of official merits for seeding (fallback when JSON unavailable).</summary>

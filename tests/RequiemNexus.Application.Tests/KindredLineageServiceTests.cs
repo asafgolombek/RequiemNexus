@@ -55,15 +55,29 @@ public class KindredLineageServiceTests
         IDiceService? diceService = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
+        return new KindredLineageService(
+            new TestApplicationDbContextFactory(options),
+            auth,
+            new RelationshipWebMetrics(_meterFactory.Value),
+            NullLogger<KindredLineageService>.Instance);
+    }
+
+    private static BloodSympathyRollService CreateBloodSympathyService(
+        DbContextOptions<ApplicationDbContext> options,
+        IAuthorizationHelper? authHelper = null,
+        ITraitResolver? traitResolver = null,
+        IDiceService? diceService = null)
+    {
+        var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var traits = traitResolver ?? CreateTraitResolverMock(2).Object;
         var dice = diceService ?? CreateDiceMock(1).Object;
-        return new KindredLineageService(
+        return new BloodSympathyRollService(
             new TestApplicationDbContextFactory(options),
             auth,
             traits,
             dice,
             new RelationshipWebMetrics(_meterFactory.Value),
-            NullLogger<KindredLineageService>.Instance);
+            NullLogger<BloodSympathyRollService>.Instance);
     }
 
     private static Mock<IAuthorizationHelper> CreatePermissiveAuthMock()
@@ -233,7 +247,7 @@ public class KindredLineageServiceTests
         }
 
         var dice = CreateDiceMock(3);
-        var service = CreateService(options, diceService: dice.Object);
+        var service = CreateBloodSympathyService(options, diceService: dice.Object);
         Result<RollResult> result = await service.RollBloodSympathyAsync(2, 1, "u2");
 
         Assert.True(result.IsSuccess);
@@ -266,7 +280,7 @@ public class KindredLineageServiceTests
             await ctx.SaveChangesAsync();
         }
 
-        var service = CreateService(options);
+        var service = CreateBloodSympathyService(options);
         Result<RollResult> result = await service.RollBloodSympathyAsync(5, 1, "u");
 
         Assert.False(result.IsSuccess);
@@ -286,7 +300,7 @@ public class KindredLineageServiceTests
             await ctx.SaveChangesAsync();
         }
 
-        var service = CreateService(options);
+        var service = CreateBloodSympathyService(options);
         Result<RollResult> result = await service.RollBloodSympathyAsync(1, 2, "u");
 
         Assert.False(result.IsSuccess);

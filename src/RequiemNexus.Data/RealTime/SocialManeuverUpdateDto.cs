@@ -17,7 +17,7 @@ namespace RequiemNexus.Data.RealTime;
 /// <param name="Status">Maneuver lifecycle status.</param>
 /// <param name="CumulativePenaltyDice">Cumulative failure penalty dice.</param>
 /// <param name="LastRollAtUtc">Last open/force roll instant (UTC).</param>
-/// <param name="GoalDescription">Stated goal text.</param>
+/// <param name="GoalDescription">Stated goal text. Over SignalR campaign broadcast this may be empty for privacy; the Storyteller receives a separate copy with the full text.</param>
 public record SocialManeuverUpdateDto(
     int CampaignId,
     int ManeuverId,

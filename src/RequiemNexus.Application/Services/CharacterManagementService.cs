@@ -71,6 +71,7 @@ public class CharacterManagementService(
             .Include(c => c.Banes)
             .Include(c => c.Aspirations)
             .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
 
@@ -250,6 +251,7 @@ public class CharacterManagementService(
             .Include(c => c.Aspirations)
             .Include(c => c.Banes)
             .AsNoTracking()
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Id == characterId);
 
         if (character == null)

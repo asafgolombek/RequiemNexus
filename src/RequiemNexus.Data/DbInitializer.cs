@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.SeedData;
 
@@ -11,7 +12,7 @@ public static class DbInitializer
     /// <summary>Default activation cost when no structured requirements are specified (Phase 9.5).</summary>
     private const string _defaultRiteRequirementsJson = """[{"type":"InternalVitae","value":1,"isConsumed":true}]""";
 
-    public static async Task InitializeAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager, bool runMigrations = false)
+    public static async Task InitializeAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager, ILogger logger, bool runMigrations = false)
     {
         if (runMigrations)
         {
@@ -20,15 +21,15 @@ public static class DbInitializer
 
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
-        await SeedMeritsAsync(context);
+        await SeedMeritsAsync(context, logger);
         await SeedEquipmentCatalogAsync(context);
-        await SeedCovenantsAsync(context);
+        await SeedCovenantsAsync(context, logger);
         await SeedCovenantDefinitionMeritsAsync(context);
-        await SeedBloodlinesAsync(context);
-        await SeedDevotionsAsync(context);
-        await SeedSorceryRitesAsync(context);
+        await SeedBloodlinesAsync(context, logger);
+        await SeedDevotionsAsync(context, logger);
+        await SeedSorceryRitesAsync(context, logger);
         await EnsureBloodSorceryPhaseExtensionsAsync(context);
-        await SeedCoilsAsync(context);
+        await SeedCoilsAsync(context, logger);
         await SeedPrebuiltStatBlocksAsync(context);
     }
 
@@ -64,7 +65,7 @@ public static class DbInitializer
         }
     }
 
-    private static async Task SeedMeritsAsync(ApplicationDbContext context)
+    private static async Task SeedMeritsAsync(ApplicationDbContext context, ILogger logger)
     {
         // Idempotent: never remove CharacterMerits or re-seed on every startup — that wiped player selections
         // after each host restart. Refreshing the official catalog requires an explicit migration or tooling.
@@ -73,7 +74,7 @@ public static class DbInitializer
             return;
         }
 
-        var merits = MeritSeedData.LoadFromDocs();
+        var merits = MeritSeedData.LoadFromDocs(logger);
         await context.Merits.AddRangeAsync(merits);
         await context.SaveChangesAsync();
 
@@ -87,14 +88,14 @@ public static class DbInitializer
         }
     }
 
-    private static async Task SeedCovenantsAsync(ApplicationDbContext context)
+    private static async Task SeedCovenantsAsync(ApplicationDbContext context, ILogger logger)
     {
         if (await context.CovenantDefinitions.AnyAsync())
         {
             return;
         }
 
-        var covenants = CovenantSeedData.LoadFromDocs();
+        var covenants = CovenantSeedData.LoadFromDocs(logger);
         await context.CovenantDefinitions.AddRangeAsync(covenants);
         await context.SaveChangesAsync();
     }
@@ -165,7 +166,7 @@ public static class DbInitializer
         }
     }
 
-    private static async Task SeedBloodlinesAsync(ApplicationDbContext context)
+    private static async Task SeedBloodlinesAsync(ApplicationDbContext context, ILogger logger)
     {
         if (await context.BloodlineDefinitions.AnyAsync())
         {
@@ -174,12 +175,12 @@ public static class DbInitializer
 
         var clans = await context.Clans.ToListAsync();
         var disciplines = await context.Disciplines.ToListAsync();
-        var bloodlines = BloodlineSeedData.LoadFromDocs(clans, disciplines);
+        var bloodlines = BloodlineSeedData.LoadFromDocs(clans, disciplines, logger);
         await context.BloodlineDefinitions.AddRangeAsync(bloodlines);
         await context.SaveChangesAsync();
     }
 
-    private static async Task SeedDevotionsAsync(ApplicationDbContext context)
+    private static async Task SeedDevotionsAsync(ApplicationDbContext context, ILogger logger)
     {
         if (await context.DevotionDefinitions.AnyAsync())
         {
@@ -187,12 +188,12 @@ public static class DbInitializer
         }
 
         var disciplines = await context.Disciplines.ToListAsync();
-        var devotions = DevotionSeedData.LoadFromDocs(disciplines);
+        var devotions = DevotionSeedData.LoadFromDocs(disciplines, logger);
         await context.DevotionDefinitions.AddRangeAsync(devotions);
         await context.SaveChangesAsync();
     }
 
-    private static async Task SeedSorceryRitesAsync(ApplicationDbContext context)
+    private static async Task SeedSorceryRitesAsync(ApplicationDbContext context, ILogger logger)
     {
         if (await context.SorceryRiteDefinitions.AnyAsync())
         {
@@ -212,7 +213,7 @@ public static class DbInitializer
             return;
         }
 
-        var entries = SorceryRiteSeedData.LoadFromDocs();
+        var entries = SorceryRiteSeedData.LoadFromDocs(logger);
         var rites = new List<SorceryRiteDefinition>();
 
         foreach (var (name, rating, prerequisites, effect, sorceryType) in entries)
@@ -344,9 +345,9 @@ public static class DbInitializer
     /// Ensures Scale and Coil definitions exist for every entry in coil seed data.
     /// Inserts only scales missing by name so existing databases pick up new Mysteries when seed JSON grows.
     /// </summary>
-    private static async Task SeedCoilsAsync(ApplicationDbContext context)
+    private static async Task SeedCoilsAsync(ApplicationDbContext context, ILogger logger)
     {
-        var entries = CoilSeedData.LoadFromDocs();
+        var entries = CoilSeedData.LoadFromDocs(logger);
         List<string> existingNames = await context.ScaleDefinitions
             .AsNoTracking()
             .Select(s => s.Name)

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain.Enums;
 
@@ -15,24 +15,15 @@ public static class SorceryRiteSeedData
     /// Loads rites from SeedSource/rites.json (Crúac) and SeedSource/rituals.json (Theban).
     /// Returns list of (Name, Rating, Prerequisites, Effect, SorceryType).
     /// </summary>
-    public static List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType)> LoadFromDocs()
+    public static List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType)> LoadFromDocs(ILogger logger)
     {
         var result = new List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType)>();
 
-        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
-        if (seedDir == null)
+        using (JsonDocument? ritesDoc = SeedDataLoader.TryLoadJson("rites.json", logger))
         {
-            return GetMinimalSeed();
-        }
-
-        var ritesPath = Path.Combine(seedDir, "rites.json");
-        if (File.Exists(ritesPath))
-        {
-            try
+            if (ritesDoc != null)
             {
-                string json = File.ReadAllText(ritesPath);
-                using var doc = JsonDocument.Parse(json);
-                foreach (var el in doc.RootElement.EnumerateArray())
+                foreach (var el in ritesDoc.RootElement.EnumerateArray())
                 {
                     string name = el.GetProperty("name").GetString() ?? string.Empty;
                     int rating = el.TryGetProperty("Rating", out var r) ? r.GetInt32() : 1;
@@ -44,24 +35,17 @@ public static class SorceryRiteSeedData
                     }
                 }
             }
-            catch
+            else
             {
                 result.AddRange(GetMinimalCruac());
             }
         }
-        else
-        {
-            result.AddRange(GetMinimalCruac());
-        }
 
-        var ritualsPath = Path.Combine(seedDir, "rituals.json");
-        if (File.Exists(ritualsPath))
+        using (JsonDocument? ritualsDoc = SeedDataLoader.TryLoadJson("rituals.json", logger))
         {
-            try
+            if (ritualsDoc != null)
             {
-                string json = File.ReadAllText(ritualsPath);
-                using var doc = JsonDocument.Parse(json);
-                foreach (var el in doc.RootElement.EnumerateArray())
+                foreach (var el in ritualsDoc.RootElement.EnumerateArray())
                 {
                     string name = el.GetProperty("name").GetString() ?? string.Empty;
                     int rating = el.TryGetProperty("Rating", out var r) ? r.GetInt32() : 1;
@@ -73,14 +57,10 @@ public static class SorceryRiteSeedData
                     }
                 }
             }
-            catch
+            else
             {
                 result.AddRange(GetMinimalTheban());
             }
-        }
-        else
-        {
-            result.AddRange(GetMinimalTheban());
         }
 
         return result.Count > 0 ? result : GetMinimalSeed();

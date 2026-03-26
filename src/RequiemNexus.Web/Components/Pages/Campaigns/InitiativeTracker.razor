@@ -11,6 +11,8 @@
 @using System.Threading
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IEncounterService EncounterService
+@inject IEncounterQueryService EncounterQueryService
+@inject IEncounterParticipantService EncounterParticipantService
 @inject IEncounterPrepService EncounterPrepService
 @inject INpcCombatService NpcCombatService
 @inject IChronicleNpcService ChronicleNpcService
@@ -707,7 +709,7 @@
             _accessDenied = false;
             try
             {
-                _encounter = await EncounterService.GetEncounterAsync(EncounterId, _currentUserId!);
+                _encounter = await EncounterQueryService.GetEncounterAsync(EncounterId, _currentUserId!);
             }
             catch (UnauthorizedAccessException)
             {
@@ -823,11 +825,11 @@
         {
             if (_addType == "character")
             {
-                await EncounterService.AddCharacterToEncounterAsync(EncounterId, _addCharacterId, _addInitMod, _addRoll, _currentUserId!);
+                await EncounterParticipantService.AddCharacterToEncounterAsync(EncounterId, _addCharacterId, _addInitMod, _addRoll, _currentUserId!);
             }
             else if (_addType == "npc")
             {
-                await EncounterService.AddNpcToEncounterAsync(
+                await EncounterParticipantService.AddNpcToEncounterAsync(
                     EncounterId,
                     _addNpcName.Trim(),
                     _addInitMod,
@@ -838,7 +840,7 @@
             }
             else
             {
-                await EncounterService.AddNpcToEncounterFromChronicleNpcAsync(
+                await EncounterParticipantService.AddNpcToEncounterFromChronicleNpcAsync(
                     EncounterId,
                     _addChronicleNpcId,
                     _addInitMod,
@@ -1085,7 +1087,7 @@
         _busy = true;
         try
         {
-            await EncounterService.RemoveEntryAsync(entryId, _currentUserId!);
+            await EncounterParticipantService.RemoveEntryAsync(entryId, _currentUserId!);
             await LoadEncounter();
         }
         finally

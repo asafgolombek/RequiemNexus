@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -46,25 +47,60 @@ public class SocialManeuveringServiceTests
             .Options;
     }
 
+    private static SocialManeuverLifecycleCoordinator CreateLifecycleCoordinator(
+        ISessionPublisher publisher,
+        IConditionService conditions) =>
+        new(
+            conditions,
+            publisher,
+            NullLogger<SocialManeuverLifecycleCoordinator>.Instance);
+
     private static SocialManeuveringService CreateService(
         DbContextOptions<ApplicationDbContext> options,
         IAuthorizationHelper? authHelper = null,
-        IDiceService? diceService = null,
         ISessionPublisher? sessionPublisher = null,
         IConditionService? conditionService = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
-        var dice = diceService ?? CreateDiceMock(1).Object;
         var logger = new Mock<ILogger<SocialManeuveringService>>().Object;
         var publisher = sessionPublisher ?? CreateSessionPublisherMock().Object;
         var conditions = conditionService ?? CreateConditionNoOpMock().Object;
+        var lifecycle = CreateLifecycleCoordinator(publisher, conditions);
         return new SocialManeuveringService(
             new TestApplicationDbContextFactory(options),
             auth,
-            dice,
-            publisher,
-            conditions,
+            lifecycle,
             logger);
+    }
+
+    private static SocialManeuverRollService CreateRollService(
+        DbContextOptions<ApplicationDbContext> options,
+        IAuthorizationHelper? authHelper = null,
+        IDiceService? diceService = null,
+        IConditionService? conditionService = null,
+        ISessionPublisher? sessionPublisher = null)
+    {
+        var auth = authHelper ?? CreatePermissiveAuthMock().Object;
+        var dice = diceService ?? CreateDiceMock(1).Object;
+        var publisher = sessionPublisher ?? CreateSessionPublisherMock().Object;
+        var conditions = conditionService ?? CreateConditionNoOpMock().Object;
+        var lifecycle = CreateLifecycleCoordinator(publisher, conditions);
+        return new SocialManeuverRollService(
+            new TestApplicationDbContextFactory(options),
+            auth,
+            dice,
+            lifecycle,
+            NullLogger<SocialManeuverRollService>.Instance);
+    }
+
+    private static SocialManeuverQueryService CreateQueryService(
+        DbContextOptions<ApplicationDbContext> options,
+        IAuthorizationHelper? authHelper = null)
+    {
+        var auth = authHelper ?? CreatePermissiveAuthMock().Object;
+        return new SocialManeuverQueryService(
+            new TestApplicationDbContextFactory(options),
+            auth);
     }
 
     private static Mock<IConditionService> CreateConditionNoOpMock()
@@ -95,6 +131,7 @@ public class SocialManeuveringServiceTests
             .Returns(Task.CompletedTask);
         var pub = new Mock<ISessionPublisher>();
         pub.Setup(p => p.Group(It.IsAny<int>())).Returns(client.Object);
+        pub.Setup(p => p.User(It.IsAny<string>())).Returns(client.Object);
         return pub;
     }
 
@@ -128,6 +165,18 @@ public class SocialManeuveringServiceTests
             ClanId = 1,
             CampaignId = 1,
             Humanity = 7,
+            Attributes =
+            [
+                new CharacterAttribute { Name = "Manipulation", Rating = 4, Category = TraitCategory.Social },
+                new CharacterAttribute { Name = "Presence", Rating = 4, Category = TraitCategory.Social },
+                new CharacterAttribute { Name = "Intelligence", Rating = 2, Category = TraitCategory.Mental },
+                new CharacterAttribute { Name = "Wits", Rating = 2, Category = TraitCategory.Mental },
+            ],
+            Skills =
+            [
+                new CharacterSkill { Name = "Persuasion", Rating = 4, Category = TraitCategory.Social },
+                new CharacterSkill { Name = "Socialize", Rating = 3, Category = TraitCategory.Social },
+            ],
         });
         ctx.ChronicleNpcs.Add(new ChronicleNpc
         {
@@ -199,12 +248,15 @@ public class SocialManeuveringServiceTests
         var options = CreateOptions(nameof(RollOpenDoorAsync_ReducesRemainingDoors_OnSuccess));
         using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(options, diceService: CreateDiceMock(3).Object);
+        var mutService = CreateService(options);
+        var rollService = CreateRollService(options, diceService: CreateDiceMock(3).Object);
 
-        SocialManeuver created = await service.CreateAsync(
+        SocialManeuver created = await mutService.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
 
-        (SocialManeuver updated, RollResult roll, int opened) = await service.RollOpenDoorAsync(created.Id, 5, "player");
+        var openResult = await rollService.RollOpenDoorAsync(created.Id, 5, "player");
+        Assert.True(openResult.IsSuccess);
+        (SocialManeuver updated, RollResult roll, int opened) = openResult.Value!;
 
         Assert.Equal(3, roll.Successes);
         Assert.Equal(1, opened);
@@ -219,13 +271,14 @@ public class SocialManeuveringServiceTests
         await SeedCampaignCharacterAndNpcAsync(ctx);
         var realAuth = new AuthorizationHelper(new TestApplicationDbContextFactory(options), NullLogger<AuthorizationHelper>.Instance);
 
-        var service = CreateService(options, authHelper: realAuth, diceService: CreateDiceMock(1).Object);
+        var mutService = CreateService(options, authHelper: realAuth);
+        var rollService = CreateRollService(options, authHelper: realAuth, diceService: CreateDiceMock(1).Object);
 
-        SocialManeuver created = await service.CreateAsync(
+        SocialManeuver created = await mutService.CreateAsync(
             1, 1, 1, "goal", false, false, false, "st-user");
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => service.RollOpenDoorAsync(created.Id, 5, "stranger"));
+            () => rollService.RollOpenDoorAsync(created.Id, 5, "stranger"));
     }
 
     [Fact]
@@ -276,10 +329,13 @@ public class SocialManeuveringServiceTests
         using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
         var client = new Mock<ISessionClient>();
+        var received = new List<SocialManeuverUpdateDto>();
         client.Setup(c => c.ReceiveSocialManeuverUpdate(It.IsAny<SocialManeuverUpdateDto>()))
+            .Callback<SocialManeuverUpdateDto>(received.Add)
             .Returns(Task.CompletedTask);
         var pub = new Mock<ISessionPublisher>();
         pub.Setup(p => p.Group(It.IsAny<int>())).Returns(client.Object);
+        pub.Setup(p => p.User(It.IsAny<string>())).Returns(client.Object);
 
         SocialManeuveringService service = CreateService(options, sessionPublisher: pub.Object);
 
@@ -293,9 +349,9 @@ public class SocialManeuveringServiceTests
             false,
             "st-user");
 
-        client.Verify(
-            c => c.ReceiveSocialManeuverUpdate(It.Is<SocialManeuverUpdateDto>(d => d.ManeuverId == m.Id && d.CampaignId == 1)),
-            Times.Once);
+        Assert.Equal(2, received.Count);
+        Assert.Contains(received, d => d.ManeuverId == m.Id && d.CampaignId == 1 && d.GoalDescription == string.Empty);
+        Assert.Contains(received, d => d.ManeuverId == m.Id && d.CampaignId == 1 && d.GoalDescription == "goal");
     }
 
     [Fact]
@@ -304,10 +360,10 @@ public class SocialManeuveringServiceTests
         var options = CreateOptions(nameof(ListForCampaignAsync_IncludesInitiatorAndTargetNpcNames));
         using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
-        var service = CreateService(options);
-        await service.CreateAsync(1, 1, 1, "goal", false, false, false, "st-user");
+        var mutService = CreateService(options);
+        await mutService.CreateAsync(1, 1, 1, "goal", false, false, false, "st-user");
 
-        IReadOnlyList<SocialManeuver> list = await service.ListForCampaignAsync(1, "st-user");
+        IReadOnlyList<SocialManeuver> list = await CreateQueryService(options).ListForCampaignAsync(1, "st-user");
 
         Assert.Single(list);
         Assert.Equal("PC", list[0].InitiatorCharacter?.Name);
@@ -370,9 +426,10 @@ public class SocialManeuveringServiceTests
         using var ctx = new ApplicationDbContext(options);
         await SeedCampaignCharacterAndNpcAsync(ctx);
         var conditions = CreateConditionNoOpMock();
-        var service = CreateService(options, diceService: CreateDiceMock(5).Object, conditionService: conditions.Object);
+        var mutService = CreateService(options);
+        var rollService = CreateRollService(options, diceService: CreateDiceMock(5).Object, conditionService: conditions.Object);
 
-        SocialManeuver created = await service.CreateAsync(
+        SocialManeuver created = await mutService.CreateAsync(
             1,
             1,
             1,
@@ -382,7 +439,8 @@ public class SocialManeuveringServiceTests
             actsAgainstVirtueOrMask: false,
             "st-user");
 
-        await service.RollOpenDoorAsync(created.Id, 8, "player");
+        var rollResult = await rollService.RollOpenDoorAsync(created.Id, 8, "player");
+        Assert.True(rollResult.IsSuccess);
 
         conditions.Verify(
             c => c.ApplyConditionAsync(
@@ -392,5 +450,40 @@ public class SocialManeuveringServiceTests
                 It.IsAny<string?>(),
                 "player"),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task RollOpenDoorAsync_DeclaredPoolAboveSheet_ReturnsFailure()
+    {
+        var options = CreateOptions(nameof(RollOpenDoorAsync_DeclaredPoolAboveSheet_ReturnsFailure));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var mutService = CreateService(options);
+        var rollService = CreateRollService(options, diceService: CreateDiceMock(1).Object);
+
+        SocialManeuver created = await mutService.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        var result = await rollService.RollOpenDoorAsync(created.Id, 20, "player");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("exceeds", result.Error!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RollOpenDoorAsync_StorytellerMayDeclarePoolAboveSheet()
+    {
+        var options = CreateOptions(nameof(RollOpenDoorAsync_StorytellerMayDeclarePoolAboveSheet));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        var mutService = CreateService(options);
+        var rollService = CreateRollService(options, diceService: CreateDiceMock(3).Object);
+
+        SocialManeuver created = await mutService.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        var result = await rollService.RollOpenDoorAsync(created.Id, 25, "st-user");
+
+        Assert.True(result.IsSuccess);
     }
 }

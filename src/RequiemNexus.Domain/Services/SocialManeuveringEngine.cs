@@ -180,5 +180,63 @@ public static class SocialManeuveringEngine
         return (newProgress, cluesGranted);
     }
 
+    /// <summary>
+    /// Largest standard Attribute + Skill pool commonly used for Social maneuvering approaches (VtR 2e mental/social traits).
+    /// Used to cap player-declared dice on the server; excludes specialties and situational modifiers.
+    /// </summary>
+    /// <param name="intelligence">Intelligence dots.</param>
+    /// <param name="wits">Wits dots.</param>
+    /// <param name="manipulation">Manipulation dots.</param>
+    /// <param name="presence">Presence dots.</param>
+    /// <param name="empathy">Empathy dots.</param>
+    /// <param name="expression">Expression dots.</param>
+    /// <param name="intimidation">Intimidation dots.</param>
+    /// <param name="persuasion">Persuasion dots.</param>
+    /// <param name="socialize">Socialize dots.</param>
+    /// <param name="streetwise">Streetwise dots.</param>
+    /// <param name="subterfuge">Subterfuge dots.</param>
+    /// <returns>Maximum of the listed approach pools (non-negative).</returns>
+    public static int ComputeMaximumSocialApproachDicePool(
+        int intelligence,
+        int wits,
+        int manipulation,
+        int presence,
+        int empathy,
+        int expression,
+        int intimidation,
+        int persuasion,
+        int socialize,
+        int streetwise,
+        int subterfuge)
+    {
+        int[] pools =
+        [
+            manipulation + persuasion,
+            manipulation + socialize,
+            manipulation + subterfuge,
+            manipulation + intimidation,
+            manipulation + streetwise,
+            presence + persuasion,
+            presence + socialize,
+            presence + empathy,
+            presence + intimidation,
+            presence + expression,
+            intelligence + expression,
+            wits + empathy,
+            wits + expression,
+        ];
+
+        int max = 0;
+        foreach (int p in pools)
+        {
+            if (p > max)
+            {
+                max = p;
+            }
+        }
+
+        return max;
+    }
+
     private static int ClampDot(int value) => Math.Clamp(value, 1, 5);
 }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.SeedData;
 using RequiemNexus.Web.Helpers;
@@ -10,7 +11,7 @@ public class MeritSeedDataResourcesValidRatingsTests
     [Fact]
     public void LoadFromDocs_Resources_uses_real_bullets_and_parses_as_one_to_five()
     {
-        List<Merit> merits = MeritSeedData.LoadFromDocs();
+        List<Merit> merits = MeritSeedData.LoadFromDocs(NullLogger.Instance);
         Merit? resources = merits.FirstOrDefault(m => m.Name == "Resources");
         Assert.NotNull(resources);
         Assert.Contains("\u2022", resources!.ValidRatings, StringComparison.Ordinal);

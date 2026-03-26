@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data.SeedData;
@@ -14,57 +15,42 @@ public static class CovenantSeedData
     /// Maps short description to Description; VII is not playable; Crone and Lancea support Blood Sorcery.
     /// Falls back to <see cref="GetAllCovenants"/> when file is missing or invalid.
     /// </summary>
-    public static List<CovenantDefinition> LoadFromDocs()
+    public static List<CovenantDefinition> LoadFromDocs(ILogger logger)
     {
-        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
-        if (seedDir == null)
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson("Covenants.json", logger);
+        if (doc == null)
         {
             return GetAllCovenants();
         }
 
-        var path = Path.Combine(seedDir, "Covenants.json");
-        if (!File.Exists(path))
-        {
-            return GetAllCovenants();
-        }
+        var result = new List<CovenantDefinition>();
 
-        try
+        foreach (var el in doc.RootElement.EnumerateArray())
         {
-            string json = File.ReadAllText(path);
-            using var doc = JsonDocument.Parse(json);
-            var result = new List<CovenantDefinition>();
+            string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+            string description = el.TryGetProperty("short description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
 
-            foreach (var el in doc.RootElement.EnumerateArray())
+            if (string.IsNullOrEmpty(name))
             {
-                string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
-                string description = el.TryGetProperty("short description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
-
-                if (string.IsNullOrEmpty(name))
-                {
-                    continue;
-                }
-
-                bool isPlayable = !string.Equals(name, "VII", StringComparison.OrdinalIgnoreCase);
-                bool supportsBloodSorcery = string.Equals(name, "The Circle of the Crone", StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(name, "The Lancea et Sanctum", StringComparison.OrdinalIgnoreCase);
-                bool supportsOrdoRituals = string.Equals(name, "The Ordo Dracul", StringComparison.OrdinalIgnoreCase);
-
-                result.Add(new CovenantDefinition
-                {
-                    Name = name,
-                    Description = description,
-                    IsPlayable = isPlayable,
-                    SupportsBloodSorcery = supportsBloodSorcery,
-                    SupportsOrdoRituals = supportsOrdoRituals,
-                });
+                continue;
             }
 
-            return result.Count > 0 ? result : GetAllCovenants();
+            bool isPlayable = !string.Equals(name, "VII", StringComparison.OrdinalIgnoreCase);
+            bool supportsBloodSorcery = string.Equals(name, "The Circle of the Crone", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(name, "The Lancea et Sanctum", StringComparison.OrdinalIgnoreCase);
+            bool supportsOrdoRituals = string.Equals(name, "The Ordo Dracul", StringComparison.OrdinalIgnoreCase);
+
+            result.Add(new CovenantDefinition
+            {
+                Name = name,
+                Description = description,
+                IsPlayable = isPlayable,
+                SupportsBloodSorcery = supportsBloodSorcery,
+                SupportsOrdoRituals = supportsOrdoRituals,
+            });
         }
-        catch
-        {
-            return GetAllCovenants();
-        }
+
+        return result.Count > 0 ? result : GetAllCovenants();
     }
 
     /// <summary>

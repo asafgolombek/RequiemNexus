@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data.SeedData;
@@ -23,112 +24,97 @@ public static class BloodlineSeedData
     /// Skips bloodlines that reference disciplines not in the database.
     /// Falls back to <see cref="GetAllBloodlines"/> when file is missing or invalid.
     /// </summary>
-    public static List<BloodlineDefinition> LoadFromDocs(List<Clan> clans, List<Discipline> disciplines)
+    public static List<BloodlineDefinition> LoadFromDocs(List<Clan> clans, List<Discipline> disciplines, ILogger logger)
     {
-        string? seedDir = SeedSourcePathResolver.GetSeedDirectory();
-        if (seedDir == null)
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson("bloodlines.json", logger);
+        if (doc == null)
         {
             return GetAllBloodlines(clans, disciplines);
         }
 
-        var path = Path.Combine(seedDir, "bloodlines.json");
-        if (!File.Exists(path))
-        {
-            return GetAllBloodlines(clans, disciplines);
-        }
+        var result = new List<BloodlineDefinition>();
+        var clanByName = clans.ToDictionary(c => c.Name, c => c, StringComparer.OrdinalIgnoreCase);
+        var disciplineByName = disciplines.ToDictionary(d => d.Name, d => d, StringComparer.OrdinalIgnoreCase);
+        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        try
+        foreach (var parentEl in doc.RootElement.EnumerateArray())
         {
-            string json = File.ReadAllText(path);
-            using var doc = JsonDocument.Parse(json);
-            var result = new List<BloodlineDefinition>();
-            var clanByName = clans.ToDictionary(c => c.Name, c => c, StringComparer.OrdinalIgnoreCase);
-            var disciplineByName = disciplines.ToDictionary(d => d.Name, d => d, StringComparer.OrdinalIgnoreCase);
-            var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var parentEl in doc.RootElement.EnumerateArray())
+            string parentClanName = parentEl.TryGetProperty("parent_clan", out var pcEl) ? pcEl.GetString() ?? string.Empty : string.Empty;
+            if (!clanByName.TryGetValue(parentClanName, out var clan) || !_clanDisciplineNames.TryGetValue(parentClanName, out var clanDiscNames))
             {
-                string parentClanName = parentEl.TryGetProperty("parent_clan", out var pcEl) ? pcEl.GetString() ?? string.Empty : string.Empty;
-                if (!clanByName.TryGetValue(parentClanName, out var clan) || !_clanDisciplineNames.TryGetValue(parentClanName, out var clanDiscNames))
-                {
-                    continue;
-                }
-
-                var clanDiscSet = new HashSet<string>(clanDiscNames, StringComparer.OrdinalIgnoreCase);
-
-                if (!parentEl.TryGetProperty("bloodlines", out var bloodlinesEl))
-                {
-                    continue;
-                }
-
-                foreach (var blEl in bloodlinesEl.EnumerateArray())
-                {
-                    string name = blEl.TryGetProperty("name", out var nEl) ? nEl.GetString() ?? string.Empty : string.Empty;
-                    string description = blEl.TryGetProperty("description", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
-                    string weakness = blEl.TryGetProperty("weakness", out var wEl) ? wEl.GetString() ?? string.Empty : string.Empty;
-                    string specialFeature = blEl.TryGetProperty("special_feature", out var sfEl) ? sfEl.GetString() ?? string.Empty : string.Empty;
-
-                    if (string.IsNullOrEmpty(name))
-                    {
-                        continue;
-                    }
-
-                    if (seenNames.Contains(name))
-                    {
-                        var existing = result.First(b => string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase));
-                        existing.AllowedParentClans.Add(new BloodlineClan { ClanId = clan.Id });
-                        continue;
-                    }
-
-                    if (!blEl.TryGetProperty("disciplines", out var discEl))
-                    {
-                        continue;
-                    }
-
-                    var blDiscNames = new List<string>();
-                    foreach (var d in discEl.EnumerateArray())
-                    {
-                        string? dn = d.GetString();
-                        if (!string.IsNullOrEmpty(dn))
-                        {
-                            blDiscNames.Add(dn);
-                        }
-                    }
-
-                    if (blDiscNames.Count != 4)
-                    {
-                        continue;
-                    }
-
-                    string? fourthName = blDiscNames.FirstOrDefault(d => !clanDiscSet.Contains(d));
-                    if (string.IsNullOrEmpty(fourthName) || !disciplineByName.TryGetValue(fourthName, out var fourthDisc))
-                    {
-                        continue;
-                    }
-
-                    var def = new BloodlineDefinition
-                    {
-                        Name = name,
-                        Description = description,
-                        FourthDisciplineId = fourthDisc.Id,
-                        PrerequisiteBloodPotency = 2,
-                        BaneOverride = weakness,
-                        CustomRuleOverride = !string.Equals(specialFeature, "None", StringComparison.OrdinalIgnoreCase),
-                        CustomRuleOverrideDescription = string.Equals(specialFeature, "None", StringComparison.OrdinalIgnoreCase) ? null : specialFeature,
-                        AllowedParentClans = [new BloodlineClan { ClanId = clan.Id }],
-                    };
-
-                    result.Add(def);
-                    seenNames.Add(name);
-                }
+                continue;
             }
 
-            return result.Count > 0 ? result : GetAllBloodlines(clans, disciplines);
+            var clanDiscSet = new HashSet<string>(clanDiscNames, StringComparer.OrdinalIgnoreCase);
+
+            if (!parentEl.TryGetProperty("bloodlines", out var bloodlinesEl))
+            {
+                continue;
+            }
+
+            foreach (var blEl in bloodlinesEl.EnumerateArray())
+            {
+                string name = blEl.TryGetProperty("name", out var nEl) ? nEl.GetString() ?? string.Empty : string.Empty;
+                string description = blEl.TryGetProperty("description", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
+                string weakness = blEl.TryGetProperty("weakness", out var wEl) ? wEl.GetString() ?? string.Empty : string.Empty;
+                string specialFeature = blEl.TryGetProperty("special_feature", out var sfEl) ? sfEl.GetString() ?? string.Empty : string.Empty;
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    continue;
+                }
+
+                if (seenNames.Contains(name))
+                {
+                    var existing = result.First(b => string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase));
+                    existing.AllowedParentClans.Add(new BloodlineClan { ClanId = clan.Id });
+                    continue;
+                }
+
+                if (!blEl.TryGetProperty("disciplines", out var discEl))
+                {
+                    continue;
+                }
+
+                var blDiscNames = new List<string>();
+                foreach (var d in discEl.EnumerateArray())
+                {
+                    string? dn = d.GetString();
+                    if (!string.IsNullOrEmpty(dn))
+                    {
+                        blDiscNames.Add(dn);
+                    }
+                }
+
+                if (blDiscNames.Count != 4)
+                {
+                    continue;
+                }
+
+                string? fourthName = blDiscNames.FirstOrDefault(d => !clanDiscSet.Contains(d));
+                if (string.IsNullOrEmpty(fourthName) || !disciplineByName.TryGetValue(fourthName, out var fourthDisc))
+                {
+                    continue;
+                }
+
+                var def = new BloodlineDefinition
+                {
+                    Name = name,
+                    Description = description,
+                    FourthDisciplineId = fourthDisc.Id,
+                    PrerequisiteBloodPotency = 2,
+                    BaneOverride = weakness,
+                    CustomRuleOverride = !string.Equals(specialFeature, "None", StringComparison.OrdinalIgnoreCase),
+                    CustomRuleOverrideDescription = string.Equals(specialFeature, "None", StringComparison.OrdinalIgnoreCase) ? null : specialFeature,
+                    AllowedParentClans = [new BloodlineClan { ClanId = clan.Id }],
+                };
+
+                result.Add(def);
+                seenNames.Add(name);
+            }
         }
-        catch
-        {
-            return GetAllBloodlines(clans, disciplines);
-        }
+
+        return result.Count > 0 ? result : GetAllBloodlines(clans, disciplines);
     }
 
     /// <summary>

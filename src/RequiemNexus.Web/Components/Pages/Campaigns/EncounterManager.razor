@@ -9,6 +9,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
 @inject IEncounterService EncounterService
+@inject IEncounterQueryService EncounterQueryService
+@inject IEncounterParticipantService EncounterParticipantService
 @inject IEncounterPrepService EncounterPrepService
 @inject IEncounterTemplateService EncounterTemplateService
 @inject IChronicleNpcService ChronicleNpcService
@@ -558,7 +560,7 @@
                 return;
             }
 
-            _encounters = await EncounterService.GetEncountersAsync(Id, _currentUserId!);
+            _encounters = await EncounterQueryService.GetEncountersAsync(Id, _currentUserId!);
 
             _availableBlocks = await NpcStatBlockService.GetAvailableBlocksAsync(Id);
             _chronicleNpcs = await ChronicleNpcService.GetNpcsAsync(Id, includeDeceased: false);
@@ -779,7 +781,7 @@
         }
         else if (!string.IsNullOrEmpty(_currentUserId))
         {
-            CombatEncounter? live = await EncounterService.GetEncounterAsync(encounterId, _currentUserId);
+            CombatEncounter? live = await EncounterQueryService.GetEncounterAsync(encounterId, _currentUserId);
             if (live?.NpcTemplates != null)
             {
                 foreach (EncounterNpcTemplate t in live.NpcTemplates)
@@ -938,7 +940,7 @@
             }
             else
             {
-                await EncounterService.AddNpcToEncounterFromChronicleNpcAsync(
+                await EncounterParticipantService.AddNpcToEncounterFromChronicleNpcAsync(
                     _activeEncounterForNpc.Value,
                     _selectedChronicleNpcId,
                     _npcInitMod,
@@ -996,7 +998,7 @@
             }
             else
             {
-                await EncounterService.AddNpcToEncounterAsync(
+                await EncounterParticipantService.AddNpcToEncounterAsync(
                     _activeEncounterForNpc.Value,
                     block.Name,
                     _npcInitMod,
@@ -1130,7 +1132,7 @@
                 await EncounterService.LaunchEncounterAsync(encounterId, _currentUserId!);
             }
 
-            await EncounterService.BulkAddOnlinePlayersAsync(encounterId, ids, _currentUserId!);
+            await EncounterParticipantService.BulkAddOnlinePlayersAsync(encounterId, ids, _currentUserId!);
 
             CancelSmartLaunch();
             await LoadEncounters();

@@ -373,6 +373,7 @@ public class CharacterExportService(ApplicationDbContext dbContext) : ICharacter
             .Include(c => c.Banes)
             .Where(c => c.Id == characterId && c.ApplicationUserId == userId)
             .AsNoTracking()
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
     }
 }

@@ -5,6 +5,7 @@
 @using RequiemNexus.Domain.Enums
 @using RequiemNexus.Web.Services
 @inject ISocialManeuveringService SocialService
+@inject ISocialManeuverRollService SocialRollService
 @inject ToastService ToastService
 
 <div class="card-rn glimpse-card">
@@ -314,13 +315,25 @@
 
     private async Task RollOpen(int mId)
     {
-        await SocialService.RollOpenDoorAsync(mId, _openPool[mId], StorytellerId);
+        var result = await SocialRollService.RollOpenDoorAsync(mId, _openPool[mId], StorytellerId);
+        if (!result.IsSuccess)
+        {
+            ToastService.Show("Open Door", result.Error ?? "Roll failed.", ToastType.Error);
+            return;
+        }
+
         await OnChanged.InvokeAsync();
     }
 
     private async Task RollForce(int mId)
     {
-        await SocialService.RollForceDoorsAsync(mId, _forcePool[mId], _forceHard[mId], _forceBp[mId], StorytellerId);
+        var result = await SocialRollService.RollForceDoorsAsync(mId, _forcePool[mId], _forceHard[mId], _forceBp[mId], StorytellerId);
+        if (!result.IsSuccess)
+        {
+            ToastService.Show("Force Doors", result.Error ?? "Roll failed.", ToastType.Error);
+            return;
+        }
+
         await OnChanged.InvokeAsync();
     }
 }

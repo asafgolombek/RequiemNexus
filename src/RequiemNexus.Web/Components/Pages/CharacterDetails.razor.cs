@@ -618,8 +618,13 @@ public partial class CharacterDetails : IAsyncDisposable
             _rollerBaseDice = 0;
             _isRollerOpen = true;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(
+                ex,
+                "Failed to resolve devotion pool for {DevotionName} on character {CharacterId}; opening roller with 0 dice",
+                cd.DevotionDefinition.Name,
+                Id);
             _rollerBaseDice = 0;
             _isRollerOpen = true;
         }
@@ -1077,7 +1082,7 @@ public partial class CharacterDetails : IAsyncDisposable
                     AcknowledgeMaterialFocus: true);
             }
 
-            int dice = await SorceryService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
+            int dice = await SorceryActivationService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
             _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
             _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
             _rollerBaseDice = dice;

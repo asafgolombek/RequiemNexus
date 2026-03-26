@@ -1,6 +1,6 @@
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.DTOs
-@inject IBloodBondService BloodBondService
+@inject IBloodBondQueryService BloodBondQueryService
 
 <section class="cs-section cs-blood-bonds">
     <h2>Blood Bonds</h2>
@@ -69,7 +69,7 @@
         _loading = true;
         try
         {
-            IReadOnlyList<BloodBondDto> list = await BloodBondService.GetBondsForThrallAsync(CharacterId, CurrentUserId);
+            IReadOnlyList<BloodBondDto> list = await BloodBondQueryService.GetBondsForThrallAsync(CharacterId, CurrentUserId);
             _bonds = list.ToList();
         }
         catch

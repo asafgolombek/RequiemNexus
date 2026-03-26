@@ -196,48 +196,6 @@ public class BloodBondService(
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<BloodBondDto>> GetBondsForThrallAsync(int characterId, string userId)
-    {
-        await _authHelper.RequireCharacterAccessAsync(characterId, userId, "view Blood Bonds");
-        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
-        DateTime now = DateTime.UtcNow;
-        List<int> ids = await db.BloodBonds.AsNoTracking()
-            .Where(b => b.ThrallCharacterId == characterId)
-            .Select(b => b.Id)
-            .ToListAsync();
-
-        List<BloodBondDto> list = [];
-        foreach (int id in ids)
-        {
-            list.Add(await MapToDtoAsync(db, id, now));
-        }
-
-        return list;
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<BloodBondDto>> GetBondsInChronicleAsync(int chronicleId, string userId)
-    {
-        await _authHelper.RequireStorytellerAsync(chronicleId, userId, "list Blood Bonds");
-        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
-        DateTime now = DateTime.UtcNow;
-        List<int> ids = await db.BloodBonds.AsNoTracking()
-            .Where(b => b.ChronicleId == chronicleId)
-            .OrderBy(b => b.ThrallCharacterId)
-            .ThenBy(b => b.RegnantKey)
-            .Select(b => b.Id)
-            .ToListAsync();
-
-        List<BloodBondDto> list = [];
-        foreach (int id in ids)
-        {
-            list.Add(await MapToDtoAsync(db, id, now));
-        }
-
-        return list;
-    }
-
-    /// <inheritdoc />
     public async Task<Result<Unit>> FadeBondAsync(int bondId, string userId)
     {
         string correlationId = AmbientCorrelation.ForNewOperation();
@@ -289,30 +247,6 @@ public class BloodBondService(
             correlationId);
 
         return Result<Unit>.Success(Unit.Value);
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<BloodBondDto>> GetFadingAlertsAsync(int chronicleId, string userId)
-    {
-        await _authHelper.RequireStorytellerAsync(chronicleId, userId, "view Blood Bond fading alerts");
-        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
-        DateTime now = DateTime.UtcNow;
-        List<BloodBondDto> all = [];
-        List<int> ids = await db.BloodBonds.AsNoTracking()
-            .Where(b => b.ChronicleId == chronicleId)
-            .Select(b => b.Id)
-            .ToListAsync();
-
-        foreach (int id in ids)
-        {
-            BloodBondDto dto = await MapToDtoAsync(db, id, now);
-            if (dto.IsFading)
-            {
-                all.Add(dto);
-            }
-        }
-
-        return all;
     }
 
     private static string BondSourceTag(int bondId) => $"bloodbond:{bondId}";
@@ -479,7 +413,10 @@ public class BloodBondService(
             .Include(b => b.RegnantNpc)
             .FirstAsync(b => b.Id == bondId);
 
-        string regnantLabel = ResolveRegnantLabel(bond);
+        string regnantLabel = bond.RegnantCharacter?.Name
+            ?? bond.RegnantNpc?.Name
+            ?? bond.RegnantDisplayName
+            ?? string.Empty;
         string activeName = _conditionRules.GetConditionDescription(BloodBondRules.ConditionForStage(bond.Stage));
 
         return new BloodBondDto(
@@ -495,12 +432,6 @@ public class BloodBondService(
             BloodBondRules.IsFading(bond.LastFedAt, now),
             activeName);
     }
-
-    private static string ResolveRegnantLabel(BloodBond bond) =>
-        bond.RegnantCharacter?.Name
-        ?? bond.RegnantNpc?.Name
-        ?? bond.RegnantDisplayName
-        ?? string.Empty;
 
     private async Task<string> RegnantLabelAsync(ApplicationDbContext db, BloodBond bond)
     {
