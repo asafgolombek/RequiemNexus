@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Web.Helpers;
@@ -37,7 +38,7 @@ public class DbInitializerTests
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
 
         var bloodlines = await context.BloodlineDefinitions
             .Include(b => b.AllowedParentClans)
@@ -70,7 +71,7 @@ public class DbInitializerTests
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
 
         var devotions = await context.DevotionDefinitions
             .Include(d => d.Prerequisites)
@@ -99,7 +100,7 @@ public class DbInitializerTests
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
 
         var clanIds = await context.Clans.Select(c => c.Id).ToHashSetAsync();
         var disciplineIds = await context.Disciplines.Select(d => d.Id).ToHashSetAsync();
@@ -126,11 +127,11 @@ public class DbInitializerTests
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
         var bloodlineCount1 = await context.BloodlineDefinitions.CountAsync();
         var devotionCount1 = await context.DevotionDefinitions.CountAsync();
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
         var bloodlineCount2 = await context.BloodlineDefinitions.CountAsync();
         var devotionCount2 = await context.DevotionDefinitions.CountAsync();
 
@@ -146,7 +147,7 @@ public class DbInitializerTests
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
 
         Merit? anyOfficialMerit = await context.Merits.AsNoTracking().FirstOrDefaultAsync(m => !m.IsHomebrew);
         Assert.NotNull(anyOfficialMerit);
@@ -175,7 +176,7 @@ public class DbInitializerTests
         int meritLinksBefore = await context.CharacterMerits.CountAsync(cm => cm.CharacterId == character.Id);
         Assert.Equal(1, meritLinksBefore);
 
-        await DbInitializer.InitializeAsync(context, roleManager, runMigrations: false);
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
 
         int meritLinksAfter = await context.CharacterMerits.CountAsync(cm => cm.CharacterId == character.Id);
         Assert.Equal(1, meritLinksAfter);

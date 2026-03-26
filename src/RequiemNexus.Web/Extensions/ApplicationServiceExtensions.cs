@@ -41,6 +41,7 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.IPerceptionRollService, RequiemNexus.Application.Services.PerceptionRollService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICityFactionService, RequiemNexus.Application.Services.CityFactionService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IChronicleNpcService, RequiemNexus.Application.Services.ChronicleNpcService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ISocialManeuverLifecycleCoordinator, RequiemNexus.Application.Services.SocialManeuverLifecycleCoordinator>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISocialManeuveringService, RequiemNexus.Application.Services.SocialManeuveringService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISocialManeuverQueryService, RequiemNexus.Application.Services.SocialManeuverQueryService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISocialManeuverRollService, RequiemNexus.Application.Services.SocialManeuverRollService>();

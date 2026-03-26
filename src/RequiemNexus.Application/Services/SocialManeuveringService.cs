@@ -1,11 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
-using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
-using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Services;
 
@@ -18,14 +16,12 @@ namespace RequiemNexus.Application.Services;
 public class SocialManeuveringService(
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     IAuthorizationHelper authHelper,
-    ISessionPublisher sessionPublisher,
-    IConditionService conditionService,
+    ISocialManeuverLifecycleCoordinator lifecycleCoordinator,
     ILogger<SocialManeuveringService> logger) : ISocialManeuveringService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly IAuthorizationHelper _authHelper = authHelper;
-    private readonly ISessionPublisher _sessionPublisher = sessionPublisher;
-    private readonly IConditionService _conditionService = conditionService;
+    private readonly ISocialManeuverLifecycleCoordinator _lifecycle = lifecycleCoordinator;
     private readonly ILogger<SocialManeuveringService> _logger = logger;
 
     /// <inheritdoc />
@@ -111,7 +107,7 @@ public class SocialManeuveringService(
             initialDoors,
             storytellerUserId);
 
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
+        await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
 
         return maneuver;
     }
@@ -121,7 +117,7 @@ public class SocialManeuveringService(
     {
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
+        SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, maneuverId);
         await _authHelper.RequireStorytellerAsync(maneuver.CampaignId, storytellerUserId, "set maneuver impression");
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -143,7 +139,7 @@ public class SocialManeuveringService(
             impression,
             storytellerUserId);
 
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
+        await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
     }
 
     /// <inheritdoc />
@@ -151,7 +147,7 @@ public class SocialManeuveringService(
     {
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
+        SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, maneuverId);
         await _authHelper.RequireStorytellerAsync(maneuver.CampaignId, storytellerUserId, "adjust maneuver Doors");
 
         if (remainingDoors < 0 || remainingDoors > maneuver.InitialDoors)
@@ -175,7 +171,7 @@ public class SocialManeuveringService(
             remainingDoors,
             storytellerUserId);
 
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
+        await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
     }
 
     /// <inheritdoc />
@@ -205,7 +201,7 @@ public class SocialManeuveringService(
     {
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
+        SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, maneuverId);
         await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "bank Investigation successes");
 
         if (maneuver.Status != ManeuverStatus.Active)
@@ -249,7 +245,7 @@ public class SocialManeuveringService(
             newProgress,
             userId);
 
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
+        await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
     }
 
     /// <inheritdoc />
@@ -261,7 +257,7 @@ public class SocialManeuveringService(
     {
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
+        SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, maneuverId);
         await _authHelper.RequireStorytellerAsync(maneuver.CampaignId, storytellerUserId, "add a maneuver clue");
 
         if (string.IsNullOrWhiteSpace(sourceDescription))
@@ -285,7 +281,7 @@ public class SocialManeuveringService(
             maneuverId,
             storytellerUserId);
 
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
+        await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
 
         return clue;
     }
@@ -328,102 +324,6 @@ public class SocialManeuveringService(
             clue.SocialManeuverId,
             userId);
 
-        await PublishManeuverUpdateAsync(db, clue.SocialManeuverId);
-    }
-
-    private async Task PublishManeuverUpdateAsync(ApplicationDbContext db, int maneuverId)
-    {
-        SocialManeuver? row = await db.SocialManeuvers
-            .AsNoTracking()
-            .Include(m => m.InitiatorCharacter)
-            .Include(m => m.TargetNpc)
-            .FirstOrDefaultAsync(m => m.Id == maneuverId);
-
-        if (row == null)
-        {
-            return;
-        }
-
-        var dto = new SocialManeuverUpdateDto(
-            row.CampaignId,
-            row.Id,
-            row.InitiatorCharacterId,
-            row.InitiatorCharacter?.Name ?? "?",
-            row.TargetChronicleNpcId,
-            row.TargetNpc?.Name ?? "?",
-            row.RemainingDoors,
-            row.InitialDoors,
-            row.CurrentImpression,
-            row.Status,
-            row.CumulativePenaltyDice,
-            row.LastRollAt,
-            row.GoalDescription);
-
-        await _sessionPublisher.Group(row.CampaignId).ReceiveSocialManeuverUpdate(dto);
-    }
-
-    private async Task<SocialManeuver> LoadManeuverForMutationAsync(ApplicationDbContext db, int maneuverId)
-    {
-        SocialManeuver maneuver = await db.SocialManeuvers
-            .Include(m => m.TargetNpc)
-            .Include(m => m.Campaign)
-            .FirstOrDefaultAsync(m => m.Id == maneuverId)
-            ?? throw new InvalidOperationException($"Social maneuver {maneuverId} not found.");
-
-        await ApplyHostileWeekFailureIfNeededAsync(db, maneuver, DateTimeOffset.UtcNow);
-        return maneuver;
-    }
-
-    private async Task ApplyHostileWeekFailureIfNeededAsync(ApplicationDbContext db, SocialManeuver maneuver, DateTimeOffset nowUtc)
-    {
-        if (maneuver.Status != ManeuverStatus.Active)
-        {
-            return;
-        }
-
-        if (!SocialManeuveringEngine.ShouldFailFromHostileWeek(maneuver.HostileSince, maneuver.CurrentImpression, nowUtc))
-        {
-            return;
-        }
-
-        maneuver.Status = ManeuverStatus.Failed;
-        _logger.LogInformation(
-            "Maneuver {ManeuverId} failed: Hostile impression persisted for one week.",
-            maneuver.Id);
-
-        await db.SaveChangesAsync();
-
-        string stUserId = maneuver.Campaign?.StoryTellerId
-            ?? await db.Campaigns.AsNoTracking()
-                .Where(c => c.Id == maneuver.CampaignId)
-                .Select(c => c.StoryTellerId)
-                .FirstAsync();
-
-        await ApplySocialConditionIfAbsentAsync(
-            db,
-            maneuver.InitiatorCharacterId,
-            ConditionType.Shaken,
-            "From Social maneuver failure: Hostile impression lasted a week.",
-            stUserId);
-
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
-    }
-
-    private async Task ApplySocialConditionIfAbsentAsync(
-        ApplicationDbContext db,
-        int characterId,
-        ConditionType type,
-        string? descriptionOverride,
-        string actingUserId)
-    {
-        bool hasActive = await db.CharacterConditions.AnyAsync(
-            c => c.CharacterId == characterId && !c.IsResolved && c.ConditionType == type);
-
-        if (hasActive)
-        {
-            return;
-        }
-
-        await _conditionService.ApplyConditionAsync(characterId, type, null, descriptionOverride, actingUserId);
+        await _lifecycle.PublishManeuverUpdateAsync(db, clue.SocialManeuverId);
     }
 }

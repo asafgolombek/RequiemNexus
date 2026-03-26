@@ -173,4 +173,23 @@ public class SocialManeuveringEngineTests
         DateTimeOffset now = hostileSince.AddDays(6);
         Assert.False(SocialManeuveringEngine.ShouldFailFromHostileWeek(hostileSince, ImpressionLevel.Hostile, now));
     }
+
+    [Fact]
+    public void ComputeMaximumSocialApproachDicePool_ReturnsLargestListedApproach()
+    {
+        int max = SocialManeuveringEngine.ComputeMaximumSocialApproachDicePool(
+            intelligence: 2,
+            wits: 2,
+            manipulation: 5,
+            presence: 2,
+            empathy: 0,
+            expression: 0,
+            intimidation: 0,
+            persuasion: 5,
+            socialize: 0,
+            streetwise: 0,
+            subterfuge: 0);
+
+        Assert.Equal(10, max);
+    }
 }

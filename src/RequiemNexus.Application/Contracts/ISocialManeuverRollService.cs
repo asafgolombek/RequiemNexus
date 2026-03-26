@@ -9,9 +9,13 @@ namespace RequiemNexus.Application.Contracts;
 public interface ISocialManeuverRollService
 {
     /// <summary>
-    /// Rolls to open one or two Doors. Initiator owner or Storyteller; enforces impression interval and cumulative failure dice.
+    /// Rolls to open one or two Doors. Initiator owner or Storyteller; enforces impression interval, cumulative failure dice, and player-declared pool cap vs sheet.
     /// </summary>
-    Task<(SocialManeuver Updated, RollResult Roll, int DoorsOpened)> RollOpenDoorAsync(
+    /// <param name="maneuverId">Maneuver id.</param>
+    /// <param name="dicePool">Declared pool before penalties (server-validated for non–Storyteller callers).</param>
+    /// <param name="userId">Authenticated user id.</param>
+    /// <returns>Updated maneuver, roll details, and doors opened; or a failure message.</returns>
+    Task<Result<(SocialManeuver Updated, RollResult Roll, int DoorsOpened)>> RollOpenDoorAsync(
         int maneuverId,
         int dicePool,
         string userId);
@@ -19,7 +23,13 @@ public interface ISocialManeuverRollService
     /// <summary>
     /// Forces remaining Doors with pool penalty equal to closed Doors. Optional hard leverage removes Doors first per Humanity gap.
     /// </summary>
-    Task<(SocialManeuver Updated, RollResult Roll, bool ForcedSuccess)> RollForceDoorsAsync(
+    /// <param name="maneuverId">Maneuver id.</param>
+    /// <param name="dicePool">Declared pool before penalties (server-validated for non–Storyteller callers).</param>
+    /// <param name="applyHardLeverage">When true, <paramref name="breakingPointSeverity"/> adjusts closed Doors before the roll.</param>
+    /// <param name="breakingPointSeverity">Breaking point severity used for hard leverage (0–10).</param>
+    /// <param name="userId">Authenticated user id.</param>
+    /// <returns>Updated maneuver, roll details, and whether forcing succeeded; or a failure message.</returns>
+    Task<Result<(SocialManeuver Updated, RollResult Roll, bool ForcedSuccess)>> RollForceDoorsAsync(
         int maneuverId,
         int dicePool,
         bool applyHardLeverage,

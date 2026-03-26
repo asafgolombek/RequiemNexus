@@ -1,11 +1,10 @@
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
-using RequiemNexus.Application.RealTime;
+using RequiemNexus.Application.Observability;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Data.Models.Enums;
-using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
@@ -21,249 +20,229 @@ public class SocialManeuverRollService(
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     IAuthorizationHelper authHelper,
     IDiceService diceService,
-    IConditionService conditionService,
-    ISessionPublisher sessionPublisher,
+    ISocialManeuverLifecycleCoordinator lifecycleCoordinator,
     ILogger<SocialManeuverRollService> logger) : ISocialManeuverRollService
 {
+    private const int _maxDeclaredDicePool = 50;
+
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IDiceService _diceService = diceService;
-    private readonly IConditionService _conditionService = conditionService;
-    private readonly ISessionPublisher _sessionPublisher = sessionPublisher;
+    private readonly ISocialManeuverLifecycleCoordinator _lifecycle = lifecycleCoordinator;
     private readonly ILogger<SocialManeuverRollService> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<(SocialManeuver Updated, RollResult Roll, int DoorsOpened)> RollOpenDoorAsync(
+    public async Task<Result<(SocialManeuver Updated, RollResult Roll, int DoorsOpened)>> RollOpenDoorAsync(
         int maneuverId,
         int dicePool,
         string userId)
     {
-        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
-
-        SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
-        await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "roll to open a Door");
-
-        if (maneuver.Status != ManeuverStatus.Active)
+        string correlationId = AmbientCorrelation.ForNewOperation();
+        using (_logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId })!)
         {
-            throw new InvalidOperationException("This maneuver is no longer active.");
+            await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
+            SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, maneuverId);
+            await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "roll to open a Door");
+
+            Result<int> poolCheck = await ValidateDeclaredDicePoolAsync(db, maneuver, dicePool, userId);
+            if (!poolCheck.IsSuccess)
+            {
+                return Result<(SocialManeuver, RollResult, int)>.Failure(poolCheck.Error!);
+            }
+
+            if (maneuver.Status != ManeuverStatus.Active)
+            {
+                return Result<(SocialManeuver, RollResult, int)>.Failure("This maneuver is no longer active.");
+            }
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            Result<bool> timing = SocialManeuveringEngine.ValidateOpenDoorRollTiming(
+                maneuver.LastRollAt,
+                maneuver.CurrentImpression,
+                now);
+
+            if (!timing.IsSuccess)
+            {
+                return Result<(SocialManeuver, RollResult, int)>.Failure(timing.Error!);
+            }
+
+            int effectivePool = dicePool - maneuver.CumulativePenaltyDice;
+            RollResult roll = _diceService.Roll(effectivePool);
+
+            int doorsOpened = SocialManeuveringEngine.GetDoorsOpenedByOpenDoorRoll(
+                roll.Successes,
+                roll.IsExceptionalSuccess,
+                roll.IsDramaticFailure);
+
+            if (doorsOpened == 0 && !roll.IsDramaticFailure)
+            {
+                maneuver.CumulativePenaltyDice++;
+            }
+
+            maneuver.LastRollAt = now;
+            maneuver.RemainingDoors = Math.Max(0, maneuver.RemainingDoors - doorsOpened);
+
+            if (maneuver.RemainingDoors <= 0)
+            {
+                maneuver.Status = ManeuverStatus.Succeeded;
+            }
+
+            await db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Open-Door roll on maneuver {ManeuverId}: successes={Successes}, doorsOpened={DoorsOpened}, remaining={Remaining}, user {UserId} {CorrelationId}",
+                maneuverId,
+                roll.Successes,
+                doorsOpened,
+                maneuver.RemainingDoors,
+                userId,
+                correlationId);
+
+            await ApplyOpenDoorOutcomeConditionsAsync(db, maneuver, roll, doorsOpened, userId);
+
+            await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
+
+            return Result<(SocialManeuver, RollResult, int)>.Success((maneuver, roll, doorsOpened));
         }
-
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        Result<bool> timing = SocialManeuveringEngine.ValidateOpenDoorRollTiming(
-            maneuver.LastRollAt,
-            maneuver.CurrentImpression,
-            now);
-
-        if (!timing.IsSuccess)
-        {
-            throw new InvalidOperationException(timing.Error);
-        }
-
-        int effectivePool = dicePool - maneuver.CumulativePenaltyDice;
-        RollResult roll = _diceService.Roll(effectivePool);
-
-        int doorsOpened = SocialManeuveringEngine.GetDoorsOpenedByOpenDoorRoll(
-            roll.Successes,
-            roll.IsExceptionalSuccess,
-            roll.IsDramaticFailure);
-
-        if (doorsOpened == 0 && !roll.IsDramaticFailure)
-        {
-            maneuver.CumulativePenaltyDice++;
-        }
-
-        maneuver.LastRollAt = now;
-        maneuver.RemainingDoors = Math.Max(0, maneuver.RemainingDoors - doorsOpened);
-
-        if (maneuver.RemainingDoors <= 0)
-        {
-            maneuver.Status = ManeuverStatus.Succeeded;
-        }
-
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Open-Door roll on maneuver {ManeuverId}: successes={Successes}, doorsOpened={DoorsOpened}, remaining={Remaining}, user {UserId}",
-            maneuverId,
-            roll.Successes,
-            doorsOpened,
-            maneuver.RemainingDoors,
-            userId);
-
-        await ApplyOpenDoorOutcomeConditionsAsync(db, maneuver, roll, doorsOpened, userId);
-
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
-
-        return (maneuver, roll, doorsOpened);
     }
 
     /// <inheritdoc />
-    public async Task<(SocialManeuver Updated, RollResult Roll, bool ForcedSuccess)> RollForceDoorsAsync(
+    public async Task<Result<(SocialManeuver Updated, RollResult Roll, bool ForcedSuccess)>> RollForceDoorsAsync(
         int maneuverId,
         int dicePool,
         bool applyHardLeverage,
         int breakingPointSeverity,
         string userId)
     {
-        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
-
-        SocialManeuver maneuver = await LoadManeuverForMutationAsync(db, maneuverId);
-        await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "force Doors");
-
-        if (maneuver.Status != ManeuverStatus.Active)
+        string correlationId = AmbientCorrelation.ForNewOperation();
+        using (_logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId })!)
         {
-            throw new InvalidOperationException("This maneuver is no longer active.");
-        }
+            await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        int closedDoors = maneuver.RemainingDoors;
+            SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, maneuverId);
+            await _authHelper.RequireCharacterAccessAsync(maneuver.InitiatorCharacterId, userId, "force Doors");
 
-        if (applyHardLeverage)
-        {
-            Character initiator = await db.Characters
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == maneuver.InitiatorCharacterId)
-                ?? throw new InvalidOperationException($"Character {maneuver.InitiatorCharacterId} not found.");
-
-            Result<int> removed = SocialManeuveringEngine.ComputeHardLeverageDoorsRemoved(
-                breakingPointSeverity,
-                initiator.Humanity);
-
-            if (!removed.IsSuccess)
+            Result<int> poolCheck = await ValidateDeclaredDicePoolAsync(db, maneuver, dicePool, userId);
+            if (!poolCheck.IsSuccess)
             {
-                throw new InvalidOperationException(removed.Error);
+                return Result<(SocialManeuver, RollResult, bool)>.Failure(poolCheck.Error!);
             }
 
-            closedDoors = Math.Max(0, closedDoors - removed.Value!);
+            if (maneuver.Status != ManeuverStatus.Active)
+            {
+                return Result<(SocialManeuver, RollResult, bool)>.Failure("This maneuver is no longer active.");
+            }
+
+            int closedDoors = maneuver.RemainingDoors;
+
+            if (applyHardLeverage)
+            {
+                Character initiator = await db.Characters
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == maneuver.InitiatorCharacterId)
+                    ?? throw new InvalidOperationException($"Character {maneuver.InitiatorCharacterId} not found.");
+
+                Result<int> removed = SocialManeuveringEngine.ComputeHardLeverageDoorsRemoved(
+                    breakingPointSeverity,
+                    initiator.Humanity);
+
+                if (!removed.IsSuccess)
+                {
+                    return Result<(SocialManeuver, RollResult, bool)>.Failure(removed.Error!);
+                }
+
+                closedDoors = Math.Max(0, closedDoors - removed.Value!);
+            }
+
+            int penalty = SocialManeuveringEngine.ComputeForceRollPoolPenalty(closedDoors);
+            int effectivePool = dicePool - penalty;
+            RollResult roll = _diceService.Roll(effectivePool);
+
+            bool forcedSuccess = roll.Successes >= 1 && !roll.IsDramaticFailure;
+            maneuver.LastRollAt = DateTimeOffset.UtcNow;
+
+            if (forcedSuccess)
+            {
+                maneuver.RemainingDoors = 0;
+                maneuver.Status = ManeuverStatus.Succeeded;
+            }
+            else
+            {
+                maneuver.Status = ManeuverStatus.Burnt;
+            }
+
+            await db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Force-Doors roll on maneuver {ManeuverId}: successes={Successes}, success={ForcedSuccess}, status={Status}, user {UserId} {CorrelationId}",
+                maneuverId,
+                roll.Successes,
+                forcedSuccess,
+                maneuver.Status,
+                userId,
+                correlationId);
+
+            if (!forcedSuccess)
+            {
+                await _lifecycle.ApplySocialConditionIfAbsentAsync(
+                    db,
+                    maneuver.InitiatorCharacterId,
+                    ConditionType.Shaken,
+                    "From failing to force Doors in Social maneuvering — the relationship is burnt.",
+                    userId);
+            }
+            else
+            {
+                string npcName = maneuver.TargetNpc?.Name ?? "the target";
+                await _lifecycle.ApplySocialConditionIfAbsentAsync(
+                    db,
+                    maneuver.InitiatorCharacterId,
+                    ConditionType.Swooned,
+                    $"From Social maneuver success (forced Doors) toward {npcName}.",
+                    userId);
+            }
+
+            await _lifecycle.PublishManeuverUpdateAsync(db, maneuver.Id);
+
+            return Result<(SocialManeuver, RollResult, bool)>.Success((maneuver, roll, forcedSuccess));
         }
-
-        int penalty = SocialManeuveringEngine.ComputeForceRollPoolPenalty(closedDoors);
-        int effectivePool = dicePool - penalty;
-        RollResult roll = _diceService.Roll(effectivePool);
-
-        bool forcedSuccess = roll.Successes >= 1 && !roll.IsDramaticFailure;
-        maneuver.LastRollAt = DateTimeOffset.UtcNow;
-
-        if (forcedSuccess)
-        {
-            maneuver.RemainingDoors = 0;
-            maneuver.Status = ManeuverStatus.Succeeded;
-        }
-        else
-        {
-            maneuver.Status = ManeuverStatus.Burnt;
-        }
-
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Force-Doors roll on maneuver {ManeuverId}: successes={Successes}, success={ForcedSuccess}, status={Status}, user {UserId}",
-            maneuverId,
-            roll.Successes,
-            forcedSuccess,
-            maneuver.Status,
-            userId);
-
-        if (!forcedSuccess)
-        {
-            await ApplySocialConditionIfAbsentAsync(
-                db,
-                maneuver.InitiatorCharacterId,
-                ConditionType.Shaken,
-                "From failing to force Doors in Social maneuvering — the relationship is burnt.",
-                userId);
-        }
-        else
-        {
-            string npcName = maneuver.TargetNpc?.Name ?? "the target";
-            await ApplySocialConditionIfAbsentAsync(
-                db,
-                maneuver.InitiatorCharacterId,
-                ConditionType.Swooned,
-                $"From Social maneuver success (forced Doors) toward {npcName}.",
-                userId);
-        }
-
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
-
-        return (maneuver, roll, forcedSuccess);
     }
 
-    private async Task PublishManeuverUpdateAsync(ApplicationDbContext db, int maneuverId)
+    private async Task<Result<int>> ValidateDeclaredDicePoolAsync(
+        ApplicationDbContext db,
+        SocialManeuver maneuver,
+        int dicePool,
+        string userId)
     {
-        SocialManeuver? row = await db.SocialManeuvers
-            .AsNoTracking()
-            .Include(m => m.InitiatorCharacter)
-            .Include(m => m.TargetNpc)
-            .FirstOrDefaultAsync(m => m.Id == maneuverId);
-
-        if (row == null)
+        if (dicePool < 0 || dicePool > _maxDeclaredDicePool)
         {
-            return;
+            return Result<int>.Failure($"Dice pool must be between 0 and {_maxDeclaredDicePool}.");
         }
 
-        var dto = new SocialManeuverUpdateDto(
-            row.CampaignId,
-            row.Id,
-            row.InitiatorCharacterId,
-            row.InitiatorCharacter?.Name ?? "?",
-            row.TargetChronicleNpcId,
-            row.TargetNpc?.Name ?? "?",
-            row.RemainingDoors,
-            row.InitialDoors,
-            row.CurrentImpression,
-            row.Status,
-            row.CumulativePenaltyDice,
-            row.LastRollAt,
-            row.GoalDescription);
-
-        await _sessionPublisher.Group(row.CampaignId).ReceiveSocialManeuverUpdate(dto);
-    }
-
-    private async Task<SocialManeuver> LoadManeuverForMutationAsync(ApplicationDbContext db, int maneuverId)
-    {
-        SocialManeuver maneuver = await db.SocialManeuvers
-            .Include(m => m.TargetNpc)
-            .Include(m => m.Campaign)
-            .FirstOrDefaultAsync(m => m.Id == maneuverId)
-            ?? throw new InvalidOperationException($"Social maneuver {maneuverId} not found.");
-
-        await ApplyHostileWeekFailureIfNeededAsync(db, maneuver, DateTimeOffset.UtcNow);
-        return maneuver;
-    }
-
-    private async Task ApplyHostileWeekFailureIfNeededAsync(ApplicationDbContext db, SocialManeuver maneuver, DateTimeOffset nowUtc)
-    {
-        if (maneuver.Status != ManeuverStatus.Active)
+        bool isStoryteller = maneuver.Campaign?.StoryTellerId == userId;
+        if (isStoryteller)
         {
-            return;
+            return Result<int>.Success(0);
         }
 
-        if (!SocialManeuveringEngine.ShouldFailFromHostileWeek(maneuver.HostileSince, maneuver.CurrentImpression, nowUtc))
-        {
-            return;
-        }
-
-        maneuver.Status = ManeuverStatus.Failed;
-        _logger.LogInformation(
-            "Maneuver {ManeuverId} failed: Hostile impression persisted for one week.",
-            maneuver.Id);
-
-        await db.SaveChangesAsync();
-
-        string stUserId = maneuver.Campaign?.StoryTellerId
-            ?? await db.Campaigns.AsNoTracking()
-                .Where(c => c.Id == maneuver.CampaignId)
-                .Select(c => c.StoryTellerId)
-                .FirstAsync();
-
-        await ApplySocialConditionIfAbsentAsync(
+        Character? initiator = await SocialManeuverDicePoolAuthority.LoadInitiatorForDiceCapAsync(
             db,
-            maneuver.InitiatorCharacterId,
-            ConditionType.Shaken,
-            "From Social maneuver failure: Hostile impression lasted a week.",
-            stUserId);
+            maneuver.InitiatorCharacterId);
 
-        await PublishManeuverUpdateAsync(db, maneuver.Id);
+        if (initiator == null)
+        {
+            return Result<int>.Failure($"Character {maneuver.InitiatorCharacterId} not found.");
+        }
+
+        int maxFromSheet = SocialManeuverDicePoolAuthority.GetMaximumSocialDicePool(initiator);
+        if (dicePool > maxFromSheet)
+        {
+            return Result<int>.Failure(
+                $"Declared dice pool ({dicePool}) exceeds the initiator's largest applicable Attribute + Skill pool ({maxFromSheet}) on the sheet. The Storyteller may roll a higher pool when acting for the table.");
+        }
+
+        return Result<int>.Success(0);
     }
 
     private async Task ApplyOpenDoorOutcomeConditionsAsync(
@@ -276,7 +255,7 @@ public class SocialManeuverRollService(
         if (maneuver.Status == ManeuverStatus.Succeeded)
         {
             string npcName = maneuver.TargetNpc?.Name ?? "the target";
-            await ApplySocialConditionIfAbsentAsync(
+            await _lifecycle.ApplySocialConditionIfAbsentAsync(
                 db,
                 maneuver.InitiatorCharacterId,
                 ConditionType.Swooned,
@@ -287,7 +266,7 @@ public class SocialManeuverRollService(
 
         if (roll.IsDramaticFailure)
         {
-            await ApplySocialConditionIfAbsentAsync(
+            await _lifecycle.ApplySocialConditionIfAbsentAsync(
                 db,
                 maneuver.InitiatorCharacterId,
                 ConditionType.Shaken,
@@ -298,30 +277,12 @@ public class SocialManeuverRollService(
 
         if (roll.IsExceptionalSuccess && doorsOpened > 0)
         {
-            await ApplySocialConditionIfAbsentAsync(
+            await _lifecycle.ApplySocialConditionIfAbsentAsync(
                 db,
                 maneuver.InitiatorCharacterId,
                 ConditionType.Inspired,
                 "From an exceptional success while opening a Door in Social maneuvering.",
                 actingUserId);
         }
-    }
-
-    private async Task ApplySocialConditionIfAbsentAsync(
-        ApplicationDbContext db,
-        int characterId,
-        ConditionType type,
-        string? descriptionOverride,
-        string actingUserId)
-    {
-        bool hasActive = await db.CharacterConditions.AnyAsync(
-            c => c.CharacterId == characterId && !c.IsResolved && c.ConditionType == type);
-
-        if (hasActive)
-        {
-            return;
-        }
-
-        await _conditionService.ApplyConditionAsync(characterId, type, null, descriptionOverride, actingUserId);
     }
 }
