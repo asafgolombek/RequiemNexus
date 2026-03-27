@@ -46,7 +46,7 @@ public class ModifierServiceTests
         ctx.CharacterAttributes.Add(new CharacterAttribute
         {
             CharacterId = 1,
-            Name = nameof(RequiemNexus.Domain.AttributeId.Strength),
+            Name = nameof(AttributeId.Strength),
             Rating = 3,
         });
         var kit = new EquipmentAsset
@@ -86,7 +86,7 @@ public class ModifierServiceTests
         ctx.CharacterAttributes.Add(new CharacterAttribute
         {
             CharacterId = 1,
-            Name = nameof(RequiemNexus.Domain.AttributeId.Strength),
+            Name = nameof(AttributeId.Strength),
             Rating = 2,
         });
         var weapon = new WeaponAsset

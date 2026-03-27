@@ -1,7 +1,7 @@
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Canonical rules for Conditions and Tilts (VtR 2e).

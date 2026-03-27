@@ -1,7 +1,8 @@
 using System.ComponentModel;
 using System.Reflection;
+using RequiemNexus.Domain.Enums;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Maps V:tR 2e skill labels (e.g. from equipment JSON) to <see cref="SkillId"/>.

@@ -1,6 +1,6 @@
 using RequiemNexus.Domain.Enums;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Stateless rules for Predatory Aura contests per V:tR 2e pp. 89–90.

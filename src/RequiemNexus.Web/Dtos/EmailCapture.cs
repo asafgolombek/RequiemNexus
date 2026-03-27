@@ -1,7 +1,7 @@
-namespace RequiemNexus.Web.Services;
+namespace RequiemNexus.Web.Dtos;
 
 /// <summary>
-/// A single message captured by <see cref="TestEmailSink"/> during the <c>Testing</c> environment.
+/// A single message captured by <see cref="RequiemNexus.Web.Services.TestEmailSink"/> during the <c>Testing</c> environment.
 /// </summary>
 /// <param name="To">Recipient address.</param>
 /// <param name="Subject">Message subject.</param>

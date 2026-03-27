@@ -1,0 +1,124 @@
+@using RequiemNexus.Domain.Models
+
+<div class="health-damage-track-boxes tracker-boxes @(ReadOnly ? "health-damage-track-readonly" : null)"
+     role="group"
+     aria-label="Health track">
+    @for (int i = 0; i < BoxCount; i++)
+    {
+        int captureIndex = i;
+        <div class="health-box @GetHealthDamageClass(captureIndex)"
+             @onclick="() => OnToggleAsync(captureIndex)"
+             title="@GetHealthTooltip(captureIndex)">
+            @GetHealthDamageSymbol(captureIndex)
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Number of health boxes to render.</summary>
+    [Parameter, EditorRequired]
+    public int BoxCount { get; set; }
+
+    /// <summary>Raw damage string from persistence (may be short; normalized for display).</summary>
+    [Parameter, EditorRequired]
+    public string DamageTrack { get; set; } = string.Empty;
+
+    /// <summary>When true, clicks do nothing.</summary>
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    /// <summary>Invoked with a full-length normalized track after a box toggle.</summary>
+    [Parameter]
+    public EventCallback<string> DamageTrackChanged { get; set; }
+
+    private string PaddedTrack => NpcHealthDamageTrack.Normalize(DamageTrack, BoxCount);
+
+    private async Task OnToggleAsync(int index)
+    {
+        if (ReadOnly || !DamageTrackChanged.HasDelegate)
+        {
+            return;
+        }
+
+        string track = PaddedTrack;
+        char[] chars = track.ToCharArray();
+        char currentDamage = chars[index];
+        char newDamage = currentDamage switch
+        {
+            ' ' => '/',
+            '/' => 'X',
+            'X' => '*',
+            '*' => ' ',
+            _ => '/',
+        };
+
+        chars[index] = newDamage;
+        await DamageTrackChanged.InvokeAsync(new string(chars));
+    }
+
+    private string GetHealthDamageClass(int index)
+    {
+        string track = PaddedTrack;
+        if (index >= track.Length)
+        {
+            return "empty";
+        }
+
+        return track[index] switch
+        {
+            '/' => "bashing",
+            'X' => "lethal",
+            '*' => "aggravated",
+            _ => "empty",
+        };
+    }
+
+    private string GetHealthDamageSymbol(int index)
+    {
+        string track = PaddedTrack;
+        if (index >= track.Length)
+        {
+            return string.Empty;
+        }
+
+        return track[index] switch
+        {
+            '/' => "/",
+            'X' => "✕",
+            '*' => "☩",
+            _ => string.Empty,
+        };
+    }
+
+    private string GetHealthTooltip(int index)
+    {
+        int max = BoxCount;
+        string penalty = string.Empty;
+        if (index == max - 1)
+        {
+            penalty = " (Wound Penalty: −3)";
+        }
+        else if (index == max - 2)
+        {
+            penalty = " (Wound Penalty: −2)";
+        }
+        else if (index == max - 3)
+        {
+            penalty = " (Wound Penalty: −1)";
+        }
+
+        string track = PaddedTrack;
+        if (index >= track.Length)
+        {
+            return $"Health Box {index + 1}{penalty}";
+        }
+
+        return track[index] switch
+        {
+            '/' => $"Bashing Damage{penalty}",
+            'X' => $"Lethal Damage{penalty}",
+            '*' => $"Aggravated Damage{penalty}",
+            _ => $"Health Box {index + 1}{penalty}",
+        };
+    }
+}

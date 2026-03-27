@@ -4,8 +4,6 @@ using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Web.Services;
 
-#pragma warning disable SYSLIB0014 // Type or member is obsolete
-
 public partial class SmtpEmailSender : IRequiemEmailService
 {
     private readonly ILogger<SmtpEmailSender> _logger;

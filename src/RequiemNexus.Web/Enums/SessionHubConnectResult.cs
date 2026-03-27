@@ -1,4 +1,4 @@
-namespace RequiemNexus.Web.Services;
+namespace RequiemNexus.Web.Enums;
 
 /// <summary>
 /// Outcome of connecting the Blazor Server outbound <see cref="Microsoft.AspNetCore.SignalR.Client.HubConnection"/>

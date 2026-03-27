@@ -1,6 +1,6 @@
 using RequiemNexus.Domain.Enums;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Applies and heals damage on the CoD-style health string (left-to-right fill, bashing overflow rules).

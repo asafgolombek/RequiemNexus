@@ -1,4 +1,3 @@
-using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Domain.Models;

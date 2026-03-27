@@ -35,9 +35,9 @@ internal static class ApplicationServiceExtensions
         services.AddHostedService<RequiemNexus.Web.Services.AccountDeletionCleanupService>();
         services.AddHostedService<RequiemNexus.Web.BackgroundServices.SessionTerminationService>();
         services.AddHostedService<RequiemNexus.Web.BackgroundServices.TorporIntervalService>();
-        services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
-        services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
-        services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.ConditionRules>();
+        services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.Services.ExperienceCostRules>();
+        services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.Services.CharacterCreationRules>();
+        services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.Services.ConditionRules>();
         services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();

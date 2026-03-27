@@ -1,4 +1,6 @@
+using RequiemNexus.Domain.Services;
 using Xunit;
+
 namespace RequiemNexus.Domain.Tests;
 
 public class ExperienceCostRulesTests

@@ -1,4 +1,6 @@
-namespace RequiemNexus.Web.Services;
+using RequiemNexus.Web.Enums;
+
+namespace RequiemNexus.Web.Helpers;
 
 /// <summary>
 /// User-visible guidance when the Blazor Server outbound session hub connection fails.

@@ -115,7 +115,7 @@ public class AttackServiceTests
         });
 
         var pool = new PoolDefinition(
-            [new TraitReference(TraitType.Attribute, RequiemNexus.Domain.AttributeId.Strength, null, null)]);
+            [new TraitReference(TraitType.Attribute, AttributeId.Strength, null, null)]);
         AttackResult result = await service.ResolveMeleeAttackAsync(
             "st-1",
             100,
@@ -162,7 +162,7 @@ public class AttackServiceTests
         });
 
         var pool = new PoolDefinition(
-            [new TraitReference(TraitType.Attribute, RequiemNexus.Domain.AttributeId.Strength, null, null)]);
+            [new TraitReference(TraitType.Attribute, AttributeId.Strength, null, null)]);
         AttackResult result = await service.ResolveMeleeAttackAsync(
             "st-1",
             100,
@@ -207,7 +207,7 @@ public class AttackServiceTests
         });
 
         var pool = new PoolDefinition(
-            [new TraitReference(TraitType.Attribute, RequiemNexus.Domain.AttributeId.Strength, null, null)]);
+            [new TraitReference(TraitType.Attribute, AttributeId.Strength, null, null)]);
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.ResolveMeleeAttackAsync(
             "st-1",
             100,
@@ -248,7 +248,7 @@ public class AttackServiceTests
         });
 
         var pool = new PoolDefinition(
-            [new TraitReference(TraitType.Attribute, RequiemNexus.Domain.AttributeId.Strength, null, null)]);
+            [new TraitReference(TraitType.Attribute, AttributeId.Strength, null, null)]);
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.ResolveMeleeAttackAsync(
             "st-1",
             100,

@@ -9,23 +9,22 @@ namespace RequiemNexus.Application.Contracts;
 public interface INpcCombatService
 {
     /// <summary>
-    /// Appends one damage box to an NPC initiative entry.
+    /// Sets the full NPC health damage track for an initiative row (Storyteller only).
+    /// The string must be exactly as many characters as <c>NpcHealthBoxes</c>, using space, '/', 'X', or '*'.
     /// </summary>
-    Task ApplyNpcDamageAsync(int entryId, char damageType, string storyTellerUserId);
+    /// <param name="initiativeEntryId">NPC initiative row id.</param>
+    /// <param name="damageTrack">Full track (same convention as character health).</param>
+    /// <param name="storyTellerUserId">Campaign Storyteller user id.</param>
+    Task SetNpcHealthDamageAsync(int initiativeEntryId, string damageTrack, string storyTellerUserId);
 
     /// <summary>
-    /// Appends multiple damage boxes of the same severity in one transaction (e.g. melee resolution).
+    /// Applies multiple damage boxes of the same severity into the leftmost empty slots (e.g. melee resolution).
     /// </summary>
     /// <param name="entryId">NPC initiative row.</param>
     /// <param name="kind">Bashing, lethal, or aggravated (maps to track symbols).</param>
-    /// <param name="instances">Number of boxes to append; must fit on the remaining track.</param>
+    /// <param name="instances">Number of boxes to fill; must not exceed remaining empty slots.</param>
     /// <param name="storyTellerUserId">Campaign Storyteller.</param>
     Task ApplyNpcDamageBatchAsync(int entryId, HealthDamageKind kind, int instances, string storyTellerUserId);
-
-    /// <summary>
-    /// Removes the last damage mark from an NPC track.
-    /// </summary>
-    Task HealNpcDamageAsync(int entryId, string storyTellerUserId);
 
     /// <summary>
     /// Spends one willpower from an NPC initiative row (ST only).

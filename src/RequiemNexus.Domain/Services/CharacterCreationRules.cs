@@ -1,6 +1,6 @@
 using RequiemNexus.Domain.Contracts;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Encapsulates the deterministic rules for Vampire: The Requiem character creation and stat derivation.

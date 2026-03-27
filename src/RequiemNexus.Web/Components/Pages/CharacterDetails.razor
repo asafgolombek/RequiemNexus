@@ -174,7 +174,7 @@ else
                                     <h3>@label</h3>
                                     @foreach (var attr in _character.Attributes.Where(a => a.Category == category))
                                     {
-                                        <DotScale @bind-Value="attr.Rating" Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(attr.Name)" OnLabelClick="OpenReference"
+                                        <DotScale @bind-Value="attr.Rating" Label="@RequiemNexus.Domain.Services.TraitMetadata.GetDisplayName(attr.Name)" OnLabelClick="OpenReference"
                                             OnRollClick="OpenRoller" />
                                     }
                                 </div>
@@ -198,7 +198,7 @@ else
                                     <h3>@label</h3>
                                     @foreach (var skill in _character.Skills.Where(s => s.Category == category))
                                     {
-                                        <DotScale @bind-Value="skill.Rating" Label="@RequiemNexus.Domain.TraitMetadata.GetDisplayName(skill.Name)" OnLabelClick="OpenReference"
+                                        <DotScale @bind-Value="skill.Rating" Label="@RequiemNexus.Domain.Services.TraitMetadata.GetDisplayName(skill.Name)" OnLabelClick="OpenReference"
                                             OnRollClick="OpenRoller" />
                                     }
                                 </div>

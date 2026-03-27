@@ -1,7 +1,7 @@
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Canonical Vitae costs for healing actions. Full resting intervals remain ST-facing until automated.

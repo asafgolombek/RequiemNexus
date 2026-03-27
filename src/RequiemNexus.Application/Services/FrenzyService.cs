@@ -8,7 +8,6 @@ using RequiemNexus.Data.Models;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
-using AttributeId = RequiemNexus.Domain.AttributeId;
 
 namespace RequiemNexus.Application.Services;
 

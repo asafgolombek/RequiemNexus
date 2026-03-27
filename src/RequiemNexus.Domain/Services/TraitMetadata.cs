@@ -1,6 +1,7 @@
 using System.ComponentModel;
+using RequiemNexus.Domain.Enums;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Centralized metadata for all Vampire: The Requiem character traits.

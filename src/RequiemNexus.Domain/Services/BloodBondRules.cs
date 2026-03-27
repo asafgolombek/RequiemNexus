@@ -1,6 +1,6 @@
 using RequiemNexus.Domain.Enums;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Stateless rules for the Blood Bond (Vinculum) per V:tR 2e p. 154.

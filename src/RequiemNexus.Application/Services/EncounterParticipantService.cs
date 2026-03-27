@@ -5,7 +5,8 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
-using RequiemNexus.Domain;
+using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
 
@@ -44,8 +45,8 @@ public class EncounterParticipantService(
                 .FirstOrDefaultAsync(c => c.Id == charId)
                 ?? throw new InvalidOperationException($"Character {charId} not found.");
 
-            int wits = character.GetAttributeRating(Domain.AttributeId.Wits);
-            int composure = character.GetAttributeRating(Domain.AttributeId.Composure);
+            int wits = character.GetAttributeRating(AttributeId.Wits);
+            int composure = character.GetAttributeRating(AttributeId.Composure);
             int mod = wits + composure;
             int roll = Random.Shared.Next(1, 11);
 

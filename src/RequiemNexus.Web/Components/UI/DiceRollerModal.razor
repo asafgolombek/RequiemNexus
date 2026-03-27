@@ -186,8 +186,8 @@
     private bool _copying = false;
     private string? _shareSlug;
 
-    private readonly string[] _attributes = RequiemNexus.Domain.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
-    private readonly string[] _skills = RequiemNexus.Domain.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
+    private readonly string[] _attributes = RequiemNexus.Domain.Services.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
+    private readonly string[] _skills = RequiemNexus.Domain.Services.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
 
     protected override void OnInitialized()
     {
@@ -215,7 +215,7 @@
             return;
         }
 
-        RequiemNexus.Domain.Models.PoolDefinition? pool = RequiemNexus.Domain.SheetPoolBuilder.TryCreate(TraitName, _associatedTraitName);
+        RequiemNexus.Domain.Models.PoolDefinition? pool = RequiemNexus.Domain.Services.SheetPoolBuilder.TryCreate(TraitName, _associatedTraitName);
         if (pool != null)
         {
             _resolverTotal = await TraitResolver.ResolvePoolAsync(Character, pool);
@@ -228,7 +228,7 @@
         {
             if (string.IsNullOrEmpty(_associatedTraitName) || Character == null) return 0;
             var propName = _associatedTraitName.Replace(" ", "");
-            if (RequiemNexus.Domain.TraitMetadata.IsAttribute(propName))
+            if (RequiemNexus.Domain.Services.TraitMetadata.IsAttribute(propName))
                 return Character.GetAttributeRating(propName);
             else
                 return Character.GetSkillRating(propName);

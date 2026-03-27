@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Stateless rules for Blood Sympathy per V:tR 2e pp. 120–121.

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Enums;
 
 public enum SkillId
 {

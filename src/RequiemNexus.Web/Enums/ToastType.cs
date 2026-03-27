@@ -1,4 +1,4 @@
-namespace RequiemNexus.Web.Services;
+namespace RequiemNexus.Web.Enums;
 
 public enum ToastType
 {

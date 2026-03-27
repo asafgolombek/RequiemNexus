@@ -1,5 +1,5 @@
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Application.Contracts;
 

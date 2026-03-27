@@ -4,9 +4,9 @@ using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
+using RequiemNexus.Domain.Services;
 using Xunit;
 
 namespace RequiemNexus.Application.Tests;

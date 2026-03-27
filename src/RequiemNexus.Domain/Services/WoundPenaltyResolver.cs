@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Pure wound-penalty rules from the health track (matches vitals tooltips: last three boxes).

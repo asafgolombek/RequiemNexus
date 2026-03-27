@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Stateless aging rules for ghouls per V:tR 2e p. 210.

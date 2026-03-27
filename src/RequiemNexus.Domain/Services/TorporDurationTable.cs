@@ -1,4 +1,4 @@
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Minimum time in torpor before hunger escalation milestones (VtR 2e p. 165), keyed by Blood Potency (1–10).

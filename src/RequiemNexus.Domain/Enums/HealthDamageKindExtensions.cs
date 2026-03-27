@@ -1,6 +1,4 @@
-using RequiemNexus.Domain.Enums;
-
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Enums;
 
 /// <summary>
 /// Maps combat <see cref="DamageSource"/> values to health-track severities and wire symbols.

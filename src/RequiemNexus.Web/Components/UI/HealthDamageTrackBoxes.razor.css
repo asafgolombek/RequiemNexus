@@ -1,0 +1,57 @@
+.health-damage-track-boxes.tracker-boxes {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+}
+
+.health-damage-track-boxes .health-box {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--muted-gray);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: background-color 0.2s, transform 0.15s, border-color 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--bone-white);
+    cursor: pointer;
+}
+
+.health-damage-track-boxes:not(.health-damage-track-readonly) .health-box:hover {
+    border-color: var(--crimson);
+    transform: scale(1.05);
+}
+
+.health-damage-track-readonly .health-box {
+    cursor: default;
+    pointer-events: none;
+}
+
+.health-damage-track-boxes .health-box.bashing {
+    background: rgba(184, 134, 11, 0.2);
+    border-color: var(--warning-amber);
+    color: var(--warning-amber);
+}
+
+.health-damage-track-boxes .health-box.lethal {
+    background: rgba(139, 0, 0, 0.2);
+    border-color: var(--crimson);
+    color: var(--crimson);
+}
+
+.health-damage-track-boxes .health-box.aggravated {
+    background: rgba(139, 0, 0, 0.4);
+    border-color: var(--crimson-glow);
+    color: var(--bone-white);
+}
+
+@media (max-width: 768px) {
+    .health-damage-track-boxes .health-box {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
+    }
+}

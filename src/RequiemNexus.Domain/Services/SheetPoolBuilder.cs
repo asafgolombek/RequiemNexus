@@ -1,7 +1,7 @@
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Builds <see cref="PoolDefinition"/> instances from sheet UI labels (display names or enum names).

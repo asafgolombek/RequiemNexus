@@ -1,6 +1,6 @@
 using RequiemNexus.Domain.Contracts;
 
-namespace RequiemNexus.Domain;
+namespace RequiemNexus.Domain.Services;
 
 /// <summary>
 /// Pure, stateless XP cost calculations for Vampire: The Requiem 2e advancement.
