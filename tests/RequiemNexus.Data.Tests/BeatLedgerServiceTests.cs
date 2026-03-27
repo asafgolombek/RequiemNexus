@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 using Xunit;
 

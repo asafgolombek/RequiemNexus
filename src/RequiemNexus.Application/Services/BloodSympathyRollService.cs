@@ -5,10 +5,10 @@ using RequiemNexus.Application.Observability;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
+using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
 

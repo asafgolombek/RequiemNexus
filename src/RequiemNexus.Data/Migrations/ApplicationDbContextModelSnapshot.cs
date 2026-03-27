@@ -744,6 +744,9 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<bool>("IsRetired")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastStarvationNotifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Mask")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -781,6 +784,9 @@ namespace RequiemNexus.Data.Migrations
 
                     b.Property<int>("Size")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("TorporSince")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("TotalExperiencePoints")
                         .HasColumnType("integer");
@@ -1329,6 +1335,10 @@ namespace RequiemNexus.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CharacterId");
+
+                    b.HasIndex("CharacterId", "TiltType")
+                        .IsUnique()
+                        .HasFilter("\"IsActive\" = TRUE");
 
                     b.ToTable("CharacterTilts");
                 });

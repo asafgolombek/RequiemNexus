@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using RequiemNexus.Domain;
+using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Data.Models;
 
@@ -131,6 +131,16 @@ public class Character
     public int MaxVitae { get; set; }
 
     public int CurrentVitae { get; set; }
+
+    /// <summary>UTC when the character entered torpor; null when not in torpor.</summary>
+    public DateTime? TorporSince { get; set; }
+
+    /// <summary>UTC of the last starvation milestone notification while in torpor.</summary>
+    public DateTime? LastStarvationNotifiedAt { get; set; }
+
+    /// <summary>True while the character is in torpor.</summary>
+    [NotMapped]
+    public bool IsInTorpor => TorporSince.HasValue;
 
     // --- Derived Stats ---
     [NotMapped]

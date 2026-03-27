@@ -5,7 +5,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain;
+using RequiemNexus.Domain.Services;
 using Xunit;
 
 namespace RequiemNexus.Data.Tests;

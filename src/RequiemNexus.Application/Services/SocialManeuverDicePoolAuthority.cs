@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain;
+using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;

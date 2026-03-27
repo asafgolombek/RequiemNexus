@@ -1,7 +1,7 @@
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
-using RequiemNexus.Domain;
+using RequiemNexus.Domain.Enums;
 using RequiemNexus.Web.Helpers;
 using Xunit;
 

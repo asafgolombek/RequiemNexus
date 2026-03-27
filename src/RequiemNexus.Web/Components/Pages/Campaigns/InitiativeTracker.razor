@@ -6,6 +6,7 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Domain.Enums
+@using RequiemNexus.Domain.Models
 @using RequiemNexus.Web.Services
 @using System.Security.Claims
 @using System.Threading
@@ -51,6 +52,8 @@
     }
     else
     {
+        <div class="initiative-page-grid">
+        <div class="initiative-page-main">
         <div class="campaign-header">
             <div>
                 <h2>⚔️ @_encounter.Name</h2>
@@ -253,37 +256,35 @@
                             }
                             @if (isNpc && _isSt)
                             {
-                                <div class="mini-health-track">
-                                    @for (int i = 0; i < entry.NpcHealthBoxes; i++)
+                                <div class="initiative-npc-health">
+                                    <span class="initiative-npc-health-label">Health</span>
+                                    <HealthDamageTrackBoxes BoxCount="entry.NpcHealthBoxes"
+                                                            DamageTrack="@entry.NpcHealthDamage"
+                                                            ReadOnly="@(!CanStEditLaunchedNpcEncounter())"
+                                                            DamageTrackChanged="t => OnNpcHealthTrackChangedAsync(entry.Id, t)" />
+                                </div>
+                                @if (CanStEditLaunchedNpcEncounter())
+                                {
+                                    @if (entry.NpcMaxWillpower > 0)
                                     {
-                                        <span class="health-box-mini @GetNpcDamageClass(entry.NpcHealthDamage, i)"></span>
+                                        <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
+                                            Willpower: <strong>@entry.NpcCurrentWillpower</strong> / @entry.NpcMaxWillpower
+                                        </div>
+                                        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
+                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendWill(entry.Id)">Spend</button>
+                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreWill(entry.Id)">Restore</button>
+                                        </div>
                                     }
-                                </div>
-                                <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.25rem;">
-                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '/')">+B</button>
-                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, 'X')">+L</button>
-                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcDamage(entry.Id, '*')">+A</button>
-                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcHeal(entry.Id)">Heal</button>
-                                </div>
-                                @if (entry.NpcMaxWillpower > 0)
-                                {
-                                    <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
-                                        Willpower: <strong>@entry.NpcCurrentWillpower</strong> / @entry.NpcMaxWillpower
-                                    </div>
-                                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
-                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendWill(entry.Id)">Spend</button>
-                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreWill(entry.Id)">Restore</button>
-                                    </div>
-                                }
-                                @if (entry.NpcMaxVitae > 0)
-                                {
-                                    <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
-                                        Vitae: <strong>@entry.NpcCurrentVitae</strong> / @entry.NpcMaxVitae
-                                    </div>
-                                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
-                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendVitae(entry.Id)">Spend vitae</button>
-                                        <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreVitae(entry.Id)">Restore vitae</button>
-                                    </div>
+                                    @if (entry.NpcMaxVitae > 0)
+                                    {
+                                        <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
+                                            Vitae: <strong>@entry.NpcCurrentVitae</strong> / @entry.NpcMaxVitae
+                                        </div>
+                                        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
+                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendVitae(entry.Id)">Spend vitae</button>
+                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreVitae(entry.Id)">Restore vitae</button>
+                                        </div>
+                                    }
                                 }
                             }
 
@@ -409,6 +410,17 @@
                 }
             </div>
         }
+        </div>
+        @if (_isSt)
+        {
+            <aside class="initiative-blood-log-sidebar" aria-label="Blood Logs">
+                <h3 class="initiative-blood-log-title">Blood Logs</h3>
+                <div class="initiative-blood-log-feed">
+                    <RollHistoryFeed />
+                </div>
+            </aside>
+        }
+        </div>
     }
 </div>
 
@@ -935,31 +947,29 @@
         }
     }
 
-    private async Task NpcDamage(int entryId, char type)
+    private bool CanStEditLaunchedNpcEncounter() =>
+        _encounter != null
+        && !_encounter.IsDraft
+        && _encounter.ResolvedAt == null
+        && (_encounter.IsActive || _encounter.IsPaused);
+
+    private async Task OnNpcHealthTrackChangedAsync(int entryId, string track)
     {
-        if (_busy) return;
+        if (_busy || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
 
         _busy = true;
+        _actionFeedback = string.Empty;
         try
         {
-            await NpcCombatService.ApplyNpcDamageAsync(entryId, type, _currentUserId!);
-            await LoadEncounter();
+            await NpcCombatService.SetNpcHealthDamageAsync(entryId, track, _currentUserId);
+            await LoadEncounter(showFullPageSpinner: false);
         }
-        finally
+        catch (Exception ex)
         {
-            _busy = false;
-        }
-    }
-
-    private async Task NpcHeal(int entryId)
-    {
-        if (_busy) return;
-
-        _busy = true;
-        try
-        {
-            await NpcCombatService.HealNpcDamageAsync(entryId, _currentUserId!);
-            await LoadEncounter();
+            _actionFeedback = ex.Message;
         }
         finally
         {
@@ -1161,22 +1171,6 @@
 
     private bool ShowPlayerHealth(InitiativeEntry entry) =>
         entry.Character != null && _isSt;
-
-    private string GetNpcDamageClass(string damage, int index)
-    {
-        if (string.IsNullOrEmpty(damage) || index >= damage.Length)
-        {
-            return string.Empty;
-        }
-
-        return damage[index] switch
-        {
-            '/' => "bashing",
-            'X' => "lethal",
-            '*' => "aggravated",
-            _ => string.Empty,
-        };
-    }
 
     private string GetDamageClass(Character character, int index)
     {

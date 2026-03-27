@@ -12,7 +12,7 @@ namespace RequiemNexus.Application.DTOs;
 /// <param name="RegnantDisplayName">Resolved regnant label for tables and sheets.</param>
 /// <param name="Stage">Bond stage 1–3.</param>
 /// <param name="LastFedAt">UTC timestamp of last feeding from this regnant.</param>
-/// <param name="IsFading">True when <see cref="RequiemNexus.Domain.BloodBondRules.IsFading"/> applies.</param>
+/// <param name="IsFading">True when <see cref="RequiemNexus.Domain.Services.BloodBondRules.IsFading"/> applies.</param>
 /// <param name="ActiveConditionName">Human-readable name of the condition imposed by the current stage.</param>
 public record BloodBondDto(
     int Id,

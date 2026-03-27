@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Contracts;
 
 namespace RequiemNexus.Application.Services;
 
@@ -12,11 +12,11 @@ namespace RequiemNexus.Application.Services;
 public class CharacterDisciplineService(
     ApplicationDbContext dbContext,
     IBeatLedgerService beatLedger,
-    RequiemNexus.Domain.Contracts.IExperienceCostRules experienceCostRules) : ICharacterDisciplineService
+    IExperienceCostRules experienceCostRules) : ICharacterDisciplineService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
-    private readonly RequiemNexus.Domain.Contracts.IExperienceCostRules _experienceCostRules = experienceCostRules;
+    private readonly IExperienceCostRules _experienceCostRules = experienceCostRules;
 
     /// <inheritdoc />
     public async Task<List<Discipline>> GetAvailableDisciplinesAsync()

@@ -19,5 +19,10 @@ public sealed class CharacterTiltConfiguration : IEntityTypeConfiguration<Charac
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(t => t.CharacterId);
+
+        builder
+            .HasIndex(t => new { t.CharacterId, t.TiltType })
+            .HasFilter("\"IsActive\" = TRUE")
+            .IsUnique();
     }
 }

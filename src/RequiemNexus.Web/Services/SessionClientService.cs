@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Web.Enums;
 
 namespace RequiemNexus.Web.Services;
 

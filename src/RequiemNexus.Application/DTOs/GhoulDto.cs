@@ -18,7 +18,7 @@ namespace RequiemNexus.Application.DTOs;
 /// <param name="Notes">ST notes.</param>
 /// <param name="IsReleased">Whether the ghoul was released from service.</param>
 /// <param name="CreatedAt">UTC creation time (used with <see cref="LastFedAt"/> for overdue calculations when never fed).</param>
-/// <param name="IsAgingDue">True when <see cref="RequiemNexus.Domain.GhoulAgingRules.IsAgingDue"/> applies.</param>
+/// <param name="IsAgingDue">True when <see cref="RequiemNexus.Domain.Services.GhoulAgingRules.IsAgingDue"/> applies.</param>
 /// <param name="OverdueMonthsAfterGrace">Full months past the feeding grace period; zero when not aging-due.</param>
 /// <param name="DisciplineAccessEnforced">When true, <see cref="RegnantAllowedDisciplineIds"/> and <see cref="DisciplineAccessMaxCount"/> apply.</param>
 /// <param name="DisciplineAccessMaxCount">Maximum selectable disciplines when <see cref="DisciplineAccessEnforced"/> (regnant Blood Potency).</param>

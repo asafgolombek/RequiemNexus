@@ -6,10 +6,10 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
-using RequiemNexus.Domain;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
+using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
 
@@ -30,33 +30,35 @@ public class NpcCombatService(
     private readonly IDiceService _diceService = diceService;
 
     /// <inheritdoc />
-    public async Task ApplyNpcDamageAsync(int entryId, char damageType, string storyTellerUserId)
+    public async Task SetNpcHealthDamageAsync(int initiativeEntryId, string damageTrack, string storyTellerUserId)
     {
         InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
+            .FirstOrDefaultAsync(i => i.Id == initiativeEntryId)
+            ?? throw new InvalidOperationException($"Initiative entry {initiativeEntryId} not found.");
 
         if (entry.CharacterId != null)
         {
-            throw new InvalidOperationException("NPC damage tracking applies to NPC rows only.");
+            throw new InvalidOperationException("NPC health tracking applies to NPC rows only.");
         }
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
-        string damage = entry.NpcHealthDamage ?? string.Empty;
-        if (damage.Length >= entry.NpcHealthBoxes)
+        try
         {
-            throw new InvalidOperationException("NPC health track is full.");
+            NpcHealthDamageTrack.ValidateFullTrack(damageTrack, entry.NpcHealthBoxes);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException(ex.Message, ex);
         }
 
-        entry.NpcHealthDamage = damage + damageType;
+        entry.NpcHealthDamage = damageTrack;
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation(
-            "ST {UserId} applied damage '{Type}' to NPC '{NpcName}' in encounter {EncounterId}",
+            "ST {UserId} set NPC health track for '{NpcName}' in encounter {EncounterId}",
             storyTellerUserId,
-            damageType,
             entry.NpcName,
             entry.EncounterId);
 
@@ -80,19 +82,30 @@ public class NpcCombatService(
             throw new InvalidOperationException("NPC damage tracking applies to NPC rows only.");
         }
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
-        string damage = entry.NpcHealthDamage ?? string.Empty;
-        int remaining = entry.NpcHealthBoxes - damage.Length;
-        if (remaining < instances)
+        string normalized = NpcHealthDamageTrack.Normalize(entry.NpcHealthDamage, entry.NpcHealthBoxes);
+        char[] chars = normalized.ToCharArray();
+        int emptySlots = chars.Count(c => c == ' ');
+        if (emptySlots < instances)
         {
             throw new InvalidOperationException(
-                $"NPC health track has only {remaining} empty box(es); cannot apply {instances} instance(s).");
+                $"NPC health track has only {emptySlots} empty box(es); cannot apply {instances} instance(s).");
         }
 
         char symbol = kind.ToTrackSymbol();
-        entry.NpcHealthDamage = damage + new string(symbol, instances);
+        int applied = 0;
+        for (int i = 0; i < chars.Length && applied < instances; i++)
+        {
+            if (chars[i] == ' ')
+            {
+                chars[i] = symbol;
+                applied++;
+            }
+        }
+
+        entry.NpcHealthDamage = new string(chars);
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation(
@@ -107,44 +120,13 @@ public class NpcCombatService(
     }
 
     /// <inheritdoc />
-    public async Task HealNpcDamageAsync(int entryId, string storyTellerUserId)
-    {
-        InitiativeEntry entry = await _dbContext.InitiativeEntries
-            .FirstOrDefaultAsync(i => i.Id == entryId)
-            ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
-
-        if (entry.CharacterId != null)
-        {
-            throw new InvalidOperationException("NPC healing applies to NPC rows only.");
-        }
-
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
-        await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
-
-        string damage = entry.NpcHealthDamage ?? string.Empty;
-        if (damage.Length > 0)
-        {
-            entry.NpcHealthDamage = damage[..^1];
-            await _dbContext.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "ST {UserId} healed one box from NPC '{NpcName}' in encounter {EncounterId}",
-                storyTellerUserId,
-                entry.NpcName,
-                entry.EncounterId);
-
-            await PublishInitiativeAsync(entry.EncounterId, storyTellerUserId);
-        }
-    }
-
-    /// <inheritdoc />
     public async Task SpendNpcWillpowerAsync(int entryId, string storyTellerUserId)
     {
         InitiativeEntry entry = await _dbContext.InitiativeEntries
             .FirstOrDefaultAsync(i => i.Id == entryId)
             ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "spend NPC willpower");
 
         if (entry.NpcCurrentWillpower > 0)
@@ -162,7 +144,7 @@ public class NpcCombatService(
             .FirstOrDefaultAsync(i => i.Id == entryId)
             ?? throw new InvalidOperationException($"Initiative entry {entryId} not found.");
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "restore NPC willpower");
 
         if (entry.NpcCurrentWillpower < entry.NpcMaxWillpower)
@@ -185,7 +167,7 @@ public class NpcCombatService(
             throw new InvalidOperationException("This NPC does not track Vitae.");
         }
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "spend NPC vitae");
 
         if (entry.NpcCurrentVitae > 0)
@@ -208,7 +190,7 @@ public class NpcCombatService(
             throw new InvalidOperationException("This NPC does not track Vitae.");
         }
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "restore NPC vitae");
 
         if (entry.NpcCurrentVitae < entry.NpcMaxVitae)
@@ -231,7 +213,7 @@ public class NpcCombatService(
             throw new InvalidOperationException("Reveal toggle applies to NPC rows only.");
         }
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "manage encounters");
 
         entry.IsRevealed = revealed;
@@ -262,7 +244,7 @@ public class NpcCombatService(
             throw new InvalidOperationException("NPC encounter rolls apply to NPC initiative rows only.");
         }
 
-        CombatEncounter encounter = await LoadActiveCombatEncounterAsync(entry.EncounterId);
+        CombatEncounter encounter = await LoadLaunchedCombatEncounterAsync(entry.EncounterId);
         await _authHelper.RequireStorytellerAsync(encounter.CampaignId, storyTellerUserId, "roll for an NPC in encounter");
 
         int pool;
@@ -364,20 +346,20 @@ public class NpcCombatService(
         return Enum.TryParse(name, out SkillId _);
     }
 
-    private async Task<CombatEncounter> LoadActiveCombatEncounterAsync(int encounterId)
+    private async Task<CombatEncounter> LoadLaunchedCombatEncounterAsync(int encounterId)
     {
         CombatEncounter encounter = await _dbContext.CombatEncounters
             .FirstOrDefaultAsync(e => e.Id == encounterId)
             ?? throw new InvalidOperationException($"Encounter {encounterId} not found.");
 
-        if (!encounter.IsActive || encounter.IsDraft)
+        if (encounter.IsDraft || encounter.ResolvedAt != null)
         {
-            throw new InvalidOperationException($"Encounter {encounterId} is not an active launched fight.");
+            throw new InvalidOperationException($"Encounter {encounterId} is not a launched fight.");
         }
 
-        if (encounter.ResolvedAt != null)
+        if (!encounter.IsActive && !encounter.IsPaused)
         {
-            throw new InvalidOperationException($"Encounter {encounterId} is already resolved.");
+            throw new InvalidOperationException($"Encounter {encounterId} is not an active or paused launched fight.");
         }
 
         return encounter;

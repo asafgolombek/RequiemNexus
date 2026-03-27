@@ -1,3 +1,7 @@
+using RequiemNexus.Application.Events;
+using RequiemNexus.Application.Events.Handlers;
+using RequiemNexus.Domain.Events;
+
 namespace RequiemNexus.Web.Extensions;
 
 /// <summary>
@@ -7,6 +11,15 @@ internal static class ApplicationServiceExtensions
 {
     internal static void AddApplicationServices(this IServiceCollection services)
     {
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IVitaeService, RequiemNexus.Application.Services.VitaeService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IWillpowerService, RequiemNexus.Application.Services.WillpowerService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IFrenzyService, RequiemNexus.Application.Services.FrenzyService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ITorporService, RequiemNexus.Application.Services.TorporService>();
+
+        // VitaeDepletedEvent: register handlers in invocation order (see PHASE_15_THE_BEAST_WITHIN.md).
+        services.AddScoped<IDomainEventHandler<VitaeDepletedEvent>, VitaeDepletedEventHandler>();
+
         services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IBeatLedgerService, RequiemNexus.Application.Services.BeatLedgerService>();
@@ -21,9 +34,10 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.IUserDataExportService, RequiemNexus.Application.Services.UserDataExportService>();
         services.AddHostedService<RequiemNexus.Web.Services.AccountDeletionCleanupService>();
         services.AddHostedService<RequiemNexus.Web.BackgroundServices.SessionTerminationService>();
-        services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.ExperienceCostRules>();
-        services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.CharacterCreationRules>();
-        services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.ConditionRules>();
+        services.AddHostedService<RequiemNexus.Web.BackgroundServices.TorporIntervalService>();
+        services.AddSingleton<RequiemNexus.Domain.Contracts.IExperienceCostRules, RequiemNexus.Domain.Services.ExperienceCostRules>();
+        services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.Services.CharacterCreationRules>();
+        services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.Services.ConditionRules>();
         services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();

@@ -21,6 +21,8 @@ public class SorceryActivationService(
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
     ITraitResolver traitResolver,
+    IVitaeService vitaeService,
+    IWillpowerService willpowerService,
     ILogger<SorceryActivationService> logger) : ISorceryActivationService
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -33,6 +35,8 @@ public class SorceryActivationService(
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
     private readonly ITraitResolver _traitResolver = traitResolver;
+    private readonly IVitaeService _vitaeService = vitaeService;
+    private readonly IWillpowerService _willpowerService = willpowerService;
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
@@ -145,20 +149,42 @@ public class SorceryActivationService(
 
         if (vitaeCost > 0 || wpCost > 0 || stainGain > 0)
         {
-            int rows = await _dbContext.Characters
-                .Where(c => c.Id == characterId
-                    && c.CurrentVitae >= vitaeCost
-                    && c.CurrentWillpower >= wpCost)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(c => c.CurrentVitae, c => c.CurrentVitae - vitaeCost)
-                    .SetProperty(c => c.CurrentWillpower, c => c.CurrentWillpower - wpCost)
-                    .SetProperty(c => c.HumanityStains, c => c.HumanityStains + stainGain));
+            await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction tx =
+                await _dbContext.Database.BeginTransactionAsync();
 
-            if (rows == 0)
+            if (vitaeCost > 0)
             {
-                throw new InvalidOperationException(
-                    "Could not apply rite costs (insufficient Vitae or Willpower, or concurrent update).");
+                Result<int> vitaeResult = await _vitaeService.SpendVitaeAsync(
+                    characterId,
+                    userId,
+                    vitaeCost,
+                    $"Rite activation: {def.Name}");
+
+                if (!vitaeResult.IsSuccess)
+                {
+                    throw new InvalidOperationException(
+                        vitaeResult.Error ?? "Could not spend Vitae for rite activation.");
+                }
             }
+
+            if (wpCost > 0)
+            {
+                Result<int> wpResult = await _willpowerService.SpendWillpowerAsync(characterId, userId, wpCost);
+
+                if (!wpResult.IsSuccess)
+                {
+                    throw new InvalidOperationException(
+                        wpResult.Error ?? "Could not spend Willpower for rite activation.");
+                }
+            }
+
+            if (stainGain > 0)
+            {
+                character.HumanityStains += stainGain;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            await tx.CommitAsync();
         }
 
         _logger.LogInformation(

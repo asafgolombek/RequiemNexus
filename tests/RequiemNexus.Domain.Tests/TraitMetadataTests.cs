@@ -1,4 +1,6 @@
 using System.Linq;
+using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Services;
 using Xunit;
 
 namespace RequiemNexus.Domain.Tests;
