@@ -41,8 +41,17 @@
 
 .sidebar-content {
     flex: 1;
-    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 1rem;
+}
+
+.sidebar-content ::deep .roll-history-feed {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
 }
 
 /* Header & Meta */
