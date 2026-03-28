@@ -6,6 +6,8 @@
 
 using System.Globalization;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -88,6 +90,15 @@ public partial class CharacterDetails : IAsyncDisposable
     private bool _isExporting = false;
 
     private readonly HashSet<int> _expandedDisciplines = new HashSet<int>();
+
+    /// <summary>Resolved dice pools for discipline powers that define <c>PoolDefinitionJson</c>.</summary>
+    private readonly Dictionary<int, int> _disciplinePowerResolvedPools = [];
+
+    private static readonly JsonSerializerOptions _poolJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
 
     /// <summary>True when the character may use the Blood Sorcery sheet section (Crúac/Theban covenant, Ordo rituals, or Necromancy dots).</summary>
     private bool ShowBloodSorcerySection =>
@@ -275,6 +286,7 @@ public partial class CharacterDetails : IAsyncDisposable
                 // before loading the full include graph again.
                 _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
                 _availableAssets = await CharacterAssetService.GetListedCatalogAsync();
+                await ResolveDisciplinePowerPoolsAsync();
             }
         }
         catch (Exception ex)
@@ -365,6 +377,7 @@ public partial class CharacterDetails : IAsyncDisposable
             }
 
             _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+            await ResolveDisciplinePowerPoolsAsync();
             StateHasChanged();
         });
     }
@@ -410,8 +423,51 @@ public partial class CharacterDetails : IAsyncDisposable
             }
 
             _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+            await ResolveDisciplinePowerPoolsAsync();
             StateHasChanged();
         });
+    }
+
+    private async Task ResolveDisciplinePowerPoolsAsync()
+    {
+        _disciplinePowerResolvedPools.Clear();
+        if (_character == null)
+        {
+            return;
+        }
+
+        foreach (CharacterDiscipline cd in _character.Disciplines)
+        {
+            if (cd.Discipline?.Powers == null)
+            {
+                continue;
+            }
+
+            foreach (DisciplinePower p in cd.Discipline.Powers)
+            {
+                if (string.IsNullOrEmpty(p.PoolDefinitionJson))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(p.PoolDefinitionJson, _poolJsonOptions);
+                    if (pool != null)
+                    {
+                        _disciplinePowerResolvedPools[p.Id] = await TraitResolver.ResolvePoolAsync(_character, pool);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(
+                        ex,
+                        "Failed to resolve PoolDefinitionJson for discipline power {PowerId} on character {CharacterId}",
+                        p.Id,
+                        _character.Id);
+                }
+            }
+        }
     }
 
     private static void OpenReference(string traitName)

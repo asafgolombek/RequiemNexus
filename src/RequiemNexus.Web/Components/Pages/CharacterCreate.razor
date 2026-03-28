@@ -14,6 +14,7 @@
 @inject IClanService ClanService
 @inject ICharacterMeritService CharacterMeritService
 @inject IDisciplineService DisciplineService
+@inject ICharacterCreationService CharacterCreationService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject RequiemNexus.Web.Services.ToastService ToastService
@@ -70,7 +71,8 @@
                                       AvailableDisciplines="_availableDisciplines" 
                                       MeritPointsSpent="MeritPointsSpent" 
                                       DisciplineDotsSpent="DisciplineDotsSpent" 
-                                      IsValid="IsMeritDisciplineDistributionValid()" 
+                                      CreationDisciplineError="_creationDisciplineError"
+                                      IsValid="IsMeritAndDisciplineCountsValid()" 
                                       OnAddMerit="HandleAddMerit" 
                                       OnAdjustMeritRating="AdjustMeritRating" 
                                       OnRemoveMerit="RemoveMerit"
@@ -119,6 +121,7 @@
 
     private List<Merit> _availableMerits = new List<Merit>();
     private List<Discipline> _availableDisciplines = new List<Discipline>();
+    private string? _creationDisciplineError;
 
     private int MentalPointsSpent => TraitMetadata.MentalAttributes.Sum(a => CharacterTraitHelper.GetTraitValue(_newCharacter, a) - 1);
     private int PhysicalPointsSpent => TraitMetadata.PhysicalAttributes.Sum(a => CharacterTraitHelper.GetTraitValue(_newCharacter, a) - 1);
@@ -213,19 +216,31 @@
         {
             _newCharacter.Disciplines.Add(new CharacterDiscipline { DisciplineId = disciplineId, Rating = 1 });
         }
+
+        RefreshCreationDisciplineValidation();
     }
 
-    private static void AdjustDisciplineDots(CharacterDiscipline cd, int change)
+    private void AdjustDisciplineDots(CharacterDiscipline cd, int change)
     {
         if (cd.Rating + change >= 1 && cd.Rating + change <= 5)
         {
             cd.Rating += change;
         }
+
+        RefreshCreationDisciplineValidation();
     }
 
     private void RemoveDiscipline(CharacterDiscipline cd)
     {
         _newCharacter.Disciplines.Remove(cd);
+        RefreshCreationDisciplineValidation();
+    }
+
+    private void RefreshCreationDisciplineValidation()
+    {
+        _newCharacter.Clan = _availableClans.FirstOrDefault(c => c.Id == _newCharacter.ClanId);
+        var result = CharacterCreationService.ValidateCreationDisciplines(_newCharacter);
+        _creationDisciplineError = result.IsSuccess ? null : result.Error;
     }
 
     private async Task NextStep()
@@ -238,6 +253,10 @@
             }
 
             _currentStep++;
+            if (_currentStep == CreationStep.MeritsAndDisciplines)
+            {
+                RefreshCreationDisciplineValidation();
+            }
         }
     }
 
@@ -264,9 +283,14 @@
         return points[0] == 4 && points[1] == 7 && points[2] == 11;
     }
 
-    private bool IsMeritDisciplineDistributionValid()
+    private bool IsMeritAndDisciplineCountsValid()
     {
         return MeritPointsSpent == 7 && DisciplineDotsSpent == 3;
+    }
+
+    private bool CanLeaveMeritsAndDisciplinesStep()
+    {
+        return IsMeritAndDisciplineCountsValid() && string.IsNullOrEmpty(_creationDisciplineError);
     }
 
     private bool CanProceedToNextStep()
@@ -280,7 +304,7 @@
             case CreationStep.Skills:
                 return IsSkillDistributionValid();
             case CreationStep.MeritsAndDisciplines:
-                return IsMeritDisciplineDistributionValid();
+                return CanLeaveMeritsAndDisciplinesStep();
             case CreationStep.ReviewAndEmbrace:
             default:
                 return true;

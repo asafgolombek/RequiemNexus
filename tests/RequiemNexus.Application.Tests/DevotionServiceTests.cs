@@ -48,7 +48,9 @@ public class DevotionServiceTests
         Assert.NotNull(result);
         Assert.Equal(8, character.ExperiencePoints);
         Assert.Single(character.Devotions);
-        _beatLedgerMock.Verify(l => l.RecordXpSpendAsync(1, null, 2, XpExpense.Devotion, It.IsAny<string>(), "user1"), Times.Once);
+        _beatLedgerMock.Verify(
+            l => l.RecordXpSpendAsync(1, null, 2, XpExpense.Devotion, It.IsAny<string>(), "user1", null),
+            Times.Once);
     }
 
     [Fact]

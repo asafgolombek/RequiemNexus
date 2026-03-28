@@ -65,7 +65,8 @@ public class BeatLedgerService(ApplicationDbContext dbContext) : IBeatLedgerServ
         int cost,
         XpExpense expense,
         string reason,
-        string? actingUserId)
+        string? actingUserId,
+        string? notes = null)
     {
         _dbContext.XpLedger.Add(new XpLedgerEntry
         {
@@ -74,6 +75,7 @@ public class BeatLedgerService(ApplicationDbContext dbContext) : IBeatLedgerServ
             Delta = -cost,
             Expense = expense,
             Reason = reason,
+            Notes = notes,
             OccurredAt = DateTime.UtcNow,
             ActingUserId = actingUserId,
         });

@@ -219,3 +219,14 @@
     align-items: center;
     gap: 0.35rem;
 }
+
+.cruac-humanity-cap {
+    margin-top: 0.5rem;
+    font-size: 0.85em;
+    color: var(--text-muted, #a0a0a0);
+}
+
+.cruac-humanity-cap--warn {
+    color: var(--crimson-glow, #ff6666);
+    font-weight: 600;
+}

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Data.SeedData;
@@ -25,7 +27,98 @@ public static class DisciplineSeedData
         CreateVigor(),
         CreateCrúac(),
         CreateThebanSorcery(),
+        CreateNecromancy(),
     ];
+
+    /// <summary>
+    /// Loads Discipline definitions from Disciplines.json (acquisition flags and pool JSON).
+    /// CovenantId and BloodlineId are resolved in a second database seed pass after covenants and bloodlines exist.
+    /// </summary>
+    /// <param name="logger">Logger for parse failures.</param>
+    /// <returns>Parsed disciplines, or <see cref="GetAll"/> when the file is missing or invalid.</returns>
+    public static List<Discipline> LoadFromDocs(ILogger logger)
+    {
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson("Disciplines.json", logger);
+        if (doc == null)
+        {
+            return GetAll();
+        }
+
+        var result = new List<Discipline>();
+        foreach (JsonElement el in doc.RootElement.EnumerateArray())
+        {
+            string name = el.TryGetProperty("name", out var n) ? n.GetString() ?? string.Empty : string.Empty;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            var discipline = new Discipline
+            {
+                Name = name,
+                Description = el.TryGetProperty("description", out var d) ? d.GetString() ?? string.Empty : string.Empty,
+                CanLearnIndependently = ReadBool(el, "canLearnIndependently"),
+                RequiresMentorBloodToLearn = ReadBool(el, "requiresMentorBloodToLearn"),
+                IsCovenantDiscipline = ReadBool(el, "isCovenantDiscipline"),
+                IsBloodlineDiscipline = ReadBool(el, "isBloodlineDiscipline"),
+                IsNecromancy = ReadBool(el, "isNecromancy"),
+                Powers = [],
+            };
+
+            if (el.TryGetProperty("powers", out var powers))
+            {
+                int rank = 0;
+                foreach (JsonElement p in powers.EnumerateArray())
+                {
+                    rank++;
+                    string powerName = p.TryGetProperty("name", out var pn) ? pn.GetString() ?? $"{name} {rank}" : $"{name} {rank}";
+                    int level = ReadPowerRanking(p, rank);
+                    string pool = p.TryGetProperty("roll", out var pr) ? pr.GetString() ?? string.Empty : string.Empty;
+                    string cost = p.TryGetProperty("cost", out var pc) ? pc.GetString() ?? "—" : "—";
+                    string? poolJson = p.TryGetProperty("poolDefinitionJson", out var pj) && pj.ValueKind != JsonValueKind.Null
+                        ? pj.GetString()
+                        : null;
+
+                    discipline.Powers.Add(new DisciplinePower
+                    {
+                        Level = level,
+                        Name = powerName,
+                        Description = p.TryGetProperty("description", out var pd) ? pd.GetString() ?? string.Empty : string.Empty,
+                        DicePool = pool,
+                        Cost = cost,
+                        PoolDefinitionJson = poolJson,
+                    });
+                }
+            }
+
+            result.Add(discipline);
+        }
+
+        return result.Count > 0 ? result : GetAll();
+    }
+
+    private static bool ReadBool(JsonElement el, string propertyName) =>
+        el.TryGetProperty(propertyName, out var p) && p.ValueKind == JsonValueKind.True;
+
+    private static int ReadPowerRanking(JsonElement p, int fallbackRank)
+    {
+        if (!p.TryGetProperty("ranking", out var rv))
+        {
+            return fallbackRank;
+        }
+
+        if (rv.TryGetInt32(out int ri))
+        {
+            return ri;
+        }
+
+        if (rv.ValueKind == JsonValueKind.String && int.TryParse(rv.GetString(), out int rs))
+        {
+            return rs;
+        }
+
+        return fallbackRank;
+    }
 
     private static Discipline CreateAnimalism()
     {
@@ -52,11 +145,11 @@ public static class DisciplineSeedData
     private static Discipline CreateCelerity()
     {
         var d = new Discipline { Name = "Celerity", Description = "Supernatural speed and reflexes." };
-        d.Powers.Add(new DisciplinePower { Name = "Celerity 1", Level = 1, Description = "Add dots to Initiative, subtract from attack pools.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Celerity 2", Level = 2, Description = "Can take a reflexive dash action.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Celerity 3", Level = 3, Description = "Subtract from all incoming attack pools.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Celerity 4", Level = 4, Description = "Can ignore minor environmental hazards.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Celerity 5", Level = 5, Description = "Take two actions instead of one.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Between the Ticks", Level = 1, Description = "Add dots to Initiative, subtract from attack pools.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Impulses", Level = 2, Description = "Can take a reflexive dash action.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Quick March", Level = 3, Description = "Subtract from all incoming attack pools.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Downgrading Strikes", Level = 4, Description = "Can ignore minor environmental hazards.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Out of Time", Level = 5, Description = "Take two actions instead of one.", Cost = _costOneVitae });
         return d;
     }
 
@@ -118,22 +211,22 @@ public static class DisciplineSeedData
     private static Discipline CreateResilience()
     {
         var d = new Discipline { Name = "Resilience", Description = "Supernatural toughness." };
-        d.Powers.Add(new DisciplinePower { Name = "Resilience 1", Level = 1, Description = "Add to Stamina and downgrade agg damage.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Resilience 2", Level = 2, Description = "Ignore wound penalties temporarily.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Resilience 3", Level = 3, Description = "Downgrade lethal damage to bashing.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Resilience 4", Level = 4, Description = "Resist all mundane sources of damage.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Resilience 5", Level = 5, Description = "Shrug off almost anything.", Cost = _costOneWillpower });
+        d.Powers.Add(new DisciplinePower { Name = "Tough as Nails", Level = 1, Description = "Add to Stamina and downgrade agg damage.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "General Sturdiness", Level = 2, Description = "Ignore wound penalties temporarily.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Bending and Breaking", Level = 3, Description = "Downgrade lethal damage to bashing.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "The Fire Dies", Level = 4, Description = "Resist all mundane sources of damage.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Unbreakable", Level = 5, Description = "Shrug off almost anything.", Cost = _costOneWillpower });
         return d;
     }
 
     private static Discipline CreateVigor()
     {
         var d = new Discipline { Name = "Vigor", Description = "Supernatural strength." };
-        d.Powers.Add(new DisciplinePower { Name = "Vigor 1", Level = 1, Description = "Add dots to Strength and jumping.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Vigor 2", Level = 2, Description = "Increase carrying capacity massively.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Vigor 3", Level = 3, Description = "Break down doors easily.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Vigor 4", Level = 4, Description = "Leap incredible distances.", Cost = _costOneVitae });
-        d.Powers.Add(new DisciplinePower { Name = "Vigor 5", Level = 5, Description = "Strike with earth-shattering force.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Deadweight", Level = 1, Description = "Add dots to Strength and jumping.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Feat of Strength", Level = 2, Description = "Increase carrying capacity massively.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Punch Through", Level = 3, Description = "Break down doors easily.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Great Leap", Level = 4, Description = "Leap incredible distances.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Crushing Blow", Level = 5, Description = "Strike with earth-shattering force.", Cost = _costOneVitae });
         return d;
     }
 
@@ -153,5 +246,16 @@ public static class DisciplineSeedData
             Name = "Theban Sorcery",
             Description = "Sacraments of the Lancea et Sanctum. Miracles channel divine condemnation.",
         };
+    }
+
+    private static Discipline CreateNecromancy()
+    {
+        var d = new Discipline { Name = "Necromancy", Description = "Death sorcery of the Mekhet and the death-touched bloodlines." };
+        d.Powers.Add(new DisciplinePower { Name = "Death Sight", Level = 1, Description = "Perceive ghosts and deathly resonance.", DicePool = "Wits + Occult + Necromancy" });
+        d.Powers.Add(new DisciplinePower { Name = "Summon Shade", Level = 2, Description = "Call a minor ghost to answer questions.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Rotten Shroud", Level = 3, Description = "Curse a subject with decay and ill fortune.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Blighted Grasp", Level = 4, Description = "Inflict lethal harm through spectral touch.", Cost = _costOneVitae });
+        d.Powers.Add(new DisciplinePower { Name = "Legion", Level = 5, Description = "Command a host of shades.", Cost = _costOneWillpower });
+        return d;
     }
 }

@@ -8,6 +8,7 @@
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Models
 @using RequiemNexus.Data.Models.Enums
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
@@ -243,6 +244,25 @@ else
                              IsOpenChanged="HandleApplyLearnRiteModalClosed"
                              EligibleRites="_eligibleRites"
                              OnApplyRequested="HandleApplyLearnRiteRequested" />
+
+        @if (_disciplineGateDialogOpen)
+        {
+            <div class="modal-backdrop" @onclick="CancelDisciplineGateAckAsync">
+                <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="disc-gate-title">
+                    <div class="modal-header">
+                        <h3 id="disc-gate-title">Storyteller acknowledgment</h3>
+                        <button type="button" class="close-btn" @onclick="CancelDisciplineGateAckAsync" aria-label="Close">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="apply-bloodline-hint">@_disciplineGateMessage</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-rn-ghost" @onclick="CancelDisciplineGateAckAsync">Cancel</button>
+                        <button type="button" class="btn-rn-primary" @onclick="ConfirmDisciplineGateAckAsync">Storyteller acknowledges</button>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 }
 
@@ -272,6 +292,11 @@ else
     private bool _isApplyLearnRiteModalOpen;
     private bool _openingRiteModal;
     private List<SorceryRiteSummaryDto> _eligibleRites = [];
+
+    private bool _disciplineGateDialogOpen;
+    private string? _disciplineGateMessage;
+    private DisciplineAcquisitionRequest? _pendingDisciplineRequest;
+    private bool _pendingDisciplineIsUpgrade;
 
     /// <summary>Same visibility as the character sheet Blood Sorcery section.</summary>
     private bool ShowBloodSorcerySection =>
@@ -377,22 +402,34 @@ else
 
     private async Task TryUpgradeDiscipline(CharacterDiscipline cd, int newRating)
     {
-        if (_character == null || newRating <= cd.Rating) return;
+        if (_character == null || string.IsNullOrEmpty(_userId) || newRating <= cd.Rating)
+        {
+            return;
+        }
 
         _errorMessage = null;
 
-        bool success = await CharacterDisciplineService.TryUpgradeDisciplineAsync(_character, cd.Id, newRating, _userId);
-        if (success)
+        var request = new DisciplineAcquisitionRequest(_character.Id, cd.DisciplineId, newRating);
+        Result<CharacterDiscipline> result = await CharacterDisciplineService.TryUpgradeDisciplineAsync(request, _userId);
+        if (result.IsSuccess)
         {
-            // Re-check eligible devotions after discipline upgrade
             _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
             await CharacterService.SaveAsync(_character);
             await InvokeAsync(StateHasChanged);
+            return;
         }
-        else
+
+        if (DisciplineFailureAllowsStorytellerAck(result.Error))
         {
-            SetAdvancementError("Not enough Experiences to upgrade that discipline.");
+            _pendingDisciplineRequest = request;
+            _pendingDisciplineIsUpgrade = true;
+            _disciplineGateMessage = result.Error;
+            _disciplineGateDialogOpen = true;
+            await InvokeAsync(StateHasChanged);
+            return;
         }
+
+        SetAdvancementError(result.Error ?? "Could not upgrade that Discipline.");
     }
 
     private async Task AddNewMerit()
@@ -451,28 +488,100 @@ else
 
     private async Task AddNewDiscipline()
     {
-        if (_character == null || _selectedDisciplineId == 0) return;
+        if (_character == null || string.IsNullOrEmpty(_userId) || _selectedDisciplineId == 0)
+        {
+            return;
+        }
 
         _errorMessage = null;
-        
-        try 
+
+        var request = new DisciplineAcquisitionRequest(_character.Id, _selectedDisciplineId, _newDisciplineRating);
+        Result<CharacterDiscipline> result = await CharacterDisciplineService.AddDisciplineAsync(request, _userId);
+        if (result.IsSuccess && result.Value != null)
         {
             var disc = _availableDisciplines.First(d => d.Id == _selectedDisciplineId);
-            var cd = await CharacterDisciplineService.AddDisciplineAsync(_character, _selectedDisciplineId, _newDisciplineRating, _userId);
+            CharacterDiscipline cd = result.Value;
             cd.Discipline = disc;
-            _character.Disciplines.Add(cd);
+            if (!_character.Disciplines.Contains(cd))
+            {
+                _character.Disciplines.Add(cd);
+            }
 
-            // Re-check eligible devotions
             _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
 
             _selectedDisciplineId = 0;
             _newDisciplineRating = 1;
             await InvokeAsync(StateHasChanged);
+            return;
         }
-        catch (Exception ex)
+
+        if (DisciplineFailureAllowsStorytellerAck(result.Error))
         {
-            SetAdvancementError(ex.Message);
+            _pendingDisciplineRequest = request;
+            _pendingDisciplineIsUpgrade = false;
+            _disciplineGateMessage = result.Error;
+            _disciplineGateDialogOpen = true;
+            await InvokeAsync(StateHasChanged);
+            return;
         }
+
+        SetAdvancementError(result.Error ?? "Could not add that Discipline.");
+    }
+
+    private static bool DisciplineFailureAllowsStorytellerAck(string? error) =>
+        !string.IsNullOrEmpty(error)
+        && error.Contains("Storyteller", StringComparison.OrdinalIgnoreCase);
+
+    private async Task ConfirmDisciplineGateAckAsync()
+    {
+        if (_character == null || string.IsNullOrEmpty(_userId) || _pendingDisciplineRequest == null)
+        {
+            return;
+        }
+
+        _disciplineGateDialogOpen = false;
+        DisciplineAcquisitionRequest retry = _pendingDisciplineRequest with { AcquisitionAcknowledgedByST = true };
+        bool wasUpgrade = _pendingDisciplineIsUpgrade;
+        _pendingDisciplineRequest = null;
+
+        Result<CharacterDiscipline> result = wasUpgrade
+            ? await CharacterDisciplineService.TryUpgradeDisciplineAsync(retry, _userId)
+            : await CharacterDisciplineService.AddDisciplineAsync(retry, _userId);
+
+        if (!result.IsSuccess || result.Value == null)
+        {
+            SetAdvancementError(result.Error ?? "Discipline purchase failed after Storyteller acknowledgment.");
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        if (wasUpgrade)
+        {
+            _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
+        }
+        else
+        {
+            var disc = _availableDisciplines.First(d => d.Id == retry.DisciplineId);
+            result.Value.Discipline = disc;
+            if (!_character.Disciplines.Contains(result.Value))
+            {
+                _character.Disciplines.Add(result.Value);
+            }
+
+            _eligibleDevotions = await DevotionService.GetEligibleDevotionsAsync(_character);
+            _selectedDisciplineId = 0;
+            _newDisciplineRating = 1;
+        }
+
+        await CharacterService.SaveAsync(_character);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task CancelDisciplineGateAckAsync()
+    {
+        _disciplineGateDialogOpen = false;
+        _pendingDisciplineRequest = null;
+        return InvokeAsync(StateHasChanged);
     }
 
     private async Task AddNewDevotion()

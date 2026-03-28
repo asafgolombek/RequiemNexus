@@ -20,6 +20,7 @@ internal static class ApplicationServiceExtensions
 
         // VitaeDepletedEvent: register handlers in invocation order (see PHASE_15_THE_BEAST_WITHIN.md).
         services.AddScoped<IDomainEventHandler<VitaeDepletedEvent>, VitaeDepletedEventHandler>();
+        services.AddScoped<IDomainEventHandler<DegenerationCheckRequiredEvent>, DegenerationCheckRequiredEventHandler>();
 
         services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
@@ -72,6 +73,8 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.ISorceryActivationService, RequiemNexus.Application.Services.SorceryActivationService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICoilService, RequiemNexus.Application.Services.CoilService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IHumanityService, RequiemNexus.Application.Services.HumanityService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterCreationService, RequiemNexus.Application.Services.CharacterCreationService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDevotionService, RequiemNexus.Application.Services.DevotionService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IModifierService, RequiemNexus.Application.Services.ModifierService>();

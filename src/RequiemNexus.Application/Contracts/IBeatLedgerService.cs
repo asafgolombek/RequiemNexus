@@ -41,13 +41,21 @@ public interface IBeatLedgerService
     /// Appends an XP-debit entry to the ledger (Delta &lt; 0).
     /// The caller is responsible for also updating <c>Character.ExperiencePoints</c> and persisting.
     /// </summary>
+    /// <param name="characterId">Target character.</param>
+    /// <param name="campaignId">Campaign context, if any.</param>
+    /// <param name="cost">Positive XP amount debited.</param>
+    /// <param name="expense">Ledger category for the spend.</param>
+    /// <param name="reason">Human-readable description.</param>
+    /// <param name="actingUserId">UserId of the spender (player or Storyteller).</param>
+    /// <param name="notes">Optional audit extension (e.g. gate overrides). Stored on <see cref="XpLedgerEntry.Notes"/>.</param>
     Task RecordXpSpendAsync(
         int characterId,
         int? campaignId,
         int cost,
         XpExpense expense,
         string reason,
-        string? actingUserId);
+        string? actingUserId,
+        string? notes = null);
 
     /// <summary>Returns all Beat ledger entries for a character, newest first.</summary>
     Task<List<BeatLedgerEntry>> GetBeatLedgerAsync(int characterId);

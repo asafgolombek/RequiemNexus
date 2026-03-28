@@ -4,6 +4,13 @@
 <div class="step-content">
     <h3>Merits & Disciplines</h3>
     
+    @if (!string.IsNullOrEmpty(CreationDisciplineError))
+    {
+        <div class="creation-inline-error" style="margin-bottom: 16px; padding: 10px; background-color: #330000; border-left: 3px solid #ff3333; color: white; font-size: 0.9em;">
+            @CreationDisciplineError
+        </div>
+    }
+
     @if (!IsValid)
     {
         <div style="margin-bottom: 20px; padding: 10px; background-color: #330000; border-left: 3px solid #ff3333; color: white; font-size: 0.9em;">
@@ -112,6 +119,9 @@
     [Parameter] public int MeritPointsSpent { get; set; }
     [Parameter] public int DisciplineDotsSpent { get; set; }
     [Parameter] public bool IsValid { get; set; }
+
+    /// <summary>Inline message when the 2-of-3 in-clan discipline rule fails.</summary>
+    [Parameter] public string? CreationDisciplineError { get; set; }
 
     [Parameter] public Action<int>? OnAddMerit { get; set; }
     [Parameter] public Action<CharacterMerit, int>? OnAdjustMeritRating { get; set; }

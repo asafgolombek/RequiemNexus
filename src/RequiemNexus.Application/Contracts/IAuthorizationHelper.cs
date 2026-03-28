@@ -9,6 +9,12 @@ namespace RequiemNexus.Application.Contracts;
 /// </summary>
 public interface IAuthorizationHelper
 {
+    /// <summary>Returns true if the user is the Storyteller for the given campaign. Does not throw.</summary>
+    /// <param name="campaignId">The campaign to check.</param>
+    /// <param name="userId">The requesting user.</param>
+    /// <returns>True when <paramref name="campaignId"/> exists and <paramref name="userId"/> is its Storyteller.</returns>
+    Task<bool> IsStorytellerAsync(int campaignId, string userId);
+
     /// <summary>
     /// Throws <see cref="UnauthorizedAccessException"/> unless <paramref name="userId"/>
     /// is the Storyteller of <paramref name="campaignId"/>.

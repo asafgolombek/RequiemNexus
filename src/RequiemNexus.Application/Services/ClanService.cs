@@ -13,6 +13,7 @@ public class ClanService(ApplicationDbContext dbContext) : IClanService
     {
         return await _dbContext.Clans
             .AsNoTracking()
+            .Include(c => c.ClanDisciplines)
             .OrderBy(c => c.Name)
             .ToListAsync();
     }

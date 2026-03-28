@@ -7,6 +7,7 @@ using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
@@ -17,7 +18,8 @@ public class CharacterManagementService(
     ICharacterCreationRules creationRules,
     IBeatLedgerService beatLedger,
     IAuthorizationHelper authHelper,
-    ISessionService sessionService) : ICharacterService
+    ISessionService sessionService,
+    ICharacterCreationService characterCreationService) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
@@ -25,6 +27,7 @@ public class CharacterManagementService(
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly ICharacterCreationService _characterCreationService = characterCreationService;
 
     /// <inheritdoc />
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
@@ -124,6 +127,12 @@ public class CharacterManagementService(
 
         // Player-created characters are always Vampires.
         newCharacter.CreatureType = RequiemNexus.Data.Models.Enums.CreatureType.Vampire;
+
+        Result<bool> disciplineRule = _characterCreationService.ValidateCreationDisciplines(newCharacter);
+        if (!disciplineRule.IsSuccess)
+        {
+            throw new InvalidOperationException(disciplineRule.Error ?? "Invalid creation Disciplines.");
+        }
 
         _dbContext.Characters.Add(newCharacter);
         await _dbContext.SaveChangesAsync();
