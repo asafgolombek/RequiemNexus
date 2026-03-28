@@ -32,13 +32,13 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 14 | The Danse Macabre — Combat & Wounds | ✅ Complete |
 | 15 | The Beast Within — Frenzy & Torpor | ✅ Complete |
 | 16a | The Hunting Ground — Feeding | ✅ Complete |
-| 16b | The Discipline Engine — Power Activation | ⬜ Planned |
+| 16b | The Discipline Engine — Power Activation | 🔄 In Progress |
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
-| 19 | The Blood Lineage — Discipline Acquisition Rules | 🔄 In Progress |
+| 19 | The Blood Lineage — Discipline Acquisition Rules | ✅ Complete |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Phase 16a — The Hunting Ground (Feeding) is complete** (`IHuntingService`, `HuntPanel`, hunt ledger). **Phase 19 — The Blood Lineage is now active** — see [`docs/phase19-the-blood-lineage.md`](./phase19-the-blood-lineage.md) for the full implementation plan. **Phase 16b** (Discipline power activation) remains **blocked on Phase 19** (`DisciplinePower.PoolDefinitionJson`). **Phase 17** (Humanity & Conditions) is independent and may proceed in parallel. Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** after playability work. Phases 14–16a are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is now active** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). **Phase 17** (Humanity & Conditions) is independent and may proceed in parallel. Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phases 14–16a and 19 are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -51,15 +51,15 @@ Phase 14 (Combat) ✅
     └──► Phase 17 (Humanity)              ← WoundPenaltyResolver in ModifierService
 
 Phase 16a (Hunting) ✅  ← independent
-Phase 19  (Disciplines — model + seed)   ← independent; start now
-    └──► Phase 16b (Discipline Activation)  ← needs PoolDefinitionJson from Phase 19
+Phase 19  (Disciplines — model + seed) ✅
+    └──► Phase 16b (Discipline Activation) 🔄  ← unblocked by Phase 19
 
 Phase 18 (Edge Systems) ← fully independent; content passes any time
 ```
 
 **Recommended parallel tracks:**
 - Track A: ~~14 → 15~~ ✅ → **Phase 17** next (independent, ready to start)
-- Track B: **Phase 19** 🔄 → **Phase 16b** (discipline chain) — [plan](./phase19-the-blood-lineage.md)
+- Track B: ~~Phase 19~~ ✅ → **Phase 16b** 🔄 (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
 - Track C: **Phase 18** (independent, any time)
 
 ---
@@ -487,7 +487,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **The Objective:** Activate Discipline powers with cost enforcement and pool resolution.
 
-**Dependency:** Phase 19 must ship `DisciplinePower.PoolDefinitionJson` first.
+**Status:** 🔄 **In Progress** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md).
 
 ### Architectural Decisions
 
@@ -566,9 +566,9 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 
 ---
 
-## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline 🔄
+## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline ✅
 
-**Status:** 🔄 **In Progress** — see [`docs/phase19-the-blood-lineage.md`](./phase19-the-blood-lineage.md) for the full implementation plan.
+**Status:** ✅ **Complete.**
 
 **The Objective:** Enforce the acquisition rules from `DisciplinesRules.txt`, promote `Disciplines.json` to authoritative seed source, and add `PoolDefinitionJson` to unblock Phase 16b.
 
@@ -607,37 +607,37 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 - **Necromancy "cultural connection" is a soft gate.** `Discipline.IsNecromancy` gates a dedicated soft-gate path: if the character is not Mekhet-clan and has no Necromancy bloodline, `AcquisitionAcknowledgedByST = true` is required. The ST confirmation modal quotes all three eligible conditions verbatim from `DisciplinesRules.txt`.
 
 **Data model & migration**
-- [ ] Add acquisition metadata to `Discipline` entity — `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId` (int?, FK), `IsBloodlineDiscipline`, `BloodlineId` (int?, FK), `IsNecromancy`; migration `Phase19DisciplineAcquisitionMetadata`
-- [ ] Add `PoolDefinitionJson` to `DisciplinePower` — nullable string, same contract as `DevotionDefinition.PoolDefinitionJson`; same migration batch
-- [ ] Extend `Disciplines.json` schema — add acquisition fields to all 12 core disciplines + bloodline disciplines; populate `PoolDefinitionJson` from `DisciplinesRules.txt` (null where not detailed)
+- [x] Add acquisition metadata to `Discipline` entity — `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId` (int?, FK), `IsBloodlineDiscipline`, `BloodlineId` (int?, FK), `IsNecromancy`; migration `Phase19DisciplineAcquisitionMetadata`
+- [x] Add `PoolDefinitionJson` to `DisciplinePower` — nullable string, same contract as `DevotionDefinition.PoolDefinitionJson`; same migration batch
+- [x] Extend `Disciplines.json` schema — add acquisition fields to all 12 core disciplines + bloodline disciplines; populate `PoolDefinitionJson` from `DisciplinesRules.txt` (null where not detailed)
 
 **Seed pipeline**
-- [ ] `DisciplineJsonImporter` — `RequiemNexus.Data`; follows `CovenantJsonImporter` pattern; upsert by name; called from `DbInitializer.EnsureDisciplinesAsync`
-- [ ] Retire `DisciplineSeedData.cs` — delete after importer verified by integration tests; record switch in `rules-interpretations.md`
-- [ ] Fix Celerity / Resilience / Vigor power names to rulebook names in `Disciplines.json`
+- [x] `DisciplineJsonImporter` — `RequiemNexus.Data`; follows `CovenantJsonImporter` pattern; upsert by name; called from `DbInitializer.EnsureDisciplinesAsync`
+- [x] Retire `DisciplineSeedData.cs` — delete after importer verified by integration tests; record switch in `rules-interpretations.md`
+- [x] Fix Celerity / Resilience / Vigor power names to rulebook names in `Disciplines.json`
 
 **Acquisition rule enforcement**
-- [ ] `DisciplineAcquisitionRequest` DTO — `DisciplineId`, `TargetRating`, `AcquisitionAcknowledgedByST` (bool); replaces bare parameters
-- [ ] Hard gate: bloodline restriction — `CharacterDisciplineService`: if `IsBloodlineDiscipline`, character must have matching `CharacterBloodline`; `Result.Failure` if not
-- [ ] Hard gate (overridable): Covenant Status — if `IsCovenantDiscipline`, require active matching `CovenantMembership`; when `AcquisitionAcknowledgedByST = true`, bypass and audit ledger note
-- [ ] Hard gate: Theban Humanity floor — if Theban Sorcery and `TargetRating > character.Humanity`, `Result.Failure`
-- [ ] Soft gate: teacher + Vitae — if `RequiresMentorBloodToLearn` and out-of-clan, require `AcquisitionAcknowledgedByST = true`; ST confirmation modal
-- [ ] Crúac breaking point — on first Crúac purchase at Humanity ≥ 4, raise `DegenerationCheckRequired(CrúacPurchase)`
-- [ ] Necromancy gate — if `IsNecromancy` and not Mekhet-clan and no Necromancy bloodline, require `AcquisitionAcknowledgedByST = true`; modal quotes all three eligible conditions
-- [ ] Soft gate audit — append `" | gate-override stUserId={userId} {timestamp:O}"` to `XpLedgerEntry.Notes` for all ST-acknowledged purchases; format recorded in `rules-interpretations.md`
-- [ ] Crúac Humanity cap — `HumanityService.GetEffectiveMaxHumanity` returns `10 − CrúacRating`; displayed on character sheet
+- [x] `DisciplineAcquisitionRequest` DTO — `DisciplineId`, `TargetRating`, `AcquisitionAcknowledgedByST` (bool); replaces bare parameters
+- [x] Hard gate: bloodline restriction — `CharacterDisciplineService`: if `IsBloodlineDiscipline`, character must have matching `CharacterBloodline`; `Result.Failure` if not
+- [x] Hard gate (overridable): Covenant Status — if `IsCovenantDiscipline`, require active matching `CovenantMembership`; when `AcquisitionAcknowledgedByST = true`, bypass and audit ledger note
+- [x] Hard gate: Theban Humanity floor — if Theban Sorcery and `TargetRating > character.Humanity`, `Result.Failure`
+- [x] Soft gate: teacher + Vitae — if `RequiresMentorBloodToLearn` and out-of-clan, require `AcquisitionAcknowledgedByST = true`; ST confirmation modal
+- [x] Crúac breaking point — on first Crúac purchase at Humanity ≥ 4, raise `DegenerationCheckRequired(CrúacPurchase)`
+- [x] Necromancy gate — if `IsNecromancy` and not Mekhet-clan and no Necromancy bloodline, require `AcquisitionAcknowledgedByST = true`; modal quotes all three eligible conditions
+- [x] Soft gate audit — append `" | gate-override stUserId={userId} {timestamp:O}"` to `XpLedgerEntry.Notes` for all ST-acknowledged purchases; format recorded in `rules-interpretations.md`
+- [x] Crúac Humanity cap — `HumanityService.GetEffectiveMaxHumanity` returns `10 − CrúacRating`; displayed on character sheet
 
 **Character creation**
-- [ ] 2-of-3 in-clan minimum — `CharacterCreationService`: count in-clan dots; `Result.Failure` if fewer than 2; inline validation error in creation UI
-- [ ] Third-dot Covenant gate — if third creation dot targets Crúac / Theban / Coils without Covenant Status, surface ST confirmation prompt
+- [x] 2-of-3 in-clan minimum — `CharacterCreationService`: count in-clan dots; `Result.Failure` if fewer than 2; inline validation error in creation UI
+- [x] Third-dot Covenant gate — if third creation dot targets Crúac / Theban / Coils without Covenant Status, surface ST confirmation prompt
 
 **UI**
-- [ ] Acquisition gate feedback — Advancement page: hard gates show descriptive tooltip; soft gates show ST confirmation modal with rule quoted verbatim
-- [ ] Crúac Humanity cap badge — "Max Humanity: X (capped by Crúac •••)" on character sheet when `CrúacRating > 0`
-- [ ] Power pool display — when `DisciplinePower.PoolDefinitionJson` is populated, show resolved pool formula on character sheet (same pattern as Devotion display)
+- [x] Acquisition gate feedback — Advancement page: hard gates show descriptive tooltip; soft gates show ST confirmation modal with rule quoted verbatim
+- [x] Crúac Humanity cap badge — "Max Humanity: X (capped by Crúac •••)" on character sheet when `CrúacRating > 0`
+- [x] Power pool display — when `DisciplinePower.PoolDefinitionJson` is populated, show resolved pool formula on character sheet (same pattern as Devotion display)
 
 **Rules Interpretation Log**
-- [ ] Record in `docs/rules-interpretations.md`: soft vs. hard gate choices, Crúac breaking-point threshold (Humanity 4+), Theban floor formula, `DisciplineSeedData.cs` → JSON migration rationale
+- [x] Record in `docs/rules-interpretations.md`: soft vs. hard gate choices, Crúac breaking-point threshold (Humanity 4+), Theban floor formula, `DisciplineSeedData.cs` → JSON migration rationale
 
 ---
 
