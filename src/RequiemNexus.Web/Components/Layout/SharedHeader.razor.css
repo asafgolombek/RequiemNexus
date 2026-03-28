@@ -291,9 +291,14 @@
     flex-direction: row;
     flex-wrap: nowrap;
     gap: var(--space-4);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
     padding: 0 var(--space-4);
+}
+
+@media (max-width: 767.98px) {
+    .sub-nav-inner {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 .nav-tab {

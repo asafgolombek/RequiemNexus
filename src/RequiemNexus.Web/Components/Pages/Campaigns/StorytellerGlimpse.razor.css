@@ -1,5 +1,28 @@
 /* Storyteller Glimpse Scoped Styles */
 
+.glimpse-tab-bar {
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.glimpse-tab-panel {
+    margin-top: 0.25rem;
+}
+
+.glimpse-tab-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    min-width: 1.25rem;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 999px;
+    background: var(--crimson);
+    color: #fff;
+    vertical-align: middle;
+}
+
 .glimpse-card {
     margin-bottom: 1.5rem;
 }
