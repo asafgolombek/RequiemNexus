@@ -322,7 +322,7 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phase 14 — The Danse Macabre (Combat & Wounds, in progress).** Phases 14–19 close the V:tR 2e playability gaps — see [`docs/PLAYABILITY_GAP_PLAN.md`](./docs/PLAYABILITY_GAP_PLAN.md) and [`docs/mission.md`](./docs/mission.md). **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see **Phase 13** in `docs/mission.md`. Phase 12 (The Web of Night) and Phases 8–11 are complete.
+**Phases 14–16a are complete** (combat & wounds, frenzy & torpor, **feeding / hunting** — `docs/PHASE_16A_THE_HUNTING_GROUND.md`). Remaining V:tR 2e playability work: **16b** (blocked on **19** for `DisciplinePower.PoolDefinitionJson`), **17**–**19** — see [`docs/PLAYABILITY_GAP_PLAN.md`](./docs/PLAYABILITY_GAP_PLAN.md) and [`docs/mission.md`](./docs/mission.md). **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see **Phase 13** in `docs/mission.md`. Phase 12 (The Web of Night) and Phases 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 

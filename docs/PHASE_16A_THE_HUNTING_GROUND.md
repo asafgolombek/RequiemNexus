@@ -1,9 +1,9 @@
 # Phase 16a — The Hunting Ground (Feeding)
 
-**Status:** 🔄 In Progress  
+**Status:** ✅ Complete  
 **Objective:** Make feeding a first-class mechanical action. Each Predator Type has a canonical hunting pool resolved by `TraitResolver`. Territory quality adds flat bonus dice. Resonance is display-only this phase — static success-threshold mapping, no mechanical effects.
 
-**Related:** Roadmap summary in [`docs/mission.md`](./mission.md) (Phase 16a); dependency context in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). This file is the **authoritative implementation plan** for Phase 16a.
+**Related:** Roadmap summary in [`docs/mission.md`](./mission.md) (Phase 16a ✅); dependency context in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). This file is the **authoritative implementation plan** for Phase 16a (shipped).
 
 > Phase 16a is **fully independent** — no upstream dependencies on Phases 14, 15, 17, or 19.
 
@@ -306,7 +306,7 @@ Key implementation notes:
 - Pool description format: `"{PredatorType}: {pool traits}, pool {N} dice{territoryLine}"` where `territoryLine` is `" (+{rating} territory bonus)"` when applicable
 - Resonance resolution lives in a private static method, not a separate service
 
-#### Registration — `ApplicationServiceExtensions.cs`
+#### Registration — `src/RequiemNexus.Web/Extensions/ApplicationServiceExtensions.cs`
 
 ```csharp
 services.AddScoped<IHuntingService, HuntingService>();
@@ -365,89 +365,88 @@ Add `<HuntPanel />` to the character sheet, collocated near the Vitae track (sam
 ## Task Checklist
 
 ```
-- [ ] Domain: PredatorType enum
+- [x] Domain: PredatorType enum
       File: src/RequiemNexus.Domain/Enums/PredatorType.cs
       9 values, matching V:tR 2e predator types, integer-backed starting at 1.
 
-- [ ] Domain: ResonanceOutcome enum
+- [x] Domain: ResonanceOutcome enum
       File: src/RequiemNexus.Domain/Enums/ResonanceOutcome.cs
       5 values: None(0), Fleeting(1), Weak(2), Functional(3), Saturated(4).
 
-- [ ] Data: HuntingPoolDefinition entity
+- [x] Data: HuntingPoolDefinition entity
       File: src/RequiemNexus.Data/Models/HuntingPoolDefinition.cs
       Fields: Id, PredatorType, PoolDefinitionJson, BaseVitaeGain, PerSuccessVitaeGain, NarrativeDescription.
 
-- [ ] Data: HuntingRecord entity
+- [x] Data: HuntingRecord entity
       File: src/RequiemNexus.Data/Models/HuntingRecord.cs
       Fields: Id, CharacterId (FK), TerritoryId (FK nullable), PredatorType, PoolDescription,
               Successes, VitaeGained, Resonance, HuntedAt.
 
-- [ ] Data: Character.PredatorType column
+- [x] Data: Character.PredatorType column
       File: src/RequiemNexus.Data/Models/Character.cs
       PredatorType? PredatorType (nullable).
 
-- [ ] Data: ApplicationDbContext DbSets
+- [x] Data: ApplicationDbContext DbSets
       File: src/RequiemNexus.Data/ApplicationDbContext.cs
       Add HuntingPoolDefinitions and HuntingRecords DbSets.
 
-- [ ] Data: HuntingPoolDefinition unique index
-      File: src/RequiemNexus.Data/ApplicationDbContext.cs (OnModelCreating) or IEntityTypeConfiguration
+- [x] Data: HuntingPoolDefinition unique index
+      File: src/RequiemNexus.Data/EntityConfigurations/HuntingPoolDefinitionConfiguration.cs
       HasIndex(h => h.PredatorType).IsUnique() — prevents duplicate seed rows.
 
-- [ ] Data: EF Core migration
-      Name: Phase16a_HuntingGround
+- [x] Data: EF Core migration
       Adds HuntingPoolDefinitions table, HuntingRecords table, PredatorType column on Characters.
 
-- [ ] Data: HuntingPoolDefinitionSeedData
+- [x] Data: HuntingPoolDefinitionSeedData
       File: src/RequiemNexus.Data/SeedData/HuntingPoolDefinitionSeedData.cs
       9 rows (one per PredatorType), idempotent guard on AnyAsync.
 
-- [ ] Data: DbInitializer.SeedHuntingPoolDefinitionsAsync
+- [x] Data: DbInitializer.SeedHuntingPoolDefinitionsAsync
       File: src/RequiemNexus.Data/DbInitializer.cs
       Call after SeedClansAndDisciplinesAsync. Idempotent.
 
-- [ ] Application: HuntResult DTO
+- [x] Application: HuntResult DTO
       File: src/RequiemNexus.Application/Models/HuntResult.cs
       Record with Successes, VitaeGained, Resonance, PoolDescription, NarrativeDescription, TerritoryBonusApplied.
 
-- [ ] Application: IHuntingService interface
+- [x] Application: IHuntingService interface
       File: src/RequiemNexus.Application/Contracts/IHuntingService.cs
       Single method: ExecuteHuntAsync(characterId, userId, territoryId?, cancellationToken).
 
-- [ ] Application: HuntingService implementation
+- [x] Application: HuntingService implementation
       File: src/RequiemNexus.Application/Services/HuntingService.cs
       Masquerade → resolve pool → territory campaign check → pool floor clamp → roll → Vitae gain → resonance → record → dice feed → structured log.
 
-- [ ] Application: Register IHuntingService
-      File: src/RequiemNexus.Application/ApplicationServiceExtensions.cs
+- [x] Application: Register IHuntingService
+      File: src/RequiemNexus.Web/Extensions/ApplicationServiceExtensions.cs
       services.AddScoped<IHuntingService, HuntingService>();
 
-- [ ] Tests: HuntingService unit tests
-      Project: src/RequiemNexus.Application.Tests
+- [x] Tests: HuntingService unit tests
+      Project: tests/RequiemNexus.Application.Tests/HuntingServiceTests.cs
       Cover: successful hunt, null PredatorType failure, null pool definition failure,
              territory bonus, territory campaign mismatch failure, zero-success (no GainVitaeAsync call),
              Masquerade rejection, pool floor clamp (1 die minimum).
       Mock: IDiceService, ITraitResolver, IVitaeService.
 
-- [ ] Web: HuntPanel.razor component
+- [x] Web: HuntPanel.razor component
       File: src/RequiemNexus.Web/Components/Pages/CharacterSheet/HuntPanel.razor
       Hunt button, optional territory picker, result display (Vitae delta, resonance label, narrative, successes).
       aria-live announcer.
 
-- [ ] Web: Integrate HuntPanel into character sheet
-      Add <HuntPanel /> near the Vitae track.
+- [x] Web: Integrate HuntPanel into character sheet
+      CharacterVitals.razor — <HuntPanel /> collocated with Vitae track.
 
-- [ ] Rules: Update docs/rules-interpretations.md
-      Add Phase 16a section (see Rules Interpretation Log below).
+- [x] Rules: docs/rules-interpretations.md
+      Phase 16a section merged.
 
-- [ ] Verify: dotnet format, .\scripts\test-local.ps1
+- [x] Verify: dotnet build; HuntingServiceTests pass; run .\scripts\test-local.ps1 before merge.
 ```
 
 ---
 
 ## Rules Interpretation Log
 
-*(To be merged into `docs/rules-interpretations.md` under "Phase 16a" header)*
+*Merged into [`docs/rules-interpretations.md`](./rules-interpretations.md) under **Phase 16a — The Hunting Ground (feeding)**. Duplicated here for phase-doc completeness.*
 
 - **Hunting pool per Predator Type:** V:tR 2e lists primary pools per type (p. 104–107). Where the book offers a choice of two pools (e.g. Brawl or Weaponry for Alleycat), we select the first listed option for automation. Tables can use the alternate by seeding a custom `HuntingPoolDefinition` row or via ST override.
 - **Resonance thresholds:** The corebook describes resonance as a narrative quality tied to Blood Potency and circumstances, not a pure success-count table. For Phase 16a display automation we map success count to the four intensity labels (Fleeting / Weak / Functional / Saturated), with thresholds 1–2 / 3–4 / 5–6 / 7+ respectively. These thresholds are interpretive; the ST may override the displayed resonance outside the app. Mechanical resonance effects (Diablerie, Sorcery, Disciplines) are out of scope until a later phase.

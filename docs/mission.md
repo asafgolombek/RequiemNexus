@@ -31,14 +31,14 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 13 | End-to-End Testing & Accessibility | ✅ Complete |
 | 14 | The Danse Macabre — Combat & Wounds | ✅ Complete |
 | 15 | The Beast Within — Frenzy & Torpor | ✅ Complete |
-| 16a | The Hunting Ground — Feeding | 🔄 In progress |
+| 16a | The Hunting Ground — Feeding | ✅ Complete |
 | 16b | The Discipline Engine — Power Activation | ⬜ Planned |
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ⬜ Planned |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Currently active → Phase 16a — The Hunting Ground (Feeding).** Phases 14–19 are the **V:tR 2e Playability Gap** — full scope, dependency graph, and task breakdown in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** and follows after playability work. Phases 14 (Combat & Wounds) and 15 (Frenzy & Torpor) are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 16a — The Hunting Ground (Feeding) is complete** (`IHuntingService`, `HuntPanel`, hunt ledger). **Phase 16b** (Discipline power activation) remains **blocked on Phase 19** (`DisciplinePower.PoolDefinitionJson`). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). Authoritative Phase 16a tasking: [`docs/PHASE_16A_THE_HUNTING_GROUND.md`](./PHASE_16A_THE_HUNTING_GROUND.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** after playability work. Phases 14–16a are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -448,17 +448,19 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 16a: The Hunting Ground — Feeding
+## 📅 Phase 16a: The Hunting Ground — Feeding ✅
 
 **The Objective:** First-class hunting rolls wired to Predator Type, with resonance outcomes.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16a](./PLAYABILITY_GAP_PLAN.md)
+**Status:** ✅ **Complete**
 
-- [ ] `HuntingPoolDefinition` seed — one row per Predator Type (`PoolDefinitionJson`, Vitae gain, description)
-- [ ] `HuntingService` — `ExecuteHuntAsync`; optional territory bonus; `VitaeService` credit; resonance result
-- [ ] `ResonanceOutcome` enum + `ResonanceTable` JSON seed
-- [ ] `HuntingRecord` entity — lightweight audit ledger
-- [ ] Hunting UI — character sheet "Hunt" button → territory picker → result card
+> Authoritative plan: [`docs/PHASE_16A_THE_HUNTING_GROUND.md`](./PHASE_16A_THE_HUNTING_GROUND.md) · Gap summary: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16a](./PLAYABILITY_GAP_PLAN.md)
+
+- [x] `PredatorType` on `Character`, `HuntingPoolDefinition` seed (9 rows) + unique index, `HuntingRecord` ledger
+- [x] `IHuntingService` / `HuntingService` — `ExecuteHuntAsync(characterId, userId, territoryId?)`; territory campaign alignment; pool floor; `ResonanceOutcome` via static thresholds (no JSON table)
+- [x] Vitae gain via `IVitaeService.GainVitaeAsync`; dice feed via `PublishDiceRollAsync`; structured logging
+- [x] `HuntPanel.razor` on character vitals — optional territory picker, `aria-live` announcer, resonance display
+- [x] `HuntingServiceTests` (Application.Tests); rules log — **Phase 16a** in [`docs/rules-interpretations.md`](./rules-interpretations.md)
 
 ---
 

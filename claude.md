@@ -2,13 +2,14 @@
 
 You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-## 🧭 Active Phase: Phase 16a — The Hunting Ground (Feeding)
+## 🧭 Active Phase: Post-16a — Phase 16b–19 (playability gap)
 - **Content vs. Behavior:** Covenants, Blood Sorcery, and Coils/Scales are seed data interpreted by a stable engine.
 - **Pool Resolver:** Supports additive pools, contested rolls, penalty dice, and lower-of. Passive modifier engine integrated.
 - **Phase 14 delivered:** The Danse Macabre — combat pipeline (`AttackService`, `AttackResult`, `CharacterHealthService`, `WoundPenaltyResolver`, NPC combat, `NpcCombatService`); B/L/A overflow, armor mitigation, Vitae fast-heal, wound penalty in pools, full combat UI. See `docs/PLAYABILITY_GAP_PLAN.md`.
 - **Phase 15 delivered:** The Beast Within — `FrenzyService` (Resolve + Blood Potency save, Willpower optional), `TorporService` (entry/awakening/starvation), `VitaeService`, `WillpowerService`, `VitaeDepletedEvent` → Hunger frenzy auto-trigger, `TorporIntervalService` background service, `HealthDamageTrackBoxes` UI, torpor/frenzy UI panels. See `docs/PLAYABILITY_GAP_PLAN.md`.
-- **Phases 16–19:** V:tR 2e playability gap — feeding, Discipline activation, degeneration, Discipline acquisition rules. Full scope in `docs/PLAYABILITY_GAP_PLAN.md`. **Phase 20 — The Global Embrace** (i18n, public API, Discord, production SignalR) is the **last planned phase** after 14–19.
-- **Next:** Follow `docs/mission.md` and `docs/PLAYABILITY_GAP_PLAN.md` for Phase 16a (current focus) through Phase 19; Phase 20 when playability phases are delivered.
+- **Phase 16a delivered:** The Hunting Ground — `IHuntingService` / `HuntingService`, `HuntingPoolDefinition` + `HuntingRecord`, `HuntPanel`, territory bonus + campaign alignment, resonance display (static thresholds). See `docs/PHASE_16A_THE_HUNTING_GROUND.md`.
+- **Phases 16b–19:** Discipline activation (16b, **blocked on Phase 19** `PoolDefinitionJson`), Humanity/Conditions (17), edge systems (18), Discipline acquisition + seed pipeline (19). **Phase 20 — The Global Embrace** is the **last planned phase** after 14–19.
+- **Next:** Follow `docs/mission.md` and `docs/PLAYABILITY_GAP_PLAN.md`; pick **Phase 17** or **Phase 19** in parallel, or **Phase 16b** after 19’s data slice.
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.

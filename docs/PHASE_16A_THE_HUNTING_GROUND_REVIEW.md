@@ -42,7 +42,7 @@ Companion to [`PHASE_16A_THE_HUNTING_GROUND.md`](./PHASE_16A_THE_HUNTING_GROUND.
 
 4. **Optional: store dice breakdown on `HuntingRecord`** → **Deferred.** Dice feed is considered sufficient for replay/debug in Phase 16a. A future task can add breakdown JSON if audit needs grow. Added as a one-line note in the Ledger Volume section.
 
-5. **Align `mission.md` / `PLAYABILITY_GAP_PLAN.md`** → **Deferred to a cleanup pass.** The plan already notes the resonance JSON seed difference at AD §4. A doc-only alignment task can be scheduled after Phase 16a is delivered.
+5. **Align `mission.md` / `PLAYABILITY_GAP_PLAN.md`** → **Done** (post–Phase 16a doc pass). Shipped design: resonance thresholds in code, not JSON; territory campaign alignment enforced — see `mission.md`, `PLAYABILITY_GAP_PLAN.md`, and `PHASE_16A_THE_HUNTING_GROUND.md`.
 
 6. **Accessibility** → **Adopted.** HuntPanel spec now explicitly requires one `aria-live` sentence covering successes, Vitae gained, and resonance (Phase 13 roll-announcement pattern).
 

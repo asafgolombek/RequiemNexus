@@ -17,8 +17,8 @@ This document maps every identified gap between the current Requiem Nexus implem
 | 5 | Frenzy save rolls not automated | ✅ Closed | 15 |
 | 6 | Rötschreck automation | ✅ Closed | 15 |
 | 7 | Torpor state (entry, awakening, starvation) | ✅ Closed | 15 |
-| 8 | Hunting / feeding roll automation | 🟠 High | 16a |
-| 9 | Vitae gain mechanics and resonance | 🟠 High | 16a |
+| 8 | Hunting / feeding roll automation | ✅ Closed | 16a |
+| 9 | Vitae gain mechanics and resonance | ✅ Closed | 16a |
 | 10 | Discipline power activation (cost + pool) | 🟠 High | 16b _(blocked on Phase 19 schema)_ |
 | 11 | Humanity degeneration rolls | 🟡 Medium | 17 |
 | 12 | Condition penalties fully wired to pools | 🟡 Medium | 17 |
@@ -96,24 +96,26 @@ This document maps every identified gap between the current Requiem Nexus implem
 
 ---
 
-## 📅 Phase 16a: The Hunting Ground — Feeding
+## 📅 Phase 16a: The Hunting Ground — Feeding ✅
 
 **The Objective:** Make feeding a first-class mechanical action with per-predator-type pools and a resonance outcome. Independent of Phase 19.
 
+**Status:** ✅ **Complete** — see [`docs/PHASE_16A_THE_HUNTING_GROUND.md`](./PHASE_16A_THE_HUNTING_GROUND.md).
+
 ### Architectural Decisions
 
-- **Hunting is a pool roll wired to Predator Type.** `HuntingService` (Application) reads the character's `PredatorType`, selects the canonical hunting pool from a seed table (`HuntingPoolDefinition`), resolves it via `TraitResolver`, and returns successes mapped to Vitae gained (1 success = 1 Vitae baseline; bonus successes can exceed).
-- **Territory is optional, not required.** `ExecuteHuntAsync(characterId, territoryId?)` — when `territoryId` is provided, territory quality (1–5 rating, already tracked on `FeedingTerritory`) is added as a flat bonus die to the pool. Territory ownership is not validated — the Storyteller owns that narrative gate. When `territoryId` is null, the roll proceeds without the bonus.
-- **Feeding resonance is seed data, not business logic.** A `ResonanceTable` seed (JSON → `DbInitializer`) maps success thresholds to `ResonanceOutcome` quality (Fleeting / Weak / Functional / Saturated). `HuntingService` attaches the result; the character sheet displays it. No mechanical effects beyond display are automated in this phase.
+- **Hunting is a pool roll wired to Predator Type.** `HuntingService` reads `Character.PredatorType`, loads `HuntingPoolDefinition`, resolves `PoolDefinitionJson` via `TraitResolver`, rolls with 10-again, maps successes to Vitae (`BaseVitaeGain` + per-success scaling via `VitaeService`).
+- **Territory is optional.** `ExecuteHuntAsync(characterId, userId, territoryId?)` — when `territoryId` is set, `FeedingTerritory.Rating` adds bonus dice. **Campaign alignment is enforced:** `territory.CampaignId` must equal `character.CampaignId` (and character must be in a campaign when a territory is used).
+- **Resonance is display-only in code.** `ResonanceOutcome` (incl. `None`) maps from success count via a static threshold table in `HuntingService` — no `ResonanceTable` JSON seed. UI shows label; no mechanical resonance effects in this phase.
 
 ### Tasks
 
-- [ ] **`HuntingPoolDefinition` seed table** — Data: one row per `PredatorType` containing `PoolDefinitionJson`, `BaseVitaeGain`, `PerSuccessVitaeGain`, short narrative description. Seeded in `DbInitializer`.
-- [ ] **`HuntingService`** — Application: `ExecuteHuntAsync(characterId, territoryId?)` — resolves pool (+ territory quality bonus when provided), maps successes to Vitae, applies Vitae gain via `VitaeService`, records resonance result. Masquerade: character ownership check.
-- [ ] **`ResonanceOutcome` enum** — Domain: Fleeting, Weak, Functional, Saturated. `ResonanceTable` JSON seeded in `SeedSource/` mapping success-count to outcome.
-- [ ] **Hunt history ledger** — `HuntingRecord` entity (characterId, territoryId, pool successes, Vitae gained, resonance, timestamp). Lightweight audit, mirrors Beat / XP ledger pattern.
-- [ ] **Hunting UI** — Character sheet "Hunt" button → optional territory picker → rolls → shows Vitae gained + resonance + narrative outcome. Existing Phase 13 announcer pattern used for screen-reader announcement of result.
-- [ ] **Rules Interpretation Log** — Hunting pool choices per predator type, resonance table interpretation, Vitae-per-success scaling, territory bonus formula.
+- [x] **`HuntingPoolDefinition` seed table** — one row per `PredatorType`; idempotent seed in `DbInitializer`.
+- [x] **`HuntingService`** — `ExecuteHuntAsync`; Masquerade via `RequireCharacterAccessAsync`; territory bonus + mismatch guards; pool floor 1; `PublishDiceRollAsync` for dice feed.
+- [x] **`ResonanceOutcome` enum** — Domain; static mapping from successes in Application layer.
+- [x] **`HuntingRecord` ledger** — append-only audit per hunt.
+- [x] **Hunting UI** — `HuntPanel.razor` on character vitals; Phase 13 `aria-live` pattern.
+- [x] **Rules Interpretation Log** — Phase 16a section in `docs/rules-interpretations.md`.
 
 ---
 
