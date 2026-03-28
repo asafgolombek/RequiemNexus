@@ -1,12 +1,9 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.JSInterop
-@using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-@inject CommandPaletteService PaletteService
-@inject PlatformShortcutHintService PlatformHints
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
@@ -32,19 +29,6 @@
             </div>
 
             <div class="header-actions-row">
-                @if (ShowSearch)
-                {
-                    <button type="button"
-                            class="cmd-palette-trigger"
-                            aria-label="Open command palette"
-                            @onclick="OpenCommandPalette">
-                        <span class="cmd-palette-trigger-inner">
-                            <Icon Name="@IconName.Search" Class="cmd-palette-icon" />
-                            <span class="cmd-palette-hint" aria-hidden="true">@(_shortcutLabel ?? "Ctrl+K")</span>
-                        </span>
-                    </button>
-                }
-
                 <nav class="header-desktop-nav" aria-label="Account">
                     @if (!string.IsNullOrEmpty(_userName))
                     {
@@ -122,10 +106,7 @@
 @code {
     [Parameter] public bool ShowSubNav { get; set; } = true;
 
-    [Parameter] public bool ShowSearch { get; set; } = true;
-
     private string? _userName;
-    private string? _shortcutLabel;
     private bool _drawerOpen;
     private bool _scheduleFocusTrap;
     private ElementReference _hamburgerButton;
@@ -141,11 +122,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            _shortcutLabel = await PlatformHints.GetCommandPaletteShortcutLabelAsync(JS);
-            StateHasChanged();
-        }
+        _ = firstRender;
 
         if (_scheduleFocusTrap)
         {
@@ -156,8 +133,6 @@
             }
         }
     }
-
-    private void OpenCommandPalette() => PaletteService.Open();
 
     private async Task ToggleDrawerAsync()
     {

@@ -61,7 +61,7 @@ Mechanical choices for automated frenzy saves, Vitae-zero handling, torpor inter
 
 ## Phase 16a — The Hunting Ground (feeding)
 
-Mechanical choices for predator-type pools, territory bonus dice, resonance display, and hunt ledger. Full tasking lives in [`PHASE_16A_THE_HUNTING_GROUND.md`](./PHASE_16A_THE_HUNTING_GROUND.md).
+Mechanical choices for predator-type pools, territory bonus dice, resonance display, and hunt ledger.
 
 - **Hunting pool per Predator Type:** V:tR 2e lists primary pools per type (p. 104–107). Where the book offers a choice of two pools (e.g. Brawl or Weaponry for Alleycat), we select the first listed option for automation. Tables can use the alternate by seeding a custom `HuntingPoolDefinition` row or via ST override.
 - **Resonance thresholds:** The corebook describes resonance as a narrative quality tied to Blood Potency and circumstances, not a pure success-count table. For Phase 16a display automation we map success count to the four intensity labels (Fleeting / Weak / Functional / Saturated), with thresholds 1–2 / 3–4 / 5–6 / 7+ respectively. These thresholds are interpretive; the ST may override the displayed resonance outside the app. Mechanical resonance effects (Diablerie, Sorcery, Disciplines) are out of scope until a later phase.

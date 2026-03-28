@@ -144,14 +144,14 @@ RequiemNexus/
 | 13 | **End-to-End Testing & Accessibility** | ✅ Complete |
 | 14 | **The Danse Macabre** — Combat & Wounds | ✅ Complete |
 | 15 | **The Beast Within** — Frenzy & Torpor | ✅ Complete ([spec](./PHASE_15_THE_BEAST_WITHIN.md), [review](./PHASE_15_THE_BEAST_WITHIN_REVIEW.md)) |
-| 16a | **The Hunting Ground** — Feeding | ✅ Complete ([spec](./PHASE_16A_THE_HUNTING_GROUND.md)) |
+| 16a | **The Hunting Ground** — Feeding | ✅ Complete |
 | 16b | **The Discipline Engine** — Power Activation | ⬜ Planned |
 | 17 | **The Fog of Eternity** — Humanity & Conditions | ⬜ Planned |
 | 18 | **The Wider Web** — Edge Systems & Content | ⬜ Planned |
 | 19 | **The Blood Lineage** — Discipline Acquisition Rules | ⬜ Planned |
 | 20 | **The Global Embrace** — i18n, public API (last planned phase) | ⬜ Planned |
 
-**Next up:** Phases **14–16a** are complete. Remaining **V:tR 2e playability** work: **16b** (blocked on **19** for `PoolDefinitionJson`), **17**–**19** — see [`docs/mission.md`](./mission.md) and [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production SignalR polish) is the **last planned phase** after playability work.
+**Next up:** Phases **14–16a** are complete. Remaining **V:tR 2e playability** work: **16b** (blocked on **19** for `PoolDefinitionJson`), **17**–**19** — see [`docs/mission.md`](./mission.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production SignalR polish) is the **last planned phase** after playability work.
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 

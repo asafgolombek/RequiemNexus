@@ -34,16 +34,6 @@ window.rnConfirm = function (message) {
     return confirm(message);
 };
 
-window.registerCommandPaletteShortcut = function (dotNetRef) {
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            dotNetRef.invokeMethodAsync('Toggle');
-        }
-    });
-};
-
-// Visible shortcut hint for the command palette (UI_UX_FACELIFT Track 2.3). Avoids navigator.platform.
 /** Performance mode: fewer animations (pairs with wwwroot/css/app-chrome.css html.performance-mode). */
 window.requiemGetPerformanceMode = function () {
     try {
@@ -65,25 +55,6 @@ window.requiemSetPerformanceMode = function (enabled) {
     } catch {
         /* ignore */
     }
-};
-
-window.getPaletteShortcutLabel = function () {
-    try {
-        const uaData = navigator.userAgentData;
-        if (uaData && typeof uaData.platform === 'string') {
-            const p = uaData.platform.toLowerCase();
-            if (p.includes('mac') || p.includes('iphone') || p.includes('ipad')) {
-                return '⌘K';
-            }
-        }
-    } catch {
-        /* ignore */
-    }
-    const ua = navigator.userAgent || '';
-    if (/Mac|iPhone|iPad|iPod/i.test(ua)) {
-        return '⌘K';
-    }
-    return 'Ctrl+K';
 };
 
 /**

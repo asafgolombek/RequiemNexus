@@ -1,8 +1,6 @@
 @inherits LayoutComponentBase
 @using RequiemNexus.Web.Components.Layout
-@using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
-@inject CommandPaletteService PaletteService
 @inject SessionClientService SessionClient
 @inject ToastService ToastService
 @inject IJSRuntime JS
@@ -39,7 +37,6 @@
 
 <ToastContainer />
 <ConditionToastHost />
-<CommandPalette />
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
@@ -51,14 +48,6 @@
     protected override void OnInitialized()
     {
         SessionClient.BloodlineApproved += OnBloodlineApprovedHandler;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("registerCommandPaletteShortcut", DotNetObjectReference.Create(this));
-        }
     }
 
     private void OnBloodlineApprovedHandler(int characterId, string bloodlineName)
@@ -76,6 +65,4 @@
         SessionClient.BloodlineApproved -= OnBloodlineApprovedHandler;
     }
 
-    [JSInvokable]
-    public void Toggle() => PaletteService.Toggle();
 }
