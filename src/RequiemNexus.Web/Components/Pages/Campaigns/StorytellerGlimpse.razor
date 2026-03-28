@@ -44,215 +44,284 @@
             <StorytellerChronicleNav CampaignId="Id" />
         </div>
 
-        @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
-        <div class="card-rn glimpse-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="section-header">Award Beat to Coterie</h3>
-                <div class="draggable-beat" draggable="true" @ondragstart="HandleDragStart" title="Drag this to a character card to award a Beat instantly">
-                    ⚫
-                </div>
-            </div>
-            <div class="coterie-beat-award">
-                <input class="form-control coterie-reason-input"
-                       placeholder="Reason for coterie Beat…"
-                       aria-label="Reason for coterie-wide Beat award"
-                       @bind="_coteReason" />
-                <button class="btn-rn-primary"
-                        disabled="@(string.IsNullOrWhiteSpace(_coteReason) || _awarding)"
-                        @onclick="AwardCoterieBeat">
-                    Award to All
-                </button>
-            </div>
-            @if (!string.IsNullOrEmpty(_coteMessage))
-            {
-                <p class="feedback-ok">@_coteMessage</p>
-            }
+        <div class="tab-bar glimpse-tab-bar" role="tablist" aria-label="Storyteller Glimpse sections">
+            <button type="button"
+                    class="tab-btn @(_glimpseTab == "overview" ? "active" : "")"
+                    role="tab"
+                    aria-selected="@(_glimpseTab == "overview" ? "true" : "false")"
+                    id="tab-glimpse-overview"
+                    @onclick='() => SelectGlimpseTab("overview")'
+                    @onkeydown="HandleGlimpseTabKeydown">
+                Overview
+            </button>
+            <button type="button"
+                    class="tab-btn @(_glimpseTab == "social" ? "active" : "")"
+                    role="tab"
+                    aria-selected="@(_glimpseTab == "social" ? "true" : "false")"
+                    id="tab-glimpse-social"
+                    @onclick='() => SelectGlimpseTab("social")'
+                    @onkeydown="HandleGlimpseTabKeydown">
+                Social
+            </button>
+            <button type="button"
+                    class="tab-btn @(_glimpseTab == "approvals" ? "active" : "")"
+                    role="tab"
+                    aria-selected="@(_glimpseTab == "approvals" ? "true" : "false")"
+                    id="tab-glimpse-approvals"
+                    @onclick='() => SelectGlimpseTab("approvals")'
+                    @onkeydown="HandleGlimpseTabKeydown">
+                Approvals
+                @if (PendingApprovalCount > 0)
+                {
+                    <span class="glimpse-tab-badge" aria-label="@($"{PendingApprovalCount} pending approvals")">@PendingApprovalCount</span>
+                }
+            </button>
+            <button type="button"
+                    class="tab-btn @(_glimpseTab == "chronicle" ? "active" : "")"
+                    role="tab"
+                    aria-selected="@(_glimpseTab == "chronicle" ? "true" : "false")"
+                    id="tab-glimpse-chronicle"
+                    @onclick='() => SelectGlimpseTab("chronicle")'
+                    @onkeydown="HandleGlimpseTabKeydown">
+                Chronicle
+            </button>
         </div>
 
-        <GlimpseSocialManeuvers 
-            CampaignId="Id"
-            StorytellerId="@_currentUserId"
-            Maneuvers="_socialManeuvers"
-            Vitals="_vitals"
-            Npcs="_npcs"
-            InitialClueThreshold="@_campaign.SocialManeuverInvestigationSuccessesPerClue"
-            PinnedNpcIds="_pinnedNpcIds"
-            OnChanged="LoadSocialManeuvers" />
-
-        <GlimpsePendingRequests
-            StorytellerId="@_currentUserId"
-            Bloodlines="_pendingBloodlines"
-            Covenants="_pendingCovenants"
-            Rites="_pendingRites"
-            ChosenMysteries="_pendingChosenMysteries"
-            Coils="_pendingCoils"
-            AssetProcurements="_pendingAssetProcurements"
-            OnChanged="LoadVitals" />
-
-        <BloodBondsPanel CampaignId="Id"
-                         StorytellerUserId="@(_currentUserId ?? string.Empty)"
-                         Vitals="_vitals"
-                         Npcs="_npcs" />
-
-        <PredatoryAuraHistoryPanel CampaignId="Id"
-                                   StorytellerUserId="@(_currentUserId ?? string.Empty)" />
-
-        <GhoulsTab CampaignId="Id"
-                   StorytellerUserId="@(_currentUserId ?? string.Empty)"
-                   Vitals="_vitals"
-                   Npcs="_npcs" />
-
-        @* ── Pinned NPCs ────────────────────────────────────────────────────── *@
-        @if (_pinnedNpcIds.Any())
+        @if (_glimpseTab == "overview")
         {
-            <h3 class="section-header">Pinned NPCs</h3>
-            <div class="character-grid mb-lg">
-                @foreach (var npcId in _pinnedNpcIds)
-                {
-                    var npc = _npcs.FirstOrDefault(n => n.Id == npcId);
-                    if (npc != null)
+            <div class="glimpse-tab-panel" id="panel-glimpse-overview" role="tabpanel" aria-labelledby="tab-glimpse-overview">
+                @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
+                <div class="card-rn glimpse-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 class="section-header">Award Beat to Coterie</h3>
+                        <div class="draggable-beat" draggable="true" @ondragstart="HandleDragStart" title="Drag this to a character card to award a Beat instantly">
+                            ⚫
+                        </div>
+                    </div>
+                    <div class="coterie-beat-award">
+                        <input class="form-control coterie-reason-input"
+                               placeholder="Reason for coterie Beat…"
+                               aria-label="Reason for coterie-wide Beat award"
+                               @bind="_coteReason" />
+                        <button class="btn-rn-primary"
+                                disabled="@(string.IsNullOrWhiteSpace(_coteReason) || _awarding)"
+                                @onclick="AwardCoterieBeat">
+                            Award to All
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_coteMessage))
                     {
-                        <div class="card-rn glimpse-card active">
-                            <div class="glimpse-card-header">
-                                <h4>📌 @npc.Name</h4>
-                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => TogglePinNpc(npc.Id)">📍 Unpin</button>
-                            </div>
-                            
-                            @if (!string.IsNullOrEmpty(npc.Title))
-                            {
-                                <p class="text-small text-muted-rn mb-sm">@npc.Title</p>
-                            }
-
-                            <div class="glimpse-stats">
-                                <span>🎭 @npc.CreatureType</span>
-                                @if (npc.PrimaryFaction != null)
-                                {
-                                    <span>⚔️ @npc.PrimaryFaction.Name</span>
-                                }
-                            </div>
-
-                            <p class="text-xsmall text-muted-rn">
-                                <em>NPC Vitals (Damage tracking deferred to Phase 11)</em>
-                            </p>
-                        </div>
+                        <p class="feedback-ok">@_coteMessage</p>
                     }
-                }
-            </div>
-        }
+                </div>
 
-        @* ── Character Cards ─────────────────────────────────────────────────── *@
-        @if (!_vitals.Any())
-        {
-            <div class="empty-state-rn">
-                <p>No characters have joined this campaign yet.</p>
-            </div>
-        }
-        else
-        {
-            <div class="character-grid">
-                @foreach (CharacterVitalsDto v in _vitals)
+                @* ── Pinned NPCs ────────────────────────────────────────────────────── *@
+                @if (_pinnedNpcIds.Any())
                 {
-                    <div class="card-rn glimpse-card drop-zone @(_activeDropTargetId == v.CharacterId ? "drop-zone-active" : "")"
-                         ondragover="event.preventDefault();"
-                         @ondragenter="() => HandleDragEnter(v.CharacterId)"
-                         @ondragleave="HandleDragLeave"
-                         @ondrop="() => HandleDrop(v.CharacterId)">
-                        <div class="glimpse-card-header">
-                            <h4>@v.Name</h4>
-                            <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
-                                <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-rn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
-                                <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => OpenLineageEditor(v.CharacterId)">Lineage</button>
-                            </div>
-                        </div>
-
-                        <div class="vitals-grid">
-                            <div class="vital-row">
-                                <span class="vital-label">❤️ Health</span>
-                                <div class="vital-bar-wrap">
-                                    <div class="vital-bar health-bar" style="width:@BarPct(v.CurrentHealth, v.MaxHealth)%"></div>
-                                </div>
-                                <span class="vital-value">@v.CurrentHealth / @v.MaxHealth</span>
-                            </div>
-                            <div class="vital-row">
-                                <span class="vital-label">🛡️ Willpower</span>
-                                <div class="vital-bar-wrap">
-                                    <div class="vital-bar willpower-bar" style="width:@BarPct(v.CurrentWillpower, v.MaxWillpower)%"></div>
-                                </div>
-                                <span class="vital-value">@v.CurrentWillpower / @v.MaxWillpower</span>
-                            </div>
-                            <div class="vital-row">
-                                <span class="vital-label">🍷 Vitae</span>
-                                <div class="vital-bar-wrap">
-                                    <div class="vital-bar vitae-bar" style="width:@BarPct(v.CurrentVitae, v.MaxVitae)%"></div>
-                                </div>
-                                <span class="vital-value">@v.CurrentVitae / @v.MaxVitae</span>
-                            </div>
-                        </div>
-
-                        @if (v.MaxVitae > 0)
+                    <h3 class="section-header">Pinned NPCs</h3>
+                    <div class="character-grid mb-lg">
+                        @foreach (var npcId in _pinnedNpcIds)
                         {
-                            <VitaeFastHealPanel CharacterId="v.CharacterId"
-                                                ActingUserId="@_currentUserId"
-                                                CurrentVitae="v.CurrentVitae"
-                                                MaxVitae="v.MaxVitae"
-                                                HealthDamage="@v.HealthDamage"
-                                                TrackLength="v.MaxHealth"
-                                                OnHealed="LoadVitals" />
-                        }
-
-                        <div class="glimpse-stats">
-                            <span>🕊️ Humanity: @v.Humanity</span>
-                            <span>⚫ Beats: @v.Beats</span>
-                            <span>✨ XP: @v.ExperiencePoints</span>
-                            @if (v.ActiveConditionCount > 0)
+                            var npc = _npcs.FirstOrDefault(n => n.Id == npcId);
+                            if (npc != null)
                             {
-                                <span class="condition-badge">⚠️ @v.ActiveConditionCount Condition@(v.ActiveConditionCount > 1 ? "s" : "")</span>
+                                <div class="card-rn glimpse-card active">
+                                    <div class="glimpse-card-header">
+                                        <h4>📌 @npc.Name</h4>
+                                        <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => TogglePinNpc(npc.Id)">📍 Unpin</button>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(npc.Title))
+                                    {
+                                        <p class="text-small text-muted-rn mb-sm">@npc.Title</p>
+                                    }
+
+                                    <div class="glimpse-stats">
+                                        <span>🎭 @npc.CreatureType</span>
+                                        @if (npc.PrimaryFaction != null)
+                                        {
+                                            <span>⚔️ @npc.PrimaryFaction.Name</span>
+                                        }
+                                    </div>
+
+                                    <p class="text-xsmall text-muted-rn">
+                                        <em>NPC Vitals (Damage tracking deferred to Phase 11)</em>
+                                    </p>
+                                </div>
                             }
-                        </div>
-
-                        @* Beat award *@
-                        <div class="award-panel">
-                            <div class="award-row">
-                                <input class="form-control award-input"
-                                       placeholder="Beat reason…"
-                                       aria-label="@($"Beat reason for {v.Name}")"
-                                       @bind="_beatReasons[v.CharacterId]" />
-                                <button class="btn-rn-primary"
-                                        style="font-size:0.85em;"
-                                        disabled="@(string.IsNullOrWhiteSpace(_beatReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
-                                        @onclick="() => AwardBeat(v.CharacterId)">
-                                    + Beat
-                                </button>
-                            </div>
-                        </div>
-
-                        @* XP award *@
-                        <div class="award-panel" style="margin-top:0.5rem;">
-                            <div class="award-row">
-                                <input type="number"
-                                       class="form-control xp-amount-input"
-                                       min="1"
-                                       aria-label="@($"Experience points to award to {v.Name}")"
-                                       @bind="_xpAmounts[v.CharacterId]" />
-                                <input class="form-control award-input"
-                                       placeholder="XP reason…"
-                                       aria-label="@($"Experience point reason for {v.Name}")"
-                                       @bind="_xpReasons[v.CharacterId]" />
-                                <button class="btn-rn-ghost"
-                                        style="font-size:0.85em;"
-                                        disabled="@(_xpAmounts.GetValueOrDefault(v.CharacterId) <= 0 || string.IsNullOrWhiteSpace(_xpReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
-                                        @onclick="() => AwardXp(v.CharacterId)">
-                                    + XP
-                                </button>
-                            </div>
-                        </div>
-
-                        @if (_feedbackMessages.TryGetValue(v.CharacterId, out string? msg) && !string.IsNullOrEmpty(msg))
-                        {
-                            <p class="feedback-ok feedback-small">@msg</p>
                         }
                     </div>
                 }
+
+                @* ── Character Cards ─────────────────────────────────────────────────── *@
+                @if (!_vitals.Any())
+                {
+                    <div class="empty-state-rn">
+                        <p>No characters have joined this campaign yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="character-grid">
+                        @foreach (CharacterVitalsDto v in _vitals)
+                        {
+                            <div class="card-rn glimpse-card drop-zone @(_activeDropTargetId == v.CharacterId ? "drop-zone-active" : "")"
+                                 ondragover="event.preventDefault();"
+                                 @ondragenter="() => HandleDragEnter(v.CharacterId)"
+                                 @ondragleave="HandleDragLeave"
+                                 @ondrop="() => HandleDrop(v.CharacterId)">
+                                <div class="glimpse-card-header">
+                                    <h4>@v.Name</h4>
+                                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+                                        <a href="/campaigns/@Id/characters/@v.CharacterId" class="btn-rn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                                        <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => OpenLineageEditor(v.CharacterId)">Lineage</button>
+                                    </div>
+                                </div>
+
+                                <div class="vitals-grid">
+                                    <div class="vital-row">
+                                        <span class="vital-label">❤️ Health</span>
+                                        <div class="vital-bar-wrap">
+                                            <div class="vital-bar health-bar" style="width:@BarPct(v.CurrentHealth, v.MaxHealth)%"></div>
+                                        </div>
+                                        <span class="vital-value">@v.CurrentHealth / @v.MaxHealth</span>
+                                    </div>
+                                    <div class="vital-row">
+                                        <span class="vital-label">🛡️ Willpower</span>
+                                        <div class="vital-bar-wrap">
+                                            <div class="vital-bar willpower-bar" style="width:@BarPct(v.CurrentWillpower, v.MaxWillpower)%"></div>
+                                        </div>
+                                        <span class="vital-value">@v.CurrentWillpower / @v.MaxWillpower</span>
+                                    </div>
+                                    <div class="vital-row">
+                                        <span class="vital-label">🍷 Vitae</span>
+                                        <div class="vital-bar-wrap">
+                                            <div class="vital-bar vitae-bar" style="width:@BarPct(v.CurrentVitae, v.MaxVitae)%"></div>
+                                        </div>
+                                        <span class="vital-value">@v.CurrentVitae / @v.MaxVitae</span>
+                                    </div>
+                                </div>
+
+                                @if (v.MaxVitae > 0)
+                                {
+                                    <VitaeFastHealPanel CharacterId="v.CharacterId"
+                                                        ActingUserId="@_currentUserId"
+                                                        CurrentVitae="v.CurrentVitae"
+                                                        MaxVitae="v.MaxVitae"
+                                                        HealthDamage="@v.HealthDamage"
+                                                        TrackLength="v.MaxHealth"
+                                                        OnHealed="LoadVitals" />
+                                }
+
+                                <div class="glimpse-stats">
+                                    <span>🕊️ Humanity: @v.Humanity</span>
+                                    <span>⚫ Beats: @v.Beats</span>
+                                    <span>✨ XP: @v.ExperiencePoints</span>
+                                    @if (v.ActiveConditionCount > 0)
+                                    {
+                                        <span class="condition-badge">⚠️ @v.ActiveConditionCount Condition@(v.ActiveConditionCount > 1 ? "s" : "")</span>
+                                    }
+                                </div>
+
+                                @* Beat award *@
+                                <div class="award-panel">
+                                    <div class="award-row">
+                                        <input class="form-control award-input"
+                                               placeholder="Beat reason…"
+                                               aria-label="@($"Beat reason for {v.Name}")"
+                                               @bind="_beatReasons[v.CharacterId]" />
+                                        <button class="btn-rn-primary"
+                                                style="font-size:0.85em;"
+                                                disabled="@(string.IsNullOrWhiteSpace(_beatReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
+                                                @onclick="() => AwardBeat(v.CharacterId)">
+                                            + Beat
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @* XP award *@
+                                <div class="award-panel" style="margin-top:0.5rem;">
+                                    <div class="award-row">
+                                        <input type="number"
+                                               class="form-control xp-amount-input"
+                                               min="1"
+                                               aria-label="@($"Experience points to award to {v.Name}")"
+                                               @bind="_xpAmounts[v.CharacterId]" />
+                                        <input class="form-control award-input"
+                                               placeholder="XP reason…"
+                                               aria-label="@($"Experience point reason for {v.Name}")"
+                                               @bind="_xpReasons[v.CharacterId]" />
+                                        <button class="btn-rn-ghost"
+                                                style="font-size:0.85em;"
+                                                disabled="@(_xpAmounts.GetValueOrDefault(v.CharacterId) <= 0 || string.IsNullOrWhiteSpace(_xpReasons.GetValueOrDefault(v.CharacterId)) || _awarding)"
+                                                @onclick="() => AwardXp(v.CharacterId)">
+                                            + XP
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if (_feedbackMessages.TryGetValue(v.CharacterId, out string? msg) && !string.IsNullOrEmpty(msg))
+                                {
+                                    <p class="feedback-ok feedback-small">@msg</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else if (_glimpseTab == "social")
+        {
+            <div class="glimpse-tab-panel" id="panel-glimpse-social" role="tabpanel" aria-labelledby="tab-glimpse-social">
+                <GlimpseSocialManeuvers
+                    CampaignId="Id"
+                    StorytellerId="@_currentUserId"
+                    Maneuvers="_socialManeuvers"
+                    Vitals="_vitals"
+                    Npcs="_npcs"
+                    InitialClueThreshold="@_campaign.SocialManeuverInvestigationSuccessesPerClue"
+                    PinnedNpcIds="_pinnedNpcIds"
+                    OnChanged="LoadSocialManeuvers" />
+            </div>
+        }
+        else if (_glimpseTab == "approvals")
+        {
+            <div class="glimpse-tab-panel" id="panel-glimpse-approvals" role="tabpanel" aria-labelledby="tab-glimpse-approvals">
+                @if (PendingApprovalCount == 0)
+                {
+                    <div class="empty-state-rn">
+                        <p>No pending player requests. Bloodline, covenant, rite, coil, chosen mystery, and illicit procurement approvals appear here.</p>
+                    </div>
+                }
+                else
+                {
+                    <GlimpsePendingRequests
+                        StorytellerId="@_currentUserId"
+                        Bloodlines="_pendingBloodlines"
+                        Covenants="_pendingCovenants"
+                        Rites="_pendingRites"
+                        ChosenMysteries="_pendingChosenMysteries"
+                        Coils="_pendingCoils"
+                        AssetProcurements="_pendingAssetProcurements"
+                        OnChanged="LoadVitals" />
+                }
+            </div>
+        }
+        else if (_glimpseTab == "chronicle")
+        {
+            <div class="glimpse-tab-panel" id="panel-glimpse-chronicle" role="tabpanel" aria-labelledby="tab-glimpse-chronicle">
+                <BloodBondsPanel CampaignId="Id"
+                                 StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                                 Vitals="_vitals"
+                                 Npcs="_npcs" />
+
+                <PredatoryAuraHistoryPanel CampaignId="Id"
+                                           StorytellerUserId="@(_currentUserId ?? string.Empty)" />
+
+                <GhoulsTab CampaignId="Id"
+                           StorytellerUserId="@(_currentUserId ?? string.Empty)"
+                           Vitals="_vitals"
+                           Npcs="_npcs" />
             </div>
         }
     }

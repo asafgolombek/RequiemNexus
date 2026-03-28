@@ -86,6 +86,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<FeedingTerritory> FeedingTerritories { get; set; } = default!;
 
+    public DbSet<HuntingPoolDefinition> HuntingPoolDefinitions { get; set; } = default!;
+
+    public DbSet<HuntingRecord> HuntingRecords { get; set; } = default!;
+
     public DbSet<FactionRelationship> FactionRelationships { get; set; } = default!;
 
     public DbSet<NpcStatBlock> NpcStatBlocks { get; set; } = default!;

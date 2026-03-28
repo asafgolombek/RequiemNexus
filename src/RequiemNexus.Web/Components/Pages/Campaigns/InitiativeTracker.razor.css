@@ -10,6 +10,7 @@
 }
 
 .initiative-blood-log-sidebar {
+    align-self: stretch;
     position: sticky;
     top: 1rem;
     max-height: calc(100vh - 2rem);
@@ -27,11 +28,19 @@
 .initiative-blood-log-feed {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     padding: 0.5rem;
     background: var(--charcoal);
+}
+
+.initiative-blood-log-feed ::deep .roll-history-feed {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
 }
 
 .initiative-npc-health {

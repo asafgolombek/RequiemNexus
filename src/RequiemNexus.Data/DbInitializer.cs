@@ -21,6 +21,7 @@ public static class DbInitializer
 
         await SeedRolesAsync(roleManager);
         await SeedClansAndDisciplinesAsync(context);
+        await SeedHuntingPoolDefinitionsAsync(context);
         await SeedMeritsAsync(context, logger);
         await SeedEquipmentCatalogAsync(context);
         await SeedCovenantsAsync(context, logger);
@@ -63,6 +64,11 @@ public static class DbInitializer
             await context.ClanDisciplines.AddRangeAsync(clanDisciplines);
             await context.SaveChangesAsync();
         }
+    }
+
+    private static async Task SeedHuntingPoolDefinitionsAsync(ApplicationDbContext context)
+    {
+        await HuntingPoolDefinitionSeedData.SeedAsync(context);
     }
 
     private static async Task SeedMeritsAsync(ApplicationDbContext context, ILogger logger)

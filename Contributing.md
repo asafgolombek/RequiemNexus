@@ -189,8 +189,6 @@ We provide type-specific PR templates for focused reviews. When creating a PR, y
 
 Append `&template=feature.md` (or the appropriate template name) to the PR creation URL, or select the template from the GitHub UI.
 
-If none of the specific templates fit, the default template will be used automatically.
-
 ---
 
 ## 🧭 First-Time Contributors

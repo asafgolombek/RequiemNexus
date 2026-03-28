@@ -82,6 +82,16 @@ public partial class StorytellerGlimpse
 
     private int _lineageEditCharacterId;
 
+    private string _glimpseTab = "overview";
+
+    private int PendingApprovalCount =>
+        _pendingBloodlines.Count
+        + _pendingCovenants.Count
+        + _pendingRites.Count
+        + _pendingChosenMysteries.Count
+        + _pendingCoils.Count
+        + _pendingAssetProcurements.Count;
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -265,5 +275,34 @@ public partial class StorytellerGlimpse
     private async Task OnLineageSavedAsync()
     {
         await LoadVitals();
+    }
+
+    private void SelectGlimpseTab(string tab) => _glimpseTab = tab;
+
+    private void HandleGlimpseTabKeydown(KeyboardEventArgs e)
+    {
+        string[] tabs = ["overview", "social", "approvals", "chronicle"];
+        int i = Array.IndexOf(tabs, _glimpseTab);
+        if (i < 0)
+        {
+            return;
+        }
+
+        if (e.Key == "ArrowRight" || e.Key == "ArrowDown")
+        {
+            SelectGlimpseTab(tabs[(i + 1) % tabs.Length]);
+        }
+        else if (e.Key == "ArrowLeft" || e.Key == "ArrowUp")
+        {
+            SelectGlimpseTab(tabs[(i - 1 + tabs.Length) % tabs.Length]);
+        }
+        else if (e.Key == "Home")
+        {
+            SelectGlimpseTab(tabs[0]);
+        }
+        else if (e.Key == "End")
+        {
+            SelectGlimpseTab(tabs[^1]);
+        }
     }
 }

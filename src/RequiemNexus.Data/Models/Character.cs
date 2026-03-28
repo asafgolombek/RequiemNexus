@@ -128,6 +128,9 @@ public class Character
 
     public int BloodPotency { get; set; } = 1;
 
+    /// <summary>V:tR 2e Predator Type. Null until set during character creation or ST assignment.</summary>
+    public PredatorType? PredatorType { get; set; }
+
     public int MaxVitae { get; set; }
 
     public int CurrentVitae { get; set; }

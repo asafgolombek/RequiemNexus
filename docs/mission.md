@@ -29,16 +29,38 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 11 | Assets & Armory (Equipment & Services) | ✅ Complete |
 | 12 | The Web of Night (Relationship Webs) | ✅ Complete |
 | 13 | End-to-End Testing & Accessibility | ✅ Complete |
-| 14 | The Danse Macabre — Combat & Wounds | 🔄 In progress |
-| 15 | The Beast Within — Frenzy & Torpor | 🔄 In progress |
-| 16a | The Hunting Ground — Feeding | ⬜ Planned |
+| 14 | The Danse Macabre — Combat & Wounds | ✅ Complete |
+| 15 | The Beast Within — Frenzy & Torpor | ✅ Complete |
+| 16a | The Hunting Ground — Feeding | ✅ Complete |
 | 16b | The Discipline Engine — Power Activation | ⬜ Planned |
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
-| 19 | The Blood Lineage — Discipline Acquisition Rules | ⬜ Planned |
+| 19 | The Blood Lineage — Discipline Acquisition Rules | 🔄 In Progress |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Currently active → Phase 14 — The Danse Macabre (Combat & Wounds).** Phases 14–19 are the **V:tR 2e Playability Gap** — full scope, dependency graph, and task breakdown in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** and follows after playability work. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — summary and exit criteria are in **Phase 13** below; run local browser tests with `scripts/test-e2e-local.ps1`. Phase 12 (The Web of Night) is delivered; see phase table above.
+> **Phase 16a — The Hunting Ground (Feeding) is complete** (`IHuntingService`, `HuntPanel`, hunt ledger). **Phase 19 — The Blood Lineage is now active** — see [`docs/phase19-the-blood-lineage.md`](./phase19-the-blood-lineage.md) for the full implementation plan. **Phase 16b** (Discipline power activation) remains **blocked on Phase 19** (`DisciplinePower.PoolDefinitionJson`). **Phase 17** (Humanity & Conditions) is independent and may proceed in parallel. Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** after playability work. Phases 14–16a are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+
+---
+
+## 🗺️ Playability Dependency Graph (Phases 14–19)
+
+```
+Phase 14 (Combat) ✅
+    ├──► Phase 15 (Frenzy/Torpor) ✅      ← VitaeDepletedEvent
+    │         └──► Phase 17 (Humanity)    ← DegenerationCheckRequired UI
+    └──► Phase 17 (Humanity)              ← WoundPenaltyResolver in ModifierService
+
+Phase 16a (Hunting) ✅  ← independent
+Phase 19  (Disciplines — model + seed)   ← independent; start now
+    └──► Phase 16b (Discipline Activation)  ← needs PoolDefinitionJson from Phase 19
+
+Phase 18 (Edge Systems) ← fully independent; content passes any time
+```
+
+**Recommended parallel tracks:**
+- Track A: ~~14 → 15~~ ✅ → **Phase 17** next (independent, ready to start)
+- Track B: **Phase 19** 🔄 → **Phase 16b** (discipline chain) — [plan](./phase19-the-blood-lineage.md)
+- Track C: **Phase 18** (independent, any time)
 
 ---
 
@@ -62,6 +84,9 @@ Requiem Nexus intentionally does **not** attempt to:
 - Become a generic multi-system TTRPG platform.
 - Support every **Chronicles of Darkness** splat line.
 - Automate Storyteller narrative judgment — social and approval gates are intentionally lightweight.
+- Automate **chases or mass combat** — these VtR 2e mechanical frames are out of scope; Storytellers manage them manually.
+- Automate **merged pools / coordinated actions** across multiple characters — handled manually via the dice modal.
+- Cover supplements beyond the **VtR 2e core book** in Phase 18 content passes — supplement catalogs are future work.
 
 ---
 
@@ -411,51 +436,50 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 14: The Danse Macabre — Combat & Wounds
+## 📅 Phase 14: The Danse Macabre — Combat & Wounds ✅
 
 **The Objective:** Build the attack-to-damage pipeline so initiative resolution produces real mechanical outcomes.
 
-**Status:** 🔄 **In progress** — this is the current engineering focus.
+**Status:** ✅ **Complete**
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 14](./PLAYABILITY_GAP_PLAN.md)
-
-- [ ] `AttackResult` value object — successes, weapon dice, `DamageSource` (Bashing / Lethal / Aggravated / Fire / Sunlight / Weapon)
-- [ ] `AttackService` — melee-first MVP; reads existing `character.Defense` derived stat
-- [ ] `HealthService` — B/L/A overflow rules (p.172); damage applied to health boxes
-- [ ] `WoundPenaltyResolver` — injects `PassiveModifier(Target = WoundPenalty)` into existing `ModifierService.GetModifiersForCharacterAsync`
-- [ ] Healing via `VitaeService` — `HealingReason` enum; fast-heal costs enforced as Domain constants
-- [ ] Combat UI — Attack Panel (Glimpse) and Heal Panel (sheet + Glimpse)
-- [ ] Rules Interpretation Log — MVP boundary, Defense vs. firearms, B/L/A edge cases
+- [x] `AttackResult` value object — successes, weapon dice, `DamageSource` (Bashing / Lethal / Aggravated / Fire / Sunlight / Weapon)
+- [x] `AttackService` — melee-first MVP; reads existing `character.Defense` derived stat
+- [x] `CharacterHealthService` — B/L/A overflow rules (p.172); damage applied to health boxes
+- [x] `WoundPenaltyResolver` — injects `PassiveModifier(Target = WoundPenalty)` into existing `ModifierService.GetModifiersForCharacterAsync`
+- [x] Healing via `CharacterHealthService.TryFastHealBashingWithVitaeAsync` — `HealingReason` enum; fast-heal costs enforced as Domain constants (`VitaeHealingCosts`)
+- [x] Combat UI — Attack Panel (`MeleeAttackResolveModal`, Glimpse + Tracker) and Heal Panel (sheet + Glimpse); NPC health track (`NpcCombatService`, `HealthDamageTrackBoxes`)
+- [x] Rules Interpretation Log — MVP boundary, Defense vs. firearms, B/L/A edge cases
 
 ---
 
-## 📅 Phase 15: The Beast Within — Frenzy & Torpor
+## 📅 Phase 15: The Beast Within — Frenzy & Torpor ✅
 
 **The Objective:** Give the Beast teeth — automated frenzy saves and torpor state tracking.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 15](./PLAYABILITY_GAP_PLAN.md)
+**Status:** ✅ **Complete**
 
-- [ ] `FrenzyTrigger` enum — Hunger, Rage, Rotschreck, Starvation
-- [ ] `FrenzyService` — `Resolve + Blood Potency` save; tilt application atomic via unique index on `(CharacterId, TiltType, IsActive)`
-- [ ] `VitaeDepletedEvent` — raises Hunger frenzy save; in-process, idempotent
-- [ ] `TorporSince` on `Character`; `TorporService` — enter, awaken, starvation-interval check
-- [ ] `TorporIntervalService : BackgroundService` — follows `SessionTerminationService` pattern; nightly cadence + ST "Advance Time" on-demand trigger
-- [ ] Frenzy save UI — player "I am exposed" button; ST Glimpse trigger per character
-- [ ] Rules Interpretation Log — torpor duration table, Rötschreck pool, hunger escalation
+- [x] `FrenzyTrigger` enum — Hunger, Rage, Rotschreck, Starvation
+- [x] `FrenzyService` — `Resolve + Blood Potency` save; tilt application guarded by beast-active check; Willpower optional spend path
+- [x] `VitaeService` + `WillpowerService` — Masquerade-checked spend/gain; `VitaeDepletedEvent` → Hunger frenzy auto-trigger via `VitaeDepletedEventHandler`
+- [x] `TorporSince` + `LastStarvationNotifiedAt` on `Character` (migration `Phase15TorporState`); `TorporService` — enter, awaken, starvation-interval check with `TorporDurationTable`
+- [x] `TorporIntervalService : BackgroundService` — follows `SessionTerminationService` pattern; configurable cadence (default 24 h via `Torpor:IntervalHours`)
+- [x] `DomainEventDispatcher` + `IDomainEventHandler<T>` — in-process domain event infrastructure
+- [x] Frenzy/torpor UI — `HealthDamageTrackBoxes` component; torpor badge + enter/awaken panels on character sheet and ST Glimpse
+- [x] Rules Interpretation Log — torpor duration table, Rötschreck pool, hunger escalation, one-Vitae awakening cost
 
 ---
 
-## 📅 Phase 16a: The Hunting Ground — Feeding
+## 📅 Phase 16a: The Hunting Ground — Feeding ✅
 
 **The Objective:** First-class hunting rolls wired to Predator Type, with resonance outcomes.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16a](./PLAYABILITY_GAP_PLAN.md)
+**Status:** ✅ **Complete**
 
-- [ ] `HuntingPoolDefinition` seed — one row per Predator Type (`PoolDefinitionJson`, Vitae gain, description)
-- [ ] `HuntingService` — `ExecuteHuntAsync`; optional territory bonus; `VitaeService` credit; resonance result
-- [ ] `ResonanceOutcome` enum + `ResonanceTable` JSON seed
-- [ ] `HuntingRecord` entity — lightweight audit ledger
-- [ ] Hunting UI — character sheet "Hunt" button → territory picker → result card
+- [x] `PredatorType` on `Character`, `HuntingPoolDefinition` seed (9 rows) + unique index, `HuntingRecord` ledger
+- [x] `IHuntingService` / `HuntingService` — `ExecuteHuntAsync(characterId, userId, territoryId?)`; territory campaign alignment; pool floor; `ResonanceOutcome` via static thresholds (no JSON table)
+- [x] Vitae gain via `IVitaeService.GainVitaeAsync`; dice feed via `PublishDiceRollAsync`; structured logging
+- [x] `HuntPanel.razor` on character vitals — optional territory picker, `aria-live` announcer, resonance display
+- [x] `HuntingServiceTests` (Application.Tests); rules log — **Phase 16a** in [`docs/rules-interpretations.md`](./rules-interpretations.md)
 
 ---
 
@@ -465,11 +489,16 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **Dependency:** Phase 19 must ship `DisciplinePower.PoolDefinitionJson` first.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 16b](./PLAYABILITY_GAP_PLAN.md)
+### Architectural Decisions
 
-- [ ] `DisciplineActivationService` — reads `PoolDefinitionJson`, deducts `ActivationCost`, posts result to dice feed
-- [ ] `ActivationCost` value object — parses `DisciplinePower.Cost` string
-- [ ] Discipline activation UI — "Activate" button per power with populated pool; cost-preview modal
+- **Discipline activation is a wrapper around the existing `TraitResolver`.** `DisciplineActivationService` (Application) receives a `disciplinePowerId` and `characterId`, reads `DisciplinePower.PoolDefinitionJson` and `Cost`, calls `TraitResolver`, deducts cost, and posts the result to the dice feed.
+- **Cost deduction is atomic.** Vitae and Willpower spends go through `VitaeService` / `WillpowerService` — no separate code path.
+- **Powers with null `PoolDefinitionJson` remain display-only** — the "Activate" button is suppressed until the content pass populates their pool.
+
+- [ ] `DisciplineActivationService` — Application: `ActivatePowerAsync(characterId, disciplinePowerId)`; reads `PoolDefinitionJson`, resolves via `TraitResolver`, deducts `ActivationCost`, posts to dice feed; Masquerade ownership check
+- [ ] `ActivationCost` value object — Domain: parses `DisciplinePower.Cost` string (`"1 Vitae"`, `"1 Willpower"`, `"—"`) into typed cost; enforced before rolling
+- [ ] Discipline activation UI — character sheet Disciplines section: "Activate" button per power with populated pool; cost-preview modal → confirm → result in dice feed; null-pool powers remain display-only
+- [ ] Rules Interpretation Log — cost enforcement choices, pool edge cases not covered by existing `TraitResolver` contract
 
 ---
 
@@ -477,7 +506,11 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 **The Objective:** Automate degeneration rolls and wire all Condition penalties into the dice pool.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 17](./PLAYABILITY_GAP_PLAN.md)
+### Architectural Decisions
+
+- **Degeneration is a triggered roll, not an automatic loss.** When `HumanityStains` crosses the threshold for the current Humanity dot, `HumanityService` raises `DegenerationCheckRequired(Reason = StainsThreshold)`. The Storyteller sees a Glimpse banner; clicking it fires a `Resolve + (7 − Humanity)` roll and auto-applies the result.
+- **Condition penalties are a modifier source, not special-cased code.** Each canonical `ConditionType` gains a nullable `PenaltyModifierJson` column. `ModifierService` reads active conditions and injects their penalties into `TraitResolver` alongside equipment and Coil modifiers. Homebrew / custom condition types have `PenaltyModifierJson = null`; the ST applies custom penalties by hand.
+- **Remorse / anchor checks are explicit ST actions.** `TouchstoneService.RollRemorseAsync` rolls `Humanity` dice (chance die at Humanity 0). An active Touchstone adds +1 die.
 
 **Shared event (defined once, used by Phase 17 and Phase 19):**
 
@@ -486,11 +519,14 @@ record DegenerationCheckRequired(int CharacterId, DegenerationReason Reason);
 enum DegenerationReason { StainsThreshold, CrúacPurchase }
 ```
 
-- [ ] `PenaltyModifierJson` on canonical Conditions — migration; wired into `ModifierService` aggregation loop
-- [ ] `HumanityService.EvaluateStainsAsync` — raises `DegenerationCheckRequired` at stain threshold
-- [ ] Degeneration roll UI — Glimpse banner → `Resolve + (7 − Humanity)` → auto-apply result
-- [ ] `TouchstoneService.RollRemorseAsync` — voluntary remorse roll; Touchstone adds +1 die
-- [ ] Incapacitated flag — UI suppression on player sheet only; ST Glimpse bypasses
+- [ ] **`PenaltyModifierJson` on canonical Conditions** — Data: nullable JSON column; migration. Canonical penalties: Shaken (−2 pools), Exhausted (−2 physical), Frightened (−2 except fleeing), Guilty (−1 Resolve + Composure), Despondent (−2 Mental), Provoked (−1 Composure), Blind (−3 attack / −2 other), Stunned (no action flag). Homebrew types: `null`.
+- [ ] **`ModifierService` — Condition source integration** — `ConditionModifierSource` added to aggregation loop; reads active `CharacterCondition` rows, maps `ConditionType` → `PenaltyModifierJson`, injects into `TraitResolver` call
+- [ ] **`HumanityService.EvaluateStainsAsync`** — raises `DegenerationCheckRequired` at stain threshold
+- [ ] **Degeneration roll UI** — Glimpse banner → `Resolve + (7 − Humanity)` → auto-apply result (success: clear stains; failure: remove dot + clear stains; dramatic failure: remove dot + apply `Guilty`)
+- [ ] **`TouchstoneService.RollRemorseAsync`** — voluntary remorse roll; Touchstone adds +1 die; applies outcome via `HumanityService`
+- [ ] **Remorse UI** — "Roll Remorse" button on character sheet and Glimpse (active when stains are present but below degeneration threshold)
+- [ ] **Incapacitated flag** — UI suppression on player sheet only; ST Glimpse bypasses for coup de grâce / death-condition tests
+- [ ] **Rules Interpretation Log** — degeneration threshold formula, Touchstone bonus justification, stain-clearing behavior on both degeneration outcomes
 
 ---
 
@@ -498,29 +534,110 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 
 **The Objective:** Close low-priority mechanical gaps and fill the core-book content catalog.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 18](./PLAYABILITY_GAP_PLAN.md)
+### Architectural Decisions
 
-- [ ] `PassiveAuraService` — `IsLashOut = false` path; auto-triggers on `CombatEncounter` + ST manual toggle from Glimpse NPC panel
+- **Passive Predatory Aura reuses existing `PredatoryAuraContest` infrastructure.** The `IsLashOut` column reserved in Phase 12 drives the distinction. "Same scene" = two vampires in the same `CombatEncounter` (automatic) or ST manual trigger from the Glimpse NPC panel. No ambient scene detection beyond `CombatEncounter` — a session/location entity would require new scope. Decision recorded in `rules-interpretations.md`.
+- **Blood Sympathy rolls are a thin wrapper.** `BloodSympathyService` already calculates the pool; `RollBloodSympathyAsync` submits it to `DiceService` and posts to the dice feed. No new entity needed.
+- **Social Maneuvering interception adds a third party to an existing `SocialManeuver`.** A `ManeuverInterceptor` join entity links a second character to an active maneuver. `SocialManeuveringEngine` checks for interceptors before applying door reductions; an interceptor may contest the roll (Manipulation + Persuasion vs. initiator).
+- **Content passes are data migrations, not code changes.** All rite / Coil / Devotion catalog expansions are JSON seed additions to `SeedSource/` and a `DbInitializer` extension call — no business logic changes required.
+
+**Passive Predatory Aura**
+- [ ] `PassiveAuraService` — Application: `TriggerPassiveContestAsync(vampireAId, vampireBId)`; calls existing `PredatoryAuraService` with `IsLashOut = false`; both characters must be in a shared Chronicle
+- [ ] Scene context hook — when two vampires are added to the same `CombatEncounter`, `PassiveAuraService` auto-invokes for any pair not yet contested that scene
+- [ ] UI — "Passive aura contest" notification in dice feed; outcome Conditions applied via existing logic; ST manual toggle from Glimpse NPC panel
+
+**Blood Sympathy**
 - [ ] `BloodSympathyService.RollBloodSympathyAsync` — `Wits + Empathy + BloodSympathyRating`; posts to dice feed
-- [ ] `ManeuverInterceptor` entity — third-party interception of active `SocialManeuver`
-- [ ] Content passes (data-only): Theban Sorcery full catalog, Crúac full catalog, all 5 Ordo Mysteries / 5 Coils each, Necromancy catalog expansion, Devotion catalog expansion, Loresheet Merits
+- [ ] UI — "Sense Blood Kin" button on character sheet Lineage section; select target from known kindred; result in dice feed
+
+**Social Maneuvering Interception**
+- [ ] `ManeuverInterceptor` entity — Data: `SocialManeuverId`, `InterceptorCharacterId`, `IsActive`, `Successes`; migration
+- [ ] `SocialManeuveringEngine` interception logic — check for active interceptors before door-reduction rolls; net successes subtract from effective door reductions
+- [ ] ST UI — "Add Interceptor" to any active maneuver on Glimpse; interceptor roll via existing dice modal
+- [ ] Rules Interpretation Log — `PassiveAuraService` "same scene" definition; interception pool and tie-breaking
+
+**Content Passes (data-only)**
+- [ ] Theban Sorcery full catalog — all Miracles from VtR 2e core book in `bloodSorceryRites.json`
+- [ ] Crúac full catalog — all Rites from VtR 2e core book
+- [ ] Ordo Dracul Coil catalog — all 5 Mysteries × 5 Coils in `coils.json`
+- [ ] Necromancy catalog expansion — additional rites beyond Phase 9.6 sample
+- [ ] Devotion catalog expansion — remaining clan/covenant-specific Devotions in `devotions.json`
+- [ ] Loresheet Merits — `Merit` seed additions for Loresheet entries from core book
 
 ---
 
-## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline
+## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline 🔄
+
+**Status:** 🔄 **In Progress** — see [`docs/phase19-the-blood-lineage.md`](./phase19-the-blood-lineage.md) for the full implementation plan.
 
 **The Objective:** Enforce the acquisition rules from `DisciplinesRules.txt`, promote `Disciplines.json` to authoritative seed source, and add `PoolDefinitionJson` to unblock Phase 16b.
 
-> Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 19](./PLAYABILITY_GAP_PLAN.md)
+### Current State (what's broken)
 
-- [ ] Enrich `Discipline` entity — `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId`, `IsBloodlineDiscipline`, `BloodlineId`, `IsNecromancy`; migration `Phase19DisciplineAcquisitionMetadata`
-- [ ] Add `PoolDefinitionJson` to `DisciplinePower` (same migration)
-- [ ] `DisciplineJsonImporter` — replaces `DisciplineSeedData.cs`; idempotent upsert by name
-- [ ] Hard gates: bloodline restriction, Theban Humanity floor — `Result.Failure`, no override
-- [ ] Soft gates (ST-acknowledged): teacher + Vitae, Covenant Status (stolen-secrets path), Necromancy cultural-connection — audited in `XpLedgerEntry.Notes` as `" | gate-override stUserId={id} {timestamp:O}"`
-- [ ] Character creation: 2-of-3 in-clan minimum; third-dot Covenant gate
-- [ ] Crúac Humanity cap: `GetEffectiveMaxHumanity = 10 − CrúacRating`; raises `DegenerationCheckRequired(CrúacPurchase)`
+| Component | Problem |
+|-----------|---------|
+| `Disciplines.json` | Exists in `SeedSource/` but is **not read by `DbInitializer`**. `DisciplineSeedData.cs` is the actual seed — the JSON is dead weight. |
+| `Discipline` entity | Missing: `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId`, `IsBloodlineDiscipline`, `BloodlineId`. |
+| `DisciplinePower` entity | No `PoolDefinitionJson` — Phase 16b activation cannot resolve per-power pools. |
+| `CharacterDisciplineService` | Validates XP and in-clan status only. Zero enforcement of teacher, Covenant Status, Theban Humanity floor, Crúac cap, or bloodline restrictions. |
+| Character creation | "3 dots: ≥2 must be in-clan, 1 free" not validated anywhere. |
+| Power names | Celerity / Resilience / Vigor use placeholder names (`"Celerity 1"`, etc.) not rulebook names. |
+
+### Acquisition Rules Reference
+
+| Rule | Gate type | Enforcement |
+|------|-----------|-------------|
+| ≥2 of 3 creation dots must be in-clan | Hard | `CharacterCreationService` |
+| Animalism, Celerity, Obfuscate, Resilience, Vigor — learn independently | Hard allow | no teacher flag required |
+| Auspex, Dominate, Majesty, Nightmare, Protean out-of-clan — require teacher + Vitae drink | Soft (ST-acknowledged) | `CharacterDisciplineService` |
+| Crúac, Theban, Coils — require Covenant Status + teacher | Hard (overridable by ST for Covenant gate only — "stolen secrets") | `CharacterDisciplineService` + `CovenantMembershipService` |
+| Theban Sorcery dot N requires Humanity ≥ N | Hard | `CharacterDisciplineService` |
+| Crúac dot 1 is a breaking point at Humanity 4+ | Event | raise `DegenerationCheckRequired(CrúacPurchase)` |
+| Crúac permanently caps Humanity at `10 − CrúacRating` | Derived stat | `HumanityService.GetEffectiveMaxHumanity` |
+| Bloodline Disciplines — bloodline members only | Hard | `CharacterDisciplineService` (check `CharacterBloodline`) |
+| Necromancy — Mekhet-clan OR Necromancy bloodline OR ST-acknowledged cultural connection | Soft (ST-acknowledged) | `CharacterDisciplineService` |
+
+### Architectural Decisions
+
+- **`Disciplines.json` becomes authoritative; `DisciplineSeedData.cs` is retired.** A `DisciplineJsonImporter` in `DbInitializer` reads the JSON using the same `JsonSerializerOptions` pattern as other importers. `DisciplineSeedData.cs` is deleted once the importer is verified in integration tests.
+- **Acquisition gates are soft or hard depending on verifiability.** Teacher presence and Vitae-drinking cannot be verified by the app — these use an `AcquisitionAcknowledgedByST` bool on the purchase DTO. Mechanical prerequisites (Covenant Status, Humanity, bloodline) are hard gates enforced in code.
+- **`DisciplinePower.PoolDefinitionJson` mirrors `DevotionDefinition.PoolDefinitionJson`** — same `PoolDefinition` serialization format and `TraitResolver` contract. Phase 16b reads this column directly.
+- **Crúac Humanity cap is a derived modifier, not stored.** `HumanityService.GetEffectiveMaxHumanity(character)` returns `10 − CrúacRating`. If future mechanics add additional ceilings, they are `Math.Min`-composed at that point.
+- **Covenant Status is a hard gate overridable by the ST for covenant Disciplines only.** When `AcquisitionAcknowledgedByST = true`, the Status check is bypassed and audited in the ledger as `" | gate-override stUserId={userId} {timestamp:O}"`. Bloodline restrictions and Theban Humanity floor remain always-hard.
+- **Necromancy "cultural connection" is a soft gate.** `Discipline.IsNecromancy` gates a dedicated soft-gate path: if the character is not Mekhet-clan and has no Necromancy bloodline, `AcquisitionAcknowledgedByST = true` is required. The ST confirmation modal quotes all three eligible conditions verbatim from `DisciplinesRules.txt`.
+
+**Data model & migration**
+- [ ] Add acquisition metadata to `Discipline` entity — `CanLearnIndependently`, `RequiresMentorBloodToLearn`, `IsCovenantDiscipline`, `CovenantId` (int?, FK), `IsBloodlineDiscipline`, `BloodlineId` (int?, FK), `IsNecromancy`; migration `Phase19DisciplineAcquisitionMetadata`
+- [ ] Add `PoolDefinitionJson` to `DisciplinePower` — nullable string, same contract as `DevotionDefinition.PoolDefinitionJson`; same migration batch
+- [ ] Extend `Disciplines.json` schema — add acquisition fields to all 12 core disciplines + bloodline disciplines; populate `PoolDefinitionJson` from `DisciplinesRules.txt` (null where not detailed)
+
+**Seed pipeline**
+- [ ] `DisciplineJsonImporter` — `RequiemNexus.Data`; follows `CovenantJsonImporter` pattern; upsert by name; called from `DbInitializer.EnsureDisciplinesAsync`
+- [ ] Retire `DisciplineSeedData.cs` — delete after importer verified by integration tests; record switch in `rules-interpretations.md`
 - [ ] Fix Celerity / Resilience / Vigor power names to rulebook names in `Disciplines.json`
+
+**Acquisition rule enforcement**
+- [ ] `DisciplineAcquisitionRequest` DTO — `DisciplineId`, `TargetRating`, `AcquisitionAcknowledgedByST` (bool); replaces bare parameters
+- [ ] Hard gate: bloodline restriction — `CharacterDisciplineService`: if `IsBloodlineDiscipline`, character must have matching `CharacterBloodline`; `Result.Failure` if not
+- [ ] Hard gate (overridable): Covenant Status — if `IsCovenantDiscipline`, require active matching `CovenantMembership`; when `AcquisitionAcknowledgedByST = true`, bypass and audit ledger note
+- [ ] Hard gate: Theban Humanity floor — if Theban Sorcery and `TargetRating > character.Humanity`, `Result.Failure`
+- [ ] Soft gate: teacher + Vitae — if `RequiresMentorBloodToLearn` and out-of-clan, require `AcquisitionAcknowledgedByST = true`; ST confirmation modal
+- [ ] Crúac breaking point — on first Crúac purchase at Humanity ≥ 4, raise `DegenerationCheckRequired(CrúacPurchase)`
+- [ ] Necromancy gate — if `IsNecromancy` and not Mekhet-clan and no Necromancy bloodline, require `AcquisitionAcknowledgedByST = true`; modal quotes all three eligible conditions
+- [ ] Soft gate audit — append `" | gate-override stUserId={userId} {timestamp:O}"` to `XpLedgerEntry.Notes` for all ST-acknowledged purchases; format recorded in `rules-interpretations.md`
+- [ ] Crúac Humanity cap — `HumanityService.GetEffectiveMaxHumanity` returns `10 − CrúacRating`; displayed on character sheet
+
+**Character creation**
+- [ ] 2-of-3 in-clan minimum — `CharacterCreationService`: count in-clan dots; `Result.Failure` if fewer than 2; inline validation error in creation UI
+- [ ] Third-dot Covenant gate — if third creation dot targets Crúac / Theban / Coils without Covenant Status, surface ST confirmation prompt
+
+**UI**
+- [ ] Acquisition gate feedback — Advancement page: hard gates show descriptive tooltip; soft gates show ST confirmation modal with rule quoted verbatim
+- [ ] Crúac Humanity cap badge — "Max Humanity: X (capped by Crúac •••)" on character sheet when `CrúacRating > 0`
+- [ ] Power pool display — when `DisciplinePower.PoolDefinitionJson` is populated, show resolved pool formula on character sheet (same pattern as Devotion display)
+
+**Rules Interpretation Log**
+- [ ] Record in `docs/rules-interpretations.md`: soft vs. hard gate choices, Crúac breaking-point threshold (Humanity 4+), Theban floor formula, `DisciplineSeedData.cs` → JSON migration rationale
 
 ---
 

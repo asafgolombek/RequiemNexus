@@ -19,7 +19,7 @@
                     Select the thrall who drank, then exactly one regnant (PC, NPC, or name only). Re-feeding the same regnant escalates the bond until Stage 3.
                 </p>
                 <label class="text-small" for="bond-thrall">Thrall</label>
-                <select id="bond-thrall" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_thrallId">
+                <select id="bond-thrall" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_thrallId" @bind:after="OnThrallChanged">
                     <option value="0">— Select thrall —</option>
                     @foreach (var v in Vitals)
                     {
@@ -38,7 +38,7 @@
                     <label class="text-small" for="bond-pc">Regnant (PC)</label>
                     <select id="bond-pc" class="form-control" style="width:100%;margin:0.35rem 0 0.75rem;" @bind="_regnantPcId">
                         <option value="0">— Select —</option>
-                        @foreach (var v in Vitals)
+                        @foreach (var v in Vitals.Where(v => v.CharacterId != _thrallId))
                         {
                             <option value="@v.CharacterId">@v.Name</option>
                         }
@@ -58,7 +58,11 @@
                 else
                 {
                     <label class="text-small" for="bond-name">Regnant display name</label>
-                    <input id="bond-name" type="text" class="form-control" maxlength="150" placeholder="Unlinked regnant" @bind="_regnantName" style="margin:0.35rem 0 0.75rem;" />
+                    <input id="bond-name" type="text" class="form-control" maxlength="150" placeholder="Unlinked regnant" @bind="_regnantName" @bind:event="oninput" style="margin:0.35rem 0 0.75rem;" />
+                    @if (RegnantNameMatchesSelectedThrall())
+                    {
+                        <p class="text-small" style="color:var(--accent-warm);margin:0 0 0.75rem;">The regnant cannot be the same character as the thrall.</p>
+                    }
                 }
 
                 <label class="text-small" for="bond-notes">Notes (optional)</label>
@@ -121,8 +125,28 @@
     {
         "pc" => _regnantPcId != 0 && _regnantPcId != _thrallId,
         "npc" => _regnantNpcId != 0,
-        _ => !string.IsNullOrWhiteSpace(_regnantName),
+        _ => !string.IsNullOrWhiteSpace(_regnantName) && !RegnantNameMatchesSelectedThrall(),
     });
+
+    private void OnThrallChanged()
+    {
+        if (_regnantPcId == _thrallId)
+        {
+            _regnantPcId = 0;
+        }
+    }
+
+    private bool RegnantNameMatchesSelectedThrall()
+    {
+        if (_thrallId == 0 || string.IsNullOrWhiteSpace(_regnantName))
+        {
+            return false;
+        }
+
+        CharacterVitalsDto? thrall = Vitals.FirstOrDefault(v => v.CharacterId == _thrallId);
+        return thrall != null
+            && string.Equals(thrall.Name.Trim(), _regnantName.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
 
     private string ModeClass(string mode) =>
         $"btn-rn-ghost lineage-mode-btn {(_regnantMode == mode ? "lineage-mode-active" : string.Empty)}";

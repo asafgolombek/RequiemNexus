@@ -216,6 +216,23 @@ public class BloodBondServiceTests
     }
 
     [Fact]
+    public async Task RecordFeeding_Fails_WhenThrallAndRegnantPcAreSameCharacter()
+    {
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(nameof(RecordFeeding_Fails_WhenThrallAndRegnantPcAreSameCharacter));
+        await using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignWithKindredAsync(ctx);
+        BloodBondService sut = CreateService(options);
+
+        Result<BloodBondDto> result = await sut.RecordFeedingAsync(
+            new RecordFeedingRequest(1, 2, RegnantCharacterId: 2, RegnantNpcId: null, RegnantDisplayName: null, Notes: null),
+            "st");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("themselves", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, await ctx.BloodBonds.AsNoTracking().CountAsync());
+    }
+
+    [Fact]
     public async Task RecordFeeding_DisplayNameCollision_IsSingleBondEscalated()
     {
         DbContextOptions<ApplicationDbContext> options = CreateOptions(nameof(RecordFeeding_DisplayNameCollision_IsSingleBondEscalated));

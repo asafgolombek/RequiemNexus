@@ -14,7 +14,7 @@ public enum IconName
     /// <summary>Droplet — vitae / embrace (Lucide <c>droplet</c>).</summary>
     Droplet,
 
-    /// <summary>Magnifying glass — search / command palette (Lucide <c>search</c>).</summary>
+    /// <summary>Magnifying glass — search (Lucide <c>search</c>).</summary>
     Search,
 
     /// <summary>Hamburger menu — mobile nav (Lucide <c>menu</c>).</summary>
