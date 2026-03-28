@@ -5,7 +5,11 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<div class="roll-history-feed" @ref="_feedElement">
+<div class="roll-history-feed"
+     @ref="_feedElement"
+     role="region"
+     aria-label="Dice rolls in this session"
+     tabindex="0">
     @foreach (var roll in _rolls)
     {
         <div class="roll-entry @(roll.IsExceptionalSuccess ? "exceptional" : "") @(roll.IsDramaticFailure ? "dramatic" : "")">

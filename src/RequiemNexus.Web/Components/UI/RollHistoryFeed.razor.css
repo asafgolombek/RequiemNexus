@@ -13,6 +13,12 @@
     scrollbar-width: thin;
 }
 
+/* scrollable-region-focusable (WCAG 2.1.1) — region is keyboard-focusable for arrow-key scrolling */
+.roll-history-feed:focus-visible {
+    outline: 2px solid var(--crimson-glow, #e85a6b);
+    outline-offset: 2px;
+}
+
 .roll-entry {
     background: rgba(255, 255, 255, 0.05);
     border-left: 3px solid var(--text-muted);

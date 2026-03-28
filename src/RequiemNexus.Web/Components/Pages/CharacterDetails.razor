@@ -723,14 +723,14 @@ else
 
         @if (SessionClient.IsConnected)
         {
-            <div class="character-sidebar">
+            <aside class="character-sidebar" aria-labelledby="character-blood-logs-heading">
                 <div class="sidebar-header">
-                    <h3>≡ƒ⌐╕ Blood Logs</h3>
+                    <p id="character-blood-logs-heading" class="sidebar-heading">Blood logs</p>
                 </div>
                 <div class="sidebar-content">
                     <RollHistoryFeed />
                 </div>
-            </div>
+            </aside>
         }
     </div>
 
