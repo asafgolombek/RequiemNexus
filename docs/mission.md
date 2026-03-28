@@ -29,16 +29,16 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 11 | Assets & Armory (Equipment & Services) | ✅ Complete |
 | 12 | The Web of Night (Relationship Webs) | ✅ Complete |
 | 13 | End-to-End Testing & Accessibility | ✅ Complete |
-| 14 | The Danse Macabre — Combat & Wounds | 🔄 In progress |
-| 15 | The Beast Within — Frenzy & Torpor | 🔄 In progress |
-| 16a | The Hunting Ground — Feeding | ⬜ Planned |
+| 14 | The Danse Macabre — Combat & Wounds | ✅ Complete |
+| 15 | The Beast Within — Frenzy & Torpor | ✅ Complete |
+| 16a | The Hunting Ground — Feeding | 🔄 In progress |
 | 16b | The Discipline Engine — Power Activation | ⬜ Planned |
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ⬜ Planned |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Currently active → Phase 14 — The Danse Macabre (Combat & Wounds).** Phases 14–19 are the **V:tR 2e Playability Gap** — full scope, dependency graph, and task breakdown in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** and follows after playability work. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — summary and exit criteria are in **Phase 13** below; run local browser tests with `scripts/test-e2e-local.ps1`. Phase 12 (The Web of Night) is delivered; see phase table above.
+> **Currently active → Phase 16a — The Hunting Ground (Feeding).** Phases 14–19 are the **V:tR 2e Playability Gap** — full scope, dependency graph, and task breakdown in [`docs/PLAYABILITY_GAP_PLAN.md`](./PLAYABILITY_GAP_PLAN.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** and follows after playability work. Phases 14 (Combat & Wounds) and 15 (Frenzy & Torpor) are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -411,37 +411,40 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 14: The Danse Macabre — Combat & Wounds
+## 📅 Phase 14: The Danse Macabre — Combat & Wounds ✅
 
 **The Objective:** Build the attack-to-damage pipeline so initiative resolution produces real mechanical outcomes.
 
-**Status:** 🔄 **In progress** — this is the current engineering focus.
+**Status:** ✅ **Complete**
 
 > Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 14](./PLAYABILITY_GAP_PLAN.md)
 
-- [ ] `AttackResult` value object — successes, weapon dice, `DamageSource` (Bashing / Lethal / Aggravated / Fire / Sunlight / Weapon)
-- [ ] `AttackService` — melee-first MVP; reads existing `character.Defense` derived stat
-- [ ] `HealthService` — B/L/A overflow rules (p.172); damage applied to health boxes
-- [ ] `WoundPenaltyResolver` — injects `PassiveModifier(Target = WoundPenalty)` into existing `ModifierService.GetModifiersForCharacterAsync`
-- [ ] Healing via `VitaeService` — `HealingReason` enum; fast-heal costs enforced as Domain constants
-- [ ] Combat UI — Attack Panel (Glimpse) and Heal Panel (sheet + Glimpse)
-- [ ] Rules Interpretation Log — MVP boundary, Defense vs. firearms, B/L/A edge cases
+- [x] `AttackResult` value object — successes, weapon dice, `DamageSource` (Bashing / Lethal / Aggravated / Fire / Sunlight / Weapon)
+- [x] `AttackService` — melee-first MVP; reads existing `character.Defense` derived stat
+- [x] `CharacterHealthService` — B/L/A overflow rules (p.172); damage applied to health boxes
+- [x] `WoundPenaltyResolver` — injects `PassiveModifier(Target = WoundPenalty)` into existing `ModifierService.GetModifiersForCharacterAsync`
+- [x] Healing via `CharacterHealthService.TryFastHealBashingWithVitaeAsync` — `HealingReason` enum; fast-heal costs enforced as Domain constants (`VitaeHealingCosts`)
+- [x] Combat UI — Attack Panel (`MeleeAttackResolveModal`, Glimpse + Tracker) and Heal Panel (sheet + Glimpse); NPC health track (`NpcCombatService`, `HealthDamageTrackBoxes`)
+- [x] Rules Interpretation Log — MVP boundary, Defense vs. firearms, B/L/A edge cases
 
 ---
 
-## 📅 Phase 15: The Beast Within — Frenzy & Torpor
+## 📅 Phase 15: The Beast Within — Frenzy & Torpor ✅
 
 **The Objective:** Give the Beast teeth — automated frenzy saves and torpor state tracking.
 
+**Status:** ✅ **Complete**
+
 > Full task breakdown: [`docs/PLAYABILITY_GAP_PLAN.md` — Phase 15](./PLAYABILITY_GAP_PLAN.md)
 
-- [ ] `FrenzyTrigger` enum — Hunger, Rage, Rotschreck, Starvation
-- [ ] `FrenzyService` — `Resolve + Blood Potency` save; tilt application atomic via unique index on `(CharacterId, TiltType, IsActive)`
-- [ ] `VitaeDepletedEvent` — raises Hunger frenzy save; in-process, idempotent
-- [ ] `TorporSince` on `Character`; `TorporService` — enter, awaken, starvation-interval check
-- [ ] `TorporIntervalService : BackgroundService` — follows `SessionTerminationService` pattern; nightly cadence + ST "Advance Time" on-demand trigger
-- [ ] Frenzy save UI — player "I am exposed" button; ST Glimpse trigger per character
-- [ ] Rules Interpretation Log — torpor duration table, Rötschreck pool, hunger escalation
+- [x] `FrenzyTrigger` enum — Hunger, Rage, Rotschreck, Starvation
+- [x] `FrenzyService` — `Resolve + Blood Potency` save; tilt application guarded by beast-active check; Willpower optional spend path
+- [x] `VitaeService` + `WillpowerService` — Masquerade-checked spend/gain; `VitaeDepletedEvent` → Hunger frenzy auto-trigger via `VitaeDepletedEventHandler`
+- [x] `TorporSince` + `LastStarvationNotifiedAt` on `Character` (migration `Phase15TorporState`); `TorporService` — enter, awaken, starvation-interval check with `TorporDurationTable`
+- [x] `TorporIntervalService : BackgroundService` — follows `SessionTerminationService` pattern; configurable cadence (default 24 h via `Torpor:IntervalHours`)
+- [x] `DomainEventDispatcher` + `IDomainEventHandler<T>` — in-process domain event infrastructure
+- [x] Frenzy/torpor UI — `HealthDamageTrackBoxes` component; torpor badge + enter/awaken panels on character sheet and ST Glimpse
+- [x] Rules Interpretation Log — torpor duration table, Rötschreck pool, hunger escalation, one-Vitae awakening cost
 
 ---
 

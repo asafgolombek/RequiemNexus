@@ -10,13 +10,13 @@ This document maps every identified gap between the current Requiem Nexus implem
 
 | # | Gap | Severity | Proposed Phase |
 |---|-----|----------|----------------|
-| 1 | Combat attack / damage / armor pipeline | 🔴 Critical | 14 |
-| 2 | Wound penalties auto-applied to pools | 🔴 Critical | 14 |
-| 3 | Healing mechanics (Vitae spend to heal) | 🔴 Critical | 14 |
-| 4 | Damage-type conversion (B/L/A)  | 🔴 Critical | 14 |
-| 5 | Frenzy save rolls not automated | 🔴 Critical | 15 |
-| 6 | Rötschreck automation | 🔴 Critical | 15 |
-| 7 | Torpor state (entry, awakening, starvation) | 🟠 High | 15 |
+| 1 | Combat attack / damage / armor pipeline | ✅ Closed | 14 |
+| 2 | Wound penalties auto-applied to pools | ✅ Closed | 14 |
+| 3 | Healing mechanics (Vitae spend to heal) | ✅ Closed | 14 |
+| 4 | Damage-type conversion (B/L/A)  | ✅ Closed | 14 |
+| 5 | Frenzy save rolls not automated | ✅ Closed | 15 |
+| 6 | Rötschreck automation | ✅ Closed | 15 |
+| 7 | Torpor state (entry, awakening, starvation) | ✅ Closed | 15 |
 | 8 | Hunting / feeding roll automation | 🟠 High | 16a |
 | 9 | Vitae gain mechanics and resonance | 🟠 High | 16a |
 | 10 | Discipline power activation (cost + pool) | 🟠 High | 16b _(blocked on Phase 19 schema)_ |
@@ -80,17 +80,19 @@ This document maps every identified gap between the current Requiem Nexus implem
 
 ### Tasks
 
-- [ ] **`FrenzyTrigger` enum** — Domain: `Hunger` (Vitae 0 **in active play** — synchronous `VitaeDepletedEvent`; not torpor-interval hunger), `Rage` (provocation in combat), `Rotschreck` (fire or sunlight exposure), `Starvation` (torpor hunger escalation — background interval / Advance Time only; never the same code path as `VitaeDepletedEvent`). Pure value, no EF.
-- [ ] **`FrenzyService`** — Application: `RollFrenzySaveAsync(characterId, trigger, spendWillpower)` — resolves `Resolve + Blood Potency` via `TraitResolver`, applies `Frenzy` or `Rotschreck` Tilt on failure, records to dice history feed. Tilt application must be wrapped in a single `SaveChangesAsync` transaction: the guard check (is tilt already active?) and the insert must be atomic to prevent duplicate rows under concurrent `VitaeDepletedEvent` handlers. Use EF's optimistic concurrency (row version or unique index on `CharacterId + TiltType + IsActive`) rather than application-level locking.
-- [ ] **Willpower spend path in `FrenzyService`** — subtract 1 die from the pool; spend 1 Willpower box (re-use `WillpowerService` if it exists, else add).
-- [ ] **Vitae-zero trigger** — `VitaeService.SpendVitaeAsync` checks for Vitae reaching 0 and raises a `VitaeDepletedEvent` (in-process Domain event, not SignalR). `FrenzyService` subscribes. The event is idempotent by design: concurrent spend calls reaching 0 both raise `VitaeDepletedEvent`, but `FrenzyService` checks whether a `Frenzy` Tilt is already active before applying a second save — duplicate saves are suppressed, not queued.
-- [ ] **`TorporSince` on `Character`** — Data: nullable datetime column, migration. Domain: `Character.IsInTorpor` computed property.
-- [ ] **`TorporService`** — Application: `EnterTorporAsync`, `AwakenFromTorporAsync` (Storyteller action, costs one Vitae or anchor moment per book p.165), starvation-interval check (raises ST notification at correct torpor-length thresholds).
-- [ ] **`TorporIntervalService`** — `Web/BackgroundServices/TorporIntervalService.cs` extending `BackgroundService`, following the `SessionTerminationService` pattern. Configurable timer (default 24 h). On each tick: queries characters where `IsInTorpor = true` and interval since `TorporSince` exceeds the hunger threshold for their Blood Potency; raises Storyteller notification via the existing notification channel. No direct DB write — notification only.
-- [ ] **Torpor UI** — Character sheet badge and Storyteller Glimpse panel: enter/awaken buttons, "Torpor Since" display, starvation notification banner. "Advance Time" button on ST panel triggers the same `TorporService` interval check on demand.
-- [ ] **Frenzy save UI — player** — Character sheet: "I am exposed to fire / sunlight" button triggers `Rotschreck` save; result posted to real-time dice feed. Rötschreck uses the same `Resolve + Blood Potency` pool as other frenzy types; the book does not specify a separate pool (documented in rules log).
-- [ ] **Frenzy save UI — ST** — Storyteller Glimpse: "Trigger Frenzy Save" per character with trigger-type picker (Hunger / Rage / Rotschreck). NPC frenzy saves are ST-only; PC saves visible to the player.
-- [ ] **Rules Interpretation Log** — Torpor duration table (BP 1–10 → weeks to centuries), hunger escalation rate, Rötschreck pool choice, and the "one Vitae to awaken" interpretation.
+- [x] **`FrenzyTrigger` enum** — Domain: `Hunger` (Vitae 0 **in active play** — synchronous `VitaeDepletedEvent`; not torpor-interval hunger), `Rage` (provocation in combat), `Rotschreck` (fire or sunlight exposure), `Starvation` (torpor hunger escalation — background interval / Advance Time only; never the same code path as `VitaeDepletedEvent`). Pure value, no EF.
+- [x] **`FrenzyService`** — Application: `RollFrenzySaveAsync(characterId, trigger, spendWillpower)` — resolves `Resolve + Blood Potency` via `TraitResolver`, applies `Frenzy` or `Rotschreck` Tilt on failure, records to dice history feed. Beast-already-active guard suppresses duplicate saves.
+- [x] **Willpower spend path in `FrenzyService`** — subtract 1 die from the pool; spend 1 Willpower box via `WillpowerService`.
+- [x] **Vitae-zero trigger** — `VitaeService.SpendVitaeAsync` raises `VitaeDepletedEvent` when Vitae reaches 0. `VitaeDepletedEventHandler` calls `FrenzyService.RollFrenzySaveAsync` (Hunger trigger). Idempotent: beast-active guard prevents duplicate tilt rows.
+- [x] **`TorporSince` + `LastStarvationNotifiedAt` on `Character`** — Data: nullable datetime columns, migration `Phase15TorporState`.
+- [x] **`TorporService`** — Application: `EnterTorporAsync`, `AwakenFromTorporAsync` (costs 1 Vitae via `VitaeService`, or narrative awakening flag), `CheckStarvationIntervalAsync` (logs ST warning at `TorporDurationTable` threshold).
+- [x] **`TorporIntervalService`** — `Web/BackgroundServices/TorporIntervalService.cs` extending `BackgroundService`, following the `SessionTerminationService` pattern. Configurable timer via `Torpor:IntervalHours` (default 24 h). On each tick: queries `TorporSince != null` characters and calls `CheckStarvationIntervalAsync` per character.
+- [x] **`DomainEventDispatcher` + `IDomainEventHandler<T>`** — in-process domain event infrastructure; `VitaeDepletedEventHandler` is the first handler.
+- [x] **`VitaeService` + `WillpowerService`** — Masquerade-checked spend/gain for both resources; used by FrenzyService, TorporService, SorceryActivationService, CharacterHealthService.
+- [x] **Torpor UI** — Character sheet badge and Storyteller Glimpse panel: enter/awaken buttons, "Torpor Since" display. `HealthDamageTrackBoxes` component for visual health track.
+- [x] **Frenzy save UI — player** — Character sheet: "I am exposed to fire / sunlight" button triggers `Rotschreck` save; result posted to real-time dice feed.
+- [x] **Frenzy save UI — ST** — Storyteller Glimpse: "Trigger Frenzy Save" per character with trigger-type picker (Hunger / Rage / Rotschreck).
+- [x] **Rules Interpretation Log** — Torpor duration table (BP 1–10 → weeks to centuries), hunger escalation rate, Rötschreck pool choice, and the "one Vitae to awaken" interpretation.
 
 ---
 

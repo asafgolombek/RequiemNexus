@@ -15,6 +15,7 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.IVitaeService, RequiemNexus.Application.Services.VitaeService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IWillpowerService, RequiemNexus.Application.Services.WillpowerService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IFrenzyService, RequiemNexus.Application.Services.FrenzyService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IHuntingService, RequiemNexus.Application.Services.HuntingService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ITorporService, RequiemNexus.Application.Services.TorporService>();
 
         // VitaeDepletedEvent: register handlers in invocation order (see PHASE_15_THE_BEAST_WITHIN.md).

@@ -83,10 +83,6 @@ public sealed class FrenzyService(
             }
 
             willpowerSpent = true;
-            character = await _dbContext.Characters
-                .Include(c => c.Attributes)
-                .Include(c => c.Skills)
-                .FirstAsync(c => c.Id == characterId, cancellationToken);
         }
 
         if (poolSize <= 0)

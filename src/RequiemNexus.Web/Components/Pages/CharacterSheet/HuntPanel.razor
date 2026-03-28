@@ -1,0 +1,142 @@
+@using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.Models
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Web.Services
+@inject IHuntingService HuntingService
+@inject IFeedingTerritoryService FeedingTerritoryService
+@inject ScreenReaderAnnouncer Announcer
+
+@if (Character.PredatorType is not null && !string.IsNullOrEmpty(ActingUserId) && Character.MaxVitae > 0)
+{
+    <div class="hunt-panel" style="margin-top:0.75rem;padding-top:0.65rem;border-top:1px solid rgba(80,40,40,0.35);">
+        <div style="font-size:0.78em;text-transform:uppercase;letter-spacing:0.06em;color:var(--gothic-muted);margin-bottom:0.35rem;">
+            Hunt (Predator: @Character.PredatorType)
+        </div>
+        @if (Character.CampaignId is int campaignId && _territories.Count > 0)
+        {
+            <div style="margin-bottom:0.45rem;">
+                <label class="text-muted-rn" style="font-size:0.8em;display:block;margin-bottom:0.2rem;">Territory (optional)</label>
+                <select class="form-control" style="font-size:0.85em;max-width:18rem;" @bind="_selectedTerritoryKey" disabled="@_busy">
+                    <option value="0">None</option>
+                    @foreach (FeedingTerritory t in _territories)
+                    {
+                        <option value="@t.Id">@t.Name (rating @t.Rating)</option>
+                    }
+                </select>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <p class="text-danger" style="font-size:0.82em;margin:0.35rem 0 0;">@_error</p>
+        }
+        <button type="button" class="btn-rn-primary" style="font-size:0.82em;margin-top:0.35rem;" disabled="@_busy" @onclick="HuntAsync">
+            @(_busy ? "Hunting…" : "Hunt")
+        </button>
+
+        @if (_lastResult is { } r)
+        {
+            <div class="hunt-result" style="margin-top:0.65rem;font-size:0.88em;color:var(--parchment);">
+                <div><strong>Successes:</strong> @r.Successes</div>
+                <div><strong>Vitae gained:</strong> <span class="text-success">+@r.VitaeGained</span></div>
+                <div><strong>Resonance:</strong> <span class="@ResonanceClass(r.Resonance)" style="@ResonanceStyle(r.Resonance)">@r.Resonance</span></div>
+                <p class="text-muted-rn" style="margin:0.45rem 0 0;font-size:0.9em;font-style:italic;">@r.NarrativeDescription</p>
+            </div>
+        }
+
+        <div class="visually-hidden" aria-live="polite" aria-atomic="true">@_announcement</div>
+    </div>
+}
+
+@code {
+    private readonly List<FeedingTerritory> _territories = [];
+
+    private int _selectedTerritoryKey;
+
+    private bool _busy;
+
+    private string _error = string.Empty;
+
+    private HuntResult? _lastResult;
+
+    private string _announcement = string.Empty;
+
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter]
+    public string? ActingUserId { get; set; }
+
+    [Parameter]
+    public EventCallback OnHuntCompleted { get; set; }
+
+    private int? _territoriesCampaignId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Character.CampaignId == _territoriesCampaignId)
+        {
+            return;
+        }
+
+        _territoriesCampaignId = Character.CampaignId;
+        _territories.Clear();
+        _selectedTerritoryKey = 0;
+        if (Character.CampaignId is int campaignId)
+        {
+            List<FeedingTerritory> list = await FeedingTerritoryService.GetTerritoriesAsync(campaignId);
+            _territories.AddRange(list.OrderBy(t => t.Name));
+        }
+    }
+
+    private static string ResonanceClass(ResonanceOutcome o) => o switch
+    {
+        ResonanceOutcome.None => "text-muted-rn",
+        ResonanceOutcome.Fleeting => "text-light",
+        ResonanceOutcome.Weak => "text-warning",
+        ResonanceOutcome.Functional => string.Empty,
+        ResonanceOutcome.Saturated => "text-danger",
+        _ => string.Empty,
+    };
+
+    private static string ResonanceStyle(ResonanceOutcome o) => o switch
+    {
+        ResonanceOutcome.Functional => "color:#e8a04c;",
+        _ => string.Empty,
+    };
+
+    private async Task HuntAsync()
+    {
+        _error = string.Empty;
+        _busy = true;
+        _lastResult = null;
+        _announcement = string.Empty;
+        try
+        {
+            int? territoryId = _selectedTerritoryKey == 0 ? null : _selectedTerritoryKey;
+            var result = await HuntingService.ExecuteHuntAsync(Character.Id, ActingUserId!, territoryId);
+            if (!result.IsSuccess)
+            {
+                _error = result.Error ?? "Hunt failed.";
+                return;
+            }
+
+            _lastResult = result.Value;
+            if (_lastResult is { } r)
+            {
+                string msg = $"Hunt: {r.Successes} successes, {r.VitaeGained} Vitae gained, resonance {r.Resonance}.";
+                _announcement = msg;
+                await Announcer.AnnounceAsync(msg);
+            }
+
+            if (OnHuntCompleted.HasDelegate)
+            {
+                await OnHuntCompleted.InvokeAsync();
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

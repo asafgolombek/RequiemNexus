@@ -61,6 +61,10 @@
                         TrackLength="Character.CalculatedMaxHealth"
                         OnHealed="OnVitaeHealCompleted" />
 
+    <HuntPanel Character="Character"
+               ActingUserId="ActingUserId"
+               OnHuntCompleted="OnHuntCompleted" />
+
     <div class="derived-stats @(_humanityPulse ? "animate-pulse" : "")" style="margin-top: 20px; display: flex; gap: 20px; font-family: 'Cinzel', serif; color: #d0c0b0; border-top: 1px solid #330000; padding-top: 15px;">
         <div class="stat-item" style="text-align: center; flex: 1;">
             <div class="text-muted-rn" style="font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px;">Size</div>
@@ -93,6 +97,9 @@
 
     [Parameter]
     public EventCallback OnVitaeHealCompleted { get; set; }
+
+    [Parameter]
+    public EventCallback OnHuntCompleted { get; set; }
 
     private string _clipId = Guid.NewGuid().ToString("N");
     private ElementReference _vitaeContainer;
