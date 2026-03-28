@@ -1,51 +1,123 @@
 [
   {
-    "parent_clan": "Daeva",
+    "parent_clan": "Ventrue",
     "bloodlines": [
       {
-        "name": "Jharana",
-        "description": "Obsessive technomystics chosen from those touched by the God-Machine.",
-        "disciplines": ["Auspex", "Dead Signal", "Celerity", "Vigor"],
-        "special_feature": "Bloodline Discipline",
-        "weakness": "Risk Persistent Obsession from the Wanton Curse",
-        "source": "NH-SB 20"
+        "name": "Apollinaire",
+        "description": "Gatekeepers who act as mediums and invokers of spirits.",
+        "disciplines": [
+          "Animalism",
+          "Dominate",
+          "Obfuscate",
+          "Resilience"
+        ],
+        "special_feature": "The Eye of Ghede",
+        "weakness": "The Curse of Ghede (depth perception penalty, possession resistance capped by Humanity)",
+        "source": "Bloodlines: The Resurrected 11"
       },
       {
-        "name": "Lidérc",
-        "description": "Passionate lovers who drink from the ardor they incite.",
-        "disciplines": ["Celerity", "Majesty", "Obfuscate", "Vigor"],
-        "special_feature": "Siphon Devotions",
-        "weakness": "The Wanton Curse also disrupts Touchstones",
-        "source": "NH-SB 24"
+        "name": "Deucalion",
+        "description": "Mentors who seek to help Kindred attain perfection and overcome their banes.",
+        "disciplines": [
+          "Animalism",
+          "Dominate",
+          "Resilience",
+          "Vigor"
+        ],
+        "special_feature": "The Spanos Method / Impurity Devotion",
+        "weakness": "The Myopic Curse (Social penalty when lacking Touchstones)",
+        "source": "Bloodlines: The Devoted 25"
       },
       {
-        "name": "Vilseduire",
-        "description": "Narcissistic rebels who revel in glamorous transgression",
-        "disciplines": ["Majesty", "Nightmare", "Obfuscate", "Resilience"],
-        "special_feature": "None",
-        "weakness": "Only one Touchstone, and risk detachment at lower Humanity",
-        "source": "NH-SB 50"
-      }
-    ]
-  },
-  {
-    "parent_clan": "Gangrel",
-    "bloodlines": [
-      {
-        "name": "Kerberos",
-        "description": "Self-reinventing social predators who excel at projecting the Beast.",
-        "disciplines": ["Animalism", "Majesty", "Protean", "Resilience"],
-        "special_feature": "Hounds of Hell",
-        "weakness": "Lose 10-again to oppose characters without the Predatory Aura",
-        "source": "Onyx Path blog"
+        "name": "Dragolescu",
+        "description": "The Possessed who siphon deathly energy from ghosts.",
+        "disciplines": [
+          "Animalism",
+          "Auspex",
+          "Dominate",
+          "Resilience"
+        ],
+        "special_feature": "Essentiaphagia",
+        "weakness": "The Beacon Curse (Resistance against ghosts and deathly beings is capped by Humanity)",
+        "source": "Bloodlines: The Devoted 27"
       },
       {
-        "name": "Nosoi",
-        "description": "Plague farmers who cultivate blood-borne disease in the herd.",
-        "disciplines": ["Dominate", "Obfuscate", "Protean", "Resilience"],
-        "special_feature": "Bloodline Devotions",
-        "weakness": "Imbibed Vitae untainted by your disease is capped nightly by Humanity",
-        "source": "NH-SB 29"
+        "name": "Gorgons",
+        "description": "Medusas with an affinity for snakes and reptilian transformations.",
+        "disciplines": [
+          "Animalism",
+          "Dominate",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Amphivena Merit",
+        "weakness": "The Curse of Minerva (Gains noticeable snake features as Humanity falls below 7)",
+        "source": "Bloodlines: The Devoted 29"
+      },
+      {
+        "name": "Icarians",
+        "description": "Dynasts driven by overwhelming ambition and willpower.",
+        "disciplines": [
+          "Animalism",
+          "Constance",
+          "Dominate",
+          "Resilience"
+        ],
+        "special_feature": "Constance Discipline",
+        "weakness": "The All or Nothing Curse (Limited Willpower regain when defending Anchors after breaking points)",
+        "source": "Bloodlines: The Devoted 32"
+      },
+      {
+        "name": "Macellarius",
+        "description": "Gluttons tempted to consume flesh and massive amounts of Vitae.",
+        "disciplines": [
+          "Animalism",
+          "Carnem",
+          "Dominate",
+          "Resilience"
+        ],
+        "special_feature": "Carnem Discipline",
+        "weakness": "The Epicurean Curse (Penalty to resist frenzy unless heavily fed)",
+        "source": "Bloodlines: The Devoted 41"
+      },
+      {
+        "name": "Nahualli",
+        "description": "Jekylls trying to suppress the beast through bloody rituals.",
+        "disciplines": [
+          "Animalism",
+          "Auspex",
+          "Dominate",
+          "Resilience"
+        ],
+        "special_feature": "Tezcatl Aspects and Rituals",
+        "weakness": "The Tempting Curse (Persistent Tempted condition and penalty to frenzy resistance)",
+        "source": "Bloodlines: The Resurrected 14"
+      },
+      {
+        "name": "Sotoha",
+        "description": "Outsiders masking their emotions entirely to remain aloof.",
+        "disciplines": [
+          "Dominate",
+          "Majesty",
+          "Obfuscate",
+          "Resilience"
+        ],
+        "special_feature": "Oath of the Quiet Heart",
+        "weakness": "The Callous Curse (Touchstones attach at higher Humanity; unattached Touchstones cannot stop frenzy)",
+        "source": "Bloodlines: The Devoted 51"
+      },
+      {
+        "name": "Vardyvle",
+        "description": "Doppelgängers who yearn for what they are not and lose themselves in others' lives.",
+        "disciplines": [
+          "Dominate",
+          "Obfuscate",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Shapeshifting Devotion",
+        "weakness": "The Covetous Curse (False Memories from envied victims)",
+        "source": "Night Horrors: Spilled Blood 45"
       }
     ]
   },
@@ -53,36 +125,416 @@
     "parent_clan": "Mekhet",
     "bloodlines": [
       {
+        "name": "Agonistes",
+        "description": "Polemicists attempting to master torpor and memory.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Dominate",
+          "Obfuscate"
+        ],
+        "special_feature": "The Agon",
+        "weakness": "The Languorous Curse (Addicted to torpor; involuntary torpor decreases Humanity)",
+        "source": "Bloodlines: The Devoted 7"
+      },
+      {
+        "name": "Alucinor",
+        "description": "Sandmen who study and manipulate dreams.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Nightmare",
+          "Obfuscate"
+        ],
+        "special_feature": "Insomnium Devotions",
+        "weakness": "The Dreamstruck Curse (Trouble distinguishing waking from sleep; subject to delusions during breaking points)",
+        "source": "Bloodlines: The Resurrected 7"
+      },
+      {
         "name": "Ankou",
-        "description": "Killers who keep the living separate from the dead for the greater good.",
-        "disciplines": ["Auspex", "Celerity", "Obfuscate", "Vigor"],
-        "special_feature": "None",
-        "weakness": "Must roll Humanity to recover Willpower from Mask",
-        "source": "NH-SB 12"
+        "description": "Guardians and reapers enforcing the ecosystem of the dead.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Guardians of the Kindred ecosystem",
+        "weakness": "The Distanced Curse (Must roll Humanity to regain Willpower from maintaining their Mask)",
+        "source": "Night Horrors: Spilled Blood 12"
+      },
+      {
+        "name": "Connected",
+        "description": "Oracles who manipulate technology and digital systems.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Interface",
+          "Obfuscate"
+        ],
+        "special_feature": "Interface Discipline",
+        "weakness": "The Anonymous Curse (Distracted Condition when in large crowds)",
+        "source": "Strange Shades: Mekhet 18"
+      },
+      {
+        "name": "Család",
+        "description": "Stone Sires tied mystically to the cities they claim.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Lithopedia",
+          "Obfuscate"
+        ],
+        "special_feature": "Lithopedia Discipline",
+        "weakness": "The Civic Curse (Lethargic Condition when resting outside their territory)",
+        "source": "Strange Shades: Mekhet 25"
       },
       {
         "name": "Icelus",
         "description": "Manipulators disguised as hypnotherapists plumbing the collective unconscious.",
-        "disciplines": ["Auspex", "Dominate", "Obfuscate", "Resilience"],
+        "disciplines": [
+          "Auspex",
+          "Dominate",
+          "Obfuscate",
+          "Resilience"
+        ],
         "special_feature": "Psychognosis Merit",
-        "weakness": "Detachment inflicts a Mesmerized state",
-        "source": "NH-SB 15"
+        "weakness": "The Hypnotic Curse (Detachment inflicts a Mesmerized state)",
+        "source": "Night Horrors: Spilled Blood 15"
       },
       {
-        "name": "Khaibit",
-        "description": "An ancient line of soldiers who fight darkness by embracing it.",
-        "disciplines": ["Auspex", "Celerity", "Obfuscate", "Vigor"],
-        "special_feature": "Obtenebration Devotions",
-        "weakness": "Temporarily blinded by any light bright enough to inhibit normal vision",
-        "source": "Onyx Path blog"
+        "name": "Kuufukuji",
+        "description": "Celibates starving the Beast through martial asceticism.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Obfuscate",
+          "Resilience"
+        ],
+        "special_feature": "Shihai Devotions",
+        "weakness": "The Ascetic Curse (Gains the Bestial Condition if drinking Vitae in excess of Humanity dots)",
+        "source": "Strange Shades: Mekhet 31"
       },
       {
-        "name": "Morbus",
-        "description": "Outcast plague angels who feed on diseased vessels.",
-        "disciplines": ["Auspex", "Celerity", "Cachexy", "Obfuscate"],
-        "special_feature": "Bloodline Discipline",
-        "weakness": "Can't feed on the living free of disease",
-        "source": "DEC 94"
+        "name": "Leandros",
+        "description": "Heartbreakers searching desperately for soulmates.",
+        "disciplines": [
+          "Auspex",
+          "Majesty",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Siphon / Heart Thief Devotions",
+        "weakness": "The Infatuated Curse (Obsession with mortal vessels upon feeding; subsequent Vitae tastes like water)",
+        "source": "Strange Shades: Mekhet 36"
+      },
+      {
+        "name": "Libitinarius",
+        "description": "Morticians curating torpor for other Kindred.",
+        "disciplines": [
+          "Auspex",
+          "Dominate",
+          "Obfuscate",
+          "Resilience"
+        ],
+        "special_feature": "Mortualia / Coil of the Vigilant",
+        "weakness": "The Petrified Curse (Daytime actions suffer severe penalties; no 10-again during the day)",
+        "source": "Bloodlines: The Devoted 8"
+      },
+      {
+        "name": "Lynx",
+        "description": "Operators managing vast social and digital networks.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Majesty",
+          "Obfuscate"
+        ],
+        "special_feature": "The Web / The Chain Devotions",
+        "weakness": "The Disconnected Curse (Needs at least two attached Touchstones to gain detachment bonuses)",
+        "source": "Bloodlines: The Devoted 38"
+      },
+      {
+        "name": "Mnemosyne",
+        "description": "Keepers who steal and trade memories.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Dominate",
+          "Obfuscate"
+        ],
+        "special_feature": "Meminisse Devotions",
+        "weakness": "The Gestalt Curse (False Memories Condition when feeding from previous victims)",
+        "source": "Strange Shades: Mekhet 42"
+      },
+      {
+        "name": "Norvegi",
+        "description": "Knives and outlaws with mutable, twisting flesh.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Protean",
+          "Vigor"
+        ],
+        "special_feature": "Drapsmåter Devotions",
+        "weakness": "The Curse of Glamr (Physical mutations cause social penalties unless controlled)",
+        "source": "Strange Shades: Mekhet 48"
+      },
+      {
+        "name": "Qedeshah",
+        "description": "Mothers cultivating mystical families of mortals and ghouls.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Majesty",
+          "Obfuscate"
+        ],
+        "special_feature": "Embrocation Bloodline Gift",
+        "weakness": "The Fretful Curse (Guilty Condition if they do not defend Touchstones or anointed)",
+        "source": "Strange Shades: Mekhet 54"
+      },
+      {
+        "name": "Sangiovanni",
+        "description": "Necromancers studying death with a clinical appraisal.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Dominate",
+          "Obfuscate"
+        ],
+        "special_feature": "Cattiveria",
+        "weakness": "The Uncanny Curse (Humanity treated as lower for social rolls due to obsession with dead bodies)",
+        "source": "Bloodlines: The Resurrected 16"
+      },
+      {
+        "name": "Tismanu",
+        "description": "Shepherds acting as confessors for other vampires.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Majesty",
+          "Resilience"
+        ],
+        "special_feature": "Eupraxia Devotions",
+        "weakness": "The Martyr Curse (Humanity drop if denying a sincere request for help)",
+        "source": "Bloodlines: The Devoted 59"
+      }
+    ]
+  },
+  {
+    "parent_clan": "Daeva",
+    "bloodlines": [
+      {
+        "name": "Asnâm",
+        "description": "Idols demanding worship and cultivating cults.",
+        "disciplines": [
+          "Animalism",
+          "Majesty",
+          "Protean",
+          "Vigor"
+        ],
+        "special_feature": "Anointing Avatars",
+        "weakness": "The Vainglorious Curse (Daeva bane is triggered by exceptional success in Social actions)",
+        "source": "Bloodlines: The Devoted 11"
+      },
+      {
+        "name": "The Carnival",
+        "description": "Freaks turning their Requiems into a twisted circus.",
+        "disciplines": [
+          "Celerity",
+          "Majesty",
+          "Nightmare",
+          "Vigor"
+        ],
+        "special_feature": "Undead Contortion Merit",
+        "weakness": "The Transient Curse (Social penalties when staying in a community too long)",
+        "source": "Bloodlines: The Devoted 22"
+      },
+      {
+        "name": "Jharana",
+        "description": "Menders receiving the dead signal from the God-Machine.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Dead Signal",
+          "Vigor"
+        ],
+        "special_feature": "Dead Signal Discipline",
+        "weakness": "The Omen Curse (Obsession Condition if feeding from the same person multiple times)",
+        "source": "Night Horrors: Spilled Blood 20"
+      },
+      {
+        "name": "Kallisti",
+        "description": "Ravagers sowing discord and breaking bonds of love.",
+        "disciplines": [
+          "Celerity",
+          "Majesty",
+          "Perfidy",
+          "Vigor"
+        ],
+        "special_feature": "Perfidy Discipline",
+        "weakness": "The Loveless Curse (Cannot inflict stage 3 Vinculum; thralls easily break bonds)",
+        "source": "Bloodlines: The Devoted 34"
+      },
+      {
+        "name": "Lidérc",
+        "description": "The Beloved sapping the emotional will of their lovers.",
+        "disciplines": [
+          "Celerity",
+          "Majesty",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Siphon Devotions",
+        "weakness": "The Devoted Curse (Touchstones fade when taking the Dependent Condition)",
+        "source": "Night Horrors: Spilled Blood 24"
+      },
+      {
+        "name": "Septemi",
+        "description": "The Passionate driven by human virtues.",
+        "disciplines": [
+          "Abjurism",
+          "Celerity",
+          "Majesty",
+          "Vigor"
+        ],
+        "special_feature": "Abjurism Discipline",
+        "weakness": "The Upright Curse (Lose Willpower when resisting opportunities to fulfill their mortal Virtue)",
+        "source": "Bloodlines: The Resurrected 17"
+      },
+      {
+        "name": "Spina",
+        "description": "Knights enforcing politesse with extreme prejudice.",
+        "disciplines": [
+          "Celerity",
+          "Dominate",
+          "Majesty",
+          "Vigor"
+        ],
+        "special_feature": "Thorned Wreath Courtoisie",
+        "weakness": "The Politesse Curse (Must punish unapologetic rudeness before the end of the scene)",
+        "source": "Bloodlines: The Devoted 53"
+      },
+      {
+        "name": "Tianpàn Xiao",
+        "description": "Sirens overwhelmed by their own sensual emotions.",
+        "disciplines": [
+          "Celerity",
+          "Majesty",
+          "Nightmare",
+          "Vigor"
+        ],
+        "special_feature": "Xinyao",
+        "weakness": "The Sensualist Curse (Humanity treated as lower when suffering Bestial, Wanton, or Competitive)",
+        "source": "Bloodlines: The Resurrected 18"
+      },
+      {
+        "name": "Vilseduire",
+        "description": "Tempters bringing out the absolute worst in mortals and Kindred.",
+        "disciplines": [
+          "Majesty",
+          "Nightmare",
+          "Obfuscate",
+          "Resilience"
+        ],
+        "special_feature": "Enablers",
+        "weakness": "The Ablative Curse (Breaking points occur at half normal Humanity)",
+        "source": "Night Horrors: Spilled Blood 50"
+      },
+      {
+        "name": "Zelani",
+        "description": "Devils manipulating fate and bound by thresholds.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Majesty",
+          "Vigor"
+        ],
+        "special_feature": "Serendipity Devotions",
+        "weakness": "The Threshold Curse (Must roll Humanity to enter mortal homes uninvited, or face frenzy)",
+        "source": "Bloodlines: The Resurrected 19"
+      }
+    ]
+  },
+  {
+    "parent_clan": "Gangrel",
+    "bloodlines": [
+      {
+        "name": "Amari",
+        "description": "Winter Kings surviving the polar night.",
+        "disciplines": [
+          "Obfuscate",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Conservation / Rationing",
+        "weakness": "The Pale Curse (Severe penalty to resist frenzy from fire and sunlight)",
+        "source": "Night Horrors: Spilled Blood 81"
+      },
+      {
+        "name": "Annunaku",
+        "description": "Landlords ruling their domains as feudal lords.",
+        "disciplines": [
+          "Animalism",
+          "Auspex",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Tenure Devotions",
+        "weakness": "The Feudal Curse (Touchstone is tied to their household/territory)",
+        "source": "Bloodlines: The Resurrected 9"
+      },
+      {
+        "name": "Bohagande",
+        "description": "Jonahs manipulating fate and bad luck.",
+        "disciplines": [
+          "Animalism",
+          "Obfuscate",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Sunnikuse Devotions",
+        "weakness": "The Raven's Curse (Exceptional successes on Physical/Social actions can backfire with a dice penalty)",
+        "source": "Bloodlines: The Devoted 20"
+      },
+      {
+        "name": "Nepheshim",
+        "description": "Mendicants wandering the earth in holy poverty.",
+        "disciplines": [
+          "Animalism",
+          "Auspex",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Nahdad Merits",
+        "weakness": "The Itinerant Curse (Frenzying in a territory requires Willpower to wake thereafter)",
+        "source": "Bloodlines: The Devoted 49"
+      },
+      {
+        "name": "Nosoi",
+        "description": "Plague Doctors cultivating diseases in their blood.",
+        "disciplines": [
+          "Dominate",
+          "Obfuscate",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Infectious Bite Devotion",
+        "weakness": "The Calamitous Curse (Addicted to a specific blood-borne illness; limits uninfected sustenance)",
+        "source": "Night Horrors: Spilled Blood 29"
+      },
+      {
+        "name": "Vedma",
+        "description": "Warlocks passing off Kindred powers as witchcraft.",
+        "disciplines": [
+          "Animalism",
+          "Auspex",
+          "Obfuscate",
+          "Protean"
+        ],
+        "special_feature": "Zagovny Merit",
+        "weakness": "The Bewitched Curse (Limbs wither, taking Arm/Leg Wrack Tilts over time)",
+        "source": "Bloodlines: The Devoted 61"
       }
     ]
   },
@@ -90,41 +542,262 @@
     "parent_clan": "Nosferatu",
     "bloodlines": [
       {
-        "name": "Vilseduire",
-        "description": "Narcissistic rebels who revel in glamorous transgression",
-        "disciplines": ["Majesty", "Nightmare", "Obfuscate", "Resilience"],
-        "special_feature": "None",
-        "weakness": "Only one Touchstone, and risk detachment at lower Humanity",
-        "source": "NH-SB 50"
+        "name": "Azerkatil",
+        "description": "Dragonslayers hunting their fellow Kindred.",
+        "disciplines": [
+          "Nightmare",
+          "Obfuscate",
+          "Suikast",
+          "Vigor"
+        ],
+        "special_feature": "Suikast Discipline",
+        "weakness": "The Kin-Slayer's Curse (Increased difficulty relating to non-Azerkatil vampires)",
+        "source": "Bloodlines: The Devoted 14"
+      },
+      {
+        "name": "Baddacelli",
+        "description": "Morlocks living completely blind in darkness.",
+        "disciplines": [
+          "Mimetismo",
+          "Nightmare",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Mimetismo Discipline / Devotions",
+        "weakness": "The Chiropteran Curse (Persistent Blind Condition)",
+        "source": "Bloodlines: The Devoted 16"
+      },
+      {
+        "name": "Burakumin",
+        "description": "The Unclean rotting with necrotic energy.",
+        "disciplines": [
+          "Nightmare",
+          "Obfuscate",
+          "Resilience",
+          "Vigor"
+        ],
+        "special_feature": "Getsumei",
+        "weakness": "The Putrescent Curse (Humanity reduced for social rolls due to rotting appearance)",
+        "source": "Bloodlines: The Resurrected 12"
+      },
+      {
+        "name": "Galloi",
+        "description": "Pretties obsessed with beauty and blood bathing.",
+        "disciplines": [
+          "Majesty",
+          "Nightmare",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Taurobolium",
+        "weakness": "The Popular Curse (Mortal subjects of failed social actions gain Obsession Condition)",
+        "source": "Bloodlines: The Resurrected 13"
+      },
+      {
+        "name": "Morotrophians",
+        "description": "Monks tied to bureaucratic institutions.",
+        "disciplines": [
+          "Dominate",
+          "Nightmare",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Institutionalize",
+        "weakness": "The Cloistered Curse (Confused Condition if a dramatic failure happens outside an institution)",
+        "source": "Bloodlines: The Devoted 44"
       }
     ]
   },
   {
-    "parent_clan": "Ventrue",
+    "parent_clan": "Akhud",
     "bloodlines": [
       {
-        "name": "Bron",
-        "description": "Knights errant and bravos who live by blood, quest, and oath.",
-        "disciplines": ["Animalism", "Crochan", "Dominate", "Resilience"],
-        "special_feature": "Bloodline Discipline",
-        "weakness": "Touchstones are vulnerable to detaching and changing by the whims of fate",
-        "source": "DE2 117"
+        "name": "Dunia",
+        "description": "Surveyors searching for the lost city of Irem.",
+        "disciplines": [
+          "Celerity",
+          "Obfuscate",
+          "Praestantia",
+          "Protean"
+        ],
+        "special_feature": "al-Bahth Merit",
+        "weakness": "The Curse of Ubar (Persistent Aspiration to search for Irem)",
+        "source": "Bloodlines: The Devoted 64"
       },
       {
-        "name": "Icelus",
-        "description": "Manipulators disguised as hypnotherapists plumbing the collective unconscious.",
-        "disciplines": ["Auspex", "Dominate", "Obfuscate", "Resilience"],
-        "special_feature": "Psychognosis Merit",
-        "weakness": "Detachment inflicts a Mesmerized state",
-        "source": "NH-SB 15"
+        "name": "Rexroth",
+        "description": "Diviners with too much compassion for the dead.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Obfuscate",
+          "Praestantia"
+        ],
+        "special_feature": "Kindred Necromancy",
+        "weakness": "The Fleeting Curse (Clan bane extends to ghosts and Sin-Eaters)",
+        "source": "Bloodlines: The Devoted 67"
       },
       {
-        "name": "Vardyvle",
-        "description": "Jealous dreamers who yearn for what they are not and lose themselves in others' lives.",
-        "disciplines": ["Dominate", "Obfuscate", "Protean", "Resilience"],
-        "special_feature": "Shapeshifting Devotion",
-        "weakness": "Feeding from those living your dreams risks False Memories",
-        "source": "NH-SB 45"
+        "name": "Stawa",
+        "description": "Ronin compromised by their blood ties.",
+        "disciplines": [
+          "Obfuscate",
+          "Praestantia",
+          "Resilience",
+          "Vigor"
+        ],
+        "special_feature": "None",
+        "weakness": "The Friendless Curse (Humanity treated lower for bane when in a coterie of Ahranites)",
+        "source": "Bloodlines: The Devoted 68"
+      }
+    ]
+  },
+  {
+    "parent_clan": "Any",
+    "bloodlines": [
+      {
+        "name": "Mortifiers of the Flesh",
+        "description": "Flagellants who suffer for their sins in service to the Lancea Sanctum.",
+        "disciplines": [
+          "Scourge"
+        ],
+        "special_feature": "Scourge Discipline",
+        "weakness": "The Penitent Curse (Must flagellate if taking more than Humanity in Vitae, or suffer Guilty Condition)",
+        "source": "Bloodlines: The Devoted 47"
+      },
+      {
+        "name": "Parliamentarians",
+        "description": "Hidebound bureaucrats obsessed with order.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Majesty",
+          "Resilience"
+        ],
+        "special_feature": "None",
+        "weakness": "The Ordered Curse (Detachment from passion for procedures)",
+        "source": "Night Horrors: Spilled Blood 33"
+      },
+      {
+        "name": "Penumbrae",
+        "description": "Seers delving into dreams with Crúac.",
+        "disciplines": [
+          "Auspex",
+          "Celerity",
+          "Crúac",
+          "Vigor"
+        ],
+        "special_feature": "Sanguine Auger / Clotho's Skein rites",
+        "weakness": "The Somnolent Curse (Difficult to wake from torpor)",
+        "source": "Night Horrors: Spilled Blood 37"
+      },
+      {
+        "name": "Scions of the First City",
+        "description": "Harbingers bound to their home city.",
+        "disciplines": [
+          "Animalism",
+          "Auspex",
+          "Obfuscate",
+          "Resilience"
+        ],
+        "special_feature": "City Attunement",
+        "weakness": "The Mother's Curse (Agitated outside city bounds, limiting dice pools)",
+        "source": "Night Horrors: Spilled Blood 41"
+      },
+      {
+        "name": "Stalkers",
+        "description": "The Twice-Cursed who bear the burden of two clan curses.",
+        "disciplines": [
+          "Celerity",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Not So Special Devotion",
+        "weakness": "The Miserable Curse (Gains Daeva and Nosferatu banes at Humanity 6)",
+        "source": "Night Horrors: Spilled Blood 102"
+      },
+      {
+        "name": "Therion",
+        "description": "Advocates for Belial's Brood and the Beast.",
+        "disciplines": [
+          "Animalism",
+          "Obfuscate",
+          "Vigor"
+        ],
+        "special_feature": "Vaulderie",
+        "weakness": "The Gnostic Curse (Embrace costs two Humanity dots)",
+        "source": "Bloodlines: The Devoted 56"
+      }
+    ]
+  },
+  {
+    "parent_clan": "Unknown / Lost Clan",
+    "bloodlines": [
+      {
+        "name": "Bekaak",
+        "description": "Prophets who can reverse their aging process.",
+        "disciplines": [
+          "Animalism",
+          "Celerity",
+          "Obfuscate",
+          "Vitiate"
+        ],
+        "special_feature": "Vitiate Discipline",
+        "weakness": "Geriatric Condition as their mental faculties degrade with age",
+        "source": "Night Horrors: Spilled Blood 86"
+      },
+      {
+        "name": "Hypatian",
+        "description": "Miracle cure peddlers using alchemical blood.",
+        "disciplines": [
+          "Animalism",
+          "Nightmare",
+          "Protean",
+          "Resilience",
+          "Vigor"
+        ],
+        "special_feature": "Blood Chymistry",
+        "weakness": "Treats Humanity as one dot lower for their clan bane",
+        "source": "Night Horrors: Spilled Blood 91"
+      },
+      {
+        "name": "Julii",
+        "description": "Founders of the Camarilla, now a dead clan.",
+        "disciplines": [
+          "Dominate",
+          "Resilience",
+          "Vigor"
+        ],
+        "special_feature": "None",
+        "weakness": "The Strigid Curse (Vulnerable to otherworldly influence, capped by Humanity)",
+        "source": "Thousand Years of Night 29"
+      },
+      {
+        "name": "Nhang",
+        "description": "Water Serpents who inhabit watery prisons.",
+        "disciplines": [
+          "Celerity",
+          "Protean",
+          "Resilience"
+        ],
+        "special_feature": "Flesh Form Devotion",
+        "weakness": "The Curse of the Depths (Skin becomes brittle and fragile outside water, taking upgraded damage)",
+        "source": "Night Horrors: Spilled Blood 94"
+      },
+      {
+        "name": "Pijavica",
+        "description": "Leeches who exist in a balance between human and blood form.",
+        "disciplines": [
+          "Celerity",
+          "Dominate",
+          "Majesty",
+          "Protean",
+          "Resilience",
+          "Vigor"
+        ],
+        "special_feature": "Kin Maker",
+        "weakness": "Turbulent reproduction and blood form reliance",
+        "source": "Thousand Years of Night 30"
       }
     ]
   }

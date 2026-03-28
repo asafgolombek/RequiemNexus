@@ -26,4 +26,12 @@ public class DisciplinePower
 
     [MaxLength(100)]
     public string Cost { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the serialized <see cref="RequiemNexus.Domain.Models.PoolDefinition"/> for this power's dice pool.
+    /// Uses the same contract as <see cref="DevotionDefinition.PoolDefinitionJson"/>.
+    /// Null for powers that have no rollable pool (passive or narrative-only).
+    /// Phase 16b reads this column to resolve the dice pool on activation.
+    /// </summary>
+    public string? PoolDefinitionJson { get; set; }
 }

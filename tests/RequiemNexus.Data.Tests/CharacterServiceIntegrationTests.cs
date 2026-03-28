@@ -29,7 +29,8 @@ public class CharacterServiceIntegrationTests
             new CharacterCreationRules(),
             new BeatLedgerService(ctx),
             auth,
-            new Mock<ISessionService>().Object);
+            new Mock<ISessionService>().Object,
+            new CharacterCreationService());
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
@@ -255,5 +256,38 @@ public class CharacterServiceIntegrationTests
 
         // Assert
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task EmbraceCharacterAsync_ThrowsWhenNecromancyOnNonMekhet()
+    {
+        string dbName = nameof(EmbraceCharacterAsync_ThrowsWhenNecromancyOnNonMekhet);
+        using var ctx = CreateContext(dbName);
+        var service = CreateCharacterService(ctx, dbName);
+
+        var animalism = new Discipline { Name = "Animalism" };
+        var dominate = new Discipline { Name = "Dominate" };
+        var resilience = new Discipline { Name = "Resilience" };
+        var necromancy = new Discipline { Name = "Necromancy", IsNecromancy = true };
+        ctx.Disciplines.AddRange(animalism, dominate, resilience, necromancy);
+        await ctx.SaveChangesAsync();
+
+        var ventrue = new Clan { Name = "Ventrue" };
+        ctx.Clans.Add(ventrue);
+        await ctx.SaveChangesAsync();
+
+        ventrue.ClanDisciplines.Add(new ClanDiscipline { ClanId = ventrue.Id, DisciplineId = animalism.Id });
+        ventrue.ClanDisciplines.Add(new ClanDiscipline { ClanId = ventrue.Id, DisciplineId = dominate.Id });
+        ventrue.ClanDisciplines.Add(new ClanDiscipline { ClanId = ventrue.Id, DisciplineId = resilience.Id });
+        await ctx.SaveChangesAsync();
+
+        Character character = BuildNewCharacter();
+        character.ClanId = ventrue.Id;
+        character.Disciplines.Add(new CharacterDiscipline { DisciplineId = animalism.Id, Rating = 2 });
+        character.Disciplines.Add(new CharacterDiscipline { DisciplineId = necromancy.Id, Rating = 1 });
+
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmbraceCharacterAsync(character));
+
+        Assert.Contains("Necromancy", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

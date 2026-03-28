@@ -32,9 +32,10 @@
     border-bottom: 1px solid var(--border-subtle);
 }
 
-.sidebar-header h3 {
+.sidebar-heading {
     margin: 0;
     font-size: 1.1rem;
+    font-weight: 600;
     /* --crimson on --ash-gray fails WCAG AA (~1.4:1); glow red meets ~4.5:1 (axe: CharacterBloodSorcerySection) */
     color: var(--crimson-glow);
 }
@@ -218,4 +219,15 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem;
+}
+
+.cruac-humanity-cap {
+    margin-top: 0.5rem;
+    font-size: 0.85em;
+    color: var(--text-muted, #a0a0a0);
+}
+
+.cruac-humanity-cap--warn {
+    color: var(--crimson-glow, #ff6666);
+    font-weight: 600;
 }

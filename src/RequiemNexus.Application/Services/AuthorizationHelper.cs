@@ -12,6 +12,14 @@ public class AuthorizationHelper(
     ILogger<AuthorizationHelper> logger) : IAuthorizationHelper
 {
     /// <inheritdoc />
+    public async Task<bool> IsStorytellerAsync(int campaignId, string userId)
+    {
+        await using ApplicationDbContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Campaigns
+            .AnyAsync(c => c.Id == campaignId && c.StoryTellerId == userId);
+    }
+
+    /// <inheritdoc />
     public async Task RequireStorytellerAsync(int campaignId, string userId, string operationName = "perform this action")
     {
         await using ApplicationDbContext dbContext = await dbContextFactory.CreateDbContextAsync();

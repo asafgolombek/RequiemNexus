@@ -63,6 +63,7 @@
                                         <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.25rem;">
                                             <input class="form-control" style="flex:1;min-width:100px;font-size:0.9em;"
                                                    placeholder="Recorded benefit…"
+                                                   aria-label="Recorded benefit when spending this clue"
                                                    value="@GetSpendBenefit(clue.Id)"
                                                    @onchange="e => SetSpendBenefit(clue.Id, e)" />
                                             <button type="button" class="btn-rn-primary" style="font-size:0.75em;" disabled="@_busy"
@@ -76,14 +77,16 @@
                     @if (m.Status == ManeuverStatus.Active)
                     {
                         <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.08);">
-                            <span style="font-size:0.8em;">Open Door pool</span>
+                            <span style="font-size:0.8em;" id="@($"open-pool-label-{m.Id}")">Open Door pool</span>
                             <input type="number" class="form-control" style="width:52px;" min="0" max="50"
+                                   aria-labelledby="@($"open-pool-label-{m.Id}")"
                                    value="@GetOpenPool(m.Id)"
                                    @onchange="e => SetOpenPool(m.Id, e)" />
                             <button type="button" class="btn-rn-primary" style="font-size:0.8em;" disabled="@_busy"
                                     @onclick="() => RollOpenAsync(m.Id)">Roll open</button>
-                            <span style="font-size:0.8em;margin-left:0.35rem;">Force pool</span>
+                            <span style="font-size:0.8em;margin-left:0.35rem;" id="@($"force-pool-label-{m.Id}")">Force pool</span>
                             <input type="number" class="form-control" style="width:52px;" min="0" max="50"
+                                   aria-labelledby="@($"force-pool-label-{m.Id}")"
                                    value="@GetForcePool(m.Id)"
                                    @onchange="e => SetForcePool(m.Id, e)" />
                             <label style="font-size:0.78em;">
@@ -93,6 +96,7 @@
                             {
                                 <label style="font-size:0.78em;">BP sev.
                                     <input type="number" class="form-control" style="display:inline-block;width:48px;" min="0" max="10"
+                                           aria-label="Breaking point severity for hard leverage"
                                            value="@GetForceBp(m.Id)"
                                            @onchange="e => SetForceBp(m.Id, e)" />
                                 </label>

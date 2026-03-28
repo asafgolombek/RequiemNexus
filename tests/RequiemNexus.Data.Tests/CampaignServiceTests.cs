@@ -39,7 +39,14 @@ public class CampaignServiceTests
     {
         IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
         var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
-        return new CharacterManagementService(ctx, factory, new RequiemNexus.Domain.Services.CharacterCreationRules(), new BeatLedgerService(ctx), auth, new Mock<ISessionService>().Object);
+        return new CharacterManagementService(
+            ctx,
+            factory,
+            new RequiemNexus.Domain.Services.CharacterCreationRules(),
+            new BeatLedgerService(ctx),
+            auth,
+            new Mock<ISessionService>().Object,
+            new CharacterCreationService());
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>

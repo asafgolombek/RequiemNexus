@@ -13,6 +13,7 @@
 @using RequiemNexus.Application.RealTime
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
+@using RequiemNexus.Web.Helpers
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject ICharacterAssetService CharacterAssetService
@@ -20,6 +21,7 @@
 @inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
 @inject ITraitResolver TraitResolver
+@inject IHumanityService HumanityService
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject SessionClientService SessionClient
@@ -215,6 +217,17 @@ else
                                 OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
                             <DotScale @bind-Value="_character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
                                 OnRollClick="OpenRoller" />
+                            @{
+                                int crucDots = _character.GetDisciplineRating("Crúac");
+                                int effectiveMaxHumanity = HumanityService.GetEffectiveMaxHumanity(_character);
+                            }
+                            @if (crucDots > 0)
+                            {
+                                <div class="cruac-humanity-cap @( _character.Humanity >= effectiveMaxHumanity ? "cruac-humanity-cap--warn" : string.Empty)"
+                                     title="Crúac permanently caps Humanity">
+                                    Max Humanity: @effectiveMaxHumanity (capped by Crúac @(new string('\u2022', crucDots)))
+                                </div>
+                            }
 
                             <h3 class="trait-subheading">Merits</h3>
                             <ul class="trait-list">
@@ -240,7 +253,8 @@ else
                             </ul>
                         </section>
                         <section class="cs-section cs-disciplines">
-                            <h2>Disciplines</h2>
+                            <h2>Disciplines (clan triple, bloodline fourth, or out-of-clan)</h2>
+                            <p class="text-muted-rn" style="font-size: 0.85em; margin: -6px 0 10px 0;">XP cost uses in-clan (×4) vs out-of-clan (×5) per affinity below.</p>
                             <ul class="trait-list disciplines-list">
                                 @foreach (var disc in _character.Disciplines)
                                 {
@@ -256,6 +270,15 @@ else
                                                     <i class="oi oi-chevron-right expand-icon"></i>
                                                 }
                                                 @disc.Discipline?.Name
+                                                @if (disc.Discipline != null)
+                                                {
+                                                    <span class="discipline-affinity-badge" style="display: block; font-size: 0.8em; color: #a0a0a0; font-weight: normal; margin-top: 2px;">@DisciplineUiLabels.FormatAffinityBadge(_character, disc.Discipline)</span>
+                                                    var defTags = DisciplineUiLabels.FormatDefinitionTags(disc.Discipline);
+                                                    if (!string.IsNullOrEmpty(defTags))
+                                                    {
+                                                        <span style="display: block; font-size: 0.75em; color: #888;">@defTags</span>
+                                                    }
+                                                }
                                             </span>
                                             <span class="trait-dots">@(new string('\u2022', disc.Rating))</span>
                                         </div>
@@ -266,14 +289,23 @@ else
                                                 @foreach (var power in disc.Discipline.Powers.Where(p => p.Level <= disc.Rating).OrderBy(p => p.Level))
                                                 {
                                                     <div class="power-item">
-                                                        <strong>Level @power.Level - @power.Name:</strong>
+                                                        <strong>Level @power.Level - @power.Name@if (_disciplinePowerResolvedPools.TryGetValue(power.Id, out int resolvedPool)) { <text> — Pool: @resolvedPool</text> }</strong>
                                                         <p class="power-desc">@power.Description</p>
-                                                        @if (!string.IsNullOrEmpty(power.DicePool) || !string.IsNullOrEmpty(power.Cost))
+                                                        @if ((!string.IsNullOrEmpty(power.DicePool) && !_disciplinePowerResolvedPools.ContainsKey(power.Id)) || !string.IsNullOrEmpty(power.Cost))
                                                         {
                                                             <div class="power-meta">
-                                                                @(string.IsNullOrEmpty(power.DicePool) ? "" : $"Pool: {power.DicePool}")
-                                                                @(string.IsNullOrEmpty(power.DicePool) || string.IsNullOrEmpty(power.Cost) ? "" : " | ")
-                                                                @(string.IsNullOrEmpty(power.Cost) ? "" : $"Cost: {power.Cost}")
+                                                                @if (!string.IsNullOrEmpty(power.DicePool) && !_disciplinePowerResolvedPools.ContainsKey(power.Id))
+                                                                {
+                                                                    <text>Pool: @power.DicePool</text>
+                                                                }
+                                                                @if ((!string.IsNullOrEmpty(power.DicePool) && !_disciplinePowerResolvedPools.ContainsKey(power.Id)) && !string.IsNullOrEmpty(power.Cost))
+                                                                {
+                                                                    <text> | </text>
+                                                                }
+                                                                @if (!string.IsNullOrEmpty(power.Cost))
+                                                                {
+                                                                    <text>Cost: @power.Cost</text>
+                                                                }
                                                             </div>
                                                         }
                                                     </div>
@@ -691,14 +723,14 @@ else
 
         @if (SessionClient.IsConnected)
         {
-            <div class="character-sidebar">
+            <aside class="character-sidebar" aria-labelledby="character-blood-logs-heading">
                 <div class="sidebar-header">
-                    <h3>≡ƒ⌐╕ Blood Logs</h3>
+                    <p id="character-blood-logs-heading" class="sidebar-heading">Blood logs</p>
                 </div>
                 <div class="sidebar-content">
                     <RollHistoryFeed />
                 </div>
-            </div>
+            </aside>
         }
     </div>
 

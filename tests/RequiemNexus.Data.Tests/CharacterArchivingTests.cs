@@ -23,7 +23,8 @@ public class CharacterArchivingTests
             new CharacterCreationRules(),
             new BeatLedgerService(ctx),
             auth,
-            new Mock<ISessionService>().Object);
+            new Mock<ISessionService>().Object,
+            new CharacterCreationService());
     }
 
     private static ApplicationDbContext CreateContext(string dbName)

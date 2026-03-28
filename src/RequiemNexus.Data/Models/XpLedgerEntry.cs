@@ -35,6 +35,10 @@ public class XpLedgerEntry
     [MaxLength(500)]
     public string Reason { get; set; } = string.Empty;
 
+    /// <summary>Optional audit extension (e.g. Storyteller gate overrides). Immutable after insert.</summary>
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+
     public DateTime OccurredAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>UserId of the actor who triggered this entry. Null for automated conversions.</summary>

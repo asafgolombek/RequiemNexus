@@ -7,6 +7,7 @@ using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
@@ -17,7 +18,8 @@ public class CharacterManagementService(
     ICharacterCreationRules creationRules,
     IBeatLedgerService beatLedger,
     IAuthorizationHelper authHelper,
-    ISessionService sessionService) : ICharacterService
+    ISessionService sessionService,
+    ICharacterCreationService characterCreationService) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
@@ -25,6 +27,7 @@ public class CharacterManagementService(
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly ICharacterCreationService _characterCreationService = characterCreationService;
 
     /// <inheritdoc />
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
@@ -55,7 +58,7 @@ public class CharacterManagementService(
         // Intentionally NOT AsNoTracking: this method is the edit path — the returned entity
         // is tracked by EF so that subsequent mutations (AddBeatAsync, SaveAsync, etc.) persist.
         return await _dbContext.Characters
-            .Include(c => c.Clan)
+            .Include(c => c.Clan)!.ThenInclude(cl => cl!.ClanDisciplines)
             .Include(c => c.Covenant)
             .Include(c => c.Campaign)
             .Include(c => c.Attributes)
@@ -124,6 +127,41 @@ public class CharacterManagementService(
 
         // Player-created characters are always Vampires.
         newCharacter.CreatureType = RequiemNexus.Data.Models.Enums.CreatureType.Vampire;
+
+        if (newCharacter.Clan == null && newCharacter.ClanId.HasValue)
+        {
+            newCharacter.Clan = await _dbContext.Clans
+                .Include(c => c.ClanDisciplines)
+                .FirstOrDefaultAsync(c => c.Id == newCharacter.ClanId.Value);
+        }
+
+        List<int> disciplineIds = newCharacter.Disciplines.Select(d => d.DisciplineId).Distinct().ToList();
+        if (disciplineIds.Count > 0)
+        {
+            Dictionary<int, Discipline> disciplineMap = await _dbContext.Disciplines
+                .AsNoTracking()
+                .Include(d => d.Covenant)
+                .Include(d => d.Bloodline)
+                .Where(d => disciplineIds.Contains(d.Id))
+                .ToDictionaryAsync(d => d.Id);
+
+            if (disciplineMap.Count != disciplineIds.Count)
+            {
+                throw new InvalidOperationException("One or more Discipline assignments reference unknown disciplines.");
+            }
+
+            Result<bool> eligibility = _characterCreationService.ValidateCreationDisciplineEligibility(newCharacter, disciplineMap);
+            if (!eligibility.IsSuccess)
+            {
+                throw new InvalidOperationException(eligibility.Error ?? "Invalid discipline selection for character creation.");
+            }
+        }
+
+        Result<bool> disciplineRule = _characterCreationService.ValidateCreationDisciplines(newCharacter);
+        if (!disciplineRule.IsSuccess)
+        {
+            throw new InvalidOperationException(disciplineRule.Error ?? "Invalid creation Disciplines.");
+        }
 
         _dbContext.Characters.Add(newCharacter);
         await _dbContext.SaveChangesAsync();
@@ -241,12 +279,13 @@ public class CharacterManagementService(
     public async Task<(Character Character, bool IsOwner)?> GetCharacterWithAccessCheckAsync(int characterId, string requestingUserId)
     {
         Character? character = await _dbContext.Characters
-            .Include(c => c.Clan)
+            .Include(c => c.Clan)!.ThenInclude(cl => cl!.ClanDisciplines)
             .Include(c => c.Campaign)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
+            .Include(c => c.Bloodlines).ThenInclude(b => b.BloodlineDefinition)
             .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
             .Include(c => c.Aspirations)
             .Include(c => c.Banes)
