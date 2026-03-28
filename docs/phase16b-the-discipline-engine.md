@@ -13,7 +13,7 @@ Activate Discipline powers with typed cost enforcement and dice-pool resolution.
 - Vitae / Willpower costs are deducted atomically before the roll
 - Pool is resolved via `ITraitResolver` (full modifiers) and published to the dice feed
 - Powers with `null PoolDefinitionJson` remain display-only (no Activate button)
-- All 20 tests pass; `dotnet build` and `dotnet format` are clean
+- All 21 tests pass (12 application + 9 domain); `dotnet build` and `dotnet format` are clean
 
 ---
 
@@ -32,7 +32,7 @@ Activate Discipline powers with typed cost enforcement and dice-pool resolution.
 - **Cost deduction is atomic.** Vitae and Willpower spends go through their respective services inside an EF transaction — same pattern as rite activation.
 - **Powers with `null PoolDefinitionJson` are display-only.** The Activate button is suppressed in the UI; `ActivatePowerAsync` throws `InvalidOperationException` as a safety net.
 - **`ActivationCost` lives in Domain.** String parsing of `DisciplinePower.Cost` (`"1 Vitae"`, `"1 Willpower"`, `"—"`) is encapsulated in a value object — the service layer never does raw string matching.
-- **Authorization: `RequireCharacterAccessAsync`.** Owner or ST may activate, matching rite activation.
+- **Authorization: `RequireCharacterAccessAsync`.** Owner or Storyteller may activate, consistent with in-play character actions (`HuntingService`, `FrenzyService`, `VitaeService`). Note: `SorceryActivationService` uses the narrower `RequireCharacterOwnerAsync` — rites are player-only; discipline activation intentionally extends to ST for NPC and in-session use.
 - **`"1 Vitae or 1 Willpower"` defaults to Vitae.** Player choice UI is deferred to Phase 18 content pass (recorded in rules log).
 
 ---
@@ -71,7 +71,7 @@ namespace RequiemNexus.Domain.Models;
 
 /// <summary>
 /// Typed representation of a Discipline power's activation cost.
-/// Parsed from <see cref="RequiemNexus.Data.Models.DisciplinePower.Cost"/> strings.
+/// Parsed from the seeded <c>Cost</c> string on a discipline power (e.g. "1 Vitae", "1 Willpower", "—").
 /// </summary>
 public sealed record ActivationCost(ActivationCostType Type, int Amount)
 {
@@ -175,7 +175,7 @@ public sealed class DisciplineActivationService(
   3. Load `DisciplinePower` by `disciplinePowerId`; verify eligibility (`CharacterHasPowerEligibility`)
   4. If `power.PoolDefinitionJson` is null/empty → return `0` (no throw — preview path)
   5. `JsonSerializer.Deserialize<PoolDefinition>` → `traitResolver.ResolvePool(character, pool)` (sync)
-  6. Wrap in try/catch; log Warning and return `0` on malformed JSON
+  6. Wrap in try/catch; log **Error** with structured fields (CharacterId, PowerId) and return `0` on malformed JSON — matching `SorceryActivationService` severity for operability
 - `ActivatePowerAsync`:
   1. `await authHelper.RequireCharacterAccessAsync(characterId, userId, "activate discipline power")`
   2. Load character with includes
@@ -189,10 +189,10 @@ public sealed class DisciplineActivationService(
      - `await tx.CommitAsync()`
   7. Reload character (fresh query) to get post-spend trait values
   8. `JsonSerializer.Deserialize<PoolDefinition>` → `await traitResolver.ResolvePoolAsync(character, pool)` (async, full modifiers)
-  9. If `character.CampaignId` has a value: `await sessionService.PublishDiceRollAsync(...)`
-  10. Log structured event (CharacterId, PowerId, PowerName, CostType, CostAmount, PoolSize)
-  11. If `!cost.IsNone`: `await sessionService.BroadcastCharacterUpdateAsync(characterId)`
-  12. Return `poolSize`
+  9. Log structured event (CharacterId, PowerId, PowerName, CostType, CostAmount, PoolSize)
+  10. If `!cost.IsNone`: `await sessionService.BroadcastCharacterUpdateAsync(characterId)`
+  11. Return `poolSize`
+  - **Do not call `PublishDiceRollAsync` or `RollDiceAsync` from the service.** The dice roll and dice-feed publication are performed by `DiceRollerModal` in the code-behind when it opens with the returned pool size. This matches `SorceryActivationService.BeginRiteActivationAsync` exactly.
 - `CharacterHasPowerEligibility` (private):
   - `character.Disciplines.FirstOrDefault(d => d.DisciplineId == power.DisciplineId)?.Rating >= power.Level`
 
@@ -284,8 +284,8 @@ private async Task HandleDisciplineActivateConfirmedAsync()
         _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
         await ResolveDisciplinePowerPoolsAsync();
         _rollerTraitName = _disciplineActivatePower.Name;
-        _rollerFixedDicePool = dice;
-        _rollerBaseDice = 0;
+        _rollerBaseDice = dice;
+        _rollerFixedDicePool = null;
         _isRollerOpen = true;
     }
     catch (Exception ex)
