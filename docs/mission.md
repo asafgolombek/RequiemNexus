@@ -35,10 +35,10 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 16b | The Discipline Engine — Power Activation | ⬜ Planned |
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ⬜ Planned |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
-| 19 | The Blood Lineage — Discipline Acquisition Rules | ⬜ Planned |
+| 19 | The Blood Lineage — Discipline Acquisition Rules | 🔄 In Progress |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Phase 16a — The Hunting Ground (Feeding) is complete** (`IHuntingService`, `HuntPanel`, hunt ledger). **Phase 16b** (Discipline power activation) remains **blocked on Phase 19** (`DisciplinePower.PoolDefinitionJson`). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** after playability work. Phases 14–16a are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 16a — The Hunting Ground (Feeding) is complete** (`IHuntingService`, `HuntPanel`, hunt ledger). **Phase 19 — The Blood Lineage is now active** — see [`docs/phase19-the-blood-lineage.md`](./phase19-the-blood-lineage.md) for the full implementation plan. **Phase 16b** (Discipline power activation) remains **blocked on Phase 19** (`DisciplinePower.PoolDefinitionJson`). **Phase 17** (Humanity & Conditions) is independent and may proceed in parallel. Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase** after playability work. Phases 14–16a are **complete** — see phase sections below. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -58,8 +58,8 @@ Phase 18 (Edge Systems) ← fully independent; content passes any time
 ```
 
 **Recommended parallel tracks:**
-- Track A: ~~14 → 15~~ ✅ → **Phase 17** next
-- Track B: **Phase 19** → **Phase 16b** (discipline chain)
+- Track A: ~~14 → 15~~ ✅ → **Phase 17** next (independent, ready to start)
+- Track B: **Phase 19** 🔄 → **Phase 16b** (discipline chain) — [plan](./phase19-the-blood-lineage.md)
 - Track C: **Phase 18** (independent, any time)
 
 ---
@@ -566,7 +566,9 @@ enum DegenerationReason { StainsThreshold, CrúacPurchase }
 
 ---
 
-## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline
+## 📅 Phase 19: The Blood Lineage — Discipline Acquisition Rules & Seed Pipeline 🔄
+
+**Status:** 🔄 **In Progress** — see [`docs/phase19-the-blood-lineage.md`](./phase19-the-blood-lineage.md) for the full implementation plan.
 
 **The Objective:** Enforce the acquisition rules from `DisciplinesRules.txt`, promote `Disciplines.json` to authoritative seed source, and add `PoolDefinitionJson` to unblock Phase 16b.
 

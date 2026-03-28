@@ -322,11 +322,12 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phases 14–16a are complete** (combat & wounds, frenzy & torpor, feeding / hunting). Remaining V:tR 2e playability work: **16b** (blocked on **19** for `DisciplinePower.PoolDefinitionJson`), **17**–**19** — see [`docs/mission.md`](./docs/mission.md). **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phase 13 (E2E infrastructure, axe scans, Lighthouse CI, screen-reader announcer, visual-regression workflow) is complete — see **Phase 13** in `docs/mission.md`. Phase 12 (The Web of Night) and Phases 8–11 are complete.
+**Phases 14–16a are complete** (combat & wounds, frenzy & torpor, feeding / hunting). **Phase 19 — The Blood Lineage is active 🔄** — read [`docs/phase19-the-blood-lineage.md`](./docs/phase19-the-blood-lineage.md) before touching anything in the Discipline, `CharacterDisciplineService`, `DbInitializer`, or `IAuthorizationHelper` areas. **Phase 16b** remains blocked on Phase 19 (`DisciplinePower.PoolDefinitionJson`). **Phase 17** (Humanity & Conditions) is independent and may run in parallel. **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phases 13, 12, and 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
+See [`docs/phase19-the-blood-lineage.md`](./docs/phase19-the-blood-lineage.md) for the active Phase 19 implementation plan.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 
 ---
