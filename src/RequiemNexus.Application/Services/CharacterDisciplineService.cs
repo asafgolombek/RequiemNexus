@@ -4,7 +4,6 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.Events;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Events;
@@ -175,21 +174,6 @@ public class CharacterDisciplineService(
         return Result<CharacterDiscipline>.Success(cd);
     }
 
-    private static bool HasApprovedCovenantMembership(Character character, int requiredCovenantId)
-    {
-        if (character.CovenantId != requiredCovenantId)
-        {
-            return false;
-        }
-
-        if (character.CovenantJoinStatus == CovenantJoinStatus.Pending)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     private static string? BuildLedgerNotes(IReadOnlyList<string> auditSegments, string userId)
     {
         if (auditSegments.Count == 0)
@@ -227,32 +211,16 @@ public class CharacterDisciplineService(
         bool stAcknowledged,
         List<string> auditSegments)
     {
-        // Gate 1 — Bloodline restriction (hard)
-        if (discipline.IsBloodlineDiscipline && discipline.BloodlineId.HasValue)
+        string? bloodlineErr = DisciplineAcquisitionGates.TryBloodlineGateAcquisition(character, discipline);
+        if (bloodlineErr != null)
         {
-            bool hasBloodline = character.Bloodlines.Any(b =>
-                b.Status == BloodlineStatus.Active && b.BloodlineDefinitionId == discipline.BloodlineId.Value);
-
-            if (!hasBloodline)
-            {
-                string blName = discipline.Bloodline?.Name ?? "the required bloodline";
-                return $"This Discipline is restricted to members of the {blName} bloodline.";
-            }
+            return bloodlineErr;
         }
 
-        // Gate 2 — Covenant Status (hard; ST override is soft)
-        if (discipline.IsCovenantDiscipline && discipline.CovenantId.HasValue)
+        string? covenantErr = DisciplineAcquisitionGates.TryCovenantGateAcquisition(character, discipline, stAcknowledged, auditSegments);
+        if (covenantErr != null)
         {
-            if (!HasApprovedCovenantMembership(character, discipline.CovenantId.Value))
-            {
-                if (!stAcknowledged)
-                {
-                    string covName = discipline.Covenant?.Name ?? "the covenant";
-                    return $"Covenant Status in {covName} is required. A Storyteller may override for 'stolen secrets'.";
-                }
-
-                auditSegments.Add("covenant");
-            }
+            return covenantErr;
         }
 
         // Gate 3 — Theban Humanity floor (hard)
@@ -263,34 +231,16 @@ public class CharacterDisciplineService(
             return $"Theban Sorcery •{targetRating} requires Humanity {targetRating} or higher.";
         }
 
-        // Gate 4 — Out-of-clan teacher + Vitae (soft)
-        if (discipline.RequiresMentorBloodToLearn && !character.IsDisciplineInClan(discipline.Id))
+        string? mentorErr = DisciplineAcquisitionGates.TryMentorBloodGateAcquisition(character, discipline, stAcknowledged, auditSegments);
+        if (mentorErr != null)
         {
-            if (!stAcknowledged)
-            {
-                return "Out-of-clan Disciplines require a teacher and must drink their Vitae. Storyteller must acknowledge.";
-            }
-
-            auditSegments.Add("teacher");
+            return mentorErr;
         }
 
-        // Gate 6 — Necromancy cultural connection (soft)
-        if (discipline.IsNecromancy)
+        string? necromancyErr = DisciplineAcquisitionGates.TryNecromancyGateAcquisition(character, discipline, stAcknowledged, auditSegments);
+        if (necromancyErr != null)
         {
-            bool isMekhet = string.Equals(character.Clan?.Name, "Mekhet", StringComparison.Ordinal);
-            bool hasNecromancyBloodline = character.Bloodlines.Any(b =>
-                b.Status == BloodlineStatus.Active
-                && b.BloodlineDefinition?.FourthDisciplineId == discipline.Id);
-
-            if (!isMekhet && !hasNecromancyBloodline)
-            {
-                if (!stAcknowledged)
-                {
-                    return "Necromancy requires Mekhet-clan membership, a Necromancy-linked bloodline, or ST-acknowledged cultural connection.";
-                }
-
-                auditSegments.Add("necromancy");
-            }
+            return necromancyErr;
         }
 
         await Task.CompletedTask;

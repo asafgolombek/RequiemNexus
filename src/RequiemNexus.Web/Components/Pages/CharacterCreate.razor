@@ -8,7 +8,9 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using RequiemNexus.Web.Components.Pages.CharacterCreation
 @using RequiemNexus.Application.Contracts
+@using RequiemNexus.Application.Services
 @using RequiemNexus.Domain
+@using RequiemNexus.Domain.Models
 @using RequiemNexus.Web.Helpers
 @inject ICharacterService CharacterService
 @inject IClanService ClanService
@@ -69,6 +71,7 @@
             <MeritsAndDisciplinesStep Character="_newCharacter" 
                                       AvailableMerits="_availableMerits" 
                                       AvailableDisciplines="_availableDisciplines" 
+                                      SelectableDisciplines="_selectableDisciplines"
                                       MeritPointsSpent="MeritPointsSpent" 
                                       DisciplineDotsSpent="DisciplineDotsSpent" 
                                       CreationDisciplineError="_creationDisciplineError"
@@ -86,6 +89,7 @@
         {
             <ReviewAndEmbraceStep Character="_newCharacter" 
                                   AvailableClans="_availableClans" 
+                                  AvailableDisciplines="_availableDisciplines"
                                   MentalPointsSpent="MentalPointsSpent" 
                                   PhysicalPointsSpent="PhysicalPointsSpent" 
                                   SocialPointsSpent="SocialPointsSpent" 
@@ -121,6 +125,7 @@
 
     private List<Merit> _availableMerits = new List<Merit>();
     private List<Discipline> _availableDisciplines = new List<Discipline>();
+    private List<Discipline> _selectableDisciplines = new List<Discipline>();
     private string? _creationDisciplineError;
 
     private int MentalPointsSpent => TraitMetadata.MentalAttributes.Sum(a => CharacterTraitHelper.GetTraitValue(_newCharacter, a) - 1);
@@ -239,8 +244,16 @@
     private void RefreshCreationDisciplineValidation()
     {
         _newCharacter.Clan = _availableClans.FirstOrDefault(c => c.Id == _newCharacter.ClanId);
-        var result = CharacterCreationService.ValidateCreationDisciplines(_newCharacter);
-        _creationDisciplineError = result.IsSuccess ? null : result.Error;
+        _selectableDisciplines = _availableDisciplines
+            .Where(d => DisciplineAcquisitionGates.GetCharacterCreationBlockingReason(_newCharacter, d) == null)
+            .ToList();
+
+        IReadOnlyDictionary<int, Discipline> disciplineMap = _availableDisciplines.ToDictionary(d => d.Id);
+        Result<bool> eligibility = CharacterCreationService.ValidateCreationDisciplineEligibility(_newCharacter, disciplineMap);
+        Result<bool> dotRule = CharacterCreationService.ValidateCreationDisciplines(_newCharacter);
+        _creationDisciplineError = !eligibility.IsSuccess
+            ? eligibility.Error
+            : (!dotRule.IsSuccess ? dotRule.Error : null);
     }
 
     private async Task NextStep()
@@ -257,12 +270,23 @@
             {
                 RefreshCreationDisciplineValidation();
             }
+            else if (_currentStep == CreationStep.ReviewAndEmbrace)
+            {
+                _newCharacter.Clan = _availableClans.FirstOrDefault(c => c.Id == _newCharacter.ClanId);
+            }
         }
     }
 
     private void PreviousStep()
     {
-        if (_currentStep > CreationStep.BasicInformation) _currentStep--;
+        if (_currentStep > CreationStep.BasicInformation)
+        {
+            _currentStep--;
+            if (_currentStep == CreationStep.MeritsAndDisciplines)
+            {
+                RefreshCreationDisciplineValidation();
+            }
+        }
     }
 
     private async Task NextStepAsync() => await NextStep();

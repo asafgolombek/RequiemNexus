@@ -79,14 +79,14 @@
         <!-- Disciplines -->
         <div>
             <h4 style="color: #990000; border-bottom: 1px solid #330000; padding-bottom: 5px;">Disciplines (@DisciplineDotsSpent / 3)</h4>
-            <p style="font-size: 0.8em; color: #a0a0a0;">Assign 3 dots to Clan Disciplines.</p>
+            <p style="font-size: 0.8em; color: #a0a0a0;">Assign 3 dots among eligible Disciplines (in-clan vs out-of-clan follows the usual ×4 / ×5 rule).</p>
             
             <div style="margin-bottom: 15px; display: flex; gap: 10px;">
                 <select @bind="selectedDisciplineId" class="form-control" style="flex-grow: 1; padding: 5px; background-color: #1a1a1a; border: 1px solid #330000; color: white;">
                     <option value="">-- Select Discipline --</option>
-                    @foreach (var disc in AvailableDisciplines)
+                    @foreach (var disc in SelectableDisciplines)
                     {
-                        <option value="@disc.Id">@disc.Name</option>
+                        <option value="@disc.Id">@DisciplineUiLabels.FormatCreationOption(Character, disc)</option>
                     }
                 </select>
                 <button class="nav-btn" style="padding: 5px 15px;" @onclick="AddDiscipline" disabled="@(selectedDisciplineId == null || DisciplineDotsSpent >= 3)">Add</button>
@@ -98,7 +98,10 @@
                 if (d != null)
                 {
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background-color: #151515; padding: 5px 10px; border-radius: 4px;">
-                        <span>@d.Name</span>
+                        <span>
+                            @d.Name
+                            <span style="font-size: 0.75em; color: #a0a0a0; display: block;">@DisciplineUiLabels.FormatAffinityBadge(Character, d)</span>
+                        </span>
                         <div>
                             <button class="nav-btn" style="padding: 0px 6px;" @onclick='() => AdjustDisciplineAndNotify(cd, -1)' disabled="@(cd.Rating <= 1)">-</button>
                             <span style="display: inline-block; width: 15px; text-align: center;">@cd.Rating</span>
@@ -116,6 +119,9 @@
     [Parameter, EditorRequired] public Character Character { get; set; } = default!;
     [Parameter] public List<Merit> AvailableMerits { get; set; } = new();
     [Parameter] public List<Discipline> AvailableDisciplines { get; set; } = new();
+
+    /// <summary>Disciplines allowed at chargen (covenant, bloodline-only, and Necromancy gates applied).</summary>
+    [Parameter] public List<Discipline> SelectableDisciplines { get; set; } = new();
     [Parameter] public int MeritPointsSpent { get; set; }
     [Parameter] public int DisciplineDotsSpent { get; set; }
     [Parameter] public bool IsValid { get; set; }

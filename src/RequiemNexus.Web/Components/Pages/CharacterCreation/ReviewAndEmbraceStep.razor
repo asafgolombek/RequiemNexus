@@ -1,4 +1,5 @@
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Helpers
 
 <div class="step-content">
     <h3>Review & Embrace</h3>
@@ -31,6 +32,23 @@
                     <li>Merits: @MeritPointsSpent pts</li>
                     <li>Disciplines: @DisciplineDotsSpent dots</li>
                 </ul>
+                @if (Character.Disciplines.Any())
+                {
+                    <strong style="display: block; margin-top: 12px;">Discipline summary</strong>
+                    <ul style="margin-top: 6px;">
+                        @foreach (var cd in Character.Disciplines)
+                        {
+                            var d = AvailableDisciplines.FirstOrDefault(x => x.Id == cd.DisciplineId);
+                            if (d != null)
+                            {
+                                <li style="margin-bottom: 6px;">
+                                    @d.Name (@cd.Rating dot@(cd.Rating == 1 ? "" : "s"))<br />
+                                    <span style="font-size: 0.85em; color: #a0a0a0;">@DisciplineUiLabels.FormatAffinityBadge(Character, d)</span>
+                                </li>
+                            }
+                        }
+                    </ul>
+                }
             </div>
         </div>
     </div>
@@ -39,6 +57,7 @@
 @code {
     [Parameter, EditorRequired] public Character Character { get; set; } = default!;
     [Parameter] public List<Clan> AvailableClans { get; set; } = new();
+    [Parameter] public List<Discipline> AvailableDisciplines { get; set; } = new();
 
     [Parameter] public int MentalPointsSpent { get; set; }
     [Parameter] public int PhysicalPointsSpent { get; set; }

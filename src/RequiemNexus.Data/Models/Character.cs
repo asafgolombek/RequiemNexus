@@ -275,4 +275,25 @@ public class Character
 
         return false;
     }
+
+    /// <summary>
+    /// Returns true when the discipline is one of the parent clan's three standard in-clan Disciplines (not the bloodline fourth).
+    /// </summary>
+    /// <param name="disciplineId">The discipline id.</param>
+    /// <returns>True when on the clan triple.</returns>
+    public bool IsDisciplineOnClanTriple(int disciplineId)
+    {
+        return Clan?.ClanDisciplines.Any(cd => cd.DisciplineId == disciplineId) == true;
+    }
+
+    /// <summary>
+    /// Returns true when the discipline matches the active bloodline's fourth in-clan Discipline.
+    /// </summary>
+    /// <param name="disciplineId">The discipline id.</param>
+    /// <returns>True when granted by an active bloodline fourth slot.</returns>
+    public bool IsDisciplineFromActiveBloodlineFourth(int disciplineId)
+    {
+        var activeBloodline = Bloodlines.FirstOrDefault(b => b.Status == Enums.BloodlineStatus.Active);
+        return activeBloodline?.BloodlineDefinition?.FourthDisciplineId == disciplineId;
+    }
 }

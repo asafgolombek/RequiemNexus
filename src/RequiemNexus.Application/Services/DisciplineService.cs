@@ -13,6 +13,8 @@ public class DisciplineService(ApplicationDbContext dbContext) : IDisciplineServ
     {
         return await _dbContext.Disciplines
             .AsNoTracking()
+            .Include(d => d.Covenant)
+            .Include(d => d.Bloodline)
             .OrderBy(d => d.Name)
             .ToListAsync();
     }

@@ -10,6 +10,7 @@
 @using RequiemNexus.Application.DTOs
 @using RequiemNexus.Domain.Models
 @using RequiemNexus.Data.Models.Enums
+@using RequiemNexus.Web.Helpers
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject ISorceryService SorceryService
@@ -102,13 +103,23 @@ else
                 @if (_character.Disciplines.Any())
                 {
                     <section class="cs-section cs-disciplines">
-                        <h2>Disciplines (In-Clan: x4 | Out-of-Clan: x5)</h2>
+                        <h2>Disciplines (clan triple, bloodline fourth, out-of-clan)</h2>
                         <ul class="trait-list disciplines-list" style="max-width: 400px;">
                             @foreach (var disc in _character.Disciplines)
                             {
-                                bool isInClan = _character.IsDisciplineInClan(disc.DisciplineId);
                                 <li class="trait-item discipline-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <span style="flex-grow: 1;">@disc.Discipline?.Name @(isInClan ? "(In-Clan)" : "")</span>
+                                    <span style="flex-grow: 1;">
+                                        @disc.Discipline?.Name
+                                        @if (disc.Discipline != null)
+                                        {
+                                            <span style="display: block; font-size: 0.8em; color: #a0a0a0;">@DisciplineUiLabels.FormatAffinityBadge(_character, disc.Discipline)</span>
+                                            var advTags = DisciplineUiLabels.FormatDefinitionTags(disc.Discipline);
+                                            if (!string.IsNullOrEmpty(advTags))
+                                            {
+                                                <span style="display: block; font-size: 0.75em; color: #888;">@advTags</span>
+                                            }
+                                        }
+                                    </span>
                                     <DotScale Value="disc.Rating" ValueChanged='(int val) => TryUpgradeDiscipline(disc, val)' Max="5" ShowRollButton="false" />
                                 </li>
                             }
@@ -161,8 +172,7 @@ else
                             <option value="0">-- Select Discipline --</option>
                             @foreach (var d in _availableDisciplines.Where(ad => !_character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
                             {
-                                bool isInClan = _character.IsDisciplineInClan(d.Id);
-                                <option value="@d.Id">@d.Name @(isInClan ? "(In-Clan: x4)" : "(Out-of-Clan: x5)")</option>
+                                <option value="@d.Id">@DisciplineUiLabels.FormatAdvancementOption(_character, d)</option>
                             }
                         </select>
 

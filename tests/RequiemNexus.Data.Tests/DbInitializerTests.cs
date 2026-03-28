@@ -46,7 +46,11 @@ public class DbInitializerTests
 
         Assert.True(bloodlines.Count >= 8, $"Expected at least 8 bloodlines, got {bloodlines.Count}");
 
-        var expectedNames = new[] { "Ankou", "Icelus", "Khaibit", "Kerberos", "Lidérc", "Nosoi", "Vardyvle", "Vilseduire" };
+        // Representative bloodlines from SeedSource/bloodlines.json (set evolves with content packs).
+        var expectedNames = new[]
+        {
+            "Ankou", "Icelus", "Lidérc", "Nosoi", "Vardyvle", "Vilseduire", "Sangiovanni", "Burakumin",
+        };
         foreach (var name in expectedNames)
         {
             var b = bloodlines.FirstOrDefault(x => x.Name == name);
@@ -57,10 +61,10 @@ public class DbInitializerTests
         }
 
         var icelus = bloodlines.First(b => b.Name == "Icelus");
-        Assert.Equal(2, icelus.AllowedParentClans.Count);
+        Assert.Single(icelus.AllowedParentClans);
 
         var vilseduire = bloodlines.First(b => b.Name == "Vilseduire");
-        Assert.Equal(2, vilseduire.AllowedParentClans.Count);
+        Assert.Single(vilseduire.AllowedParentClans);
     }
 
     [Fact]

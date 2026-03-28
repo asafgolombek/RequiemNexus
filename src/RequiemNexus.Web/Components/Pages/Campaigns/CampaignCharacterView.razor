@@ -6,6 +6,7 @@
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
+@using RequiemNexus.Web.Helpers
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ICharacterService CharacterService
@@ -207,7 +208,7 @@ else
                     </section>
 
                     <section class="cs-section cs-disciplines">
-                        <h2>Disciplines</h2>
+                        <h2>Disciplines (clan / bloodline / out-of-clan)</h2>
                         <ul class="trait-list disciplines-list">
                             @foreach (var disc in _character.Disciplines)
                             {
@@ -224,6 +225,15 @@ else
                                                 <i class="oi oi-chevron-right" style="font-size:0.8em;margin-right:5px;"></i>
                                             }
                                             @disc.Discipline?.Name
+                                            @if (disc.Discipline != null)
+                                            {
+                                                <span style="display:block;font-size:0.8em;color:#a0a0a0;margin-top:2px;">@DisciplineUiLabels.FormatAffinityBadge(_character, disc.Discipline)</span>
+                                                var cvTags = DisciplineUiLabels.FormatDefinitionTags(disc.Discipline);
+                                                if (!string.IsNullOrEmpty(cvTags))
+                                                {
+                                                    <span style="display:block;font-size:0.75em;color:#888;">@cvTags</span>
+                                                }
+                                            }
                                         </span>
                                         <span class="trait-dots">@(new string('•', disc.Rating))</span>
                                     </div>
