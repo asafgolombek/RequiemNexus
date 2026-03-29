@@ -2,13 +2,17 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.Models;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Data.Models.Enums;
-using RequiemNexus.Domain.Enums;
+using RequiemNexus.Data.RealTime;
+using RequiemNexus.Domain.Models;
 using RequiemNexus.Web.Enums;
+using RequiemNexus.Web.Helpers;
 using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Components.Pages.Campaigns;
@@ -25,8 +29,23 @@ namespace RequiemNexus.Web.Components.Pages.Campaigns;
 /// - <see cref="GlimpsePendingRequests"/> handles approvals (Bloodlines, Covenants, etc).
 /// - Main page manages coterie vitals and awards.
 /// </summary>
-public partial class StorytellerGlimpse
+public partial class StorytellerGlimpse : IAsyncDisposable
 {
+    [Inject]
+    private SessionClientService SessionClient { get; set; } = default!;
+
+    [Inject]
+    private ISessionService SessionService { get; set; } = default!;
+
+    [Inject]
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
+
+    [Inject]
+    private IHumanityService HumanityService { get; set; } = default!;
+
+    [Inject]
+    private ITouchstoneService TouchstoneService { get; set; } = default!;
+
     /// <summary>Gets or sets the campaign id.</summary>
     [Parameter]
     public int Id { get; set; }
@@ -84,6 +103,14 @@ public partial class StorytellerGlimpse
 
     private string _glimpseTab = "overview";
 
+    private readonly Dictionary<int, (string Name, int Humanity, int Resolve)> _degAlerts = [];
+
+    private bool _degRollModalOpen;
+
+    private int? _degRollTargetId;
+
+    private bool _sessionHubWired;
+
     private int PendingApprovalCount =>
         _pendingBloodlines.Count
         + _pendingCovenants.Count
@@ -133,6 +160,7 @@ public partial class StorytellerGlimpse
             }
 
             _accessDenied = false;
+            SyncDegenerationAlertsFromVitals();
         }
         catch (UnauthorizedAccessException)
         {
@@ -142,6 +170,32 @@ public partial class StorytellerGlimpse
         {
             _loading = false;
         }
+    }
+
+    private void SyncDegenerationAlertsFromVitals()
+    {
+        foreach (CharacterVitalsDto v in _vitals)
+        {
+            if (v.HumanityStains >= v.Humanity)
+            {
+                _degAlerts[v.CharacterId] = (v.Name, v.Humanity, v.ResolveRating);
+            }
+            else
+            {
+                _degAlerts.Remove(v.CharacterId);
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync()
+    {
+        if (_sessionHubWired)
+        {
+            SessionClient.ChronicleUpdated -= HandleChroniclePatch;
+        }
+
+        return ValueTask.CompletedTask;
     }
 
     private async Task LoadSocialManeuvers()
@@ -305,4 +359,124 @@ public partial class StorytellerGlimpse
             SelectGlimpseTab(tabs[^1]);
         }
     }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _accessDenied || string.IsNullOrEmpty(_currentUserId) || _sessionHubWired)
+        {
+            return;
+        }
+
+        _sessionHubWired = true;
+        SessionClient.ChronicleUpdated += HandleChroniclePatch;
+        string? cookie = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
+        _ = await SessionClient.GetSessionActiveAsync(Id, SessionService);
+        SessionHubConnectResult hubResult = await SessionClient.StartAsync(Id, null, _currentUserId, cookie);
+        if (hubResult != SessionHubConnectResult.Connected)
+        {
+            ToastService.Show(
+                "Live session",
+                SessionHubConnectMessages.Format(hubResult),
+                ToastType.Warning);
+        }
+    }
+
+    private void HandleChroniclePatch(ChronicleUpdateDto patch)
+    {
+        if (patch.ChronicleId != Id)
+        {
+            return;
+        }
+
+        if (patch.DegenerationCheckRequired is { } alert)
+        {
+            _degAlerts[alert.CharacterId] = (alert.CharacterName, alert.Humanity, alert.ResolveRating);
+        }
+
+        if (patch.DegenerationCheckClearedCharacterId is int cleared)
+        {
+            _degAlerts.Remove(cleared);
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenDegenerationRollModal(int characterId)
+    {
+        _degRollTargetId = characterId;
+        _degRollModalOpen = true;
+    }
+
+    private void CloseDegenerationRollModal()
+    {
+        _degRollModalOpen = false;
+        _degRollTargetId = null;
+    }
+
+    private async Task ConfirmDegenerationRollAsync()
+    {
+        if (_degRollTargetId is not int cid || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        Result<DegenerationRollOutcome> result = await HumanityService.ExecuteDegenerationRollAsync(cid, _currentUserId);
+        if (result.IsSuccess)
+        {
+            ToastService.Show("Degeneration", "Roll completed. See the dice feed for results.", ToastType.Success);
+            CloseDegenerationRollModal();
+            _degAlerts.Remove(cid);
+            await LoadVitals();
+        }
+        else
+        {
+            ToastService.Show("Degeneration", result.Error ?? "Roll failed.", ToastType.Warning);
+        }
+    }
+
+    private async Task RollRemorseForCharacterAsync(int characterId)
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        Result<DegenerationRollOutcome> result = await TouchstoneService.RollRemorseAsync(characterId, _currentUserId);
+        if (result.IsSuccess)
+        {
+            ToastService.Show("Remorse", "Roll completed. See the dice feed for results.", ToastType.Success);
+            await LoadVitals();
+        }
+        else
+        {
+            ToastService.Show("Remorse", result.Error ?? "Roll failed.", ToastType.Warning);
+        }
+    }
+
+    private void HandleDegBannerKeydown(KeyboardEventArgs e, int characterId)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            OpenDegenerationRollModal(characterId);
+        }
+    }
+
+    private static string DegenerationPoolHint(int humanity, int resolve)
+    {
+        if (humanity <= 0)
+        {
+            return "chance die (Humanity 0)";
+        }
+
+        int pool = resolve + (7 - humanity);
+        return $"{resolve} + (7 − {humanity}) = {pool} dice";
+    }
+
+    private string? DegenerationModalMessage =>
+        _degRollTargetId is int id && _degAlerts.TryGetValue(id, out (string Name, int Humanity, int Resolve) entry)
+            ? $"{entry.Name} rolls degeneration ({DegenerationPoolHint(entry.Humanity, entry.Resolve)}). " +
+              "Success (≥1): clear all stains, Humanity unchanged. " +
+              "Failure: lose 1 Humanity, clear stains. Dramatic failure: also gain Guilty."
+            : string.Empty;
 }

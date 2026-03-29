@@ -1,74 +1,48 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
-using RequiemNexus.Application.Events;
 using RequiemNexus.Application.Models;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
-using RequiemNexus.Domain.Events;
 using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.Services;
 
 /// <inheritdoc />
-public sealed class HumanityService(
+public sealed class TouchstoneService(
     ApplicationDbContext dbContext,
     IAuthorizationHelper authorizationHelper,
-    IDomainEventDispatcher domainEventDispatcher,
     IDiceService diceService,
     ISessionService sessionService,
     IConditionService conditionService,
-    ILogger<HumanityService> logger) : IHumanityService
+    IHumanityService humanityService,
+    ILogger<TouchstoneService> logger) : ITouchstoneService
 {
+    private const string _touchstoneMeritName = "Touchstone";
+
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authorizationHelper = authorizationHelper;
-    private readonly IDomainEventDispatcher _domainEventDispatcher = domainEventDispatcher;
     private readonly IDiceService _diceService = diceService;
     private readonly ISessionService _sessionService = sessionService;
     private readonly IConditionService _conditionService = conditionService;
-    private readonly ILogger<HumanityService> _logger = logger;
+    private readonly IHumanityService _humanityService = humanityService;
+    private readonly ILogger<TouchstoneService> _logger = logger;
 
     /// <inheritdoc />
-    public int GetEffectiveMaxHumanity(Character character)
-    {
-        return 10 - character.GetDisciplineRating("Crúac");
-    }
-
-    /// <inheritdoc />
-    public async Task EvaluateStainsAsync(int characterId, string userId)
-    {
-        await _authorizationHelper.RequireCharacterAccessAsync(characterId, userId, "evaluate Humanity stains");
-
-        Character? character = await _dbContext.Characters
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == characterId);
-
-        if (character == null)
-        {
-            throw new InvalidOperationException($"Character {characterId} not found.");
-        }
-
-        if (character.HumanityStains >= character.Humanity)
-        {
-            _domainEventDispatcher.Dispatch(
-                new DegenerationCheckRequiredEvent(characterId, DegenerationReason.StainsThreshold));
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<Result<DegenerationRollOutcome>> ExecuteDegenerationRollAsync(
+    public async Task<Result<DegenerationRollOutcome>> RollRemorseAsync(
         int characterId,
         string userId,
         CancellationToken cancellationToken = default)
     {
-        await _authorizationHelper.RequireCharacterAccessAsync(characterId, userId, "roll degeneration");
+        await _authorizationHelper.RequireCharacterAccessAsync(characterId, userId, "roll remorse");
 
         Character? character = await _dbContext.Characters
             .Include(c => c.Attributes)
+            .Include(c => c.Merits)
+            .ThenInclude(m => m.Merit)
             .FirstOrDefaultAsync(c => c.Id == characterId, cancellationToken);
 
         if (character is null)
@@ -76,9 +50,20 @@ public sealed class HumanityService(
             return Result<DegenerationRollOutcome>.Failure("Character not found.");
         }
 
+        if (character.HumanityStains <= 0)
+        {
+            return Result<DegenerationRollOutcome>.Failure("No stains to roll remorse for");
+        }
+
+        if (character.HumanityStains >= character.Humanity)
+        {
+            return Result<DegenerationRollOutcome>.Failure("Use degeneration roll, not remorse");
+        }
+
+        bool hasTouchstoneAnchor = HasActiveTouchstoneAnchor(character);
         int poolDice = character.Humanity <= 0
             ? 0
-            : character.GetAttributeRating(AttributeId.Resolve) + (7 - character.Humanity);
+            : character.Humanity + (hasTouchstoneAnchor ? 1 : 0);
 
         RollResult roll = _diceService.Roll(poolDice, tenAgain: true);
         bool succeeded = roll.Successes >= 1;
@@ -108,8 +93,8 @@ public sealed class HumanityService(
         }
 
         string poolLabel = character.Humanity <= 0
-            ? "Degeneration (chance die at Humanity 0)"
-            : $"Degeneration: Resolve + (7 − Humanity), pool {poolDice} dice";
+            ? "Remorse (chance die at Humanity 0)"
+            : $"Remorse: Humanity{(hasTouchstoneAnchor ? " + Touchstone" : string.Empty)}, pool {poolDice} dice";
 
         if (character.CampaignId is int chronicleId)
         {
@@ -121,7 +106,7 @@ public sealed class HumanityService(
             {
                 _logger.LogWarning(
                     ex,
-                    "Dice feed publish failed for degeneration roll (character {CharacterId}, chronicle {ChronicleId}).",
+                    "Dice feed publish failed for remorse roll (character {CharacterId}, chronicle {ChronicleId}).",
                     characterId,
                     chronicleId);
             }
@@ -129,33 +114,16 @@ public sealed class HumanityService(
         else
         {
             _logger.LogInformation(
-                "Skipping dice feed for degeneration: character {CharacterId} has no campaign.",
+                "Skipping dice feed for remorse: character {CharacterId} has no campaign.",
                 characterId);
         }
 
         await _sessionService.BroadcastCharacterUpdateAsync(characterId);
 
-        if (character.CampaignId is int clearChronicleId)
-        {
-            try
-            {
-                await _sessionService.BroadcastChronicleUpdateAsync(
-                    new ChronicleUpdateDto(clearChronicleId, DegenerationCheckClearedCharacterId: characterId));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Chronicle broadcast failed when clearing degeneration banner (character {CharacterId}, chronicle {ChronicleId}).",
-                    characterId,
-                    clearChronicleId);
-            }
-        }
-
-        await EvaluateStainsAsync(characterId, userId);
+        await _humanityService.EvaluateStainsAsync(characterId, userId);
 
         _logger.LogInformation(
-            "Degeneration roll for character {CharacterId}: successes={Successes}, humanityNow={Humanity}, guilty={Guilty}",
+            "Remorse roll for character {CharacterId}: successes={Successes}, humanityNow={Humanity}, guilty={Guilty}",
             characterId,
             roll.Successes,
             character.Humanity,
@@ -167,5 +135,23 @@ public sealed class HumanityService(
                 succeeded,
                 character.Humanity,
                 guiltyApplied));
+    }
+
+    private static bool HasActiveTouchstoneAnchor(Character character)
+    {
+        if (!string.IsNullOrWhiteSpace(character.Touchstone))
+        {
+            return true;
+        }
+
+        foreach (CharacterMerit cm in character.Merits)
+        {
+            if (cm.Rating > 0 && string.Equals(cm.Merit?.Name, _touchstoneMeritName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

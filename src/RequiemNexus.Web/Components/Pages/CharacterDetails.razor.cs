@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.Models;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Enums;
@@ -37,6 +38,9 @@ public partial class CharacterDetails : IAsyncDisposable
 
     [Inject]
     private ILogger<CharacterDetails> Logger { get; set; } = default!;
+
+    [Inject]
+    private ITouchstoneService TouchstoneService { get; set; } = default!;
 
     /// <summary>Route parameter: character id.</summary>
     [Parameter]
@@ -116,6 +120,82 @@ public partial class CharacterDetails : IAsyncDisposable
     private bool IsOrdoDraculMember =>
         _character?.Covenant?.Name == "The Ordo Dracul"
         && _character.CovenantJoinStatus == null;
+
+    /// <summary>True when the health track is entirely aggravated (VtR 2e incapacitated).</summary>
+    private bool IsIncapacitated =>
+        _character != null
+        && WoundPenaltyResolver.IsIncapacitated(_character.HealthDamage, _character.MaxHealth);
+
+    private bool HasTouchstoneBonus =>
+        _character != null
+        && (!string.IsNullOrWhiteSpace(_character.Touchstone)
+            || _character.Merits.Any(m => m.Rating > 0 && string.Equals(m.Merit?.Name, "Touchstone", StringComparison.Ordinal)));
+
+    private string RemorsePoolTooltip =>
+        _character == null
+            ? string.Empty
+            : _character.Humanity <= 0
+                ? "Pool: chance die (1 die)"
+                : $"Pool: {_character.Humanity + (HasTouchstoneBonus ? 1 : 0)} dice (Humanity{(HasTouchstoneBonus ? " + Touchstone" : string.Empty)})";
+
+    private bool _degRollPlayerModalOpen;
+
+    private string PlayerDegenerationModalMessage =>
+        _character == null
+            ? string.Empty
+            : _character.Humanity <= 0
+                ? $"{_character.Name} rolls a degeneration chance die (Humanity 0). Success (≥1 success): clear all stains. Failure: lose 1 Humanity, clear stains; dramatic failure also applies Guilty."
+                : $"{_character.Name} rolls degeneration: Resolve {_character.GetAttributeRating(AttributeId.Resolve)} + (7 − {_character.Humanity}) = {_character.GetAttributeRating(AttributeId.Resolve) + (7 - _character.Humanity)} dice. Success: clear stains, Humanity unchanged. Failure: lose 1 Humanity, clear stains; dramatic failure also applies Guilty.";
+
+    private void OpenPlayerDegenerationModal() => _degRollPlayerModalOpen = true;
+
+    private void ClosePlayerDegenerationModal()
+    {
+        _degRollPlayerModalOpen = false;
+    }
+
+    private async Task ConfirmPlayerDegenerationRollAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        Result<DegenerationRollOutcome> result = await HumanityService.ExecuteDegenerationRollAsync(Id, _currentUserId);
+        if (result.IsSuccess)
+        {
+            ToastService.Show("Degeneration", "Roll completed. Check the dice feed for results.", ToastType.Success);
+            ClosePlayerDegenerationModal();
+            _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+            await ResolveDisciplinePowerPoolsAsync();
+            StateHasChanged();
+        }
+        else
+        {
+            ToastService.Show("Degeneration", result.Error ?? "Roll failed.", ToastType.Warning);
+        }
+    }
+
+    private async Task RollRemorseFromSheetAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        Result<DegenerationRollOutcome> result = await TouchstoneService.RollRemorseAsync(Id, _currentUserId);
+        if (result.IsSuccess)
+        {
+            ToastService.Show("Remorse", "Roll completed. Check the dice feed for results.", ToastType.Success);
+            _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+            await ResolveDisciplinePowerPoolsAsync();
+            StateHasChanged();
+        }
+        else
+        {
+            ToastService.Show("Remorse", result.Error ?? "Roll failed.", ToastType.Warning);
+        }
+    }
 
     private void ToggleDiscipline(int disciplineId)
     {
@@ -333,6 +413,7 @@ public partial class CharacterDetails : IAsyncDisposable
 
             SessionClient.CharacterUpdated += HandleCharacterUpdated;
             SessionClient.BloodlineApproved += HandleBloodlineApproved;
+            SessionClient.ChronicleUpdated += HandleChroniclePatchForCharacter;
         }
 
         await TryShowRecentBloodlineApprovalToastAsync();
@@ -360,6 +441,7 @@ public partial class CharacterDetails : IAsyncDisposable
     {
         SessionClient.CharacterUpdated -= HandleCharacterUpdated;
         SessionClient.BloodlineApproved -= HandleBloodlineApproved;
+        SessionClient.ChronicleUpdated -= HandleChroniclePatchForCharacter;
 
         // Do not call SessionClient.StopAsync() here: Blazor may dispose this page after the campaign
         // page has already reconnected; a delayed stop would tear down presence. Hub teardown is via
@@ -384,6 +466,31 @@ public partial class CharacterDetails : IAsyncDisposable
             await ResolveDisciplinePowerPoolsAsync();
             StateHasChanged();
         });
+    }
+
+    private void HandleChroniclePatchForCharacter(ChronicleUpdateDto patch)
+    {
+        if (_character?.CampaignId != patch.ChronicleId)
+        {
+            return;
+        }
+
+        if (patch.DegenerationCheckRequired?.CharacterId == Id || patch.DegenerationCheckClearedCharacterId == Id)
+        {
+            _ = InvokeAsync(ReloadCharacterFromHubNotificationAsync);
+        }
+    }
+
+    private async Task ReloadCharacterFromHubNotificationAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+        await ResolveDisciplinePowerPoolsAsync();
+        StateHasChanged();
     }
 
     private async Task TryShowRecentBloodlineApprovalToastAsync()

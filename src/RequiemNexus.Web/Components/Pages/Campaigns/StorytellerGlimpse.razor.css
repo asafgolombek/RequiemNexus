@@ -453,3 +453,21 @@
 .ml-small {
     margin-left: 0.25rem;
 }
+
+.degeneration-glimpse-banners {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.degeneration-glimpse-banner {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.degeneration-glimpse-banner:focus {
+    outline: 2px solid var(--crimson-glow);
+    outline-offset: 2px;
+}

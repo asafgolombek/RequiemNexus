@@ -3,11 +3,11 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.Events;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain.Contracts;
-using RequiemNexus.Application.RealTime;
 using RequiemNexus.Domain.Events;
 using Xunit;
 

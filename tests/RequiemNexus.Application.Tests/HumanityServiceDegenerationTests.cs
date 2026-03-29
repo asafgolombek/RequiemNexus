@@ -48,6 +48,8 @@ public class HumanityServiceDegenerationTests
                 It.IsAny<RollResult>()))
             .Returns(Task.CompletedTask);
         session.Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
+        session.Setup(s => s.BroadcastChronicleUpdateAsync(It.IsAny<RequiemNexus.Data.RealTime.ChronicleUpdateDto>()))
+            .Returns(Task.CompletedTask);
 
         return new HumanityService(
             ctx,

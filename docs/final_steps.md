@@ -9,7 +9,7 @@
 
 | Phase | Name | Status | Blockers |
 |-------|------|--------|----------|
-| 17 | The Fog of Eternity — Humanity & Conditions | ⬜ Ready | None — all dependencies complete |
+| 17 | The Fog of Eternity — Humanity & Conditions | ✅ Delivered | None — exit criteria verified in repo |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Ready | None — fully independent |
 
 **Recommended execution order:** Phase 17 first (mechanical core), then Phase 18 (edge systems + content fills). Both can be parallelized after Phase 17's `ModifierService` changes land, since Phase 18 has no dependency on Phase 17.
@@ -20,7 +20,7 @@
 
 **Objective:** Automate degeneration rolls and wire all Condition penalties into the dice pool resolver.
 
-**Key architectural principle:** Condition penalties are a _modifier source_, not special-cased code. Degeneration is a _triggered roll_, not an automatic loss. Remorse is an _explicit ST action_.
+**Key architectural principle:** Condition penalties are a _modifier source_, not special-cased code. Degeneration is a _triggered roll_, not an automatic loss. Remorse is an _explicit roll_ (character owner or Storyteller), not passive resolution.
 
 ---
 
@@ -214,18 +214,18 @@ The domain event type is `DegenerationCheckRequiredEvent` (see `src/RequiemNexus
 
 ### Phase 17 — Acceptance Criteria
 
-- [ ] `IConditionRules.GetPenalties(ConditionType.Shaken)` returns `[("AllPools", -2)]`.
-- [ ] Rolling dice for a `Shaken` character produces a pool 2 dice smaller than normal.
-- [ ] Accumulating stains to the threshold triggers the Glimpse degeneration banner.
-- [ ] Rolling degeneration with 0 successes removes a Humanity dot and clears stains.
-- [ ] Rolling degeneration with a dramatic failure additionally applies `Guilty`.
-- [ ] `RollRemorseAsync` adds +1 die when a Touchstone is present.
-- [ ] Remorse roll fails fast when no stains are present.
-- [ ] Incapacitated player sheet suppresses all action buttons.
-- [ ] ST Glimpse shows action buttons for incapacitated characters.
-- [ ] Incapacitated overlay exposes `role="alert"` and a concise `aria-label` (e.g. incapacitated — actions suspended) per Phase 13 a11y expectations.
-- [ ] All rules entries added to `rules-interpretations.md`.
-- [ ] `dotnet format` passes; `.\scripts\test-local.ps1` passes (including new tests).
+- [x] `IConditionRules.GetPenalties(ConditionType.Shaken)` returns `[("AllPools", -2)]` (via `ConditionPoolTarget.AllPools`).
+- [x] Rolling dice for a `Shaken` character produces a pool 2 dice smaller than normal (`ModifierService` + `ModifierServiceTests`; trait rolls use aggregated modifiers).
+- [x] Accumulating stains to the threshold triggers the Glimpse degeneration banner (`DegenerationCheckRequiredEventHandler` → `ChronicleUpdateDto.DegenerationCheckRequired` + Glimpse hub).
+- [x] Rolling degeneration with 0 successes removes a Humanity dot and clears stains (`HumanityServiceDegenerationTests`).
+- [x] Rolling degeneration with a dramatic failure additionally applies `Guilty` (`HumanityServiceDegenerationTests`).
+- [x] `RollRemorseAsync` adds +1 die when a Touchstone is present (`TouchstoneServiceRemorseTests`).
+- [x] Remorse roll fails fast when no stains are present (`TouchstoneServiceRemorseTests`).
+- [x] Incapacitated player sheet suppresses all action buttons (`CharacterDetails` overlay + blocked interactive region).
+- [x] ST Glimpse shows action buttons for incapacitated characters (Glimpse is a separate page; no overlay applied there).
+- [x] Incapacitated overlay exposes `role="alert"` and a concise `aria-label` (Phase 13 a11y).
+- [x] Phase 17 rules entries added to `rules-interpretations.md` (degeneration, remorse, condition vs tilt scope).
+- [x] `dotnet format` passes; `.\scripts\test-local.ps1` passes (including new tests).
 
 ---
 
