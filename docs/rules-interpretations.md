@@ -83,3 +83,12 @@ Mechanical choices for predator-type pools, territory bonus dice, resonance disp
 - **Discipline identity in gate logic:** Prefer FK/ID comparisons everywhere. The string `discipline.Name == "Crúac"` is used **only** for the Crúac breaking-point event where a stable covenant-linked id is not required at the call site.
 - **Coils vs. creation dots:** The 2-of-3 in-clan rule applies to **`CharacterDiscipline`** rows only. Coils use `CharacterCoil` and a separate purchase flow.
 - **Crúac / Theban at character creation:** The creation wizard lists **all** catalogue disciplines (including covenant sorcery tracks). Characters without covenant membership still hit the same covenant gate at **advancement** when buying with XP. At creation, dots are assigned without the covenant service gate; groups that require strict in-play acquisition should restrict choices at the table. The app enforces the **2-of-3 in-clan** rule for starting dots regardless.
+
+## Phase 16b — The Discipline Engine (power activation)
+
+- **`"1 Vitae or 1 Willpower"` cost string:** `ActivationCost.Parse` defaults to `Vitae`. Player-choice UI deferred to Phase 18 content pass.
+- **Powers with `null PoolDefinitionJson` are display-only:** Activate button suppressed; `ActivatePowerAsync` throws as safety net. Phase 18 content pass populates pools for all rollable powers.
+- **Modifier-aware vs. sync pool resolution:** `ResolveActivationPoolAsync` uses `traitResolver.ResolvePool` (sync, no modifiers) for the cost-preview modal. `ActivatePowerAsync` uses `traitResolver.ResolvePoolAsync` (async, full modifiers). Preview may differ from final pool by the sum of active passive modifiers — acceptable.
+- **Cost deduction ordering (before roll):** VtR 2e: resources are spent before the roll is made. Cost is deducted inside a transaction before pool resolution. On malformed JSON failure after a committed transaction, cost remains spent — correct per the rules.
+- **Eligibility check: discipline must be at or above power level:** Character with Vigor 2 cannot activate a Vigor 3 power. Enforced via `CharacterDiscipline.Rating >= power.Level`. Explicit in VtR 2e core (p. 112).
+- **`BroadcastCharacterUpdateAsync` gating:** Called only when `!cost.IsNone`. Free powers do not change Vitae/Willpower; broadcasting an unchanged snapshot adds unnecessary SignalR traffic. Dice feed broadcast fires regardless (via `DiceRollerModal` when the player rolls).

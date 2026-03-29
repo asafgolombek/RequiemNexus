@@ -33,6 +33,7 @@
 @inject ICovenantService CovenantService
 @inject ISorceryService SorceryService
 @inject ISorceryActivationService SorceryActivationService
+@inject IDisciplineActivationService DisciplineActivationService
 @inject ICoilService CoilService
 
 <PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
@@ -307,6 +308,13 @@ else
                                                                     <text>Cost: @power.Cost</text>
                                                                 }
                                                             </div>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(power.PoolDefinitionJson))
+                                                        {
+                                                            <button type="button" class="btn-rn-ghost btn-roll-small"
+                                                                    @onclick="() => OpenDisciplinePowerActivateModal(power)">
+                                                                Activate
+                                                            </button>
                                                         }
                                                     </div>
                                                 }
@@ -733,6 +741,13 @@ else
             </aside>
         }
     </div>
+
+    <DisciplinePowerActivateModal
+        IsOpen="_isDisciplineActivateModalOpen"
+        IsOpenChanged="(v) => _isDisciplineActivateModalOpen = v"
+        Power="_disciplineActivatePower"
+        ResolvedPool="_disciplineActivatePool"
+        OnConfirmed="HandleDisciplineActivateConfirmedAsync" />
 
     <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" FixedDicePool="_rollerFixedDicePool" />
 

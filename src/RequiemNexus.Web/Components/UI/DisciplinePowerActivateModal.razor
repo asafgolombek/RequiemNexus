@@ -1,0 +1,73 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Models
+
+@if (IsOpen && Power != null)
+{
+    <div class="rn-modal-backdrop" @onclick="CloseAsync">
+        <div class="rn-modal-panel" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="discipline-activate-modal-title">
+            <div class="rn-modal-header">
+                <h2 id="discipline-activate-modal-title" class="rn-modal-title">Activate discipline power</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body">
+                <p class="rn-modal-empty" style="margin-bottom: 0.75rem;">
+                    <strong>@Power.Name</strong>
+                    <span class="text-muted-rn"> — Level @Power.Level</span>
+                </p>
+                <p>
+                    <span class="trait-subheading">Pool (preview):</span>
+                    @(ResolvedPool <= 0 ? "Chance die" : ResolvedPool.ToString())
+                </p>
+                @if (!string.IsNullOrWhiteSpace(Power.Cost))
+                {
+                    <p>
+                        <span class="trait-subheading">Cost:</span>
+                        @Power.Cost
+                    </p>
+                }
+                @if (!IsFreeCost(Power.Cost))
+                {
+                    <p class="text-muted-rn" style="font-size: 0.9em;">
+                        Confirming spends Vitae or Willpower before you roll, as shown above.
+                    </p>
+                }
+            </div>
+            <div class="rn-modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync">Cancel</button>
+                <button type="button" class="btn-rn-primary" @onclick="ConfirmAsync">Confirm &amp; Roll</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public DisciplinePower? Power { get; set; }
+
+    [Parameter]
+    public int ResolvedPool { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirmed { get; set; }
+
+    private static bool IsFreeCost(string? cost)
+    {
+        return ActivationCost.Parse(cost).IsNone;
+    }
+
+    private async Task CloseAsync()
+    {
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task ConfirmAsync()
+    {
+        await OnConfirmed.InvokeAsync();
+    }
+}
