@@ -1,6 +1,10 @@
 # Phase 16b: The Discipline Engine — Power Activation
 
-Companion to [`mission.md`](./mission.md). This is the authoritative implementation plan for Phase 16b.
+**Status: complete** (see [`mission.md`](./mission.md) Phase 16b section).
+
+Companion to [`mission.md`](./mission.md). This document is the implementation record for Phase 16b.
+
+**Delivered:** Execution groups A–D are complete in the repository (Domain `ActivationCost`, Application `DisciplineActivationService`, Web activation UI, tests, DI). **D3** — the six Phase 16b bullets live under `## Phase 16b` in [`rules-interpretations.md`](./rules-interpretations.md). The remainder of this file preserves the original plan as Grimoire (file paths, steps, and test matrix).
 
 ---
 
@@ -13,7 +17,7 @@ Activate Discipline powers with typed cost enforcement and dice-pool resolution.
 - Vitae / Willpower costs are deducted atomically before the roll
 - Pool is resolved via `ITraitResolver` (full modifiers) and published to the dice feed
 - Powers with `null PoolDefinitionJson` remain display-only (no Activate button)
-- All 21 tests pass (12 application + 9 domain); `dotnet build` and `dotnet format` are clean
+- All targeted tests pass (`DisciplineActivationServiceTests`, `ActivationCostTests`); `dotnet build` and `dotnet format` are clean (`scripts/test-local.ps1`)
 
 ---
 
@@ -327,8 +331,8 @@ Use the `CreateSqliteContextAsync` / `SqliteTeardown` scaffold from `SorceryServ
 | 6 | `ActivatePowerAsync_NullPoolDefinitionJson_ThrowsInvalidOperationException` | `power.PoolDefinitionJson = null` → throws with "no rollable pool" |
 | 7 | `ActivatePowerAsync_CharacterLacksRequiredRating_ThrowsInvalidOperationException` | Character has discipline at Rating 1, power is Level 2 → throws |
 | 8 | `ResolveActivationPoolAsync_NullPool_ReturnsZero` | `power.PoolDefinitionJson = null` → returns 0, no throw |
-| 9 | `ActivatePowerAsync_WithCampaign_PublishesToDiceFeed` | `CampaignId` set → `ISessionService.PublishDiceRollAsync` called |
-| 10 | `ActivatePowerAsync_WithoutCampaign_SkipsDiceFeed` | `CampaignId = null` → `PublishDiceRollAsync` not called |
+| 9 | `ActivatePowerAsync_UsesResolvePoolAsyncForFinalPool` | Activation uses `ResolvePoolAsync` (modifier-aware final pool) |
+| 10 | `ResolveActivationPoolAsync_UsesSyncResolvePoolOnly` | Preview uses `ResolvePool` only; `ResolvePoolAsync` never called |
 | 11 | `ActivatePowerAsync_NonZeroCost_BroadcastsCharacterUpdate` | Non-free cost → `BroadcastCharacterUpdateAsync` called |
 | 12 | `ActivatePowerAsync_ZeroCost_DoesNotBroadcastCharacterUpdate` | Cost `"—"` → `BroadcastCharacterUpdateAsync` not called |
 

@@ -17,23 +17,42 @@ main {
   }
 }
 
+/* WCAG 2 AA: do not inherit body --text-color on a light banner (was ~1.1:1 on lightyellow). */
 #blazor-error-ui {
-  color-scheme: light only;
-  background: lightyellow;
+  color-scheme: dark;
+  background: var(--charcoal);
+  color: var(--bone-white);
+  border-top: 2px solid var(--crimson-glow);
   bottom: 0;
-  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
   display: none;
   left: 0;
-  padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+  padding: 0.6rem 2.5rem 0.7rem 1.25rem;
   position: fixed;
   width: 100%;
   z-index: 1000;
 }
 
+#blazor-error-ui .reload {
+  color: #7dd3fc;
+  font-weight: 600;
+  margin-left: 0.35rem;
+  text-decoration: underline;
+}
+
+#blazor-error-ui .reload:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
 #blazor-error-ui .dismiss {
+  color: var(--bone-white);
   cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
   position: absolute;
   right: 0.75rem;
-  top: 0.5rem;
+  top: 0.45rem;
+  user-select: none;
 }

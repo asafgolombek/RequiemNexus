@@ -198,7 +198,7 @@ Not sure where to start? Here's your path:
 1. **Read the [Mission](./docs/mission.md)** — understand the *why*.
 2. **Read the [Architecture](./docs/Architecture.md)** — understand the *how*.
 3. **Check the [Issues](../../issues)** — look for issues labeled `good first issue`.
-4. **Check the mission roadmap** — the phase table in [`mission.md`](./docs/mission.md) shows what's shipped, including **Phase 13** (E2E infra, axe, Lighthouse, announcer, visual-regression CI).
+4. **Check the mission roadmap** — the phase table in [`mission.md`](./docs/mission.md) shows what's shipped, including **Phase 13** (E2E infra, axe, Lighthouse, announcer, visual-regression CI). **V:tR 2e playability** phases **14–16b** and **19** are **complete** per that table; **Phase 17** is the primary next track.
 5. **Set up The Haven** — follow the Development Setup section above.
 6. **Pick something small** — a documentation fix, a missing test, or a `good first issue` is perfect for your first PR.
 

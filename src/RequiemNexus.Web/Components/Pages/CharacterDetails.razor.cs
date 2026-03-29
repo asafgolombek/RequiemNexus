@@ -94,6 +94,10 @@ public partial class CharacterDetails : IAsyncDisposable
     /// <summary>Resolved dice pools for discipline powers that define <c>PoolDefinitionJson</c>.</summary>
     private readonly Dictionary<int, int> _disciplinePowerResolvedPools = [];
 
+    private bool _isDisciplineActivateModalOpen;
+    private DisciplinePower? _disciplineActivatePower;
+    private int _disciplineActivatePool;
+
     private static readonly JsonSerializerOptions _poolJsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -426,6 +430,56 @@ public partial class CharacterDetails : IAsyncDisposable
             await ResolveDisciplinePowerPoolsAsync();
             StateHasChanged();
         });
+    }
+
+    private async Task OpenDisciplinePowerActivateModal(DisciplinePower power)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            _disciplineActivatePower = power;
+            _disciplineActivatePool = await DisciplineActivationService.ResolveActivationPoolAsync(
+                _character.Id,
+                power.Id,
+                _currentUserId);
+            _isDisciplineActivateModalOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Discipline", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task HandleDisciplineActivateConfirmedAsync()
+    {
+        if (_character == null || _disciplineActivatePower == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _isDisciplineActivateModalOpen = false;
+        int characterId = _character.Id;
+        string userId = _currentUserId;
+        DisciplinePower power = _disciplineActivatePower;
+        try
+        {
+            int dice = await DisciplineActivationService.ActivatePowerAsync(characterId, power.Id, userId);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, userId);
+            await ResolveDisciplinePowerPoolsAsync();
+            _rollerTraitName = power.Name;
+            _rollerBaseDice = dice;
+            _rollerFixedDicePool = null;
+            _isRollerOpen = true;
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Discipline", ex.Message, ToastType.Error);
+            _character = await CharacterService.ReloadCharacterAsync(characterId, userId);
+        }
     }
 
     private async Task ResolveDisciplinePowerPoolsAsync()

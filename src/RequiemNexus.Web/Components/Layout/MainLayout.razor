@@ -38,10 +38,10 @@
 <ToastContainer />
 <ConditionToastHost />
 
-<div id="blazor-error-ui" data-nosnippet>
+<div id="blazor-error-ui" data-nosnippet role="alert" aria-live="assertive">
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <span class="dismiss" role="button" tabindex="0" aria-label="Dismiss error notification">×</span>
 </div>
 
 @code {

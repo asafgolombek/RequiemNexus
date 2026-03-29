@@ -322,12 +322,12 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phases 14–16a and 19 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline acquisition). **Phase 16b — The Discipline Engine is active 🔄** — read [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md) before touching anything in `DisciplineActivationService`, `CharacterDetails`, or `ApplicationServiceExtensions`. **Phase 17** (Humanity & Conditions) is independent and may run in parallel. **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phases 13, 12, and 8–11 are complete.
+**Phases 14–16b and 19 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, discipline acquisition). **Phase 17** (Humanity & Conditions) is the primary next parallel track — see [`docs/mission.md`](./docs/mission.md). **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phase 16b implementation reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
-See [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md) for the active Phase 16b implementation plan.
+See [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md) for the completed Phase 16b implementation record.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 
 ---
