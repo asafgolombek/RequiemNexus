@@ -55,4 +55,14 @@ public interface ISocialManeuveringService
     /// Spends an unspent clue (ST or initiator). Records mechanical benefit text; publishes update.
     /// </summary>
     Task SpendManeuverClueAsync(int clueId, string benefit, string userId);
+
+    /// <summary>
+    /// Storyteller-only: adds a character as an interceptor on an active maneuver (unique per maneuver + character).
+    /// </summary>
+    Task<ManeuverInterceptor> AddInterceptorAsync(int socialManeuverId, int interceptorCharacterId, string storytellerUserId);
+
+    /// <summary>
+    /// Storyteller-only: records the interceptor's opposition successes (Manipulation + Persuasion contest); capped by the interceptor's sheet pool.
+    /// </summary>
+    Task RecordInterceptorRollAsync(int interceptorId, int successes, string storytellerUserId);
 }

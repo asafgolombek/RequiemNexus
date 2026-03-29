@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Touch of Death",
+    "Rating": 1,
+    "Prerequisites": "Corpse or remains within line of sight.",
+    "Effect": "Sense the last moments of the dead or trace a shade's recent passage."
+  },
+  {
+    "name": "Dead Man's Chest",
+    "Rating": 1,
+    "Prerequisites": "A body or significant remains.",
+    "Effect": "Bind a minor shade to remain near the remains as a watchful presence."
+  },
+  {
+    "name": "The Caul",
+    "Rating": 2,
+    "Prerequisites": "Quiet space; narrative focus.",
+    "Effect": "Veil yourself from casual notice as if wrapped in grave-mist; does not fool active scrutiny."
+  },
+  {
+    "name": "Raise the Familiar",
+    "Rating": 2,
+    "Prerequisites": "Animal corpse or prepared vessel.",
+    "Effect": "Animate a small corpse as a short-lived servant that obeys simple commands."
+  },
+  {
+    "name": "Plague of Toothy Things",
+    "Rating": 3,
+    "Prerequisites": "Organic matter or corpse in the area.",
+    "Effect": "Summon swarms of vermin or grave-beetles to harass and obscure a zone."
+  },
+  {
+    "name": "Profane Litany",
+    "Rating": 3,
+    "Prerequisites": "Target must hear the caster.",
+    "Effect": "Whispered curse that erodes Resolve or Composure for the scene (resolved at table)."
+  },
+  {
+    "name": "Shroud of Stygia",
+    "Rating": 4,
+    "Prerequisites": "Night; place of death or burial nearby.",
+    "Effect": "Wrap an area in cold, muffling gloom that penalizes mundane perception and steadies the dead."
+  },
+  {
+    "name": "Legion of the Pit",
+    "Rating": 5,
+    "Prerequisites": "Multiple corpses or a charnel site (Elder rite).",
+    "Effect": "Call forth a host of weak shades to harry and confuse intruders; duration and resistance at table."
+  }
+]

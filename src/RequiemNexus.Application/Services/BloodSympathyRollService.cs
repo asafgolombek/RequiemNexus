@@ -22,6 +22,7 @@ public class BloodSympathyRollService(
     ITraitResolver traitResolver,
     IDiceService diceService,
     RelationshipWebMetrics relationshipWebMetrics,
+    ISessionService sessionService,
     ILogger<BloodSympathyRollService> logger) : IBloodSympathyRollService
 {
     private static readonly PoolDefinition _bloodSympathyPoolDefinition = new(
@@ -36,6 +37,7 @@ public class BloodSympathyRollService(
     private readonly ITraitResolver _traitResolver = traitResolver;
     private readonly IDiceService _diceService = diceService;
     private readonly RelationshipWebMetrics _relationshipWebMetrics = relationshipWebMetrics;
+    private readonly ISessionService _sessionService = sessionService;
     private readonly ILogger<BloodSympathyRollService> _logger = logger;
 
     /// <inheritdoc />
@@ -107,6 +109,10 @@ public class BloodSympathyRollService(
             diceCount,
             roll.Successes,
             correlationId);
+
+        string poolLabel =
+            $"Blood Sympathy — Wits + Empathy + rating ({diceCount} dice) vs {target.Name ?? "kin"}";
+        await _sessionService.PublishDiceRollAsync(userId, campaignId, characterId, poolLabel, roll);
 
         return Result<RollResult>.Success(roll);
     }

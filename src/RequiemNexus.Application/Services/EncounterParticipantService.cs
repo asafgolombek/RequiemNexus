@@ -4,6 +4,7 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Services;
@@ -17,11 +18,13 @@ namespace RequiemNexus.Application.Services;
 public class EncounterParticipantService(
     ApplicationDbContext dbContext,
     IAuthorizationHelper authHelper,
-    ISessionService sessionService) : IEncounterParticipantService
+    ISessionService sessionService,
+    IPredatoryAuraService predatoryAuraService) : IEncounterParticipantService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IPredatoryAuraService _predatoryAuraService = predatoryAuraService;
 
     /// <inheritdoc />
     public async Task BulkAddOnlinePlayersAsync(int encounterId, IReadOnlyList<int> characterIds, string storyTellerUserId)
@@ -51,9 +54,10 @@ public class EncounterParticipantService(
             int roll = Random.Shared.Next(1, 11);
 
             await AddCharacterToEncounterCoreAsync(encounterId, charId, mod, roll);
+            await _dbContext.SaveChangesAsync();
+            await TriggerPassivePredatoryAuraForNewParticipantIfNeededAsync(encounter, charId, storyTellerUserId);
         }
 
-        await _dbContext.SaveChangesAsync();
         await RecalculateOrderAsync(encounterId);
         await PublishInitiativeIfActiveAsync(encounter, storyTellerUserId);
     }
@@ -71,6 +75,7 @@ public class EncounterParticipantService(
 
         InitiativeEntry entry = await AddCharacterToEncounterCoreAsync(encounterId, characterId, initiativeMod, rollResult);
         await _dbContext.SaveChangesAsync();
+        await TriggerPassivePredatoryAuraForNewParticipantIfNeededAsync(encounter, characterId, storyTellerUserId);
         await RecalculateOrderAsync(encounterId);
         await PublishInitiativeIfActiveAsync(encounter, storyTellerUserId);
 
@@ -191,6 +196,51 @@ public class EncounterParticipantService(
         InitiativeEntry entry = new() { EncounterId = encounterId, CharacterId = characterId, InitiativeMod = initiativeMod, RollResult = rollResult, Total = initiativeMod + rollResult, HasActed = false, IsHeld = false, IsRevealed = true };
         _dbContext.InitiativeEntries.Add(entry);
         return await Task.FromResult(entry);
+    }
+
+    /// <summary>
+    /// When a Kindred joins an encounter, resolves passive Predatory Aura against each other Kindred already in the encounter (Phase 18).
+    /// </summary>
+    private async Task TriggerPassivePredatoryAuraForNewParticipantIfNeededAsync(
+        CombatEncounter encounter,
+        int newCharacterId,
+        string storyTellerUserId)
+    {
+        bool isVampire = await _dbContext.Characters.AsNoTracking()
+            .AnyAsync(c => c.Id == newCharacterId && c.CreatureType == CreatureType.Vampire);
+
+        if (!isVampire)
+        {
+            return;
+        }
+
+        List<int> peerIds = await _dbContext.InitiativeEntries
+            .AsNoTracking()
+            .Where(i => i.EncounterId == encounter.Id && i.CharacterId != null && i.CharacterId != newCharacterId)
+            .Select(i => i.CharacterId!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        if (peerIds.Count == 0)
+        {
+            return;
+        }
+
+        List<int> vampirePeerIds = await _dbContext.Characters
+            .AsNoTracking()
+            .Where(c => peerIds.Contains(c.Id) && c.CreatureType == CreatureType.Vampire)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        foreach (int otherId in vampirePeerIds)
+        {
+            _ = await _predatoryAuraService.ResolvePassiveContestAsync(
+                encounter.CampaignId,
+                newCharacterId,
+                otherId,
+                storyTellerUserId,
+                encounter.Id);
+        }
     }
 
     private async Task<CombatEncounter> LoadMutableEncounterAsync(int encounterId)

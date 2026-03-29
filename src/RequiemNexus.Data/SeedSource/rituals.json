@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "name": "Apple of Eden",
     "Rating": 1,
@@ -154,5 +154,17 @@
     "Rating": 5,
     "Prerequisites": "Sacrament: At least 1 Vitae (for vampires) or 2 lethal health levels (for mortals) of the target's blood (Elder rite).",
     "Effect": "Plumbs the target's blood to answer questions about their relatives and descendants."
+  },
+  {
+    "name": "Baptism of Damnation",
+    "Rating": 4,
+    "Prerequisites": "Sacrament: Holy water blessed in darkness and a willing or restrained subject.",
+    "Effect": "Marks the subject with spiritual corruption visible to the faithful; imposes persistent guilt and weakens resistance to further Theban workings until resolved at table."
+  },
+  {
+    "name": "The Rite of Ascending Blood",
+    "Rating": 4,
+    "Prerequisites": "Sacrament: A chalice and Vitae from three different Kindred donors.",
+    "Effect": "Temporarily elevates the ritualist's effective Blood Potency for one night for purposes of resisting predation and contesting supernatural fear; costs and limits at table."
   }
 ]

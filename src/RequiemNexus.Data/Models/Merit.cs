@@ -31,4 +31,8 @@ public class Merit
 
     /// <summary>Structured prerequisites for validation. Empty when no structured prereqs (display-only from Description).</summary>
     public virtual ICollection<MeritPrerequisite> Prerequisites { get; set; } = new List<MeritPrerequisite>();
+
+    /// <summary>Optional catalog grouping (e.g. <c>Loresheet</c>) for advancement UI filtering.</summary>
+    [MaxLength(50)]
+    public string? MeritCategory { get; set; }
 }

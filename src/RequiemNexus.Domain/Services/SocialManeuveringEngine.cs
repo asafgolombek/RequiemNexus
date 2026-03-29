@@ -93,6 +93,15 @@ public static class SocialManeuveringEngine
     }
 
     /// <summary>
+    /// Reduces the initiator's rolled successes by total interceptor successes before open-Door math (floor at zero).
+    /// </summary>
+    /// <param name="initiatorSuccesses">Successes on the initiator's open-Door roll.</param>
+    /// <param name="totalInterceptorSuccesses">Sum of recorded successes from active interceptors.</param>
+    /// <returns>Adjusted success count used for Door reduction.</returns>
+    public static int ApplyInterceptorReductionToSuccesses(int initiatorSuccesses, int totalInterceptorSuccesses) =>
+        Math.Max(0, initiatorSuccesses - Math.Max(0, totalInterceptorSuccesses));
+
+    /// <summary>
     /// Doors opened by a single open-Door attempt from success counts (exceptional = 5+ successes in CoD).
     /// </summary>
     public static int GetDoorsOpenedByOpenDoorRoll(int successCount, bool isExceptionalSuccess, bool isDramaticFailure)

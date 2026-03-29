@@ -106,6 +106,46 @@
                         }
                     </div>
                 }
+
+                <div class="card-rn glimpse-card">
+                    <h3 class="section-header">Passive Predatory Aura</h3>
+                    <p class="text-small text-muted-rn mb-sm">
+                        Manual Blood Potency contest between two PCs (chronicle-wide). Results appear in the session dice feed. When Kindred join the same encounter, passive contests also fire automatically once per pair.
+                    </p>
+                    <div class="form-row" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;">
+                        <label class="text-small">
+                            Kindred A
+                            <select class="form-control form-select-medium" @bind="_passiveAuraCharacterA">
+                                <option value="0">—</option>
+                                @foreach (CharacterVitalsDto v in _vitals.Where(x => x.CreatureType == CreatureType.Vampire))
+                                {
+                                    <option value="@v.CharacterId">@v.Name</option>
+                                }
+                            </select>
+                        </label>
+                        <label class="text-small">
+                            Kindred B
+                            <select class="form-control form-select-medium" @bind="_passiveAuraCharacterB">
+                                <option value="0">—</option>
+                                @foreach (CharacterVitalsDto v in _vitals.Where(x => x.CreatureType == CreatureType.Vampire))
+                                {
+                                    <option value="@v.CharacterId">@v.Name</option>
+                                }
+                            </select>
+                        </label>
+                        <button type="button"
+                                class="btn-rn-primary"
+                                disabled="@(_passiveAuraBusy || _passiveAuraCharacterA == 0 || _passiveAuraCharacterB == 0 || _passiveAuraCharacterA == _passiveAuraCharacterB || string.IsNullOrEmpty(_currentUserId))"
+                                @onclick="TriggerPassivePredatoryAuraAsync">
+                            Trigger contest
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_passiveAuraMessage))
+                    {
+                        <p class="text-small mt-sm @(_passiveAuraError ? "feedback-error" : "feedback-ok")">@_passiveAuraMessage</p>
+                    }
+                </div>
+
                 @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
                 <div class="card-rn glimpse-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">

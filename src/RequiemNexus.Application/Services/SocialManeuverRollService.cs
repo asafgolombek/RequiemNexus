@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.Observability;
+using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain.Contracts;
@@ -21,6 +23,7 @@ public class SocialManeuverRollService(
     IAuthorizationHelper authHelper,
     IDiceService diceService,
     ISocialManeuverLifecycleCoordinator lifecycleCoordinator,
+    ISessionService sessionService,
     ILogger<SocialManeuverRollService> logger) : ISocialManeuverRollService
 {
     private const int _maxDeclaredDicePool = 50;
@@ -29,6 +32,7 @@ public class SocialManeuverRollService(
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IDiceService _diceService = diceService;
     private readonly ISocialManeuverLifecycleCoordinator _lifecycle = lifecycleCoordinator;
+    private readonly ISessionService _sessionService = sessionService;
     private readonly ILogger<SocialManeuverRollService> _logger = logger;
 
     /// <inheritdoc />
@@ -70,9 +74,19 @@ public class SocialManeuverRollService(
             int effectivePool = dicePool - maneuver.CumulativePenaltyDice;
             RollResult roll = _diceService.Roll(effectivePool);
 
-            int doorsOpened = SocialManeuveringEngine.GetDoorsOpenedByOpenDoorRoll(
+            int interceptorTotal = maneuver.Interceptors
+                .Where(i => i.IsActive && i.Successes > 0)
+                .Sum(i => i.Successes);
+
+            int adjustedSuccesses = SocialManeuveringEngine.ApplyInterceptorReductionToSuccesses(
                 roll.Successes,
-                roll.IsExceptionalSuccess,
+                interceptorTotal);
+
+            bool adjustedExceptional = adjustedSuccesses >= 5 && !roll.IsDramaticFailure;
+
+            int doorsOpened = SocialManeuveringEngine.GetDoorsOpenedByOpenDoorRoll(
+                adjustedSuccesses,
+                adjustedExceptional,
                 roll.IsDramaticFailure);
 
             if (doorsOpened == 0 && !roll.IsDramaticFailure)
@@ -91,13 +105,27 @@ public class SocialManeuverRollService(
             await db.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Open-Door roll on maneuver {ManeuverId}: successes={Successes}, doorsOpened={DoorsOpened}, remaining={Remaining}, user {UserId} {CorrelationId}",
+                "Open-Door roll on maneuver {ManeuverId}: successes={Successes}, doorsOpened={DoorsOpened}, remaining={Remaining}, interceptors={Interceptors}, user {UserId} {CorrelationId}",
                 maneuverId,
                 roll.Successes,
                 doorsOpened,
                 maneuver.RemainingDoors,
+                interceptorTotal,
                 userId,
                 correlationId);
+
+            string initiatorName = maneuver.InitiatorCharacter?.Name ?? "?";
+            string targetName = maneuver.TargetNpc?.Name ?? "?";
+            string poolDesc = interceptorTotal > 0
+                ? BuildOpenDoorFeedDescriptionWithInterception(maneuver, initiatorName, targetName, interceptorTotal)
+                : $"Social maneuver — {initiatorName} opens a Door vs {targetName}";
+
+            await _sessionService.PublishDiceRollAsync(
+                userId,
+                maneuver.CampaignId,
+                maneuver.InitiatorCharacterId,
+                poolDesc,
+                roll);
 
             await ApplyOpenDoorOutcomeConditionsAsync(db, maneuver, roll, doorsOpened, userId);
 
@@ -207,6 +235,21 @@ public class SocialManeuverRollService(
 
             return Result<(SocialManeuver, RollResult, bool)>.Success((maneuver, roll, forcedSuccess));
         }
+    }
+
+    private static string BuildOpenDoorFeedDescriptionWithInterception(
+        SocialManeuver maneuver,
+        string initiatorName,
+        string targetName,
+        int interceptorTotal)
+    {
+        string names = string.Join(
+            ", ",
+            maneuver.Interceptors
+                .Where(i => i.IsActive && i.Successes > 0)
+                .Select(i => i.InterceptorCharacter?.Name ?? "?"));
+
+        return $"{names} contest {initiatorName}'s maneuver on {targetName} (−{interceptorTotal} successes). Open Door — {initiatorName}.";
     }
 
     private async Task<Result<int>> ValidateDeclaredDicePoolAsync(

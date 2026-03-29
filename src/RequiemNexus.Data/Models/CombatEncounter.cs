@@ -43,4 +43,7 @@ public class CombatEncounter
     public virtual ICollection<InitiativeEntry> InitiativeEntries { get; set; } = [];
 
     public virtual ICollection<EncounterNpcTemplate> NpcTemplates { get; set; } = [];
+
+    /// <summary>Passive Predatory Aura pairs already resolved in this encounter.</summary>
+    public virtual ICollection<EncounterAuraContest> EncounterAuraContests { get; set; } = [];
 }

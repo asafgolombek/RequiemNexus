@@ -25,6 +25,18 @@ public interface IPredatoryAuraService
         string userId);
 
     /// <summary>
+    /// Resolves a passive Predatory Aura (Blood Potency contest, Shaken on a decisive loser). Storyteller only.
+    /// When <paramref name="encounterId"/> is set, skips if the Kindred pair already contested in that encounter.
+    /// </summary>
+    /// <returns>The contest result, or <see langword="null"/> when skipped as a duplicate in-encounter contest.</returns>
+    Task<Result<PredatoryAuraContestResultDto?>> ResolvePassiveContestAsync(
+        int chronicleId,
+        int vampireAId,
+        int vampireBId,
+        string storytellerUserId,
+        int? encounterId);
+
+    /// <summary>
     /// Returns recent Predatory Aura contests in the chronicle (Storyteller only).
     /// </summary>
     /// <param name="chronicleId">Campaign id.</param>

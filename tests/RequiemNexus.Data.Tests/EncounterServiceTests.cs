@@ -81,7 +81,16 @@ public class EncounterServiceTests
         var prep = new EncounterPrepService(ctx, NullLogger<EncounterPrepService>.Instance, auth, rules);
         var npc = new NpcCombatService(ctx, NullLogger<NpcCombatService>.Instance, auth, mock.Object, dice);
         var service = new EncounterService(ctx, NullLogger<EncounterService>.Instance, auth, mock.Object);
-        var participants = new EncounterParticipantService(ctx, auth, mock.Object);
+        var predatoryAura = new Mock<IPredatoryAuraService>();
+        predatoryAura
+            .Setup(p => p.ResolvePassiveContestAsync(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<int?>()))
+            .ReturnsAsync(Result<PredatoryAuraContestResultDto?>.Success(null));
+        var participants = new EncounterParticipantService(ctx, auth, mock.Object, predatoryAura.Object);
         var query = new EncounterQueryService(ctx, auth);
 
         return (service, prep, npc, participants, query);

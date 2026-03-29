@@ -57,4 +57,7 @@ public class SocialManeuver
     public int InvestigationProgressTowardNextClue { get; set; }
 
     public virtual ICollection<ManeuverClue> Clues { get; set; } = new List<ManeuverClue>();
+
+    /// <summary>Characters opposing the initiator's open-Door attempts.</summary>
+    public virtual ICollection<ManeuverInterceptor> Interceptors { get; set; } = [];
 }

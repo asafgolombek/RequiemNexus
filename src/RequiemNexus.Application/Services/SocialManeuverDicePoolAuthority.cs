@@ -34,6 +34,12 @@ public static class SocialManeuverDicePoolAuthority
     }
 
     /// <summary>
+    /// Standard interception pool cap: Manipulation + Persuasion on the interceptor's sheet.
+    /// </summary>
+    public static int GetManipulationPersuasionPool(Character character) =>
+        character.GetAttributeRating(AttributeId.Manipulation) + character.GetSkillRating(SkillId.Persuasion);
+
+    /// <summary>
     /// Loads the initiator with traits required for <see cref="GetMaximumSocialDicePool"/>.
     /// </summary>
     public static async Task<Character?> LoadInitiatorForDiceCapAsync(ApplicationDbContext db, int characterId)

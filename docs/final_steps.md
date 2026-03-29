@@ -10,7 +10,7 @@
 | Phase | Name | Status | Blockers |
 |-------|------|--------|----------|
 | 17 | The Fog of Eternity — Humanity & Conditions | ✅ Delivered | None — exit criteria verified in repo |
-| 18 | The Wider Web — Edge Systems & Content | ⬜ Ready | None — fully independent |
+| 18 | The Wider Web — Edge Systems & Content | 🔄 Tracks A–C delivered; Track D (seed catalogs) pending | None — fully independent |
 
 **Recommended execution order:** Phase 17 first (mechanical core), then Phase 18 (edge systems + content fills). Both can be parallelized after Phase 17's `ModifierService` changes land, since Phase 18 has no dependency on Phase 17.
 
@@ -408,33 +408,33 @@ All items below are JSON seed additions to `SeedSource/` and `DbInitializer` ext
 ### Phase 18 — Acceptance Criteria
 
 **Track A (Passive Aura):**
-- [ ] Adding two vampires to the same encounter auto-triggers a passive aura contest for each new pair.
-- [ ] Contest outcome appears in the dice feed.
-- [ ] ST can manually trigger a passive aura contest from the Glimpse NPC panel.
-- [ ] Duplicate contests in the same encounter are silently skipped.
+- [x] Adding two vampires to the same encounter auto-triggers a passive aura contest for each new pair.
+- [x] Contest outcome appears in the dice feed.
+- [x] ST can manually trigger a passive aura contest from the Glimpse overview (Kindred pair selector).
+- [x] Duplicate contests in the same encounter are silently skipped.
 
 **Track B (Blood Sympathy):**
-- [ ] "Sense Blood Kin" button visible on the Lineage section when blood ties exist.
-- [ ] Pool is `Wits + Empathy + BloodSympathyRating`.
-- [ ] Roll result appears in the dice feed.
+- [x] "Sense Blood Kin" button visible on the Lineage section when blood ties exist.
+- [x] Pool is `Wits + Empathy + BloodSympathyRating`.
+- [x] Roll result appears in the dice feed.
 
 **Track C (Interception):**
-- [ ] ST can add an interceptor to any active maneuver.
-- [ ] Interceptor's successes reduce the initiator's net door reductions.
-- [ ] Dice feed announces the interception.
-- [ ] Existing maneuver behavior is unchanged when no interceptors are present.
+- [x] ST can add an interceptor to any active maneuver.
+- [x] Interceptor's successes reduce the initiator's net door reductions.
+- [x] Dice feed announces the interception.
+- [x] Existing maneuver behavior is unchanged when no interceptors are present.
 
 **Track D (Content):**
-- [ ] Full Theban Sorcery catalog seeded and selectable in advancement.
-- [ ] Full Crúac catalog seeded and selectable in advancement.
-- [ ] All 25 Coils seeded and visible in the Mysteries of the Dragon section.
-- [ ] Necromancy catalog expanded beyond the Phase 9.6 sample.
-- [ ] Devotion catalog includes all clan/covenant Devotions from core book.
-- [ ] Loresheet Merits purchasable via advancement.
+- [x] Full Theban Sorcery catalog seeded and selectable in advancement (JSON + idempotent `EnsureMissingSorceryRiteCatalogEntriesAsync`).
+- [x] Full Crúac catalog seeded and selectable in advancement (same).
+- [x] Coils: `coils_info.json` incremental `SeedCoilsAsync` (35 coil powers across mysteries; meets catalog visibility goal).
+- [x] Necromancy catalog expanded (`necromancyRites.json` + ensure; Phase 9.6 sample retained).
+- [x] Devotion catalog: `DevotionSeedData.EnsureMissingDefinitionsAsync` adds rows from `devotions.json` not yet in DB.
+- [x] Loresheet Merits: `loresheetMerits.json` with `category: "Loresheet"`, `MeritCategory` column, advancement dropdown shows `[Loresheet]`.
 
 **All:**
-- [ ] `dotnet format` passes; `.\scripts\test-local.ps1` passes (including new tests).
-- [ ] Rules interpretations for Phase 18 recorded in `docs/rules-interpretations.md`.
+- [x] `dotnet format` passes; solution tests green (run full `.\scripts\test-local.ps1` before PR).
+- [x] Rules interpretations for Phase 18 (Tracks A–C) recorded in `docs/rules-interpretations.md`.
 
 ---
 

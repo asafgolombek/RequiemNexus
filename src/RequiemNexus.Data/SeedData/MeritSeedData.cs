@@ -38,32 +38,14 @@ public static class MeritSeedData
 
         foreach (var el in doc.RootElement.EnumerateArray())
         {
-            string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
-            if (string.IsNullOrEmpty(name))
+            Merit? merit = ParseMeritElement(el);
+            if (merit == null || nameSet.Contains(merit.Name))
             {
                 continue;
             }
 
-            string description = el.TryGetProperty("description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
-            string rating = el.TryGetProperty("rating", out var rEl) ? rEl.GetString() ?? string.Empty : string.Empty;
-            string prerequisites = el.TryGetProperty("prerequisites", out var pEl) ? pEl.GetString() ?? string.Empty : string.Empty;
-            string rollInfo = el.TryGetProperty("roll info", out var rollEl) ? rollEl.GetString() ?? string.Empty : string.Empty;
-            string drawback = el.TryGetProperty("drawback", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
-            string sourceBook = el.TryGetProperty("source book", out var sEl) ? sEl.GetString() ?? string.Empty : string.Empty;
-
-            var fullDescription = BuildDescription(description, prerequisites, rollInfo, drawback, sourceBook);
-            var validRatings = MapRatingToBullets(rating);
-
-            result.Add(new Merit
-            {
-                Name = name,
-                Description = fullDescription,
-                ValidRatings = validRatings,
-                RequiresSpecification = false,
-                CanBePurchasedMultipleTimes = false,
-                IsHomebrew = false,
-            });
-            nameSet.Add(name);
+            result.Add(merit);
+            nameSet.Add(merit.Name);
         }
 
         foreach (var statusName in _statusMeritNames)
@@ -83,6 +65,31 @@ public static class MeritSeedData
         }
 
         return result.Count > 0 ? result : GetAllMerits();
+    }
+
+    /// <summary>
+    /// Parses merits from a single SeedSource JSON file (array of merit objects) for idempotent catalog adds.
+    /// Does not inject covenant Status merits.
+    /// </summary>
+    public static List<Merit> LoadMeritsFromJsonFile(string fileName, ILogger logger)
+    {
+        var list = new List<Merit>();
+        using JsonDocument? doc = SeedDataLoader.TryLoadJson(fileName, logger);
+        if (doc == null)
+        {
+            return list;
+        }
+
+        foreach (var el in doc.RootElement.EnumerateArray())
+        {
+            Merit? merit = ParseMeritElement(el);
+            if (merit != null)
+            {
+                list.Add(merit);
+            }
+        }
+
+        return list;
     }
 
     /// <summary>Returns the full list of official merits for seeding (fallback when JSON unavailable).</summary>
@@ -215,6 +222,39 @@ public static class MeritSeedData
         new() { Name = "Status (Ordo)", ValidRatings = "\u2022 to \u2022\u2022\u2022\u2022\u2022", Description = "Your standing within the Ordo Dracul." },
     ];
 
+    private static Merit? ParseMeritElement(JsonElement el)
+    {
+        string name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+        if (string.IsNullOrEmpty(name))
+        {
+            return null;
+        }
+
+        string description = el.TryGetProperty("description", out var descEl) ? descEl.GetString() ?? string.Empty : string.Empty;
+        string rating = el.TryGetProperty("rating", out var rEl) ? rEl.GetString() ?? string.Empty : string.Empty;
+        string prerequisites = el.TryGetProperty("prerequisites", out var pEl) ? pEl.GetString() ?? string.Empty : string.Empty;
+        string rollInfo = el.TryGetProperty("roll info", out var rollEl) ? rollEl.GetString() ?? string.Empty : string.Empty;
+        string drawback = el.TryGetProperty("drawback", out var dEl) ? dEl.GetString() ?? string.Empty : string.Empty;
+        string sourceBook = el.TryGetProperty("source book", out var sEl) ? sEl.GetString() ?? string.Empty : string.Empty;
+        string? category = el.TryGetProperty("category", out var catEl) && catEl.ValueKind == JsonValueKind.String
+            ? catEl.GetString()
+            : null;
+
+        var fullDescription = BuildDescription(description, prerequisites, rollInfo, drawback, sourceBook);
+        var validRatings = MapRatingToBullets(rating);
+
+        return new Merit
+        {
+            Name = name,
+            Description = fullDescription,
+            ValidRatings = validRatings,
+            RequiresSpecification = false,
+            CanBePurchasedMultipleTimes = false,
+            IsHomebrew = false,
+            MeritCategory = category,
+        };
+    }
+
     private static string BuildDescription(string description, string prerequisites, string rollInfo, string drawback, string sourceBook)
     {
         var parts = new List<string> { description };
@@ -267,6 +307,7 @@ public static class MeritSeedData
             .Replace("1 to 5", $"{Dots(1)} to {Dots(5)}")
             .Replace("1 to 4", $"{Dots(1)} to {Dots(4)}")
             .Replace("1 to 3", $"{Dots(1)} to {Dots(3)}")
+            .Replace("1 to 2", $"{Dots(1)} to {Dots(2)}")
             .Replace("1 or 3", $"{Dots(1)} or {Dots(3)}")
             .Replace("2 or 4", $"{Dots(2)} or {Dots(4)}")
             .Replace("1, 2, or 3", $"{Dots(1)}, {Dots(2)}, or {Dots(3)}")

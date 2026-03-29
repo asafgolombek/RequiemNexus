@@ -3,6 +3,8 @@
 @using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Application.DTOs
 @using RequiemNexus.Domain.Enums
+@using System.Globalization
+@using System.Linq
 @using RequiemNexus.Web.Services
 @inject ISocialManeuveringService SocialService
 @inject ISocialManeuverRollService SocialRollService
@@ -147,6 +149,47 @@
                         }
                     </div>
 
+                    <div class="interceptor-section mt-small">
+                        <strong class="text-small">Interceptors</strong>
+                        <p class="text-xsmall text-muted-rn">Opposition successes reduce the initiator's net successes on open-Door rolls (Manipulation + Persuasion pool cap).</p>
+                        @if (m.Interceptors.Any())
+                        {
+                            <ul class="clue-list">
+                                @foreach (ManeuverInterceptor intr in m.Interceptors.OrderBy(i => i.Id))
+                                {
+                                    <li class="clue-item">
+                                        <span><strong>@(intr.InterceptorCharacter?.Name ?? "?")</strong> — recorded: @intr.Successes</span>
+                                        @if (m.Status == ManeuverStatus.Active && intr.IsActive)
+                                        {
+                                            <div class="clue-spend-row mt-small">
+                                                <input type="number" class="form-control input-mini" min="0" max="50"
+                                                       @bind="_interceptorSuccessDraft[intr.Id]" />
+                                                <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
+                                                        @onclick="() => RecordInterceptorOpposition(intr.Id)">Record opposition</button>
+                                            </div>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        @if (m.Status == ManeuverStatus.Active)
+                        {
+                            <div class="clues-bank-row mt-small">
+                                <select class="form-control form-select-medium"
+                                        value="@(_addInterceptorCharacterId.GetValueOrDefault(m.Id).ToString(CultureInfo.InvariantCulture))"
+                                        @onchange="e => OnAddInterceptorPickChanged(m.Id, e)">
+                                    <option value="0">— Chronicle character —</option>
+                                    @foreach (CharacterVitalsDto v in Vitals.Where(v => v.CharacterId != m.InitiatorCharacterId))
+                                    {
+                                        <option value="@v.CharacterId.ToString(CultureInfo.InvariantCulture)">@v.Name</option>
+                                    }
+                                </select>
+                                <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
+                                        @onclick="() => AddInterceptorToManeuver(m.Id)">Add interceptor</button>
+                            </div>
+                        }
+                    </div>
+
                     <div class="impression-config-row">
                         <label class="text-small">Impression
                             <select class="form-control impression-select"
@@ -233,6 +276,10 @@
     private Dictionary<int, bool> _forceHard = [];
     private Dictionary<int, int> _forceBp = [];
 
+    private Dictionary<int, int> _addInterceptorCharacterId = [];
+
+    private Dictionary<int, int> _interceptorSuccessDraft = [];
+
     protected override void OnParametersSet()
     {
         _thresholdDraft = InitialClueThreshold;
@@ -246,7 +293,20 @@
             _forcePool.TryAdd(m.Id, 5);
             _forceHard.TryAdd(m.Id, false);
             _forceBp.TryAdd(m.Id, 2);
+            _addInterceptorCharacterId.TryAdd(m.Id, 0);
+            foreach (ManeuverInterceptor intr in m.Interceptors)
+            {
+                _interceptorSuccessDraft.TryAdd(intr.Id, intr.Successes);
+            }
         }
+    }
+
+    private void OnAddInterceptorPickChanged(int maneuverId, ChangeEventArgs e)
+    {
+        string? raw = e.Value?.ToString();
+        _addInterceptorCharacterId[maneuverId] = int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+            ? id
+            : 0;
     }
 
     private int GetClueThreshold(SocialManeuver m) => m.Campaign?.SocialManeuverInvestigationSuccessesPerClue ?? InitialClueThreshold;
@@ -335,5 +395,55 @@
         }
 
         await OnChanged.InvokeAsync();
+    }
+
+    private async Task AddInterceptorToManeuver(int maneuverId)
+    {
+        int pick = _addInterceptorCharacterId.GetValueOrDefault(maneuverId);
+        if (pick == 0)
+        {
+            ToastService.Show("Interceptor", "Select a chronicle character first.", ToastType.Warning);
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await SocialService.AddInterceptorAsync(maneuverId, pick, StorytellerId);
+            _addInterceptorCharacterId[maneuverId] = 0;
+            await OnChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Interceptor", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RecordInterceptorOpposition(int interceptorRowId)
+    {
+        if (!_interceptorSuccessDraft.TryGetValue(interceptorRowId, out int successes))
+        {
+            ToastService.Show("Interceptor", "Enter a success count.", ToastType.Warning);
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await SocialService.RecordInterceptorRollAsync(interceptorRowId, successes, StorytellerId);
+            await OnChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Interceptor", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 }

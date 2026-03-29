@@ -71,12 +71,22 @@ public class KindredLineageServiceTests
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var traits = traitResolver ?? CreateTraitResolverMock(2).Object;
         var dice = diceService ?? CreateDiceMock(1).Object;
+        var session = new Mock<ISessionService>();
+        session
+            .Setup(s => s.PublishDiceRollAsync(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<int?>(),
+                It.IsAny<string>(),
+                It.IsAny<RollResult>()))
+            .Returns(Task.CompletedTask);
         return new BloodSympathyRollService(
             new TestApplicationDbContextFactory(options),
             auth,
             traits,
             dice,
             new RelationshipWebMetrics(_meterFactory.Value),
+            session.Object,
             NullLogger<BloodSympathyRollService>.Instance);
     }
 

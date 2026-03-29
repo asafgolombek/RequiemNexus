@@ -5,6 +5,7 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -60,6 +61,7 @@ public class StorytellerGlimpseService(
                     .Sum(m => m.Rating),
                 c.Beats,
                 c.ExperiencePoints,
+                c.CreatureType,
             })
             .ToListAsync();
 
@@ -91,6 +93,7 @@ public class StorytellerGlimpseService(
             Beats = c.Beats,
             ExperiencePoints = c.ExperiencePoints,
             ActiveConditionCount = activeConditionCounts.GetValueOrDefault(c.Id, 0),
+            CreatureType = c.CreatureType,
         }).ToList();
     }
 

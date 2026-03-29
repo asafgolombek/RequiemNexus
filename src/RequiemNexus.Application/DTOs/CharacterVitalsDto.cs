@@ -1,3 +1,5 @@
+using RequiemNexus.Data.Models.Enums;
+
 namespace RequiemNexus.Application.DTOs;
 
 /// <summary>
@@ -56,4 +58,7 @@ public record CharacterVitalsDto
 
     /// <summary>Number of unresolved Conditions.</summary>
     public required int ActiveConditionCount { get; init; }
+
+    /// <summary>Supernatural template; passive Predatory Aura applies only to <see cref="CreatureType.Vampire"/>.</summary>
+    public required CreatureType CreatureType { get; init; }
 }

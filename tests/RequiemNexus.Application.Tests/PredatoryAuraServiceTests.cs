@@ -10,6 +10,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
@@ -84,6 +85,13 @@ public class PredatoryAuraServiceTests
         mock.Setup(s => s.BroadcastRelationshipUpdateAsync(It.IsAny<int>(), It.IsAny<RequiemNexus.Data.RealTime.RelationshipUpdateDto>()))
             .Returns(Task.CompletedTask);
         mock.Setup(s => s.NotifyConditionToastAsync(It.IsAny<string>(), It.IsAny<RequiemNexus.Data.RealTime.ConditionNotificationDto>()))
+            .Returns(Task.CompletedTask);
+        mock.Setup(s => s.PublishDiceRollAsync(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<int?>(),
+                It.IsAny<string>(),
+                It.IsAny<RollResult>()))
             .Returns(Task.CompletedTask);
         return mock;
     }
@@ -303,5 +311,61 @@ public class PredatoryAuraServiceTests
         Assert.Single(rows);
         Assert.Equal("Attacker", rows[0].AttackerName);
         Assert.Equal("Defender", rows[0].DefenderName);
+    }
+
+    [Fact]
+    public async Task ResolvePassiveContest_EncounterDuplicate_ReturnsNullSecondTime()
+    {
+        DbContextOptions<ApplicationDbContext> options =
+            CreateOptions(nameof(ResolvePassiveContest_EncounterDuplicate_ReturnsNullSecondTime));
+        await using var ctx = new ApplicationDbContext(options);
+        await SeedChronicleWithThreeKindredAsync(ctx);
+        ctx.CombatEncounters.Add(new CombatEncounter
+        {
+            Id = 50,
+            CampaignId = 1,
+            Name = "Skirmish",
+            IsActive = true,
+            IsDraft = false,
+            IsPaused = false,
+            CurrentRound = 1,
+        });
+        await ctx.SaveChangesAsync();
+
+        Mock<IDiceService> dice = CreateDiceSequenceMock(2, 1);
+        PredatoryAuraService sut = CreateService(options, diceService: dice.Object);
+
+        Result<PredatoryAuraContestResultDto?> first =
+            await sut.ResolvePassiveContestAsync(1, 1, 2, "st", 50);
+
+        Assert.True(first.IsSuccess);
+        Assert.NotNull(first.Value);
+
+        Result<PredatoryAuraContestResultDto?> second =
+            await sut.ResolvePassiveContestAsync(1, 1, 2, "st", 50);
+
+        Assert.True(second.IsSuccess);
+        Assert.Null(second.Value);
+
+        await using var verify = new ApplicationDbContext(options);
+        Assert.Equal(1, await verify.EncounterAuraContests.CountAsync());
+    }
+
+    [Fact]
+    public async Task ResolvePassiveContest_NonVampire_ReturnsFailure()
+    {
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(nameof(ResolvePassiveContest_NonVampire_ReturnsFailure));
+        await using var ctx = new ApplicationDbContext(options);
+        await SeedChronicleWithThreeKindredAsync(ctx);
+        Character mortal = await ctx.Characters.FirstAsync(c => c.Id == 2);
+        mortal.CreatureType = CreatureType.Mortal;
+        await ctx.SaveChangesAsync();
+
+        PredatoryAuraService sut = CreateService(options);
+
+        Result<PredatoryAuraContestResultDto?> result = await sut.ResolvePassiveContestAsync(1, 1, 2, "st", null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Kindred", result.Error!, StringComparison.Ordinal);
     }
 }
