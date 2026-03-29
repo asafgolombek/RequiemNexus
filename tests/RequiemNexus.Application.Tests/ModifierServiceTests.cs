@@ -6,6 +6,7 @@ using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
+using RequiemNexus.Domain.Services;
 using Xunit;
 
 namespace RequiemNexus.Application.Tests;
@@ -69,7 +70,7 @@ public class ModifierServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance);
+        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
         Assert.DoesNotContain(
@@ -111,12 +112,56 @@ public class ModifierServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance);
+        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
         // Weapon is Weaponry (IsRangedWeapon=false, UsesBrawlForAttacks=false), Str 2 vs Req 4 → penalty -2 on Weaponry only.
         Assert.Contains(mods, m => m.Target == ModifierTarget.Weaponry && m.Value == -2);
         Assert.DoesNotContain(mods, m => m.Target == ModifierTarget.Brawl && m.Value < 0 && m.Source.SourceType == ModifierSourceType.Equipment);
         Assert.DoesNotContain(mods, m => m.Target == ModifierTarget.Firearms && m.Value < 0 && m.Source.SourceType == ModifierSourceType.Equipment);
+    }
+
+    [Fact]
+    public async Task GetModifiersForCharacterAsync_ActiveShaken_AppliesAllDicePoolsPenalty()
+    {
+        string db = nameof(GetModifiersForCharacterAsync_ActiveShaken_AppliesAllDicePoolsPenalty);
+        await using var ctx = CreateContext(db);
+        ctx.Characters.Add(CreateBareCharacter());
+        ctx.CharacterConditions.Add(new CharacterCondition
+        {
+            CharacterId = 1,
+            ConditionType = ConditionType.Shaken,
+            IsResolved = false,
+        });
+        await ctx.SaveChangesAsync();
+
+        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
+        IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
+
+        PassiveModifier shaken = Assert.Single(
+            mods,
+            m => m.Source.SourceType == ModifierSourceType.Condition && m.Target == ModifierTarget.AllDicePools);
+        Assert.Equal(-2, shaken.Value);
+    }
+
+    [Fact]
+    public async Task GetModifiersForCharacterAsync_CustomCondition_NoPoolPenaltyModifiers()
+    {
+        string db = nameof(GetModifiersForCharacterAsync_CustomCondition_NoPoolPenaltyModifiers);
+        await using var ctx = CreateContext(db);
+        ctx.Characters.Add(CreateBareCharacter());
+        ctx.CharacterConditions.Add(new CharacterCondition
+        {
+            CharacterId = 1,
+            ConditionType = ConditionType.Custom,
+            CustomName = "ST homebrew",
+            IsResolved = false,
+        });
+        await ctx.SaveChangesAsync();
+
+        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
+        IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
+
+        Assert.DoesNotContain(mods, m => m.Source.SourceType == ModifierSourceType.Condition);
     }
 }

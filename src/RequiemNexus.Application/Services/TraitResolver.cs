@@ -70,6 +70,7 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
         }
 
         HashSet<SkillId> poolSkills = CollectPoolSkillIds(pool);
+        HashSet<AttributeId> poolAttributes = CollectPoolAttributeIds(pool);
 
         var modifiers = await modifierService.GetModifiersForCharacterAsync(character.Id);
         int delta = 0;
@@ -78,6 +79,11 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
         foreach (var m in modifiers)
         {
             if (m.ModifierType == ModifierType.RuleBreaking)
+            {
+                continue;
+            }
+
+            if (TryApplyConditionDicePoolModifier(m, poolSkills, poolAttributes, ref delta))
             {
                 continue;
             }
@@ -136,6 +142,100 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
         }
 
         return false;
+    }
+
+    private static bool PoolIncludesMentalSkill(HashSet<SkillId> poolSkills)
+    {
+        foreach (SkillId s in TraitMetadata.MentalSkills)
+        {
+            if (poolSkills.Contains(s))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Applies condition-sourced dice pool penalties (Phase 17). Returns <c>true</c> when <paramref name="m"/> is fully handled here.
+    /// </summary>
+    private static bool TryApplyConditionDicePoolModifier(
+        PassiveModifier m,
+        HashSet<SkillId> poolSkills,
+        HashSet<AttributeId> poolAttributes,
+        ref int delta)
+    {
+        switch (m.Target)
+        {
+            case ModifierTarget.AllDicePools:
+            case ModifierTarget.DicePoolsExceptFleeing:
+                delta += m.Value;
+                return true;
+            case ModifierTarget.PhysicalDicePools:
+                if (PoolIncludesPhysicalSkill(poolSkills))
+                {
+                    delta += m.Value;
+                }
+
+                return true;
+            case ModifierTarget.MentalDicePools:
+                if (PoolIncludesMentalSkill(poolSkills))
+                {
+                    delta += m.Value;
+                }
+
+                return true;
+            case ModifierTarget.PoolsUsingResolveOrComposure:
+                if (poolAttributes.Contains(AttributeId.Resolve) || poolAttributes.Contains(AttributeId.Composure))
+                {
+                    delta += m.Value;
+                }
+
+                return true;
+            case ModifierTarget.PoolsUsingComposureAttribute:
+                if (poolAttributes.Contains(AttributeId.Composure))
+                {
+                    delta += m.Value;
+                }
+
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static HashSet<AttributeId> CollectPoolAttributeIds(PoolDefinition pool)
+    {
+        var set = new HashSet<AttributeId>();
+        foreach (var trait in pool.Traits)
+        {
+            AddAttributeFromTrait(set, trait);
+        }
+
+        if (pool.LowerOf is { } lowerOf)
+        {
+            AddAttributeFromTrait(set, lowerOf.Left);
+            AddAttributeFromTrait(set, lowerOf.Right);
+        }
+
+        if (pool.PenaltyTraits is { } penalties)
+        {
+            foreach (var trait in penalties)
+            {
+                AddAttributeFromTrait(set, trait);
+            }
+        }
+
+        return set;
+    }
+
+    private static void AddAttributeFromTrait(HashSet<AttributeId> set, TraitReference trait)
+    {
+        if (trait.Type == TraitType.Attribute && trait.AttributeId.HasValue)
+        {
+            set.Add(trait.AttributeId.Value);
+        }
     }
 
     private static HashSet<SkillId> CollectPoolSkillIds(PoolDefinition pool)

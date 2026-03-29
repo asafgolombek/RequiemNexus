@@ -92,3 +92,10 @@ Mechanical choices for predator-type pools, territory bonus dice, resonance disp
 - **Cost deduction ordering (before roll):** VtR 2e: resources are spent before the roll is made. Cost is deducted inside a transaction before pool resolution. On malformed JSON failure after a committed transaction, cost remains spent — correct per the rules.
 - **Eligibility check: discipline must be at or above power level:** Character with Vigor 2 cannot activate a Vigor 3 power. Enforced via `CharacterDiscipline.Rating >= power.Level`. Explicit in VtR 2e core (p. 112).
 - **`BroadcastCharacterUpdateAsync` gating:** Called only when `!cost.IsNone`. Free powers do not change Vitae/Willpower; broadcasting an unchanged snapshot adds unnecessary SignalR traffic. Dice feed broadcast fires regardless (via `DiceRollerModal` when the player rolls).
+
+## Phase 17 — The Fog of Eternity (Humanity & Conditions)
+
+- **Degeneration threshold:** `HumanityStains >= character.Humanity` (VtR 2e p.185 — “a number of Stains equal to or greater than her Humanity score”). Implemented in `HumanityService.EvaluateStainsAsync`; do not change this formula without a deliberate rules pass.
+- **`DegenerationCheckRequiredEvent` idempotency:** Callers may invoke `EvaluateStainsAsync` after every stain change. Each invocation while the character remains at or above threshold dispatches **another** event (fire-every-time). Handlers and UI (e.g. Glimpse banner) must tolerate repeat dispatches; re-showing the banner when stains still qualify is correct table behavior.
+- **Degeneration pool at Humanity 0:** Pool is a **single chance die** only (`IDiceService.Roll` with pool ≤ 0). For Humanity 1+, pool is **Resolve + (7 − Humanity)** with 10-again.
+- **Stains after degeneration:** Both success and failure on the degeneration roll **clear all stains**; failure additionally removes one Humanity dot (minimum 0). Dramatic failure also applies the **Guilty** Condition.
