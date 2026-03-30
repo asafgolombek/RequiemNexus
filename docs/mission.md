@@ -38,7 +38,7 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ✅ Complete |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Phase 17 — The Fog of Eternity is active 🔄** — extends `IConditionRules.GetPenalties()` (no DB migration), wires condition penalties into `ModifierService`, adds degeneration + remorse + incapacitated UI. See [`docs/final_steps.md`](./final_steps.md) for execution detail (supersedes this document for Phase 17–18 implementation). **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 17 — The Fog of Eternity is active 🔄** — extends `IConditionRules.GetPenalties()` (no DB migration), wires condition penalties into `ModifierService`, adds degeneration + remorse + incapacitated UI. Task list and decisions: **Phase 17** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -58,9 +58,9 @@ Phase 18 (Edge Systems) ← fully independent; content passes any time
 ```
 
 **Recommended parallel tracks:**
-- Track A: ~~14 → 15~~ ✅ → ~~Phase 17~~ 🔄 **in progress** — [execution plan](./final_steps.md)
+- Track A: ~~14 → 15~~ ✅ → ~~Phase 17~~ 🔄 **in progress** — Phase 17 section below
 - Track B: ~~Phase 19~~ ✅ → ~~Phase 16b~~ ✅ (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
-- Track C: **Phase 18** (independent, any time) — [execution plan](./final_steps.md)
+- Track C: **Phase 18** (independent, any time) — Phase 18 section below
 
 ---
 
@@ -504,7 +504,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ## 📅 Phase 17: The Fog of Eternity — Humanity & Condition Wiring
 
-**Status: 🔄 Active** — See [`docs/final_steps.md`](./final_steps.md) for the full execution plan (supersedes this section for implementation detail).
+**Status: 🔄 Active** — Task list, architectural decisions, and acceptance work are in this section below.
 
 **The Objective:** Automate degeneration rolls and wire all Condition penalties into the dice pool.
 
@@ -531,7 +531,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ## 📅 Phase 18: The Wider Web — Edge Systems & Content
 
-**Status: ⬜ Planned** — See [`docs/final_steps.md`](./final_steps.md) for the full execution plan (four independent tracks: A Passive Aura, B Blood Sympathy, C Interception, D Content).
+**Status: ⬜ Planned** — Task list and architectural decisions are in this section below (four independent tracks: A Passive Aura, B Blood Sympathy, C Interception, D Content).
 
 **The Objective:** Close low-priority mechanical gaps and fill the core-book content catalog.
 

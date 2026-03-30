@@ -10,8 +10,8 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 16a delivered:** The Hunting Ground — `IHuntingService` / `HuntingService`, `HuntingPoolDefinition` + `HuntingRecord`, `HuntPanel`, territory bonus + campaign alignment, resonance display (static thresholds).
 - **Phase 19 delivered:** The Blood Lineage — `Discipline` acquisition metadata, `DisciplineJsonImporter`, two-pass seed pipeline, 7 acquisition gates in `CharacterDisciplineService`, `IHumanityService`, `DegenerationCheckRequiredEvent`.
 - **Phase 16b delivered:** The Discipline Engine — `DisciplineActivationService`, `ActivationCost`, activation UI; pool size returned to `DiceRollerModal` for feed publication (rite pattern). See `docs/phase16b-the-discipline-engine.md`.
-- **Phase 17 active 🔄:** Humanity & Conditions — extend `IConditionRules.GetPenalties()` (no migration), wire into `ModifierService`; wire `EvaluateStainsAsync` call sites; degeneration + remorse + incapacitated UI. See `docs/final_steps.md` (execution detail supersedes `docs/mission.md` for this phase).
-- **Phase 18 planned ⬜:** The Wider Web — passive Predatory Aura, Blood Sympathy roll, social maneuver interception, content passes. See `docs/final_steps.md`.
+- **Phase 17 active 🔄:** Humanity & Conditions — extend `IConditionRules.GetPenalties()` (no migration), wire into `ModifierService`; wire `EvaluateStainsAsync` call sites; degeneration + remorse + incapacitated UI. See `docs/mission.md` (Phase 17 section).
+- **Phase 18 planned ⬜:** The Wider Web — passive Predatory Aura, Blood Sympathy roll, social maneuver interception, content passes. See `docs/mission.md` (Phase 18 section).
 - **Phase 20 — The Global Embrace** is the **last planned phase** after the V:tR 2e **playability** arc on the roadmap: **14–16b** and **17–19** (see `docs/mission.md`).
 
 ## 📜 Architectural DNA
@@ -24,7 +24,6 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - `docs/Architecture.md` — The Sacred Covenants of the layers.
 - `docs/mission.md` — Roadmap, dependency graph, and full task breakdown for all phases including 14–16b, 17–19 (V:tR 2e playability gaps).
 - `docs/phase16b-the-discipline-engine.md` — Phase 16b delivery record (discipline activation).
-- `docs/final_steps.md` — Execution-level plan for Phases 17–18 (supersedes phase sections in `mission.md` for implementation detail).
 - `docs/plan.md` — Detailed Phase 7 SignalR implementation.
 
 ## ⚡ Workflow
