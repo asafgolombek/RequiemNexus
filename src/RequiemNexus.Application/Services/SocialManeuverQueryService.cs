@@ -30,6 +30,8 @@ public class SocialManeuverQueryService(
             .Include(m => m.TargetNpc)
             .Include(m => m.Campaign)
             .Include(m => m.Clues)
+            .Include(m => m.Interceptors)
+            .ThenInclude(i => i.InterceptorCharacter)
             .Where(m => m.CampaignId == campaignId)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -48,6 +50,8 @@ public class SocialManeuverQueryService(
             .Include(m => m.TargetNpc)
             .Include(m => m.Campaign)
             .Include(m => m.Clues)
+            .Include(m => m.Interceptors)
+            .ThenInclude(i => i.InterceptorCharacter)
             .Where(m => m.InitiatorCharacterId == characterId)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();

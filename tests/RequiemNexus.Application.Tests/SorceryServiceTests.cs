@@ -38,7 +38,8 @@ public class SorceryServiceTests
     private static SorceryActivationService CreateService(
         ApplicationDbContext ctx,
         ITraitResolver traitResolver,
-        IAuthorizationHelper? authHelper = null)
+        IAuthorizationHelper? authHelper = null,
+        Mock<IHumanityService>? humanityServiceMock = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var sessionService = new Mock<ISessionService>();
@@ -56,6 +57,10 @@ public class SorceryServiceTests
             ctx,
             auth,
             new Mock<ILogger<WillpowerService>>().Object);
+        Mock<IHumanityService> humanity = humanityServiceMock ?? new Mock<IHumanityService>();
+        humanity
+            .Setup(h => h.EvaluateStainsAsync(It.IsAny<int>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
         return new SorceryActivationService(
             ctx,
             auth,
@@ -63,6 +68,7 @@ public class SorceryServiceTests
             traitResolver,
             vitaeService,
             willpowerService,
+            humanity.Object,
             logger);
     }
 
@@ -284,12 +290,14 @@ public class SorceryServiceTests
             });
             await ctx.SaveChangesAsync();
 
-            var sut = CreateService(ctx, CreateTraitResolverMock(0));
+            var humanity = new Mock<IHumanityService>();
+            var sut = CreateService(ctx, CreateTraitResolverMock(0), humanityServiceMock: humanity);
             int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
             Assert.Equal(0, dice);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(3, reloaded.HumanityStains);
+            humanity.Verify(h => h.EvaluateStainsAsync(1, "player1"), Times.Once);
         }
     }
 }

@@ -25,8 +25,11 @@ public class SocialManeuverLifecycleCoordinator(
     public async Task<SocialManeuver> LoadManeuverForMutationAsync(ApplicationDbContext db, int maneuverId)
     {
         SocialManeuver maneuver = await db.SocialManeuvers
+            .Include(m => m.InitiatorCharacter)
             .Include(m => m.TargetNpc)
             .Include(m => m.Campaign)
+            .Include(m => m.Interceptors)
+            .ThenInclude(i => i.InterceptorCharacter)
             .FirstOrDefaultAsync(m => m.Id == maneuverId)
             ?? throw new InvalidOperationException($"Social maneuver {maneuverId} not found.");
 

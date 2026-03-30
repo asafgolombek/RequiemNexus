@@ -1,4 +1,6 @@
+using RequiemNexus.Application.Models;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Application.Contracts;
 
@@ -20,4 +22,18 @@ public interface IHumanityService
     /// <param name="characterId">The character to evaluate.</param>
     /// <param name="userId">The authenticated user (owner or Storyteller).</param>
     Task EvaluateStainsAsync(int characterId, string userId);
+
+    /// <summary>
+    /// Performs a degeneration check: pool is Resolve + (7 − Humanity) with 10-again, or a single chance die when Humanity is 0.
+    /// On success (≥1 success), clears all stains. On failure, removes one Humanity dot (minimum 0), clears stains; on dramatic failure, also applies <c>Guilty</c>.
+    /// Publishes the roll to the chronicle dice feed when the character has a <c>CampaignId</c>.
+    /// </summary>
+    /// <param name="characterId">Character rolling degeneration.</param>
+    /// <param name="userId">Authenticated user (owner or Storyteller).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Outcome summary, or failure if the character does not exist.</returns>
+    Task<Result<DegenerationRollOutcome>> ExecuteDegenerationRollAsync(
+        int characterId,
+        string userId,
+        CancellationToken cancellationToken = default);
 }

@@ -203,6 +203,9 @@ public class Character
     public virtual ICollection<PredatoryAuraContest> PredatoryAuraContestsAsAttacker { get; set; } =
         new List<PredatoryAuraContest>();
 
+    /// <summary>Social maneuver rows where this character acts as an interceptor.</summary>
+    public virtual ICollection<ManeuverInterceptor> ManeuverInterceptions { get; set; } = new List<ManeuverInterceptor>();
+
     public virtual ICollection<PredatoryAuraContest> PredatoryAuraContestsAsDefender { get; set; } =
         new List<PredatoryAuraContest>();
 

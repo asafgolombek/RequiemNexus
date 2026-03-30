@@ -1,4 +1,5 @@
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Domain.Contracts;
 
@@ -25,4 +26,7 @@ public interface IConditionRules
     /// Used to surface active penalties on the character sheet.
     /// </summary>
     IReadOnlyList<string> GetTiltEffects(IEnumerable<TiltType> activeTilts);
+
+    /// <summary>Returns the dice-pool penalties imposed by an active Condition. Empty list = no mechanical penalty.</summary>
+    IReadOnlyList<ConditionPenaltyModifier> GetPenalties(ConditionType type);
 }

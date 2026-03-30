@@ -85,11 +85,21 @@ public class SocialManeuveringServiceTests
         var publisher = sessionPublisher ?? CreateSessionPublisherMock().Object;
         var conditions = conditionService ?? CreateConditionNoOpMock().Object;
         var lifecycle = CreateLifecycleCoordinator(publisher, conditions);
+        var session = new Mock<ISessionService>();
+        session
+            .Setup(s => s.PublishDiceRollAsync(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<int?>(),
+                It.IsAny<string>(),
+                It.IsAny<RollResult>()))
+            .Returns(Task.CompletedTask);
         return new SocialManeuverRollService(
             new TestApplicationDbContextFactory(options),
             auth,
             dice,
             lifecycle,
+            session.Object,
             NullLogger<SocialManeuverRollService>.Instance);
     }
 

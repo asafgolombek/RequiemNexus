@@ -33,12 +33,12 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 15 | The Beast Within — Frenzy & Torpor | ✅ Complete |
 | 16a | The Hunting Ground — Feeding | ✅ Complete |
 | 16b | The Discipline Engine — Power Activation | ✅ Complete |
-| 17 | The Fog of Eternity — Humanity & Condition Wiring | 🔄 Active |
+| 17 | The Fog of Eternity — Humanity & Condition Wiring | ✅ Complete |
 | 18 | The Wider Web — Edge Systems & Content | ⬜ Planned |
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ✅ Complete |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Phase 17 — The Fog of Eternity is active 🔄** — extends `IConditionRules.GetPenalties()` (no DB migration), wires condition penalties into `ModifierService`, adds degeneration + remorse + incapacitated UI. See [`docs/final_steps.md`](./final_steps.md) for execution detail (supersedes this document for Phase 17–18 implementation). **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -47,8 +47,8 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 ```
 Phase 14 (Combat) ✅
     ├──► Phase 15 (Frenzy/Torpor) ✅      ← VitaeDepletedEvent
-    │         └──► Phase 17 (Humanity) 🔄 ← DegenerationCheckRequiredEvent UI
-    └──► Phase 17 (Humanity) 🔄           ← WoundPenaltyResolver in ModifierService
+    │         └──► Phase 17 (Humanity) ✅ ← DegenerationCheckRequiredEvent UI
+    └──► Phase 17 (Humanity) ✅           ← WoundPenaltyResolver in ModifierService
 
 Phase 16a (Hunting) ✅  ← independent
 Phase 19  (Disciplines — model + seed) ✅
@@ -58,9 +58,9 @@ Phase 18 (Edge Systems) ← fully independent; content passes any time
 ```
 
 **Recommended parallel tracks:**
-- Track A: ~~14 → 15~~ ✅ → ~~Phase 17~~ 🔄 **in progress** — [execution plan](./final_steps.md)
+- Track A: ~~14 → 15 → Phase 17~~ ✅ — Phase 17 section below
 - Track B: ~~Phase 19~~ ✅ → ~~Phase 16b~~ ✅ (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
-- Track C: **Phase 18** (independent, any time) — [execution plan](./final_steps.md)
+- Track C: **Phase 18** (independent, any time) — Phase 18 section below
 
 ---
 
@@ -504,7 +504,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ## 📅 Phase 17: The Fog of Eternity — Humanity & Condition Wiring
 
-**Status: 🔄 Active** — See [`docs/final_steps.md`](./final_steps.md) for the full execution plan (supersedes this section for implementation detail).
+**Status:** ✅ **Complete** — Scope and architectural decisions are recorded in this section; rules log entries in [`docs/rules-interpretations.md`](./rules-interpretations.md) (**Phase 17**).
 
 **The Objective:** Automate degeneration rolls and wire all Condition penalties into the dice pool.
 
@@ -513,25 +513,25 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - **Degeneration is a triggered roll, not an automatic loss.** When `HumanityStains >= character.Humanity` (VtR 2e p.185), `HumanityService.EvaluateStainsAsync` raises `DegenerationCheckRequiredEvent(Reason = StainsThreshold)`. The Storyteller sees a Glimpse banner; clicking it fires a `Resolve + (7 − Humanity)` roll and auto-applies the result.
 - **Condition penalties extend `IConditionRules`, not a DB column.** `ConditionType` is a Domain enum — no table exists. A new `GetPenalties(ConditionType)` method on `IConditionRules` / `ConditionRules` returns `IReadOnlyList<ConditionPenaltyModifier>` for canonical types (empty for `Custom`). `ModifierService` calls this and injects results into `TraitResolver`. No migration required.
 - **`Stunned` and `Blind` are `TiltType`, not `ConditionType`.** Their penalties are already surfaced by `ConditionRules.GetTiltEffects()` — they are not re-implemented here.
-- **`EvaluateStainsAsync` already exists** in `HumanityService`. Phase 17 wires call sites (stain-adding services) and adds `ExecuteDegenerationRollAsync` + `RollRemorseAsync`.
+- **`EvaluateStainsAsync` already existed** in `HumanityService`. Phase 17 wired call sites (stain-adding services) and added `ExecuteDegenerationRollAsync` + `RollRemorseAsync`.
 - **Remorse / anchor checks are explicit ST or owner actions.** `TouchstoneService.RollRemorseAsync` rolls `Humanity` dice (chance die at Humanity 0). An active Touchstone adds +1 die.
-- **Event** (already defined and used by Phase 19): `DegenerationCheckRequiredEvent` at `src/RequiemNexus.Domain/Events/DegenerationCheckRequiredEvent.cs`. Phase 17 extends the existing `DegenerationCheckRequiredEventHandler` with a SignalR push — no new handler created.
+- **Event** (already defined and used by Phase 19): `DegenerationCheckRequiredEvent` at `src/RequiemNexus.Domain/Events/DegenerationCheckRequiredEvent.cs`. Phase 17 extended the existing `DegenerationCheckRequiredEventHandler` with a SignalR push — no separate handler was added.
 
-- [ ] **`IConditionRules.GetPenalties`** — Domain: new method + `ConditionPenaltyModifier` record; no migration
-- [ ] **`ModifierService` — Condition source integration** — inject `IConditionRules`; call `GetPenalties` per active `CharacterCondition`; map to `PassiveModifier` entries in aggregation loop
-- [ ] **Wire `EvaluateStainsAsync` call sites** — add calls after every stain-applying operation (sorcery rites, breaking points)
-- [ ] **`HumanityService.ExecuteDegenerationRollAsync`** — `Resolve + (7 − Humanity)` pool; success: clear stains; failure: remove dot + clear stains; dramatic failure: remove dot + apply `Guilty`
-- [ ] **`TouchstoneService.RollRemorseAsync`** — voluntary remorse roll; Touchstone adds +1 die; applies outcome via `HumanityService`; guard: stains must be present but below threshold
-- [ ] **Degeneration roll UI** — extend `DegenerationCheckRequiredEventHandler` with SignalR push → Glimpse banner → confirm modal → dice feed result
-- [ ] **Remorse UI** — "Roll Remorse" button on character sheet and Glimpse (visible when `stains > 0` AND `stains < Humanity`)
-- [ ] **Incapacitated flag** — UI suppression on player sheet only; ST Glimpse bypasses; overlay needs `role="alert"` per Phase 13 a11y standards
-- [ ] **Rules Interpretation Log** — threshold formula (p.185 cite), idempotency policy, Touchstone bonus justification, stain-clearing on both outcomes, Condition/Tilt penalty scope
+- [x] **`IConditionRules.GetPenalties`** — Domain: new method + `ConditionPenaltyModifier` record; no migration
+- [x] **`ModifierService` — Condition source integration** — inject `IConditionRules`; call `GetPenalties` per active `CharacterCondition`; map to `PassiveModifier` entries in aggregation loop
+- [x] **Wire `EvaluateStainsAsync` call sites** — add calls after every stain-applying operation (sorcery rites, breaking points)
+- [x] **`HumanityService.ExecuteDegenerationRollAsync`** — `Resolve + (7 − Humanity)` pool; success: clear stains; failure: remove dot + clear stains; dramatic failure: remove dot + apply `Guilty`
+- [x] **`TouchstoneService.RollRemorseAsync`** — voluntary remorse roll; Touchstone adds +1 die; applies outcome via `HumanityService`; guard: stains must be present but below threshold
+- [x] **Degeneration roll UI** — extend `DegenerationCheckRequiredEventHandler` with SignalR push → Glimpse banner → confirm modal → dice feed result
+- [x] **Remorse UI** — "Roll Remorse" button on character sheet and Glimpse (visible when `stains > 0` AND `stains < Humanity`)
+- [x] **Incapacitated flag** — UI suppression on player sheet only; ST Glimpse bypasses; overlay needs `role="alert"` per Phase 13 a11y standards
+- [x] **Rules Interpretation Log** — threshold formula (p.185 cite), idempotency policy, Touchstone bonus justification, stain-clearing on both outcomes, Condition/Tilt penalty scope
 
 ---
 
 ## 📅 Phase 18: The Wider Web — Edge Systems & Content
 
-**Status: ⬜ Planned** — See [`docs/final_steps.md`](./final_steps.md) for the full execution plan (four independent tracks: A Passive Aura, B Blood Sympathy, C Interception, D Content).
+**Status: ⬜ Planned** — Task list and architectural decisions are in this section below (four independent tracks: A Passive Aura, B Blood Sympathy, C Interception, D Content).
 
 **The Objective:** Close low-priority mechanical gaps and fill the core-book content catalog.
 

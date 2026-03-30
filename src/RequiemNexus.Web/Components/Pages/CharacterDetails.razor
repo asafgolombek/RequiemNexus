@@ -63,7 +63,17 @@ else if (_character == null)
 else
 {
     <div class="character-sheet-layout @(SessionClient.IsConnected ? "with-sidebar" : "")">
-        <div class="character-sheet fade-in">
+        <div class="character-sheet fade-in cs-sheet-root">
+            @if (IsIncapacitated)
+            {
+                <div class="incapacitated-sheet-overlay" role="alert" aria-label="Incapacitated. Mechanical actions are suspended until you recover.">
+                    <div class="incapacitated-sheet-overlay-inner">
+                        <h3 class="incapacitated-sheet-title">Incapacitated</h3>
+                        <p>Every health box is aggravated. Mechanical actions on this sheet are suspended until the Storyteller restores you.</p>
+                    </div>
+                </div>
+            }
+            <div class="cs-sheet-interactive @(IsIncapacitated ? "cs-sheet-interactive--blocked" : "")">
             <!-- HEADER -->
         <header class="cs-header">
             <CharacterSheetInitialsAvatar CharacterName="@_character.Name" />
@@ -229,6 +239,21 @@ else
                                     Max Humanity: @effectiveMaxHumanity (capped by Crúac @(new string('\u2022', crucDots)))
                                 </div>
                             }
+                            <div class="humanity-stains-block" style="margin-top:0.65rem;">
+                                <span class="text-muted-rn" style="font-size:0.85em;">Humanity stains: @_character.HumanityStains</span>
+                                @if (_character.HumanityStains >= _character.Humanity)
+                                {
+                                    <button type="button" class="btn-rn-danger btn-roll-small" style="margin-left:0.5rem;" @onclick="OpenPlayerDegenerationModal">
+                                        Roll Degeneration
+                                    </button>
+                                }
+                                else if (_character.HumanityStains > 0 && _character.HumanityStains < _character.Humanity)
+                                {
+                                    <button type="button" class="btn-rn-ghost btn-roll-small" style="margin-left:0.5rem;border:1px solid var(--border-subtle);" title="@RemorsePoolTooltip" @onclick="RollRemorseFromSheetAsync">
+                                        Roll Remorse
+                                    </button>
+                                }
+                            </div>
 
                             <h3 class="trait-subheading">Merits</h3>
                             <ul class="trait-list">
@@ -727,6 +752,7 @@ else
                 </div>
             }
         </CascadingValue>
+            </div>
         </div>
 
         @if (SessionClient.IsConnected)
@@ -783,5 +809,12 @@ else
                      IsOpenChanged="(v) => _isLearnCoilModalOpen = v"
                      Coils="_eligibleCoils"
                      OnCoilSelected="HandleLearnCoilRequested" />
+
+    <ConfirmModal IsOpen="_degRollPlayerModalOpen"
+                  Title="Confirm degeneration roll"
+                  Message="@PlayerDegenerationModalMessage"
+                  ConfirmLabel="Roll degeneration"
+                  OnConfirmClicked="ConfirmPlayerDegenerationRollAsync"
+                  OnCancelClicked="ClosePlayerDegenerationModal" />
 }
 

@@ -337,4 +337,32 @@ public class TraitResolverTests
 
         Assert.Equal(1 + 5, result); // skill 1 + equipment cap 5 (3+3 uncapped would be 6)
     }
+
+    [Fact]
+    public async Task ResolvePoolAsync_ShakenCondition_SubtractsTwoFromDicePool()
+    {
+        var character = CreateCharacterWithTraits();
+        var pool = new PoolDefinition(
+        [
+            new TraitReference(TraitType.Attribute, AttributeId.Intelligence, null, null),
+            new TraitReference(TraitType.Skill, null, SkillId.Occult, null),
+        ]);
+
+        var mockMods = new Mock<IModifierService>();
+        mockMods.Setup(m => m.GetModifiersForCharacterAsync(character.Id))
+            .ReturnsAsync(
+            [
+                new PassiveModifier(
+                    ModifierTarget.AllDicePools,
+                    -2,
+                    ModifierType.Static,
+                    "Condition (Shaken)",
+                    new ModifierSource(ModifierSourceType.Condition, 42)),
+            ]);
+
+        var resolver = new TraitResolver(mockMods.Object);
+        int result = await resolver.ResolvePoolAsync(character, pool);
+
+        Assert.Equal(1, result);
+    }
 }

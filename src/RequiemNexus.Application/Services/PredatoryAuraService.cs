@@ -6,6 +6,7 @@ using RequiemNexus.Application.Observability;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -96,108 +97,115 @@ public class PredatoryAuraService(
                 "lash out with Predatory Aura");
         }
 
-        int attackerBp = attacker.BloodPotency;
-        int defenderBp = defender.BloodPotency;
+        return await RunBloodPotencyContestAndPersistAsync(
+            db,
+            chronicleId,
+            attacker,
+            defender,
+            userId,
+            isLashOut: true,
+            publishDiceFeed: true,
+            correlationId);
+    }
 
-        RollResult attackerRoll = _diceService.Roll(attackerBp, tenAgain: true);
-        RollResult defenderRoll = _diceService.Roll(defenderBp, tenAgain: true);
+    /// <inheritdoc />
+    public async Task<Result<PredatoryAuraContestResultDto?>> ResolvePassiveContestAsync(
+        int chronicleId,
+        int vampireAId,
+        int vampireBId,
+        string storytellerUserId,
+        int? encounterId)
+    {
+        string correlationId = AmbientCorrelation.ForNewOperation();
+        using IDisposable correlationScope = BeginCorrelationScope(correlationId);
 
-        PredatoryAuraOutcome outcome = PredatoryAuraRules.ResolveContest(
-            attackerRoll.Successes,
-            attackerBp,
-            defenderRoll.Successes,
-            defenderBp);
-
-        int? winnerId = outcome switch
+        if (vampireAId == vampireBId)
         {
-            PredatoryAuraOutcome.AttackerWins => attackerCharacterId,
-            PredatoryAuraOutcome.DefenderWins => defenderCharacterId,
-            _ => null,
-        };
-
-        string outcomeApplied = outcome == PredatoryAuraOutcome.Draw ? _outcomeDraw : _outcomeShaken;
-        int? loserId = outcome switch
-        {
-            PredatoryAuraOutcome.AttackerWins => defenderCharacterId,
-            PredatoryAuraOutcome.DefenderWins => attackerCharacterId,
-            _ => null,
-        };
-
-        var contest = new PredatoryAuraContest
-        {
-            ChronicleId = chronicleId,
-            AttackerCharacterId = attackerCharacterId,
-            DefenderCharacterId = defenderCharacterId,
-            AttackerBloodPotency = attackerBp,
-            DefenderBloodPotency = defenderBp,
-            AttackerSuccesses = attackerRoll.Successes,
-            DefenderSuccesses = defenderRoll.Successes,
-            WinnerId = winnerId,
-            OutcomeApplied = outcomeApplied,
-            ResolvedAt = DateTime.UtcNow,
-            IsLashOut = true,
-        };
-
-        db.PredatoryAuraContests.Add(contest);
-        await db.SaveChangesAsync();
-        int contestId = contest.Id;
-
-        if (loserId.HasValue)
-        {
-            string description = _conditionRules.GetConditionDescription(ConditionType.Shaken);
-            var condition = new CharacterCondition
-            {
-                CharacterId = loserId.Value,
-                ConditionType = ConditionType.Shaken,
-                Description = description,
-                AppliedAt = DateTime.UtcNow,
-                AwardsBeat = _conditionRules.AwardsBeatOnResolve(ConditionType.Shaken),
-                AppliedByUserId = userId,
-                SourceTag = ContestSourceTag(contestId),
-            };
-
-            db.CharacterConditions.Add(condition);
-            await db.SaveChangesAsync();
-            await NotifyConditionToastAsync(db, loserId.Value, ConditionType.Shaken, isRemoval: false);
+            return Result<PredatoryAuraContestResultDto?>.Failure("A character cannot contest their own Predatory Aura.");
         }
 
-        string attackerName = attacker.Name ?? "?";
-        string defenderName = defender.Name ?? "?";
+        await _authHelper.RequireStorytellerAsync(chronicleId, storytellerUserId, "resolve passive Predatory Aura");
 
-        var dto = new PredatoryAuraContestResultDto(
-            contestId,
-            chronicleId,
-            attackerCharacterId,
-            attackerName,
-            defenderCharacterId,
-            defenderName,
-            attackerBp,
-            defenderBp,
-            attackerRoll.Successes,
-            defenderRoll.Successes,
-            outcome,
-            winnerId,
-            outcomeApplied,
-            loserId.HasValue ? _outcomeShaken : null);
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        string summary = BuildBroadcastSummary(attackerName, defenderName, outcome);
-        await _sessionService.BroadcastCharacterUpdateAsync(attackerCharacterId);
-        await _sessionService.BroadcastCharacterUpdateAsync(defenderCharacterId);
-        await _sessionService.BroadcastRelationshipUpdateAsync(
-            chronicleId,
-            new RelationshipUpdateDto(RelationshipUpdateType.PredatoryAura, loserId, summary));
+        int lowerId = Math.Min(vampireAId, vampireBId);
+        int higherId = Math.Max(vampireAId, vampireBId);
 
-        _relationshipWebMetrics.RecordPredatoryAuraContestResolved();
-        logger.LogInformation(
-            "Predatory Aura contest {ContestId} chronicle {ChronicleId} outcome {Outcome} attacker {AttackerId} defender {DefenderId} {CorrelationId}",
-            contestId,
+        if (encounterId.HasValue)
+        {
+            bool already = await db.EncounterAuraContests.AsNoTracking()
+                .AnyAsync(e =>
+                    e.EncounterId == encounterId.Value
+                    && e.VampireLowerId == lowerId
+                    && e.VampireHigherId == higherId);
+
+            if (already)
+            {
+                return Result<PredatoryAuraContestResultDto?>.Success(null);
+            }
+        }
+
+        Character? charA = await db.Characters.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == vampireAId);
+        Character? charB = await db.Characters.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == vampireBId);
+
+        if (charA == null)
+        {
+            return Result<PredatoryAuraContestResultDto?>.Failure($"Character {vampireAId} was not found.");
+        }
+
+        if (charB == null)
+        {
+            return Result<PredatoryAuraContestResultDto?>.Failure($"Character {vampireBId} was not found.");
+        }
+
+        if (!charA.CampaignId.HasValue
+            || !charB.CampaignId.HasValue
+            || charA.CampaignId.Value != chronicleId
+            || charB.CampaignId.Value != chronicleId)
+        {
+            return Result<PredatoryAuraContestResultDto?>.Failure(
+                "Both characters must belong to the specified chronicle.");
+        }
+
+        if (charA.CreatureType != CreatureType.Vampire || charB.CreatureType != CreatureType.Vampire)
+        {
+            return Result<PredatoryAuraContestResultDto?>.Failure(
+                "Passive Predatory Aura applies only to Kindred (Vampire creature type).");
+        }
+
+        Character attacker = charA.Id == vampireAId ? charA : charB;
+        Character defender = charA.Id == vampireAId ? charB : charA;
+
+        Result<PredatoryAuraContestResultDto> inner = await RunBloodPotencyContestAndPersistAsync(
+            db,
             chronicleId,
-            outcome,
-            attackerCharacterId,
-            defenderCharacterId,
+            attacker,
+            defender,
+            storytellerUserId,
+            isLashOut: false,
+            publishDiceFeed: true,
             correlationId);
 
-        return Result<PredatoryAuraContestResultDto>.Success(dto);
+        if (!inner.IsSuccess)
+        {
+            return Result<PredatoryAuraContestResultDto?>.Failure(inner.Error!);
+        }
+
+        if (encounterId.HasValue)
+        {
+            db.EncounterAuraContests.Add(new EncounterAuraContest
+            {
+                EncounterId = encounterId.Value,
+                VampireLowerId = lowerId,
+                VampireHigherId = higherId,
+                ResolvedAt = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        return Result<PredatoryAuraContestResultDto?>.Success(inner.Value);
     }
 
     /// <inheritdoc />
@@ -230,9 +238,162 @@ public class PredatoryAuraService(
             c.ResolvedAt));
     }
 
-    private static string ContestSourceTag(int contestId) => $"predatoryaura:{contestId}";
+    private async Task<Result<PredatoryAuraContestResultDto>> RunBloodPotencyContestAndPersistAsync(
+        ApplicationDbContext db,
+        int chronicleId,
+        Character attacker,
+        Character defender,
+        string userId,
+        bool isLashOut,
+        bool publishDiceFeed,
+        string correlationId)
+    {
+        int attackerBp = attacker.BloodPotency;
+        int defenderBp = defender.BloodPotency;
 
-    private static string BuildBroadcastSummary(
+        RollResult attackerRoll = _diceService.Roll(attackerBp, tenAgain: true);
+        RollResult defenderRoll = _diceService.Roll(defenderBp, tenAgain: true);
+
+        PredatoryAuraOutcome outcome = PredatoryAuraRules.ResolveContest(
+            attackerRoll.Successes,
+            attackerBp,
+            defenderRoll.Successes,
+            defenderBp);
+
+        int? winnerId = outcome switch
+        {
+            PredatoryAuraOutcome.AttackerWins => attacker.Id,
+            PredatoryAuraOutcome.DefenderWins => defender.Id,
+            _ => null,
+        };
+
+        string outcomeApplied = outcome == PredatoryAuraOutcome.Draw ? _outcomeDraw : _outcomeShaken;
+        int? loserId = outcome switch
+        {
+            PredatoryAuraOutcome.AttackerWins => defender.Id,
+            PredatoryAuraOutcome.DefenderWins => attacker.Id,
+            _ => null,
+        };
+
+        var contest = new PredatoryAuraContest
+        {
+            ChronicleId = chronicleId,
+            AttackerCharacterId = attacker.Id,
+            DefenderCharacterId = defender.Id,
+            AttackerBloodPotency = attackerBp,
+            DefenderBloodPotency = defenderBp,
+            AttackerSuccesses = attackerRoll.Successes,
+            DefenderSuccesses = defenderRoll.Successes,
+            WinnerId = winnerId,
+            OutcomeApplied = outcomeApplied,
+            ResolvedAt = DateTime.UtcNow,
+            IsLashOut = isLashOut,
+        };
+
+        db.PredatoryAuraContests.Add(contest);
+        await db.SaveChangesAsync();
+        int contestId = contest.Id;
+
+        if (loserId.HasValue)
+        {
+            string description = _conditionRules.GetConditionDescription(ConditionType.Shaken);
+            var condition = new CharacterCondition
+            {
+                CharacterId = loserId.Value,
+                ConditionType = ConditionType.Shaken,
+                Description = description,
+                AppliedAt = DateTime.UtcNow,
+                AwardsBeat = _conditionRules.AwardsBeatOnResolve(ConditionType.Shaken),
+                AppliedByUserId = userId,
+                SourceTag = ContestSourceTag(contestId),
+            };
+
+            db.CharacterConditions.Add(condition);
+            await db.SaveChangesAsync();
+            await NotifyConditionToastAsync(db, loserId.Value, ConditionType.Shaken, isRemoval: false);
+        }
+
+        string attackerName = attacker.Name ?? "?";
+        string defenderName = defender.Name ?? "?";
+
+        var dto = new PredatoryAuraContestResultDto(
+            contestId,
+            chronicleId,
+            attacker.Id,
+            attackerName,
+            defender.Id,
+            defenderName,
+            attackerBp,
+            defenderBp,
+            attackerRoll.Successes,
+            defenderRoll.Successes,
+            outcome,
+            winnerId,
+            outcomeApplied,
+            loserId.HasValue ? _outcomeShaken : null);
+
+        if (publishDiceFeed)
+        {
+            if (isLashOut)
+            {
+                await _sessionService.PublishDiceRollAsync(
+                    userId,
+                    chronicleId,
+                    attacker.Id,
+                    $"Predatory Aura (Lash Out): {attackerName} BP ({attackerBp} dice)",
+                    attackerRoll);
+                await _sessionService.PublishDiceRollAsync(
+                    userId,
+                    chronicleId,
+                    defender.Id,
+                    $"Predatory Aura (Lash Out): {defenderName} BP ({defenderBp} dice)",
+                    defenderRoll);
+            }
+            else
+            {
+                string prefix = $"Passive Predatory Aura: {attackerName} vs {defenderName}";
+                await _sessionService.PublishDiceRollAsync(
+                    userId,
+                    chronicleId,
+                    attacker.Id,
+                    $"{prefix} — {attackerName} BP ({attackerBp} dice)",
+                    attackerRoll);
+                await _sessionService.PublishDiceRollAsync(
+                    userId,
+                    chronicleId,
+                    defender.Id,
+                    $"{prefix} — {defenderName} BP ({defenderBp} dice)",
+                    defenderRoll);
+            }
+        }
+
+        string summary = isLashOut
+            ? BuildLashOutBroadcastSummary(attackerName, defenderName, outcome)
+            : BuildPassiveBroadcastSummary(attackerName, defenderName, outcome);
+
+        await _sessionService.BroadcastCharacterUpdateAsync(attacker.Id);
+        await _sessionService.BroadcastCharacterUpdateAsync(defender.Id);
+        await _sessionService.BroadcastRelationshipUpdateAsync(
+            chronicleId,
+            new RelationshipUpdateDto(RelationshipUpdateType.PredatoryAura, loserId, summary));
+
+        _relationshipWebMetrics.RecordPredatoryAuraContestResolved();
+        logger.LogInformation(
+            "Predatory Aura contest {ContestId} chronicle {ChronicleId} lashOut={IsLashOut} outcome {Outcome} attacker {AttackerId} defender {DefenderId} {CorrelationId}",
+            contestId,
+            chronicleId,
+            isLashOut,
+            outcome,
+            attacker.Id,
+            defender.Id,
+            correlationId);
+
+        return Result<PredatoryAuraContestResultDto>.Success(dto);
+    }
+
+    private string ContestSourceTag(int contestId) => $"predatoryaura:{contestId}";
+
+    private string BuildLashOutBroadcastSummary(
         string attackerName,
         string defenderName,
         PredatoryAuraOutcome outcome)
@@ -243,6 +404,20 @@ public class PredatoryAuraService(
                 $"Predatory Aura: {attackerName} vs {defenderName} — true draw (no effect).",
             _ =>
                 $"Predatory Aura: {attackerName} lashed out at {defenderName} — loser gains Shaken.",
+        };
+    }
+
+    private string BuildPassiveBroadcastSummary(
+        string attackerName,
+        string defenderName,
+        PredatoryAuraOutcome outcome)
+    {
+        return outcome switch
+        {
+            PredatoryAuraOutcome.Draw =>
+                $"Passive Predatory Aura: {attackerName} vs {defenderName} — true draw (no effect).",
+            _ =>
+                $"Passive Predatory Aura: {attackerName} vs {defenderName} — loser gains Shaken.",
         };
     }
 

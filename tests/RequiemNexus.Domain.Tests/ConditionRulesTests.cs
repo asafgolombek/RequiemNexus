@@ -1,4 +1,5 @@
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 using Xunit;
 
@@ -125,5 +126,34 @@ public class ConditionRulesTests
         IReadOnlyList<string> effects = _rules.GetTiltEffects([TiltType.BeatenDown]);
         Assert.Single(effects);
         Assert.Contains("−2", effects[0]);
+    }
+
+    // -----------------------------------------------------------------------
+    // GetPenalties (Phase 17)
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void GetPenalties_Shaken_ReturnsAllPoolsMinusTwo()
+    {
+        IReadOnlyList<ConditionPenaltyModifier> penalties = _rules.GetPenalties(ConditionType.Shaken);
+        ConditionPenaltyModifier entry = Assert.Single(penalties);
+        Assert.Equal(ConditionPoolTarget.AllPools, entry.PoolTarget);
+        Assert.Equal(-2, entry.Delta);
+    }
+
+    [Fact]
+    public void GetPenalties_Custom_ReturnsEmpty()
+    {
+        IReadOnlyList<ConditionPenaltyModifier> penalties = _rules.GetPenalties(ConditionType.Custom);
+        Assert.Empty(penalties);
+    }
+
+    [Fact]
+    public void GetPenalties_Guilty_ReturnsResolveComposureMinusOne()
+    {
+        IReadOnlyList<ConditionPenaltyModifier> penalties = _rules.GetPenalties(ConditionType.Guilty);
+        ConditionPenaltyModifier entry = Assert.Single(penalties);
+        Assert.Equal(ConditionPoolTarget.ResolveComposure, entry.PoolTarget);
+        Assert.Equal(-1, entry.Delta);
     }
 }

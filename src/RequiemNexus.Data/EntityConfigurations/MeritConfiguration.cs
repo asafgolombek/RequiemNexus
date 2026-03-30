@@ -13,5 +13,6 @@ public sealed class MeritConfiguration : IEntityTypeConfiguration<Merit>
     public void Configure(EntityTypeBuilder<Merit> builder)
     {
         builder.HasIndex(m => m.Name).IsUnique();
+        builder.Property(m => m.MeritCategory).HasMaxLength(50);
     }
 }

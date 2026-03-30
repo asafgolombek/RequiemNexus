@@ -1,5 +1,6 @@
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Models;
 
 namespace RequiemNexus.Domain.Services;
 
@@ -81,6 +82,18 @@ public class ConditionRules : IConditionRules
         TiltType.BeatenDown =>
             "You are cowed by a stronger predator's aura. −2 to all attack and contested rolls. Resolve: spend an action and succeed at Resolve + Composure (difficulty 1).",
         _ => type.ToString(),
+    };
+
+    /// <inheritdoc />
+    public IReadOnlyList<ConditionPenaltyModifier> GetPenalties(ConditionType type) => type switch
+    {
+        ConditionType.Shaken => [new ConditionPenaltyModifier(ConditionPoolTarget.AllPools, -2)],
+        ConditionType.Exhausted => [new ConditionPenaltyModifier(ConditionPoolTarget.PhysicalPools, -2)],
+        ConditionType.Frightened => [new ConditionPenaltyModifier(ConditionPoolTarget.AllExceptFleeing, -2)],
+        ConditionType.Guilty => [new ConditionPenaltyModifier(ConditionPoolTarget.ResolveComposure, -1)],
+        ConditionType.Despondent => [new ConditionPenaltyModifier(ConditionPoolTarget.MentalPools, -2)],
+        ConditionType.Provoked => [new ConditionPenaltyModifier(ConditionPoolTarget.Composure, -1)],
+        _ => [],
     };
 
     /// <inheritdoc />

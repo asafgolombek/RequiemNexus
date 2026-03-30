@@ -21,6 +21,7 @@
 @using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Domain.Enums
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
+@using RequiemNexus.Web.Components.UI
 @using Microsoft.JSInterop
 @using System.Linq
 
@@ -90,6 +91,61 @@
         @if (_glimpseTab == "overview")
         {
             <div class="glimpse-tab-panel" id="panel-glimpse-overview" role="tabpanel" aria-labelledby="tab-glimpse-overview">
+                @if (_degAlerts.Count > 0)
+                {
+                    <div class="degeneration-glimpse-banners" role="region" aria-label="Pending degeneration checks">
+                        @foreach (KeyValuePair<int, (string Name, int Humanity, int Resolve)> kv in _degAlerts.OrderBy(x => x.Value.Name))
+                        {
+                            <div class="degeneration-glimpse-banner card-rn alert-rn alert-warning"
+                                 role="button"
+                                 tabindex="0"
+                                 @onclick="() => OpenDegenerationRollModal(kv.Key)"
+                                 @onkeydown="e => HandleDegBannerKeydown(e, kv.Key)">
+                                <strong>@kv.Value.Name</strong> must roll degeneration (@DegenerationPoolHint(kv.Value.Humanity, kv.Value.Resolve)). Open the roll confirmation (Storyteller cannot dismiss without rolling).
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="card-rn glimpse-card">
+                    <h3 class="section-header">Passive Predatory Aura</h3>
+                    <p class="text-small text-muted-rn mb-sm">
+                        Manual Blood Potency contest between two PCs (chronicle-wide). Results appear in the session dice feed. When Kindred join the same encounter, passive contests also fire automatically once per pair.
+                    </p>
+                    <div class="form-row" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;">
+                        <label class="text-small">
+                            Kindred A
+                            <select class="form-control form-select-medium" @bind="_passiveAuraCharacterA">
+                                <option value="0">—</option>
+                                @foreach (CharacterVitalsDto v in _vitals.Where(x => x.CreatureType == CreatureType.Vampire))
+                                {
+                                    <option value="@v.CharacterId">@v.Name</option>
+                                }
+                            </select>
+                        </label>
+                        <label class="text-small">
+                            Kindred B
+                            <select class="form-control form-select-medium" @bind="_passiveAuraCharacterB">
+                                <option value="0">—</option>
+                                @foreach (CharacterVitalsDto v in _vitals.Where(x => x.CreatureType == CreatureType.Vampire))
+                                {
+                                    <option value="@v.CharacterId">@v.Name</option>
+                                }
+                            </select>
+                        </label>
+                        <button type="button"
+                                class="btn-rn-primary"
+                                disabled="@(_passiveAuraBusy || _passiveAuraCharacterA == 0 || _passiveAuraCharacterB == 0 || _passiveAuraCharacterA == _passiveAuraCharacterB || string.IsNullOrEmpty(_currentUserId))"
+                                @onclick="TriggerPassivePredatoryAuraAsync">
+                            Trigger contest
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(_passiveAuraMessage))
+                    {
+                        <p class="text-small mt-sm @(_passiveAuraError ? "feedback-error" : "feedback-ok")">@_passiveAuraMessage</p>
+                    }
+                </div>
+
                 @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
                 <div class="card-rn glimpse-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -215,11 +271,34 @@
 
                                 <div class="glimpse-stats">
                                     <span>🕊️ Humanity: @v.Humanity</span>
+                                    <span>🩸 Stains: @v.HumanityStains</span>
                                     <span>⚫ Beats: @v.Beats</span>
                                     <span>✨ XP: @v.ExperiencePoints</span>
                                     @if (v.ActiveConditionCount > 0)
                                     {
                                         <span class="condition-badge">⚠️ @v.ActiveConditionCount Condition@(v.ActiveConditionCount > 1 ? "s" : "")</span>
+                                    }
+                                </div>
+
+                                <div class="glimpse-humanity-actions" style="display:flex;flex-wrap:wrap;gap:0.35rem;margin:0.5rem 0;">
+                                    @if (v.HumanityStains >= v.Humanity)
+                                    {
+                                        <button type="button"
+                                                class="btn-rn-danger"
+                                                style="font-size:0.8em;"
+                                                @onclick="() => OpenDegenerationRollModal(v.CharacterId)">
+                                            Roll Degeneration
+                                        </button>
+                                    }
+                                    else if (v.HumanityStains > 0 && v.HumanityStains < v.Humanity)
+                                    {
+                                        <button type="button"
+                                                class="btn-rn-ghost"
+                                                style="font-size:0.8em;border:1px solid var(--border-subtle);"
+                                                title="@(v.Humanity <= 0 ? "Pool: chance die (1 die)" : $"Pool: {v.Humanity + (v.HasTouchstoneAnchor ? 1 : 0)} dice (Humanity{(v.HasTouchstoneAnchor ? " + Touchstone" : "")})")"
+                                                @onclick="() => RollRemorseForCharacterAsync(v.CharacterId)">
+                                            Roll Remorse
+                                        </button>
                                     }
                                 </div>
 
@@ -333,3 +412,9 @@
                   StorytellerUserId="@(_currentUserId ?? string.Empty)"
                   OnSaved="OnLineageSavedAsync" />
 
+<ConfirmModal IsOpen="_degRollModalOpen"
+              Title="Confirm degeneration roll"
+              Message="@(DegenerationModalMessage ?? string.Empty)"
+              ConfirmLabel="Roll degeneration"
+              OnConfirmClicked="ConfirmDegenerationRollAsync"
+              OnCancelClicked="CloseDegenerationRollModal" />

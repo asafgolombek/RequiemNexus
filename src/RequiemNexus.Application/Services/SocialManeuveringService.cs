@@ -326,4 +326,119 @@ public class SocialManeuveringService(
 
         await _lifecycle.PublishManeuverUpdateAsync(db, clue.SocialManeuverId);
     }
+
+    /// <inheritdoc />
+    public async Task<ManeuverInterceptor> AddInterceptorAsync(
+        int socialManeuverId,
+        int interceptorCharacterId,
+        string storytellerUserId)
+    {
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
+        SocialManeuver maneuver = await _lifecycle.LoadManeuverForMutationAsync(db, socialManeuverId);
+        await _authHelper.RequireStorytellerAsync(maneuver.CampaignId, storytellerUserId, "add a Social maneuver interceptor");
+
+        if (maneuver.Status != ManeuverStatus.Active)
+        {
+            throw new InvalidOperationException("Interceptors can only be added to an active maneuver.");
+        }
+
+        if (interceptorCharacterId == maneuver.InitiatorCharacterId)
+        {
+            throw new InvalidOperationException("The initiator cannot be an interceptor on their own maneuver.");
+        }
+
+        Character interceptor = await db.Characters
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == interceptorCharacterId)
+            ?? throw new InvalidOperationException($"Character {interceptorCharacterId} was not found.");
+
+        if (interceptor.CampaignId != maneuver.CampaignId)
+        {
+            throw new InvalidOperationException("The interceptor must belong to the same campaign as the maneuver.");
+        }
+
+        bool exists = await db.ManeuverInterceptors.AnyAsync(i =>
+            i.SocialManeuverId == socialManeuverId && i.InterceptorCharacterId == interceptorCharacterId);
+
+        if (exists)
+        {
+            throw new InvalidOperationException("This character is already registered as an interceptor on this maneuver.");
+        }
+
+        var row = new ManeuverInterceptor
+        {
+            SocialManeuverId = socialManeuverId,
+            InterceptorCharacterId = interceptorCharacterId,
+            IsActive = true,
+            Successes = 0,
+        };
+
+        db.ManeuverInterceptors.Add(row);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Interceptor {InterceptorId} added to maneuver {ManeuverId} by ST {UserId}",
+            row.Id,
+            socialManeuverId,
+            storytellerUserId);
+
+        await _lifecycle.PublishManeuverUpdateAsync(db, socialManeuverId);
+        return row;
+    }
+
+    /// <inheritdoc />
+    public async Task RecordInterceptorRollAsync(int interceptorId, int successes, string storytellerUserId)
+    {
+        if (successes < 0 || successes > 50)
+        {
+            throw new InvalidOperationException("Interceptor successes must be between 0 and 50.");
+        }
+
+        await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
+
+        ManeuverInterceptor row = await db.ManeuverInterceptors
+            .Include(i => i.SocialManeuver)
+            .FirstOrDefaultAsync(i => i.Id == interceptorId)
+            ?? throw new InvalidOperationException($"Maneuver interceptor {interceptorId} was not found.");
+
+        if (row.SocialManeuver is null)
+        {
+            throw new InvalidOperationException($"Maneuver interceptor {interceptorId} has no maneuver.");
+        }
+
+        await _authHelper.RequireStorytellerAsync(row.SocialManeuver.CampaignId, storytellerUserId, "record interceptor opposition");
+
+        if (!row.IsActive || row.SocialManeuver.Status != ManeuverStatus.Active)
+        {
+            throw new InvalidOperationException("Interceptor rolls can only be recorded for active interceptors on active maneuvers.");
+        }
+
+        Character? interceptor = await SocialManeuverDicePoolAuthority.LoadInitiatorForDiceCapAsync(
+            db,
+            row.InterceptorCharacterId);
+
+        if (interceptor == null)
+        {
+            throw new InvalidOperationException($"Character {row.InterceptorCharacterId} was not found.");
+        }
+
+        int maxPool = SocialManeuverDicePoolAuthority.GetManipulationPersuasionPool(interceptor);
+        if (successes > maxPool)
+        {
+            throw new InvalidOperationException(
+                $"Interceptor successes ({successes}) exceed Manipulation + Persuasion ({maxPool}) on the character sheet.");
+        }
+
+        row.Successes = successes;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Interceptor roll recorded: interceptor row {InterceptorRowId} successes {Successes} by ST {UserId}",
+            interceptorId,
+            successes,
+            storytellerUserId);
+
+        await _lifecycle.PublishManeuverUpdateAsync(db, row.SocialManeuverId);
+    }
 }

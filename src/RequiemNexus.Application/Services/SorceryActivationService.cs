@@ -23,6 +23,7 @@ public class SorceryActivationService(
     ITraitResolver traitResolver,
     IVitaeService vitaeService,
     IWillpowerService willpowerService,
+    IHumanityService humanityService,
     ILogger<SorceryActivationService> logger) : ISorceryActivationService
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -37,6 +38,7 @@ public class SorceryActivationService(
     private readonly ITraitResolver _traitResolver = traitResolver;
     private readonly IVitaeService _vitaeService = vitaeService;
     private readonly IWillpowerService _willpowerService = willpowerService;
+    private readonly IHumanityService _humanityService = humanityService;
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
@@ -185,6 +187,11 @@ public class SorceryActivationService(
 
             await _dbContext.SaveChangesAsync();
             await tx.CommitAsync();
+
+            if (stainGain > 0)
+            {
+                await _humanityService.EvaluateStainsAsync(characterId, userId);
+            }
         }
 
         _logger.LogInformation(

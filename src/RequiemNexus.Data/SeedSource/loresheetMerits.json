@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Loresheet: The City That Works",
+    "description": "Your chronicle centers on a domain where institutions still function. Once per story, gain a beat when your actions visibly shore up civic order or public trust.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: Forgotten Quarter",
+    "description": "You haunt a neglected district. While acting in that territory, you may treat one failed hunt roll per chapter as a success with a complication chosen by the Storyteller.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: Old Money, New Blood",
+    "description": "Dynastic wealth defines your Requiem. Once per story, spend a Willpower to substitute Resources for a single Social roll where old money would plausibly matter.",
+    "rating": "1 to 3",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: The Last True Church",
+    "description": "Faith still shapes the domain. You gain 8-again on rolls to resist supernatural fear or coercion in consecrated ground you have personally tended.",
+    "rating": "1 to 2",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: War in the Shadows",
+    "description": "Cold war between covenants is the default. When you uncover a rival covenant's covert operation, take a beat and open one extra Door on the next maneuver against a member of that covenant this chapter.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: The Long Defiance",
+    "description": "Your coterie resists the Danse as a matter of principle. Once per chapter, a coterie member may reroll one die on a roll made to protect another member from destruction or exile.",
+    "rating": "1 to 3",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: Bloodied Crown",
+    "description": "Princes rise and fall violently here. When you witness a Praxis seizure or formal challenge, mark a beat and gain a +1 bonus on your next City Status roll this story.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: The Hungry City",
+    "description": "Feeding is never casual. The first hunt you attempt each night gains a +1 bonus; the second suffers a −1 penalty unless you accept a stain or complication from the Storyteller.",
+    "rating": "1 to 2",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: Paper Trail",
+    "description": "Bureaucracy remembers. Once per story, you may declare that a mundane institution (bank, hospital, precinct) has a file relevant to the scene; the Storyteller frames what it actually reveals.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: Kindred Noir",
+    "description": "The chronicle leans on investigation and moral grime. When you accept a Condition to advance a mystery beat, also take a beat toward a Merit purchase later this story.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: The Open Grave",
+    "description": "Death is never far. In scenes involving corpses, the dead, or hauntings, you may add one die to Occult or Empathy rolls (choose when the scene begins).",
+    "rating": "1 to 3",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  },
+  {
+    "name": "Loresheet: Neon Cathedral",
+    "description": "The domain's sacred and profane blur. Once per session, treat a nightclub, gallery, or stadium as sanctified for one Theban Sorcery sacrament requirement at Storyteller discretion.",
+    "rating": "1",
+    "category": "Loresheet",
+    "source book": "Vampire: The Requiem 2e"
+  }
+]

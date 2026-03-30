@@ -135,7 +135,8 @@ else
                             <option value="0">-- Select Merit --</option>
                             @foreach (var m in _availableMerits)
                             {
-                                <option value="@m.Id">@m.Name (@m.ValidRatings)</option>
+                                var cat = string.IsNullOrEmpty(m.MeritCategory) ? string.Empty : $" [{m.MeritCategory}]";
+                                <option value="@m.Id">@m.Name (@m.ValidRatings)@cat</option>
                             }
                         </select>
 

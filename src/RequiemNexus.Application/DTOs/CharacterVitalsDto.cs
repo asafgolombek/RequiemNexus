@@ -1,3 +1,5 @@
+using RequiemNexus.Data.Models.Enums;
+
 namespace RequiemNexus.Application.DTOs;
 
 /// <summary>
@@ -39,6 +41,15 @@ public record CharacterVitalsDto
     /// <summary>Current Humanity rating.</summary>
     public required int Humanity { get; init; }
 
+    /// <summary>Current Humanity stain count.</summary>
+    public required int HumanityStains { get; init; }
+
+    /// <summary>Resolve attribute rating (degeneration pool copy).</summary>
+    public required int ResolveRating { get; init; }
+
+    /// <summary>True when the character has a defined Touchstone text and/or Touchstone Merit dots.</summary>
+    public required bool HasTouchstoneAnchor { get; init; }
+
     /// <summary>Current Beat count.</summary>
     public required int Beats { get; init; }
 
@@ -47,4 +58,7 @@ public record CharacterVitalsDto
 
     /// <summary>Number of unresolved Conditions.</summary>
     public required int ActiveConditionCount { get; init; }
+
+    /// <summary>Supernatural template; passive Predatory Aura applies only to <see cref="CreatureType.Vampire"/>.</summary>
+    public required CreatureType CreatureType { get; init; }
 }

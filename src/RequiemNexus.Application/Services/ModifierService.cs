@@ -5,6 +5,7 @@ using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
@@ -12,10 +13,13 @@ using RequiemNexus.Domain.Services;
 namespace RequiemNexus.Application.Services;
 
 /// <summary>
-/// Aggregates passive modifiers from all active sources (Coils, Devotions, Covenant benefits, equipped catalog gear).
+/// Aggregates passive modifiers from all active sources (Coils, Devotions, Covenant benefits, equipped catalog gear, active Conditions).
 /// Modifiers are never applied permanently; derived values are computed on demand.
 /// </summary>
-public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierService> logger) : IModifierService
+public class ModifierService(
+    ApplicationDbContext dbContext,
+    ILogger<ModifierService> logger,
+    IConditionRules conditionRules) : IModifierService
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -27,6 +31,41 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
     public async Task<IReadOnlyList<PassiveModifier>> GetModifiersForCharacterAsync(int characterId)
     {
         var modifiers = new List<PassiveModifier>();
+
+        List<CharacterCondition> activeConditions = await dbContext.CharacterConditions
+            .AsNoTracking()
+            .Where(c => c.CharacterId == characterId && !c.IsResolved)
+            .ToListAsync();
+
+        foreach (CharacterCondition row in activeConditions)
+        {
+            foreach (ConditionPenaltyModifier penalty in conditionRules.GetPenalties(row.ConditionType))
+            {
+                if (penalty.Delta == 0)
+                {
+                    continue;
+                }
+
+                ModifierTarget? mapped = MapConditionPoolTargetToModifierTarget(penalty.PoolTarget);
+                if (mapped is null)
+                {
+                    logger.LogWarning(
+                        "Unknown condition pool target {PoolTarget} for CharacterCondition {ConditionId} (character {CharacterId}).",
+                        penalty.PoolTarget,
+                        row.Id,
+                        characterId);
+                    continue;
+                }
+
+                string label = $"Condition ({row.ConditionType})";
+                modifiers.Add(new PassiveModifier(
+                    mapped.Value,
+                    penalty.Delta,
+                    ModifierType.Static,
+                    label,
+                    new ModifierSource(ModifierSourceType.Condition, row.Id)));
+            }
+        }
 
         var approvedCoils = await dbContext.CharacterCoils
             .AsNoTracking()
@@ -237,6 +276,17 @@ public class ModifierService(ApplicationDbContext dbContext, ILogger<ModifierSer
 
         return modifiers.AsReadOnly();
     }
+
+    private static ModifierTarget? MapConditionPoolTargetToModifierTarget(string poolTarget) => poolTarget switch
+    {
+        ConditionPoolTarget.AllPools => ModifierTarget.AllDicePools,
+        ConditionPoolTarget.PhysicalPools => ModifierTarget.PhysicalDicePools,
+        ConditionPoolTarget.AllExceptFleeing => ModifierTarget.DicePoolsExceptFleeing,
+        ConditionPoolTarget.ResolveComposure => ModifierTarget.PoolsUsingResolveOrComposure,
+        ConditionPoolTarget.MentalPools => ModifierTarget.MentalDicePools,
+        ConditionPoolTarget.Composure => ModifierTarget.PoolsUsingComposureAttribute,
+        _ => null,
+    };
 
     /// <summary>
     /// Emits a per-weapon Strength penalty to the weapon's specific pool (Brawl/Weaponry/Firearms).

@@ -24,14 +24,16 @@ public static class DbInitializer
         await SeedClansAndDisciplinesAsync(context, logger);
         await SeedHuntingPoolDefinitionsAsync(context);
         await SeedMeritsAsync(context, logger);
+        await EnsureMissingMeritDefinitionsFromSeedFilesAsync(context, logger);
         await SeedEquipmentCatalogAsync(context);
         await SeedCovenantsAsync(context, logger);
         await SeedCovenantDefinitionMeritsAsync(context);
         await SeedBloodlinesAsync(context, logger);
         await UpdateDisciplineAcquisitionMetadataAsync(context, logger);
         await SeedDevotionsAsync(context, logger);
+        await DevotionSeedData.EnsureMissingDefinitionsAsync(context, logger);
         await SeedSorceryRitesAsync(context, logger);
-        await EnsureBloodSorceryPhaseExtensionsAsync(context);
+        await EnsureBloodSorceryPhaseExtensionsAsync(context, logger);
         await SeedCoilsAsync(context, logger);
         await SeedPrebuiltStatBlocksAsync(context);
     }
@@ -222,6 +224,62 @@ public static class DbInitializer
         }
     }
 
+    /// <summary>
+    /// Adds merit rows from <c>merits.json</c> and <c>loresheetMerits.json</c> that are absent by name (for existing databases).
+    /// </summary>
+    private static async Task EnsureMissingMeritDefinitionsFromSeedFilesAsync(ApplicationDbContext context, ILogger logger)
+    {
+        HashSet<string> existingNames = await context.Merits
+            .Select(m => m.Name)
+            .ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
+        var toAdd = new List<Merit>();
+        foreach (string file in new[] { "merits.json", "loresheetMerits.json" })
+        {
+            foreach (Merit m in MeritSeedData.LoadMeritsFromJsonFile(file, logger))
+            {
+                if (existingNames.Contains(m.Name))
+                {
+                    continue;
+                }
+
+                toAdd.Add(m);
+                existingNames.Add(m.Name);
+            }
+        }
+
+        if (toAdd.Count == 0)
+        {
+            return;
+        }
+
+        await context.Merits.AddRangeAsync(toAdd);
+        await context.SaveChangesAsync();
+
+        Dictionary<string, int> meritIdsByName = await context.Merits
+            .Where(m => !m.IsHomebrew)
+            .ToDictionaryAsync(m => m.Name, m => m.Id, StringComparer.OrdinalIgnoreCase);
+        List<MeritPrerequisite> candidatePrereqs = MeritPrerequisiteSeedData.GetPrerequisitesToSeed(meritIdsByName);
+        if (candidatePrereqs.Count == 0)
+        {
+            return;
+        }
+
+        var existingKeys = (await context.MeritPrerequisites
+                .Select(p => new { p.MeritId, p.PrerequisiteType, p.ReferenceId, p.OrGroupId })
+                .ToListAsync())
+            .Select(x => (x.MeritId, x.PrerequisiteType, x.ReferenceId, x.OrGroupId))
+            .ToHashSet();
+
+        List<MeritPrerequisite> newPrereqs = candidatePrereqs
+            .Where(p => !existingKeys.Contains((p.MeritId, p.PrerequisiteType, p.ReferenceId, p.OrGroupId)))
+            .ToList();
+        if (newPrereqs.Count > 0)
+        {
+            await context.MeritPrerequisites.AddRangeAsync(newPrereqs);
+            await context.SaveChangesAsync();
+        }
+    }
+
     private static async Task SeedCovenantsAsync(ApplicationDbContext context, ILogger logger)
     {
         if (await context.CovenantDefinitions.AnyAsync())
@@ -390,7 +448,7 @@ public static class DbInitializer
     /// <summary>
     /// Ensures Phase 9.5/9.6 disciplines, covenant flags, default requirements JSON, and sample Necromancy/Ordo rites exist.
     /// </summary>
-    private static async Task EnsureBloodSorceryPhaseExtensionsAsync(ApplicationDbContext context)
+    private static async Task EnsureBloodSorceryPhaseExtensionsAsync(ApplicationDbContext context, ILogger logger)
     {
         await EnsureDisciplineExistsAsync(context, "Necromancy", "Death sorcery associated with the Mekhet — corpses, shades, and the other side.");
         await EnsureDisciplineExistsAsync(context, "Ordo Sorcery", "Covenant rituals of the Ordo Dracul; used for unified dice pools in Requiem Nexus.");
@@ -462,6 +520,97 @@ public static class DbInitializer
         }
 
         await context.SaveChangesAsync();
+        await EnsureMissingSorceryRiteCatalogEntriesAsync(context, logger);
+    }
+
+    /// <summary>
+    /// Inserts sorcery definitions from seed JSON for names not already present (Crúac, Theban, Necromancy).
+    /// </summary>
+    private static async Task EnsureMissingSorceryRiteCatalogEntriesAsync(ApplicationDbContext context, ILogger logger)
+    {
+        HashSet<string> existing = await context.SorceryRiteDefinitions
+            .Select(r => r.Name)
+            .ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
+
+        List<CovenantDefinition> covenants = await context.CovenantDefinitions.ToListAsync();
+        List<Discipline> disciplines = await context.Disciplines.ToListAsync();
+
+        CovenantDefinition? crone = covenants.FirstOrDefault(c => c.Name == "The Circle of the Crone");
+        CovenantDefinition? lancea = covenants.FirstOrDefault(c => c.Name == "The Lancea et Sanctum");
+        Discipline? cruacDisc = disciplines.FirstOrDefault(d => d.Name == "Crúac");
+        Discipline? thebanDisc = disciplines.FirstOrDefault(d => d.Name == "Theban Sorcery");
+        Clan? mekhet = await context.Clans.AsNoTracking().FirstOrDefaultAsync(c => c.Name == "Mekhet");
+        Discipline? necromancy = disciplines.FirstOrDefault(d => d.Name == "Necromancy");
+
+        if (crone == null || lancea == null || cruacDisc == null || thebanDisc == null)
+        {
+            logger.LogWarning(
+                "Skipping sorcery catalog upsert: missing Crúac/Theban covenant or discipline gates.");
+            return;
+        }
+
+        IReadOnlyList<SorceryRiteCatalogEntry> catalog = SorceryRiteSeedData.LoadCatalogEntries(logger);
+        var toAdd = new List<SorceryRiteDefinition>();
+
+        foreach (SorceryRiteCatalogEntry entry in catalog)
+        {
+            if (existing.Contains(entry.Name))
+            {
+                continue;
+            }
+
+            switch (entry.SorceryType)
+            {
+                case Domain.Enums.SorceryType.Cruac:
+                    toAdd.Add(BuildSorceryRiteFromCatalogEntry(entry, crone.Id, requiredClanId: null, cruacDisc.Id));
+                    break;
+                case Domain.Enums.SorceryType.Theban:
+                    toAdd.Add(BuildSorceryRiteFromCatalogEntry(entry, lancea.Id, requiredClanId: null, thebanDisc.Id));
+                    break;
+                case Domain.Enums.SorceryType.Necromancy:
+                    if (mekhet == null || necromancy == null)
+                    {
+                        continue;
+                    }
+
+                    toAdd.Add(BuildSorceryRiteFromCatalogEntry(entry, requiredCovenantId: null, mekhet.Id, necromancy.Id));
+                    break;
+                default:
+                    continue;
+            }
+
+            existing.Add(entry.Name);
+        }
+
+        if (toAdd.Count > 0)
+        {
+            await context.SorceryRiteDefinitions.AddRangeAsync(toAdd);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    private static SorceryRiteDefinition BuildSorceryRiteFromCatalogEntry(
+        SorceryRiteCatalogEntry entry,
+        int? requiredCovenantId,
+        int? requiredClanId,
+        int disciplineId)
+    {
+        string? poolJson = BuildSorceryPoolJson(disciplineId);
+        return new SorceryRiteDefinition
+        {
+            Name = entry.Name,
+            Description = entry.Effect,
+            Level = entry.Rating,
+            SorceryType = entry.SorceryType,
+            XpCost = entry.Rating,
+            PoolDefinitionJson = poolJson,
+            ActivationCostDescription = "1 Vitae",
+            RequiredCovenantId = requiredCovenantId,
+            RequiredClanId = requiredClanId,
+            RequirementsJson = _defaultRiteRequirementsJson,
+            Prerequisites = entry.Prerequisites,
+            Effect = entry.Effect,
+        };
     }
 
     private static async Task EnsureDisciplineExistsAsync(ApplicationDbContext context, string name, string description)

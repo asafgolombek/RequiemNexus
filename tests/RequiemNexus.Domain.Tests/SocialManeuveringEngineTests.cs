@@ -192,4 +192,15 @@ public class SocialManeuveringEngineTests
 
         Assert.Equal(10, max);
     }
+
+    [Theory]
+    [InlineData(3, 2, 1)]
+    [InlineData(3, 5, 0)]
+    [InlineData(0, 0, 0)]
+    public void ApplyInterceptorReductionToSuccesses_FloorsAtZero(int initiator, int interceptors, int expected)
+    {
+        Assert.Equal(
+            expected,
+            SocialManeuveringEngine.ApplyInterceptorReductionToSuccesses(initiator, interceptors));
+    }
 }

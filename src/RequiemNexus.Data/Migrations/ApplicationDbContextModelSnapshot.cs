@@ -1887,6 +1887,38 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("DisciplinePowers");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterAuraContest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EncounterId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("VampireHigherId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VampireLowerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VampireHigherId");
+
+                    b.HasIndex("VampireLowerId");
+
+                    b.HasIndex("EncounterId", "VampireLowerId", "VampireHigherId")
+                        .IsUnique();
+
+                    b.ToTable("EncounterAuraContests");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.EncounterNpcTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -2373,6 +2405,36 @@ namespace RequiemNexus.Data.Migrations
                     b.ToTable("ManeuverClues");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.ManeuverInterceptor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InterceptorCharacterId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SocialManeuverId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Successes")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InterceptorCharacterId");
+
+                    b.HasIndex("SocialManeuverId", "InterceptorCharacterId")
+                        .IsUnique();
+
+                    b.ToTable("ManeuverInterceptors");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.Merit", b =>
                 {
                     b.Property<int>("Id")
@@ -2393,6 +2455,10 @@ namespace RequiemNexus.Data.Migrations
 
                     b.Property<bool>("IsHomebrew")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("MeritCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3727,6 +3793,33 @@ namespace RequiemNexus.Data.Migrations
                     b.Navigation("Discipline");
                 });
 
+            modelBuilder.Entity("RequiemNexus.Data.Models.EncounterAuraContest", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.CombatEncounter", "Encounter")
+                        .WithMany("EncounterAuraContests")
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.Character", "VampireHigher")
+                        .WithMany()
+                        .HasForeignKey("VampireHigherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.Character", "VampireLower")
+                        .WithMany()
+                        .HasForeignKey("VampireLowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Encounter");
+
+                    b.Navigation("VampireHigher");
+
+                    b.Navigation("VampireLower");
+                });
+
             modelBuilder.Entity("RequiemNexus.Data.Models.EncounterNpcTemplate", b =>
                 {
                     b.HasOne("RequiemNexus.Data.Models.ChronicleNpc", "ChronicleNpc")
@@ -3898,6 +3991,25 @@ namespace RequiemNexus.Data.Migrations
                         .HasForeignKey("SocialManeuverId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("SocialManeuver");
+                });
+
+            modelBuilder.Entity("RequiemNexus.Data.Models.ManeuverInterceptor", b =>
+                {
+                    b.HasOne("RequiemNexus.Data.Models.Character", "InterceptorCharacter")
+                        .WithMany("ManeuverInterceptions")
+                        .HasForeignKey("InterceptorCharacterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RequiemNexus.Data.Models.SocialManeuver", "SocialManeuver")
+                        .WithMany("Interceptors")
+                        .HasForeignKey("SocialManeuverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InterceptorCharacter");
 
                     b.Navigation("SocialManeuver");
                 });
@@ -4191,6 +4303,8 @@ namespace RequiemNexus.Data.Migrations
 
                     b.Navigation("InitiatedSocialManeuvers");
 
+                    b.Navigation("ManeuverInterceptions");
+
                     b.Navigation("Merits");
 
                     b.Navigation("PredatoryAuraContestsAsAttacker");
@@ -4234,6 +4348,8 @@ namespace RequiemNexus.Data.Migrations
 
             modelBuilder.Entity("RequiemNexus.Data.Models.CombatEncounter", b =>
                 {
+                    b.Navigation("EncounterAuraContests");
+
                     b.Navigation("InitiativeEntries");
 
                     b.Navigation("NpcTemplates");
@@ -4272,6 +4388,8 @@ namespace RequiemNexus.Data.Migrations
             modelBuilder.Entity("RequiemNexus.Data.Models.SocialManeuver", b =>
                 {
                     b.Navigation("Clues");
+
+                    b.Navigation("Interceptors");
                 });
 #pragma warning restore 612, 618
         }

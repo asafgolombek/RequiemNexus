@@ -134,6 +134,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ManeuverClue> ManeuverClues { get; set; } = default!;
 
+    public DbSet<ManeuverInterceptor> ManeuverInterceptors { get; set; } = default!;
+
+    public DbSet<EncounterAuraContest> EncounterAuraContests { get; set; } = default!;
+
     public DbSet<BloodBond> BloodBonds { get; set; } = default!;
 
     public DbSet<PredatoryAuraContest> PredatoryAuraContests { get; set; } = default!;

@@ -5,6 +5,7 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -49,8 +50,18 @@ public class StorytellerGlimpseService(
                 c.CurrentVitae,
                 c.MaxVitae,
                 c.Humanity,
+                c.HumanityStains,
+                c.Touchstone,
+                ResolveRating = c.Attributes
+                    .Where(a => a.Name == nameof(AttributeId.Resolve))
+                    .Select(a => (int?)a.Rating)
+                    .FirstOrDefault() ?? 0,
+                TouchstoneMeritDots = c.Merits
+                    .Where(m => m.Merit != null && m.Merit.Name == "Touchstone")
+                    .Sum(m => m.Rating),
                 c.Beats,
                 c.ExperiencePoints,
+                c.CreatureType,
             })
             .ToListAsync();
 
@@ -76,9 +87,13 @@ public class StorytellerGlimpseService(
             CurrentVitae = c.CurrentVitae,
             MaxVitae = c.MaxVitae,
             Humanity = c.Humanity,
+            HumanityStains = c.HumanityStains,
+            ResolveRating = c.ResolveRating,
+            HasTouchstoneAnchor = !string.IsNullOrWhiteSpace(c.Touchstone) || c.TouchstoneMeritDots > 0,
             Beats = c.Beats,
             ExperiencePoints = c.ExperiencePoints,
             ActiveConditionCount = activeConditionCounts.GetValueOrDefault(c.Id, 0),
+            CreatureType = c.CreatureType,
         }).ToList();
     }
 
