@@ -531,39 +531,44 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ## 📅 Phase 18: The Wider Web — Edge Systems & Content
 
-**Status: ⬜ Planned** — Task list and architectural decisions are in this section below (four independent tracks: A Passive Aura, B Blood Sympathy, C Interception, D Content).
+**Status: 🔄 In progress** — Tracks A–C are **implemented** in code; Track D (content), D8 (activation cost UI), tests, and final doc polish remain. **Canonical task breakdown, file paths, and exit criteria:** [`docs/phase18-the-wider-web.md`](./phase18-the-wider-web.md).
 
-**The Objective:** Close low-priority mechanical gaps and fill the core-book content catalog.
+**The Objective:** Close remaining V:tR 2e playability gaps and fill the **core-book-only** content catalog.
 
 ### Architectural Decisions
 
-- **Passive Predatory Aura reuses existing `PredatoryAuraContest` infrastructure.** The `IsLashOut` column reserved in Phase 12 drives the distinction. "Same scene" = two vampires in the same `CombatEncounter` (automatic) or ST manual trigger from the Glimpse NPC panel. No ambient scene detection beyond `CombatEncounter` — a session/location entity would require new scope. Decision recorded in `rules-interpretations.md`.
-- **Blood Sympathy rolls are a thin wrapper.** `BloodSympathyService` already calculates the pool; `RollBloodSympathyAsync` submits it to `DiceService` and posts to the dice feed. No new entity needed.
-- **Social Maneuvering interception adds a third party to an existing `SocialManeuver`.** A `ManeuverInterceptor` join entity links a second character to an active maneuver. `SocialManeuveringEngine` checks for interceptors before applying door reductions; an interceptor may contest the roll (Manipulation + Persuasion vs. initiator).
-- **Content passes are data migrations, not code changes.** All rite / Coil / Devotion catalog expansions are JSON seed additions to `SeedSource/` and a `DbInitializer` extension call — no business logic changes required.
+- **Passive Predatory Aura** extends `PredatoryAuraService` — no separate `PassiveAuraService`. `IPredatoryAuraService.ResolvePassiveContestAsync` uses `IsLashOut = false`, per-encounter dedup via `EncounterAuraContest`, and ST manual triggers without encounter id (no dedup). "Same scene" for automation = same **launched `CombatEncounter`**. Details: `rules-interpretations.md` (Phase 12 passive contest bullet + Phase 18 summary).
+- **Blood Sympathy** — `IBloodSympathyRollService` / `BloodSympathyRollService`: pool `Wits + Empathy` via `ITraitResolver` plus `BloodSympathyRules` rating; lineage BFS within chronicle; dice feed publication. No separate `BloodSympathyService` roll type.
+- **Social maneuver interception** — `ManeuverInterceptor` entity; `SocialManeuveringEngine.ApplyInterceptorReductionToSuccesses`; ST-entered opposition capped at interceptor's **Manipulation + Persuasion**.
+- **Content passes** — JSON under `src/RequiemNexus.Data/SeedSource/` (`rituals.json`, `rites.json`, `coils_info.json`, `necromancyRites.json`, `devotions.json`, `loresheetMerits.json`, `Disciplines.json`) plus `DbInitializer`; no schema migrations for catalog-only additions unless a new entity is required.
 
-**Passive Predatory Aura**
-- [ ] `PassiveAuraService` — Application: `TriggerPassiveContestAsync(vampireAId, vampireBId)`; calls existing `PredatoryAuraService` with `IsLashOut = false`; both characters must share the same `ChronicleId`
-- [ ] Scene context hook — when two vampires are added to the same `CombatEncounter`, `PassiveAuraService` auto-invokes for any pair not yet contested that scene
-- [ ] UI — "Passive aura contest" notification in dice feed; outcome Conditions applied via existing logic; ST manual toggle from Glimpse NPC panel
+**Passive Predatory Aura (Track A)**
+- [x] `ResolvePassiveContestAsync` + `EncounterAuraContest` dedup + dice feed (**Passive Predatory Aura** prefix) + Shaken default
+- [x] `EncounterParticipantService` auto-hook on all add-to-encounter paths; ST manual trigger from Storyteller Glimpse
+- [ ] Application tests — `EncounterParticipantServiceTests` with mock `IPredatoryAuraService` (see phase18 doc)
 
-**Blood Sympathy**
-- [ ] `BloodSympathyService.RollBloodSympathyAsync` — `Wits + Empathy + BloodSympathyRating`; posts to dice feed
-- [ ] UI — "Sense Blood Kin" button on character sheet Lineage section; select target from known kindred; result in dice feed
+**Blood Sympathy (Track B)**
+- [x] `IBloodSympathyRollService` + Lineage UI ("Roll Blood Sympathy")
+- [ ] Regression test — out-of-range kin target returns `Result.Failure` (see phase18 doc)
 
-**Social Maneuvering Interception**
-- [ ] `ManeuverInterceptor` entity — Data: `SocialManeuverId`, `InterceptorCharacterId`, `IsActive`, `Successes`; migration
-- [ ] `SocialManeuveringEngine` interception logic — check for active interceptors before door-reduction rolls; net successes subtract from effective door reductions
-- [ ] ST UI — "Add Interceptor" to any active maneuver on Glimpse; interceptor roll via existing dice modal
-- [ ] Rules Interpretation Log — `PassiveAuraService` "same scene" definition; interception pool and tie-breaking
+**Social Maneuvering Interception (Track C)**
+- [x] `ManeuverInterceptor` + migration + `SocialManeuveringService` + engine + Glimpse ST UI
+- [ ] Application tests — `AddInterceptorAsync`, `RecordInterceptorRollAsync`; Domain test — `ApplyInterceptorReductionToSuccesses` (see phase18 doc)
 
-**Content Passes (data-only)**
-- [ ] Theban Sorcery full catalog — all Miracles from VtR 2e core book in `bloodSorceryRites.json`
-- [ ] Crúac full catalog — all Rites from VtR 2e core book
-- [ ] Ordo Dracul Coil catalog — all 5 Mysteries × 5 Coils in `coils.json`
-- [ ] Necromancy catalog expansion — additional rites beyond Phase 9.6 sample
-- [ ] Devotion catalog expansion — remaining clan/covenant-specific Devotions in `devotions.json`
-- [ ] Loresheet Merits — `Merit` seed additions for Loresheet entries from core book
+**Content passes & discipline polish (Track D)**
+- [ ] D1 — Theban Sorcery catalog audit — `rituals.json`
+- [ ] D2 — Crúac catalog audit — `rites.json`
+- [ ] D3 — Ordo Dracul Coils (25 Coils / 5 Mysteries) — `coils_info.json`
+- [ ] D4 — Necromancy rites — `necromancyRites.json` (core book only)
+- [ ] D5 — Devotions — `devotions.json`
+- [ ] D6 — Loresheet Merits — `loresheetMerits.json`
+- [ ] D7 — `poolDefinitionJson` on rollable powers — `Disciplines.json`
+- [ ] D8 — Vitae **or** Willpower activation: domain flag on `ActivationCost` + modal choice + `DisciplineActivationService` (no string matching in UI)
+
+**Phase 18 completion**
+- [ ] All checkboxes above `[x]`; `dotnet build`, format, `.\scripts\test-local.ps1` green
+- [ ] `rules-interpretations.md` Phase 18 exit checklist satisfied (see `phase18-the-wider-web.md`)
+- [ ] `claude.md` active-phase bullet updated when Phase 18 is ✅
 
 ---
 
