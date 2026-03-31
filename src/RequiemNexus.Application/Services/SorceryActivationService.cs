@@ -3,10 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
+using RequiemNexus.Application.Events;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Events;
 using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 
@@ -24,6 +27,7 @@ public class SorceryActivationService(
     IVitaeService vitaeService,
     IWillpowerService willpowerService,
     IHumanityService humanityService,
+    IDomainEventDispatcher domainEventDispatcher,
     ILogger<SorceryActivationService> logger) : ISorceryActivationService
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -39,6 +43,7 @@ public class SorceryActivationService(
     private readonly IVitaeService _vitaeService = vitaeService;
     private readonly IWillpowerService _willpowerService = willpowerService;
     private readonly IHumanityService _humanityService = humanityService;
+    private readonly IDomainEventDispatcher _domainEventDispatcher = domainEventDispatcher;
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
@@ -116,6 +121,13 @@ public class SorceryActivationService(
         }
 
         SorceryRiteDefinition def = cr.SorceryRiteDefinition;
+
+        if (def.SorceryType == SorceryType.Theban && character.Humanity < def.Level)
+        {
+            throw new InvalidOperationException(
+                $"Theban Sorcery requires Humanity {def.Level} or higher to cast this miracle (character has Humanity {character.Humanity}).");
+        }
+
         Result<IReadOnlyList<RiteRequirement>> parsed = RiteRequirementValidator.ParseRequirements(def.RequirementsJson);
         if (!parsed.IsSuccess)
         {
@@ -192,6 +204,12 @@ public class SorceryActivationService(
             {
                 await _humanityService.EvaluateStainsAsync(characterId, userId);
             }
+        }
+
+        if (def.SorceryType == SorceryType.Necromancy && character.Humanity >= 7)
+        {
+            _domainEventDispatcher.Dispatch(
+                new DegenerationCheckRequiredEvent(characterId, DegenerationReason.NecromancyActivation));
         }
 
         _logger.LogInformation(

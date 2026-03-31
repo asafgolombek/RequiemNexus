@@ -8,6 +8,9 @@ public enum DegenerationReason
 
     /// <summary>The character has purchased their first dot of Crúac at Humanity 4 or higher.</summary>
     CrúacPurchase,
+
+    /// <summary>The character used a Kindred Necromancy ritual at Humanity 7 or higher.</summary>
+    NecromancyActivation,
 }
 
 /// <summary>
