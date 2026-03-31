@@ -11,7 +11,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 19 delivered:** The Blood Lineage — `Discipline` acquisition metadata, `DisciplineJsonImporter`, two-pass seed pipeline, 7 acquisition gates in `CharacterDisciplineService`, `IHumanityService`, `DegenerationCheckRequiredEvent`.
 - **Phase 16b delivered:** The Discipline Engine — `DisciplineActivationService`, `ActivationCost`, activation UI; pool size returned to `DiceRollerModal` for feed publication (rite pattern). See `docs/phase16b-the-discipline-engine.md`.
 - **Phase 17 delivered:** The Fog of Eternity — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. See `docs/mission.md` (Phase 17 section) and `docs/rules-interpretations.md`.
-- **Phase 18 delivered ✅:** The Wider Web — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), discipline pool JSON + Vitae/Willpower choice UI. Record: `docs/phase18-the-wider-web.md`.
+- **Phase 18 delivered ✅:** The Wider Web — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), discipline pool JSON + Vitae/Willpower choice UI. Record: **`docs/mission.md`** (Phase 18 section).
 - **Phase 20 — The Global Embrace** is the **last planned phase** on the V:tR 2e roadmap (i18n, public API, Discord, production polish) — see `docs/mission.md`.
 
 ## 📜 Architectural DNA
@@ -22,8 +22,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 ## 📖 Reference Docs
 - `agents.md` — The Prime Directive and full Forbidden list.
 - `docs/Architecture.md` — The Sacred Covenants of the layers.
-- `docs/mission.md` — Roadmap, dependency graph, and full task breakdown for all phases including 14–16b, 17–19 (V:tR 2e playability gaps).
-- `docs/phase18-the-wider-web.md` — Phase 18 delivery record (✅ complete).
+- `docs/mission.md` — Roadmap, dependency graph, and per-phase delivery (including **Phase 18: The Wider Web** — ✅ complete).
 - `docs/phase16b-the-discipline-engine.md` — Phase 16b delivery record (discipline activation).
 - `docs/plan.md` — Detailed Phase 7 SignalR implementation.
 
