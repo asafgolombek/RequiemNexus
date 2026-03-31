@@ -124,7 +124,8 @@ public class SessionService(
             result.IsExceptionalSuccess,
             result.IsDramaticFailure,
             result.DiceRolled,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            result.IsChanceDie);
 
         await _repository.AddRollAsync(chronicleId, rollDto);
         _metrics.RecordRoll();
@@ -148,7 +149,8 @@ public class SessionService(
             rollResult.IsExceptionalSuccess,
             rollResult.IsDramaticFailure,
             rollResult.DiceRolled,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            rollResult.IsChanceDie);
 
         await _repository.AddRollAsync(chronicleId, rollDto);
         _metrics.RecordRoll();

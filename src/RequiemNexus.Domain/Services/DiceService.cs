@@ -21,7 +21,7 @@ public class DiceService : IDiceService
 
     private static RollResult RollChanceDie(Random random)
     {
-        var result = new RollResult();
+        var result = new RollResult { IsChanceDie = true };
         int roll = random.Next(1, 11);
         result.DiceRolled.Add(roll);
 

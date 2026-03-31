@@ -70,14 +70,19 @@
                 
                 <div class="roller-form-group">
                     <label>Total Pool</label>
-                    <strong class="pool-total">@(TotalPool <= 0 ? "Chance Die" : TotalPool.ToString())</strong>
+                    <strong class="pool-total">@(IsChanceDiePool ? "Chance Die" : TotalPool.ToString())</strong>
                 </div>
 
+                @if (IsChanceDiePool)
+                {
+                    <p class="chance-die-hint">Chance die: only a 10 counts as a success. 10-again, 9-again, 8-again, and rote do not apply.</p>
+                }
+
                 <div class="options-group">
-                    <label class="option-label"><input type="checkbox" @bind="_tenAgain" /> 10-Again</label>
-                    <label class="option-label"><input type="checkbox" @bind="_nineAgain" /> 9-Again</label>
-                    <label class="option-label"><input type="checkbox" @bind="_eightAgain" /> 8-Again</label>
-                    <label class="option-label"><input type="checkbox" @bind="_isRote" /> Rote Action</label>
+                    <label class="option-label"><input type="checkbox" @bind="_tenAgain" disabled="@IsChanceDiePool" /> 10-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="_nineAgain" disabled="@IsChanceDiePool" /> 9-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="_eightAgain" disabled="@IsChanceDiePool" /> 8-Again</label>
+                    <label class="option-label"><input type="checkbox" @bind="_isRote" disabled="@IsChanceDiePool" /> Rote Action</label>
                 </div>
                 
                 <div class="roller-actions">
@@ -144,7 +149,7 @@
                             @{ int dieIndex = 0; }
                             @foreach (var die in _lastResultDto.DiceRolled)
                             {
-                                <span class="die-result @(_isRolling ? "rolling-die" : (die >= 8 ? "success-die" : "fail-die"))"
+                                <span class="die-result @(_isRolling ? "rolling-die" : (IsDieShownAsSuccess(die, _lastResultDto.IsChanceDie) ? "success-die" : "fail-die"))"
                                       style="--die-index: @dieIndex">@(_isRolling ? "" : die.ToString())</span>
                                 dieIndex++;
                             }
@@ -246,6 +251,11 @@
         }
     }
 
+    private bool IsChanceDiePool => TotalPool <= 0;
+
+    private static bool IsDieShownAsSuccess(int dieFace, bool isChanceDie) =>
+        isChanceDie ? dieFace == 10 : dieFace >= 8;
+
     private async Task Close()
     {
         IsVisible = false;
@@ -321,6 +331,12 @@
             description += $" ({(_modifier > 0 ? "+" : "")}{_modifier})";
         }
 
+        bool chanceDie = IsChanceDiePool;
+        bool tenAgain = chanceDie ? false : _tenAgain;
+        bool nineAgain = chanceDie ? false : _nineAgain;
+        bool eightAgain = chanceDie ? false : _eightAgain;
+        bool isRote = chanceDie ? false : _isRote;
+
         if (SessionClient.IsConnected && Character?.CampaignId != null)
         {
             // Server-Side Roll (The Masquerade Audit - Step 4)
@@ -329,17 +345,17 @@
                 Character.Id,
                 TotalPool,
                 description,
-                _tenAgain,
-                _nineAgain,
-                _eightAgain,
-                _isRote);
+                tenAgain,
+                nineAgain,
+                eightAgain,
+                isRote);
                 
             // The result will come back via HandleDiceRollReceived
         }
         else
         {
             // Fallback: Local Client-Side Roll (Solo/Offline)
-            var result = DiceService.Roll(TotalPool, _tenAgain, _nineAgain, _eightAgain, _isRote, _seed);
+            var result = DiceService.Roll(TotalPool, tenAgain, nineAgain, eightAgain, isRote, _seed);
             
             var userName = Character?.Name ?? "Player";
             var rollDto = new DiceRollResultDto(
@@ -351,7 +367,8 @@
                 result.IsExceptionalSuccess,
                 result.IsDramaticFailure,
                 result.DiceRolled,
-                DateTimeOffset.UtcNow);
+                DateTimeOffset.UtcNow,
+                result.IsChanceDie);
 
             await ProcessRollResult(rollDto);
         }

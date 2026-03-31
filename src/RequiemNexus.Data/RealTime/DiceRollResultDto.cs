@@ -12,6 +12,7 @@ namespace RequiemNexus.Data.RealTime;
 /// <param name="IsDramaticFailure">True if a chance die rolled a 1.</param>
 /// <param name="DiceRolled">The raw results of every die rolled, including explosions.</param>
 /// <param name="RolledAt">Timestamp of when the roll occurred.</param>
+/// <param name="IsChanceDie">True when the roll was a single chance die (pool 0 or less).</param>
 public record DiceRollResultDto(
     string PlayerName,
     string RolledByUserId,
@@ -21,4 +22,5 @@ public record DiceRollResultDto(
     bool IsExceptionalSuccess,
     bool IsDramaticFailure,
     IEnumerable<int> DiceRolled,
-    DateTimeOffset RolledAt);
+    DateTimeOffset RolledAt,
+    bool IsChanceDie = false);

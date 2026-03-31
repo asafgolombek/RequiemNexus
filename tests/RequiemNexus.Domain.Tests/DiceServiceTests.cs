@@ -26,6 +26,7 @@ public class DiceServiceTests
         var result = _diceService.Roll(dicePool: 0, seed: 42);
 
         Assert.Single(result.DiceRolled);
+        Assert.True(result.IsChanceDie);
     }
 
     [Fact]
@@ -34,6 +35,7 @@ public class DiceServiceTests
         var result = _diceService.Roll(dicePool: -3, seed: 42);
 
         Assert.Single(result.DiceRolled);
+        Assert.True(result.IsChanceDie);
     }
 
     [Fact]
@@ -45,6 +47,7 @@ public class DiceServiceTests
 
         Assert.Equal(1, result.Successes);
         Assert.False(result.IsDramaticFailure);
+        Assert.True(result.IsChanceDie);
     }
 
     [Fact]
@@ -55,6 +58,7 @@ public class DiceServiceTests
 
         Assert.True(result.IsDramaticFailure);
         Assert.Equal(0, result.Successes);
+        Assert.True(result.IsChanceDie);
     }
 
     [Theory]
@@ -68,6 +72,7 @@ public class DiceServiceTests
 
         Assert.Equal(0, result.Successes);
         Assert.False(result.IsDramaticFailure);
+        Assert.True(result.IsChanceDie);
     }
 
     // -----------------------------------------------------------------------
@@ -96,6 +101,7 @@ public class DiceServiceTests
 
         Assert.Equal(0, result.Successes);
         Assert.False(result.IsDramaticFailure); // dramatic failure only applies to chance die
+        Assert.False(result.IsChanceDie);
     }
 
     // -----------------------------------------------------------------------
