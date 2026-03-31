@@ -1,3 +1,5 @@
+using RequiemNexus.Domain.Models;
+
 namespace RequiemNexus.Application.Contracts;
 
 /// <summary>
@@ -26,6 +28,13 @@ public interface IDisciplineActivationService
     /// <param name="characterId">The character activating the power.</param>
     /// <param name="disciplinePowerId">The catalogue power id.</param>
     /// <param name="userId">The authenticated user (owner or Storyteller).</param>
+    /// <param name="resourceChoice">
+    /// Required when the parsed cost is <see cref="ActivationCost.IsPlayerChoiceVitaeOrWillpower"/>; otherwise ignored.
+    /// </param>
     /// <returns>The modifier-aware dice pool size for the roll UI.</returns>
-    Task<int> ActivatePowerAsync(int characterId, int disciplinePowerId, string userId);
+    Task<int> ActivatePowerAsync(
+        int characterId,
+        int disciplinePowerId,
+        string userId,
+        DisciplineActivationResourceChoice? resourceChoice = null);
 }

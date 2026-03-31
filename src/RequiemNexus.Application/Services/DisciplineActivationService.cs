@@ -73,7 +73,11 @@ public sealed class DisciplineActivationService(
     }
 
     /// <inheritdoc />
-    public async Task<int> ActivatePowerAsync(int characterId, int disciplinePowerId, string userId)
+    public async Task<int> ActivatePowerAsync(
+        int characterId,
+        int disciplinePowerId,
+        string userId,
+        DisciplineActivationResourceChoice? resourceChoice = null)
     {
         await _authHelper.RequireCharacterAccessAsync(characterId, userId, "activate discipline power");
 
@@ -100,12 +104,53 @@ public sealed class DisciplineActivationService(
                 power.Cost);
         }
 
+        if (cost.IsPlayerChoiceVitaeOrWillpower && resourceChoice is null)
+        {
+            throw new InvalidOperationException(
+                "A resource choice (Vitae or Willpower) is required to activate this power.");
+        }
+
         if (!cost.IsNone)
         {
             await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction tx =
                 await _dbContext.Database.BeginTransactionAsync();
 
-            if (cost.Type == ActivationCostType.Vitae)
+            if (cost.IsPlayerChoiceVitaeOrWillpower)
+            {
+                if (character.CurrentVitae < cost.Amount
+                    && character.CurrentWillpower < cost.PlayerChoiceWillpowerAmount)
+                {
+                    throw new InvalidOperationException(
+                        "Insufficient resources: neither Vitae nor Willpower available to activate this power.");
+                }
+
+                if (resourceChoice == DisciplineActivationResourceChoice.Vitae)
+                {
+                    Result<int> vitaeResult = await _vitaeService.SpendVitaeAsync(
+                        characterId,
+                        userId,
+                        cost.Amount,
+                        $"Discipline: {power.Name}");
+
+                    if (!vitaeResult.IsSuccess)
+                    {
+                        throw new InvalidOperationException(vitaeResult.Error ?? "Could not spend Vitae for discipline activation.");
+                    }
+                }
+                else
+                {
+                    Result<int> wpResult = await _willpowerService.SpendWillpowerAsync(
+                        characterId,
+                        userId,
+                        cost.PlayerChoiceWillpowerAmount);
+
+                    if (!wpResult.IsSuccess)
+                    {
+                        throw new InvalidOperationException(wpResult.Error ?? "Could not spend Willpower for discipline activation.");
+                    }
+                }
+            }
+            else if (cost.Type == ActivationCostType.Vitae)
             {
                 Result<int> vitaeResult = await _vitaeService.SpendVitaeAsync(
                     characterId,
@@ -150,12 +195,13 @@ public sealed class DisciplineActivationService(
         }
 
         _logger.LogInformation(
-            "Discipline power activated: Character {CharacterId}, Power {PowerId} ({PowerName}), CostType {CostType}, CostAmount {CostAmount}, PoolSize {PoolSize}",
+            "Discipline power activated: Character {CharacterId}, Power {PowerId} ({PowerName}), CostType {CostType}, CostAmount {CostAmount}, ResourceChoice {ResourceChoice}, PoolSize {PoolSize}",
             characterId,
             power.Id,
             power.Name,
             cost.Type,
             cost.Amount,
+            resourceChoice,
             poolSize);
 
         if (!cost.IsNone)

@@ -496,4 +496,176 @@ public class SocialManeuveringServiceTests
 
         Assert.True(result.IsSuccess);
     }
+
+    [Fact]
+    public async Task AddInterceptor_Success_ReturnsInterceptorRow()
+    {
+        var options = CreateOptions(nameof(AddInterceptor_Success_ReturnsInterceptorRow));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, characterId: 2, userId: "player-b");
+        var service = CreateService(options);
+
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        ManeuverInterceptor row = await service.AddInterceptorAsync(m.Id, 2, "st-user");
+
+        Assert.True(row.Id > 0);
+        Assert.Equal(m.Id, row.SocialManeuverId);
+        Assert.Equal(2, row.InterceptorCharacterId);
+        Assert.True(row.IsActive);
+        Assert.Equal(0, row.Successes);
+    }
+
+    [Fact]
+    public async Task AddInterceptor_NotStoryteller_ThrowsUnauthorizedAccessException()
+    {
+        var options = CreateOptions(nameof(AddInterceptor_NotStoryteller_ThrowsUnauthorizedAccessException));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, 2, "player-b");
+        var realAuth = new AuthorizationHelper(new TestApplicationDbContextFactory(options), NullLogger<AuthorizationHelper>.Instance);
+        var service = CreateService(options, authHelper: realAuth);
+
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.AddInterceptorAsync(m.Id, 2, "stranger"));
+    }
+
+    [Fact]
+    public async Task AddInterceptor_WrongChronicle_ThrowsInvalidOperationException()
+    {
+        var options = CreateOptions(nameof(AddInterceptor_WrongChronicle_ThrowsInvalidOperationException));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        ctx.Campaigns.Add(new Campaign { Id = 2, Name = "Other", StoryTellerId = "st-user" });
+        ctx.Characters.Add(new Character
+        {
+            Id = 3,
+            Name = "Outsider",
+            ApplicationUserId = "other",
+            ClanId = 1,
+            CampaignId = 2,
+            Humanity = 7,
+        });
+        await ctx.SaveChangesAsync();
+
+        var service = CreateService(options);
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddInterceptorAsync(m.Id, 3, "st-user"));
+    }
+
+    [Fact]
+    public async Task AddInterceptor_DuplicateCharacter_ThrowsInvalidOperationException()
+    {
+        var options = CreateOptions(nameof(AddInterceptor_DuplicateCharacter_ThrowsInvalidOperationException));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, 2, "player-b");
+        var service = CreateService(options);
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        await service.AddInterceptorAsync(m.Id, 2, "st-user");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddInterceptorAsync(m.Id, 2, "st-user"));
+    }
+
+    [Fact]
+    public async Task AddInterceptor_ClosedManeuver_ThrowsInvalidOperationException()
+    {
+        var options = CreateOptions(nameof(AddInterceptor_ClosedManeuver_ThrowsInvalidOperationException));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, 2, "player-b");
+        var service = CreateService(options);
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        SocialManeuver tracked = await ctx.SocialManeuvers.FirstAsync(x => x.Id == m.Id);
+        tracked.Status = ManeuverStatus.Succeeded;
+        await ctx.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AddInterceptorAsync(m.Id, 2, "st-user"));
+    }
+
+    [Fact]
+    public async Task RecordInterceptorRoll_AtPoolMax_Succeeds()
+    {
+        var options = CreateOptions(nameof(RecordInterceptorRoll_AtPoolMax_Succeeds));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, 2, "player-b");
+        var service = CreateService(options);
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        ManeuverInterceptor row = await service.AddInterceptorAsync(m.Id, 2, "st-user");
+
+        await service.RecordInterceptorRollAsync(row.Id, 8, "st-user");
+
+        ManeuverInterceptor? reloaded = await ctx.ManeuverInterceptors.AsNoTracking().FirstOrDefaultAsync(i => i.Id == row.Id);
+        Assert.NotNull(reloaded);
+        Assert.Equal(8, reloaded.Successes);
+    }
+
+    [Fact]
+    public async Task RecordInterceptorRoll_ExceedingManipulationPersuasion_ThrowsInvalidOperationException()
+    {
+        var options = CreateOptions(nameof(RecordInterceptorRoll_ExceedingManipulationPersuasion_ThrowsInvalidOperationException));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, 2, "player-b");
+        var service = CreateService(options);
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        ManeuverInterceptor row = await service.AddInterceptorAsync(m.Id, 2, "st-user");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RecordInterceptorRollAsync(row.Id, 9, "st-user"));
+    }
+
+    [Fact]
+    public async Task RecordInterceptorRoll_NotStoryteller_ThrowsUnauthorizedAccessException()
+    {
+        var options = CreateOptions(nameof(RecordInterceptorRoll_NotStoryteller_ThrowsUnauthorizedAccessException));
+        using var ctx = new ApplicationDbContext(options);
+        await SeedCampaignCharacterAndNpcAsync(ctx);
+        await SeedInterceptorCharacterAsync(ctx, 2, "player-b");
+        var realAuth = new AuthorizationHelper(new TestApplicationDbContextFactory(options), NullLogger<AuthorizationHelper>.Instance);
+        var service = CreateService(options, authHelper: realAuth);
+        SocialManeuver m = await service.CreateAsync(
+            1, 1, 1, "goal", false, false, false, "st-user");
+
+        ManeuverInterceptor row = await service.AddInterceptorAsync(m.Id, 2, "st-user");
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RecordInterceptorRollAsync(row.Id, 3, "stranger"));
+    }
+
+    private static async Task SeedInterceptorCharacterAsync(ApplicationDbContext ctx, int characterId, string userId)
+    {
+        ctx.Characters.Add(new Character
+        {
+            Id = characterId,
+            Name = "Interceptor",
+            ApplicationUserId = userId,
+            ClanId = 1,
+            CampaignId = 1,
+            Humanity = 7,
+            Attributes =
+            [
+                new CharacterAttribute { Name = "Manipulation", Rating = 4, Category = TraitCategory.Social },
+                new CharacterAttribute { Name = "Presence", Rating = 2, Category = TraitCategory.Social },
+            ],
+            Skills =
+            [
+                new CharacterSkill { Name = "Persuasion", Rating = 4, Category = TraitCategory.Social },
+            ],
+        });
+        await ctx.SaveChangesAsync();
+    }
 }

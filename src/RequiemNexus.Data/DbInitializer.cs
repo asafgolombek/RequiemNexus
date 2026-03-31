@@ -414,6 +414,7 @@ public static class DbInitializer
             int disciplineId = sorceryType == Domain.Enums.SorceryType.Cruac ? cruacDisc.Id : thebanDisc.Id;
             string? poolJson = BuildSorceryPoolJson(disciplineId);
 
+            (string costDesc, string reqJson) = BuildSorceryCostForType(sorceryType, rating);
             rites.Add(new SorceryRiteDefinition
             {
                 Name = name,
@@ -422,9 +423,9 @@ public static class DbInitializer
                 SorceryType = sorceryType,
                 XpCost = rating,
                 PoolDefinitionJson = poolJson,
-                ActivationCostDescription = "1 Vitae",
+                ActivationCostDescription = costDesc,
                 RequiredCovenantId = requiredCovenantId,
-                RequirementsJson = _defaultRiteRequirementsJson,
+                RequirementsJson = reqJson,
                 Prerequisites = prerequisites,
                 Effect = effect,
             });
@@ -433,6 +434,21 @@ public static class DbInitializer
         await context.SorceryRiteDefinitions.AddRangeAsync(rites);
         await context.SaveChangesAsync();
     }
+
+    private static (string CostDesc, string ReqJson) BuildSorceryCostForType(Domain.Enums.SorceryType type, int level)
+        => type switch
+        {
+            Domain.Enums.SorceryType.Cruac => (
+                $"{level} Vitae",
+                $$"""[{"type":"InternalVitae","value":{{level}},"isConsumed":true}]"""),
+            Domain.Enums.SorceryType.Theban => (
+                "1 Willpower + Sacrament",
+                """[{"type":"Willpower","value":1,"isConsumed":true},{"type":"PhysicalSacrament","value":1,"isConsumed":true}]"""),
+            Domain.Enums.SorceryType.Necromancy => (
+                "1 Vitae + focus",
+                """[{"type":"MaterialFocus","value":1,"isConsumed":false},{"type":"InternalVitae","value":1,"isConsumed":true}]"""),
+            _ => ("1 Vitae", _defaultRiteRequirementsJson),
+        };
 
     private static string? BuildSorceryPoolJson(int disciplineId)
     {
@@ -521,6 +537,44 @@ public static class DbInitializer
 
         await context.SaveChangesAsync();
         await EnsureMissingSorceryRiteCatalogEntriesAsync(context, logger);
+        await EnsureSorceryRiteCostsCorrectAsync(context);
+    }
+
+    /// <summary>
+    /// Patches RequirementsJson and ActivationCostDescription for already-seeded rites to match correct rule costs.
+    /// Crúac costs Level Vitae; Theban costs 1 Willpower + Sacrament; Necromancy costs 1 Vitae + focus.
+    /// </summary>
+    private static async Task EnsureSorceryRiteCostsCorrectAsync(ApplicationDbContext context)
+    {
+        List<SorceryRiteDefinition> cruacRites = await context.SorceryRiteDefinitions
+            .Where(r => r.SorceryType == Domain.Enums.SorceryType.Cruac)
+            .ToListAsync();
+        foreach (SorceryRiteDefinition r in cruacRites)
+        {
+            r.RequirementsJson = $$"""[{"type":"InternalVitae","value":{{r.Level}},"isConsumed":true}]""";
+            r.ActivationCostDescription = $"{r.Level} Vitae";
+        }
+
+        List<SorceryRiteDefinition> thebanRites = await context.SorceryRiteDefinitions
+            .Where(r => r.SorceryType == Domain.Enums.SorceryType.Theban)
+            .ToListAsync();
+        foreach (SorceryRiteDefinition r in thebanRites)
+        {
+            r.RequirementsJson = """[{"type":"Willpower","value":1,"isConsumed":true},{"type":"PhysicalSacrament","value":1,"isConsumed":true}]""";
+            r.ActivationCostDescription = "1 Willpower + Sacrament";
+        }
+
+        List<SorceryRiteDefinition> necroRites = await context.SorceryRiteDefinitions
+            .Where(r => r.SorceryType == Domain.Enums.SorceryType.Necromancy
+                   && r.RequirementsJson == _defaultRiteRequirementsJson)
+            .ToListAsync();
+        foreach (SorceryRiteDefinition r in necroRites)
+        {
+            r.RequirementsJson = """[{"type":"MaterialFocus","value":1,"isConsumed":false},{"type":"InternalVitae","value":1,"isConsumed":true}]""";
+            r.ActivationCostDescription = "1 Vitae + focus";
+        }
+
+        await context.SaveChangesAsync();
     }
 
     /// <summary>
@@ -596,6 +650,7 @@ public static class DbInitializer
         int disciplineId)
     {
         string? poolJson = BuildSorceryPoolJson(disciplineId);
+        (string costDesc, string reqJson) = BuildSorceryCostForType(entry.SorceryType, entry.Rating);
         return new SorceryRiteDefinition
         {
             Name = entry.Name,
@@ -604,10 +659,10 @@ public static class DbInitializer
             SorceryType = entry.SorceryType,
             XpCost = entry.Rating,
             PoolDefinitionJson = poolJson,
-            ActivationCostDescription = "1 Vitae",
+            ActivationCostDescription = costDesc,
             RequiredCovenantId = requiredCovenantId,
             RequiredClanId = requiredClanId,
-            RequirementsJson = _defaultRiteRequirementsJson,
+            RequirementsJson = reqJson,
             Prerequisites = entry.Prerequisites,
             Effect = entry.Effect,
         };

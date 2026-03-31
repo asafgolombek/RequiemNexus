@@ -203,4 +203,13 @@ public class SocialManeuveringEngineTests
             expected,
             SocialManeuveringEngine.ApplyInterceptorReductionToSuccesses(initiator, interceptors));
     }
+
+    [Fact]
+    public void GetDoorsOpenedByOpenDoorRoll_AfterInterceptorReductionToZero_OpensNoDoors()
+    {
+        int adjusted = SocialManeuveringEngine.ApplyInterceptorReductionToSuccesses(2, 4);
+        Assert.Equal(0, adjusted);
+        int doors = SocialManeuveringEngine.GetDoorsOpenedByOpenDoorRoll(adjusted, isExceptionalSuccess: false, isDramaticFailure: false);
+        Assert.Equal(0, doors);
+    }
 }

@@ -21,11 +21,22 @@ public class ActivationCostTests
     }
 
     [Fact]
-    public void Parse_VitaeOrWillpower_DefaultsToVitae()
+    public void Parse_VitaeOrWillpower_SetsPlayerChoiceFlag()
     {
         ActivationCost cost = ActivationCost.Parse("1 Vitae or 1 Willpower");
-        Assert.Equal(ActivationCostType.Vitae, cost.Type);
+        Assert.True(cost.IsPlayerChoiceVitaeOrWillpower);
         Assert.Equal(1, cost.Amount);
+        Assert.Equal(1, cost.PlayerChoiceWillpowerAmount);
+        Assert.Equal(ActivationCostType.Vitae, cost.Type);
+    }
+
+    [Fact]
+    public void Parse_VitaeOrWillpower_AllowsDistinctAmounts()
+    {
+        ActivationCost cost = ActivationCost.Parse("2 Vitae or 3 Willpower");
+        Assert.True(cost.IsPlayerChoiceVitaeOrWillpower);
+        Assert.Equal(2, cost.Amount);
+        Assert.Equal(3, cost.PlayerChoiceWillpowerAmount);
     }
 
     [Theory]
