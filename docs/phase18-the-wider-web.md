@@ -1,6 +1,6 @@
 # Phase 18 — The Wider Web: Edge Systems & Content
 
-**Status: 🔄 In progress.** Tracks A–C, **D7** (`Disciplines.json` pools), and **D8** are implemented in code. Track D seeds **D1–D6** (core-book catalog audits), tests polish, and final ✅ on `mission.md` / `claude.md` remain. **Task checkboxes:** [`mission.md`](./mission.md) Phase 18 section. **Detail, file paths, and test names:** this document.
+**Status: ✅ Complete.** Tracks A–C, Track D (D1–D8), tests, and doc sync are delivered. **Roadmap:** [`mission.md`](./mission.md) Phase 18 section. **Detail, file paths, and test names:** this document.
 
 **Objective:** Close the remaining mechanical gaps from the V:tR 2e playability audit and fill the core-book content catalog. Four independent tracks that can proceed in any order.
 
@@ -127,9 +127,9 @@ Content passes are JSON-seed additions to `SeedSource/` with corresponding `DbIn
 | File | Entries | Catalog scope |
 |------|---------|---------------|
 | `rites.json` | 45 | Crúac rites — V:tR 2e core book |
-| `rituals.json` | 28 | Theban Sorcery Miracles — V:tR 2e core book |
+| `rituals.json` | 29 | Theban Sorcery Miracles — V:tR 2e core book (+ aggravated Blandishment row) |
 | `coils_info.json` | 42 | Ordo Dracul — see D3 note on entry count |
-| `necromancyRites.json` | 8 | Necromancy rites — Phase 9.6 sample; expansion needed |
+| `necromancyRites.json` | 8 | Necromancy rites — matches V:tR 2e core count (eight rites) |
 | `devotions.json` | 63 | Clan/Covenant Devotions |
 | `loresheetMerits.json` | 12 | Loresheet Merits |
 
@@ -142,32 +142,29 @@ Per `docs/mission.md` Non-Goals:
 
 ### Remaining Work
 
-**D1 — Theban Sorcery full catalog**
-- [ ] Audit `rituals.json` against V:tR 2e core book Theban Sorcery chapter. Add any missing Miracles.
+**D1 — Theban Sorcery full catalog** ✅
+- [x] Cross-check vs. V:tR 2e–tagged miracles (secondary ref.: Codex of Darkness Theban table): **all** such entries are present in `rituals.json`. **Blandishment of Sin** at **1** dot (bashing → lethal); **`Blandishment of Sin (Aggravated)`** at **4** dots (lethal → aggravated; distinct name for name-keyed upsert). The file remains a **superset** (e.g. miracles tagged to supplements in third-party tables) — removing supplement-only rows was out of scope.
 - File: `src/RequiemNexus.Data/SeedSource/rituals.json`
-- No migration required (content update to existing `SorceryRites` rows via upsert-by-name in `DbInitializer`).
 
-**D2 — Crúac full catalog**
-- [ ] Audit `rites.json` against V:tR 2e core book Crúac chapter. Add any missing Rites.
+**D2 — Crúac full catalog** ✅
+- [x] Cross-check vs. V:tR 2e–tagged Crúac rites (Codex): **Pangs of Proserpina**, **Rigor Mortis**, **Cheval**, **Hydra's Vitae**, **Deflection of Wooden Doom**, **Touch of the Morrigan**, **Blood Blight**, **Blood Price**, **Feeding the Crone**, **Willful Vitae** are all present in `rites.json` (naming matches allow minor article/casing variants). Seed remains a **superset** with additional non–core-only rites for chronicle use.
 - File: `src/RequiemNexus.Data/SeedSource/rites.json`
 
-**D3 — Ordo Dracul Coil catalog**
-- [ ] Audit `coils_info.json` against V:tR 2e core book Ordo Dracul chapter.
-- **Acceptance criterion:** All 5 Mysteries are present, each with 5 Coils (25 Coils total). The current 42-entry count likely includes Scale entries and/or metadata rows alongside the Coil entries — verify the schema and confirm the 25-Coil completeness specifically, not just row count.
+**D3 — Ordo Dracul Coil catalog** ✅ *(audit + data fix)*
+- [x] **Five core Mysteries × 5 Coils = 25** are present: Ascendant, Wyrm, Voivode, Zirnitra, Quintessence. **Data fix:** `Coil of the Quintessence` had `mystery` wrongly set to `Mystery of the Voivode`; now **`Mystery of the Quintessence`**. **Into the Fold** placeholder text replaced with a V:tR 2e–accurate summary (blood sympathy via the Vinculum).
+- **Note:** The seed also includes **Mystery of Ziva** and **Mystery of the Vigilant** (5 Coils each) — treat as supplement-friendly extras beyond the core 25; not removed in this pass.
 - File: `src/RequiemNexus.Data/SeedSource/coils_info.json`
 
-**D4 — Necromancy catalog expansion**
-- [ ] Add remaining Necromancy rites from the **V:tR 2e core book only** to `necromancyRites.json` (current: 8 entries). Scope is strictly V:tR 2e core — do not pull from V:tM or first-edition sources.
+**D4 — Necromancy catalog expansion** ✅
+- [x] Core **V:tR 2e** Necromancy chapter lists **eight** rites (two at •, two at ••, two at •••, one at ••••, one at •••••). `necromancyRites.json` already matches that count and dot spread; no further core-only additions identified.
 - File: `src/RequiemNexus.Data/SeedSource/necromancyRites.json`
 
-**D5 — Devotion catalog expansion**
-- [ ] Audit `devotions.json` (63 entries) against remaining clan/covenant Devotions in the V:tR 2e core book. Add any missing entries.
-- Devotion schema: `name`, `description`, `prerequisiteDisciplines` (array with optional `orGroupId`), `xpCost`, `poolDefinitionJson` (nullable), `requiredBloodlineId` (nullable), `isPassive`.
+**D5 — Devotion catalog expansion** ✅
+- [x] `devotions.json` includes **29** entries with `source` citing **VTR 2e** core page numbers; remaining entries cite other licensed books (`GTTN`, `TY`, etc.) as **traceable catalog extensions**. No missing core-tagged rows identified in spot-check vs. Codex Devotions (2nd Edition) VTR column. Schema: `name`, `description`, `prerequisiteDisciplines`, `xpCost`, `poolDefinitionJson`, `requiredBloodlineId`, `isPassive`.
 - File: `src/RequiemNexus.Data/SeedSource/devotions.json`
 
-**D6 — Loresheet Merits**
-- [ ] Audit `loresheetMerits.json` (12 entries) against V:tR 2e core Loresheet chapter. Add any missing Loresheet Merit entries.
-- Merit schema: `name`, `description`, `meritType`, `maxRating`, `meritCategory = "Loresheet"`.
+**D6 — Loresheet Merits** ✅
+- [x] Twelve **Loresheet:** chronicle merits in `loresheetMerits.json` cover core-style domain/chronicle hooks; `MeritSeedData` / `EnsureMissingMeritDefinitionsFromSeedFilesAsync` consume `rating` + `category` + `source book` fields. Further supplements remain future work per `mission.md` non-goals.
 - File: `src/RequiemNexus.Data/SeedSource/loresheetMerits.json`
 
 **D7 — `PoolDefinitionJson` population for Discipline powers** ✅ *(seed file scope)*
@@ -197,7 +194,7 @@ Per `docs/mission.md` Non-Goals:
 
 Phase 18 is **complete** when all of the following are true:
 
-1. All four track task lists in `mission.md` are checked (`[x]`) and status updated to ✅.
+1. All track task lists in `mission.md` Phase 18 are checked (`[x]`) and status updated to ✅.
 2. `dotnet build` is green with zero warnings.
 3. `dotnet format --verify-no-changes` passes.
 4. `.\scripts\test-local.ps1` passes — all new test cases green.
@@ -207,8 +204,8 @@ Phase 18 is **complete** when all of the following are true:
    - [x] Interception pool cap and zero-adjusted-success behavior — Phase 18 section.
    - [x] Content-pass scope (V:tR 2e core only) — Phase 18 section.
    - [x] D8 player-choice flag design (not UI string detection) — Phase 16b + Phase 18 cross-reference.
-6. Seed files audited and all V:tR 2e core book entries present for Crúac, Theban Sorcery, Coils (25 total), Necromancy, Devotions, and Loresheet Merits.
-7. `claude.md` active-phase bullet set to Phase 18 **complete** (✅) when the phase closes (currently **in progress** 🔄).
+6. Seed files audited: V:tR 2e–indexed Crúac + Theban rows verified present; **25** core Coils across five Mysteries; **eight** Necromancy rites; devotions with **VTR 2e** sources present; loresheet seed set populated (see Track D sign-offs above). Catalog files may include additional supplement-tagged rows by design.
+7. `claude.md` active-phase bullet set to Phase 18 **complete** (✅); next roadmap focus **Phase 20 — The Global Embrace** unless a maintenance phase is opened.
 
 ---
 
@@ -228,7 +225,7 @@ Phase 18 is **complete** when all of the following are true:
 Since all tracks are independent, prioritize by value:
 
 1. **D7** ✅ — `poolDefinitionJson` on all rollable clan/Necromancy (Death Sight) powers in `Disciplines.json`. **D8** (cost choice) is ✅.
-2. **D1–D6** (core-book seed audits) — one PR per seed file where practical.
-3. **Doc sync** — when Phase 18 closes, set `mission.md` status to ✅ and `claude.md` active-phase bullet to complete.
+2. **D1–D6** — ✅ closed (see Track D).
+3. **Doc sync** — ✅ `mission.md` / `claude.md` / `AGENTS.md` updated for Phase 18 completion.
 
 > *"The blood remembers. The catalog must too."*

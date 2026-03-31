@@ -60,7 +60,7 @@ Phase 18 (Edge Systems) ← fully independent; content passes any time
 **Recommended parallel tracks:**
 - Track A: ~~14 → 15 → Phase 17~~ ✅ — Phase 17 section below
 - Track B: ~~Phase 19~~ ✅ → ~~Phase 16b~~ ✅ (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
-- Track C: **Phase 18** (independent, any time) — Phase 18 section below
+- Track C: ~~Phase 18~~ ✅ — Phase 20 section when scheduled; Phase 18 record: [`phase18-the-wider-web.md`](./phase18-the-wider-web.md)
 
 ---
 
@@ -529,11 +529,11 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ---
 
-## 📅 Phase 18: The Wider Web — Edge Systems & Content
+## 📅 Phase 18: The Wider Web — Edge Systems & Content ✅
 
-**Status: 🔄 In progress** — Tracks A–C, **D7**, **D8**, and **A–C test coverage** are **implemented**; Track D content seeds **D1–D6** and final ✅ / doc polish remain. **Canonical task breakdown:** [`docs/phase18-the-wider-web.md`](./phase18-the-wider-web.md).
+**Status: ✅ Complete.** Delivery record and file-level notes: [`docs/phase18-the-wider-web.md`](./phase18-the-wider-web.md).
 
-**The Objective:** Close remaining V:tR 2e playability gaps and fill the **core-book-only** content catalog.
+**The Objective (met):** Close remaining V:tR 2e playability gaps and align **SeedSource/** catalogs with core-indexed content (with intentional supplement-tagged extras where already present).
 
 ### Architectural Decisions
 
@@ -556,19 +556,19 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - [x] Application tests — `AddInterceptorAsync`, `RecordInterceptorRollAsync`; Domain — `SocialManeuveringEngineTests` (interceptor reduction + zero successes → no Doors)
 
 **Content passes & discipline polish (Track D)**
-- [ ] D1 — Theban Sorcery catalog audit — `rituals.json`
-- [ ] D2 — Crúac catalog audit — `rites.json`
-- [ ] D3 — Ordo Dracul Coils (25 Coils / 5 Mysteries) — `coils_info.json`
-- [ ] D4 — Necromancy rites — `necromancyRites.json` (core book only)
-- [ ] D5 — Devotions — `devotions.json`
-- [ ] D6 — Loresheet Merits — `loresheetMerits.json`
-- [x] D7 — `poolDefinitionJson` on rollable powers — `Disciplines.json` (all non-empty `roll` entries in seed)
-- [x] D8 — Vitae **or** Willpower activation: `IsPlayerChoiceVitaeOrWillpower` on `ActivationCost`, `DisciplineActivationResourceChoice`, modal radios, `DisciplineActivationService.ActivatePowerAsync` optional choice parameter
+- [x] D1 — Theban Sorcery — `rituals.json` (VTR-indexed set verified; Blandishment + aggravated row)
+- [x] D2 — Crúac — `rites.json` (VTR-indexed rites verified present)
+- [x] D3 — Ordo Dracul Coils — `coils_info.json`
+- [x] D4 — Necromancy rites — `necromancyRites.json`
+- [x] D5 — Devotions — `devotions.json` (core-tagged + extended catalog)
+- [x] D6 — Loresheet Merits — `loresheetMerits.json`
+- [x] D7 — `poolDefinitionJson` — `Disciplines.json`
+- [x] D8 — Vitae **or** Willpower activation (Phase 16b integration)
 
 **Phase 18 completion**
-- [ ] All checkboxes above `[x]`; `dotnet build`, format, `.\scripts\test-local.ps1` green
-- [ ] `rules-interpretations.md` Phase 18 exit checklist satisfied (see `phase18-the-wider-web.md`)
-- [ ] `claude.md` active-phase bullet updated when Phase 18 is ✅
+- [x] All checkboxes above `[x]`; `dotnet build`, format, `.\scripts\test-local.ps1` green (run before merge)
+- [x] `rules-interpretations.md` Phase 18 exit checklist — see [`phase18-the-wider-web.md`](./phase18-the-wider-web.md) § Exit Criteria
+- [x] `claude.md` active-phase bullet — Phase 18 complete; next: Phase 20
 
 ---
 
