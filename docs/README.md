@@ -147,11 +147,11 @@ RequiemNexus/
 | 16a | **The Hunting Ground** — Feeding | ✅ Complete |
 | 16b | **The Discipline Engine** — Power Activation | ✅ Complete ([implementation record](./phase16b-the-discipline-engine.md), [review](./phase16b-the-discipline-engine-review.md)) |
 | 17 | **The Fog of Eternity** — Humanity & Conditions | ✅ Complete |
-| 18 | **The Wider Web** — Edge Systems & Content | ⬜ Planned |
+| 18 | **The Wider Web** — Edge Systems & Content | ✅ Complete |
 | 19 | **The Blood Lineage** — Discipline Acquisition Rules | ✅ Complete |
 | 20 | **The Global Embrace** — i18n, public API (last planned phase) | ⬜ Planned |
 
-**Next up:** **V:tR 2e playability** phases **14–16b**, **17**, and **19** are complete. **Phase 18** (edge systems & content) is the primary remaining playability track before **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production SignalR polish). See [`docs/mission.md`](./mission.md) for the full phase table and dependency graph.
+**Next up:** **V:tR 2e playability** phases **14–19** (including **Phase 18 — The Wider Web**) are **complete**. **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. See [`docs/mission.md`](./mission.md) for the full phase table, **Phase 18** delivery detail, and dependency graph.
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 

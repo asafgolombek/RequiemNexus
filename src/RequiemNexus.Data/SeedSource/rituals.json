@@ -43,9 +43,15 @@
   },
   {
     "name": "Blandishment of Sin",
-    "Rating": 3,
+    "Rating": 1,
     "Prerequisites": "Sacrament: A scrap of paper with the victim's name written on it.",
-    "Effect": "Upgrades the next bashing damage the victim suffers to lethal, or aggravated if cast as a 4-dot version."
+    "Effect": "Upgrades the next bashing damage the victim suffers to lethal before the next sunrise (contested vs Resolve + Tolerance per V:tR 2e)."
+  },
+  {
+    "name": "Blandishment of Sin (Aggravated)",
+    "Rating": 4,
+    "Prerequisites": "Sacrament: A scrap of paper with the victim's name written on it.",
+    "Effect": "Upgrades the next lethal damage the victim suffers to aggravated before the next sunrise (contested vs Resolve + Tolerance per V:tR 2e)."
   },
   {
     "name": "Curse of Babel",

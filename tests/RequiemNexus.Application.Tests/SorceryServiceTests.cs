@@ -69,6 +69,7 @@ public class SorceryServiceTests
             vitaeService,
             willpowerService,
             humanity.Object,
+            new Mock<IDomainEventDispatcher>().Object,
             logger);
     }
 

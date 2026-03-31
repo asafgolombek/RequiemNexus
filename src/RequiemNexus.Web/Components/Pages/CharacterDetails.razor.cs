@@ -560,7 +560,7 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
-    private async Task HandleDisciplineActivateConfirmedAsync()
+    private async Task HandleDisciplineActivateConfirmedAsync(DisciplineActivationResourceChoice? resourceChoice)
     {
         if (_character == null || _disciplineActivatePower == null || string.IsNullOrEmpty(_currentUserId))
         {
@@ -573,7 +573,11 @@ public partial class CharacterDetails : IAsyncDisposable
         DisciplinePower power = _disciplineActivatePower;
         try
         {
-            int dice = await DisciplineActivationService.ActivatePowerAsync(characterId, power.Id, userId);
+            int dice = await DisciplineActivationService.ActivatePowerAsync(
+                characterId,
+                power.Id,
+                userId,
+                resourceChoice);
             _character = await CharacterService.ReloadCharacterAsync(characterId, userId);
             await ResolveDisciplinePowerPoolsAsync();
             _rollerTraitName = power.Name;

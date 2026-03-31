@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "name": "Coil of the Ascendant",
     "mystery": "Mystery of the Ascendant",
@@ -87,7 +87,7 @@
       {
         "name": "Into the Fold",
         "ranking": 2,
-        "description": "Increases the vampire's mastery over blood bonds and servants. (Note: The exact mechanical details for this specific tier are omitted from the provided source texts).",
+        "description": "The vampire forms blood sympathy connections through the Vinculum, reading and leveraging thralls and bound Kindred as if they were closer kin for sympathy and narrative ties (resolve specifics with the Storyteller).",
         "roll": "None"
       },
       {
@@ -186,7 +186,7 @@
   },
   {
     "name": "Coil of the Quintessence",
-    "mystery": "Mystery of the Voivode",
+    "mystery": "Mystery of the Quintessence",
     "short Description": "Allows an elder vampire to transcend mere rulership and mystically become one with their chosen domain itself.",
     "powers": [
       {

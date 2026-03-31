@@ -1,48 +1,60 @@
-Rituals are the overarching mechanical and narrative actions used to harness any of the Ritual Disciplines, such as Crúac, Theban Sorcery, Kindred Necromancy, or Triadic Evolution
-. A ritual is the actual step-by-step process of casting the magic: it requires the vampire to physically prepare a sacrifice, coax forth the power of the Beast or the divine, and systematically shape it over an extended period of time to achieve a specific magical effect
-.
-Rites are the specific, in-world terms for the individual powers or spells cast by certain pagan or feral covenants, most notably the Circle of the Crone
-. The term "rite" is also adopted by bloodlines that practice similar terrestrial or pagan blood sorceries, such as the Lithopedia rites used by the Család bloodline
-. Essentially, all rites are rituals, but not all rituals are rites.
 Crúac
-Overview: A bloody, witchcraft-like system of blood magic practiced primarily by the Circle of the Crone
-. It harnesses the primal, consuming power of the vampire's Beast, forcing it to taint the world by invoking the dark gods of the Crone
+What it is: A bloody, witchcraft-like system of blood magic practiced primarily by the Circle of the Crone
+. It harnesses the primal, consuming power of the vampire's Beast, forcing it to taint the world by invoking dark, ancient gods
 .
-Cost: Casting a Crúac rite costs one Vitae per dot of the rite
+How it works: It is a Ritual Discipline where spells are called "rites". Casting a rite costs one Vitae per dot of the rite
 . The first point of Vitae is spent internally to fuel the Discipline, but any remaining Vitae must be physically spilled during the casting
+. The caster makes an extended Manipulation + Occult + Crúac roll to cast the magic
 .
-Drawbacks: Because it rouses the Beast, learning Crúac actively degrades a vampire's Humanity. Learning a dot of Crúac is a breaking point for vampires with Humanity 4 or higher, and simply knowing the Discipline permanently caps the vampire's Humanity at 10 minus their Crúac dots
+How to acquire: A character must generally be an Acolyte in good standing, possessing at least one dot of Covenant Status (Circle of the Crone)
+. It requires a teacher to learn, but does not require drinking the teacher's Vitae
+. At character creation, if a player starts with Circle of the Crone Status, they may use their third Discipline dot to begin with Crúac
+.
+Drawbacks: Because it rouses the Beast, learning Crúac actively degrades a vampire's Humanity. Learning a dot of Crúac triggers a breaking point for vampires with Humanity 4 or higher
+. Simply knowing the Discipline permanently caps the vampire's maximum Humanity at 10 minus their Crúac dots
+. Additionally, vampire blood spilled during a rite becomes inert and unsuitable for feeding
 .
 Theban Sorcery
-Overview: A system of dark miracles practiced by the Lancea et Sanctum
-. Believed to have been passed down from an angel named Amoniel, it is a stern, deliberate, and judgmental magic that transmits the touch of God's Curse to punish sinners and reveal truths
-. Its spells are called "miracles"
+What it is: A system of dark miracles practiced by the Lancea et Sanctum, believed to be handed down from the angel Amoniel
+. It is a stern, deliberate, and judgmental magic that transmits God's Curse to punish sinners and reveal truths
 .
-Cost: Casting a Theban miracle requires the caster to spend one Willpower point to mentally prepare, alongside a specific physical sacrament (a symbolic item) offered to saints or angelic forces
-. Regardless of whether the ritual succeeds or fails, the physical sacrament crumbles to dust at the end of the attempt
+How it works: It is a Ritual Discipline where spells are called "miracles". Casting a miracle costs one Willpower point to mentally prepare, alongside a specific physical sacrament (a symbolic item) offered to saints or angelic forces
+. Whether the ritual succeeds or fails, the physical sacrament crumbles to dust when the ritual reaches its crescendo
+. The caster makes an extended Intelligence + Academics + Theban Sorcery roll
 .
-Drawbacks: Theban Sorcery requires strict moral discipline; a Sanctified ritualist must possess a Humanity rating equal to or higher than the dot rating of the miracle they wish to perform
+How to acquire: A character must be a priest with at least one dot of Covenant Status (Lancea et Sanctum) and swear oaths to never reveal the secrets to outsiders
+. Like Crúac, it requires a teacher
+, and starting characters with Status can use their third Discipline dot to learn it
+.
+Drawbacks: Theban Sorcery requires strict moral discipline. A Sanctified ritualist must possess a Humanity rating equal to or higher than the dot rating of the miracle they wish to cast
 .
 Kindred Necromancy
-Overview: A highly focused and demoralizing death magic that relies not on the power of the Blood or the Beast, but on the lingering aura of death surrounding every vampire
-. It is inherently practiced by specific bloodlines (such as the Sangiovanni, Apollinaire, Burakumin, and Rexroth)
-, though any vampire can learn it if they find a teacher or possess a mortal cultural connection to death magic
+What it is: A highly focused, demoralizing death magic that relies on the lingering aura of death surrounding every vampire, rather than the power of the Blood or the Beast
 .
-Cost: Casting a necromantic ritual costs 1 Vitae plus a specific required physical item
+How it works: It is a Ritual Discipline. Casting a necromantic ritual costs 1 Vitae plus a specific physical item
 . This item serves either as a material focus (which the vampire keeps afterward) or a sacrifice (which is permanently lost)
+. The caster makes a Resolve + Occult + Kindred Necromancy roll (though specific bloodlines might use alternative pools, like Presence + Persuasion or Composure + Occult)
+.
+How to acquire: Any vampire can learn it if they meet one of three conditions: 1) Finding a teacher, which limits their knowledge to their mentor's specific rituals; 2) Having a mortal cultural connection to death magic; or 3) Holding membership in a specific bloodline (like the Sangiovanni, Apollinaire, Burakumin, or Rexroth)
 .
 Drawbacks: Channeling this deathly energy draws the Kindred closer to death. Using a ritual triggers an automatic breaking point for any vampire with a Humanity of 7 or higher
-. Additionally, dots in Necromancy are added to the vampire's Blood Potency when calculating the duration they must spend in torpor, up to a maximum effective Blood Potency of 10
+. Furthermore, dots in Necromancy are added to the vampire's Blood Potency when calculating the duration they must spend in the dreaded sleep of torpor (up to a maximum effective Blood Potency of 10)
 .
-Mysteries of the Dragon Instead of traditional blood sorcery, the Ordo Dracul studies the Mysteries of the Dragon
-. Their goal is to completely transcend the vampiric condition, subverting the Curse through rigorous self-control, arcane chemistry, and clear-minded study
-. Upon joining the covenant, a vampire commits to a primary Mystery (such as the Ascendant, the Wyrm, or the Voivode)
-. The Mysteries are divided into two distinct mechanics:
-Coils: Coils are permanent, passive evolutionary alterations to the vampiric curse that manipulate the Beast and the Blood to the vampire's benefit
-. Through Coils, a Dragon can conquer vulnerabilities to fire and sunlight, tame their frenzies, or master blood bonds
-. Unlike Disciplines or rituals, Coils do not drain a vampire's Vitae
+Mysteries of the Dragon (Coils and Scales)
+What it is: Rather than traditional blood sorcery, the Ordo Dracul studies the Mysteries of the Dragon to transcend the vampiric condition, subverting the Curse through rigorous self-control, arcane chemistry, and clear-minded study
+. The Mysteries are divided into two distinct mechanics: Coils and Scales
 .
-Scales: Scales are active, ghastly procedures, experiments, and surgeries used to share or weaponize the effects of Coils
-. Through Scales, a Dragon can force others to experience their enlightened state—such as making vampires sleep at night and wake during the day, giving mortals a taste for blood, or permanently altering the bodies of ghouls
+How Coils work: Coils are permanent, passive evolutionary alterations to the vampiric curse that manipulate the Beast and the Blood (e.g., conquering vulnerabilities to fire and sunlight, or mastering blood bonds)
+. Unlike Disciplines or rituals, Coils do not drain a vampire's Vitae to use
+.
+How Scales work: Scales are active, ghastly procedures, experiments, and surgeries used to share or weaponize the effects of Coils on others
+. Through Scales, a Dragon can force others to experience their enlightened state—such as making vampires sleep at night, giving mortals a taste for blood, or permanently altering ghouls
 . Every Scale resonates with a specific tier of a specific Coil
-. If the vampire possesses the prerequisite Coil, the Scale costs only 1 Experience to learn; if they do not, it costs 2 Experiences
+.
+How to acquire: Upon joining the Ordo Dracul, a vampire must commit to a single primary Mystery
+. They can learn Coils outside their chosen Mystery, but they can have no more dots in a non-Mystery Coil than they possess dots in the Ordo Dracul Status Merit
+. Like other covenant arts, characters starting with Status can use their third Discipline dot on Coils
+. Learning a Scale costs 1 Experience if you possess the prerequisite Coil, and 2 Experiences if you do not
+.
+Drawbacks: Developing new Scales is incredibly difficult, taking months of extended research rolls and requiring test subjects, occult texts, and a safe laboratory
+. Because these procedures are brutal and tantamount to torture, developing a new Scale (whether it succeeds or fails) inflicts a breaking point at Humanity 5 minus the dot rating of the prerequisite Coil
