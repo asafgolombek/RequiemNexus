@@ -318,4 +318,91 @@ public class DisciplineActivationServiceTests
         }
     }
 
+    [Fact]
+    public async Task ActivatePowerAsync_PlayerChoiceVitae_SpendsVitae()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedAsync(
+                ctx,
+                "1 Vitae or 1 Willpower",
+                _emptyPoolJson,
+                disciplineRating: 2,
+                powerLevel: 1,
+                currentVitae: 5,
+                currentWillpower: 5);
+            var sut = CreateService(ctx, CreateTraitResolverMock(3));
+            int dice = await sut.ActivatePowerAsync(1, 1, "player1", DisciplineActivationResourceChoice.Vitae);
+            Assert.Equal(3, dice);
+            Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
+            Assert.Equal(4, reloaded.CurrentVitae);
+            Assert.Equal(5, reloaded.CurrentWillpower);
+        }
+    }
+
+    [Fact]
+    public async Task ActivatePowerAsync_PlayerChoiceWillpower_SpendsWillpower()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedAsync(
+                ctx,
+                "1 Vitae or 1 Willpower",
+                _emptyPoolJson,
+                disciplineRating: 2,
+                powerLevel: 1,
+                currentVitae: 5,
+                currentWillpower: 5);
+            var sut = CreateService(ctx, CreateTraitResolverMock(3));
+            int dice = await sut.ActivatePowerAsync(1, 1, "player1", DisciplineActivationResourceChoice.Willpower);
+            Assert.Equal(3, dice);
+            Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
+            Assert.Equal(5, reloaded.CurrentVitae);
+            Assert.Equal(4, reloaded.CurrentWillpower);
+        }
+    }
+
+    [Fact]
+    public async Task ActivatePowerAsync_PlayerChoiceMissingChoice_ThrowsInvalidOperationException()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedAsync(
+                ctx,
+                "1 Vitae or 1 Willpower",
+                _emptyPoolJson,
+                disciplineRating: 2,
+                powerLevel: 1,
+                currentVitae: 5,
+                currentWillpower: 5);
+            var sut = CreateService(ctx, CreateTraitResolverMock(3));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.ActivatePowerAsync(1, 1, "player1"));
+            Assert.Contains("resource choice", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task ActivatePowerAsync_PlayerChoiceNeitherResource_ThrowsInvalidOperationException()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedAsync(
+                ctx,
+                "1 Vitae or 1 Willpower",
+                _emptyPoolJson,
+                disciplineRating: 2,
+                powerLevel: 1,
+                currentVitae: 0,
+                currentWillpower: 0);
+            var sut = CreateService(ctx, CreateTraitResolverMock(3));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                sut.ActivatePowerAsync(1, 1, "player1", DisciplineActivationResourceChoice.Vitae));
+            Assert.Contains("neither Vitae nor Willpower", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
 }

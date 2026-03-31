@@ -531,7 +531,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 
 ## 📅 Phase 18: The Wider Web — Edge Systems & Content
 
-**Status: 🔄 In progress** — Tracks A–C are **implemented** in code; Track D (content), D8 (activation cost UI), tests, and final doc polish remain. **Canonical task breakdown, file paths, and exit criteria:** [`docs/phase18-the-wider-web.md`](./phase18-the-wider-web.md).
+**Status: 🔄 In progress** — Tracks A–C, **D7**, **D8**, and **A–C test coverage** are **implemented**; Track D content seeds **D1–D6** and final ✅ / doc polish remain. **Canonical task breakdown:** [`docs/phase18-the-wider-web.md`](./phase18-the-wider-web.md).
 
 **The Objective:** Close remaining V:tR 2e playability gaps and fill the **core-book-only** content catalog.
 
@@ -545,15 +545,15 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 **Passive Predatory Aura (Track A)**
 - [x] `ResolvePassiveContestAsync` + `EncounterAuraContest` dedup + dice feed (**Passive Predatory Aura** prefix) + Shaken default
 - [x] `EncounterParticipantService` auto-hook on all add-to-encounter paths; ST manual trigger from Storyteller Glimpse
-- [ ] Application tests — `EncounterParticipantServiceTests` with mock `IPredatoryAuraService` (see phase18 doc)
+- [x] Application tests — `EncounterParticipantServiceTests` with mock `IPredatoryAuraService`
 
 **Blood Sympathy (Track B)**
 - [x] `IBloodSympathyRollService` + Lineage UI ("Roll Blood Sympathy")
-- [ ] Regression test — out-of-range kin target returns `Result.Failure` (see phase18 doc)
+- [x] Regression test — `BloodSympathyRollServiceTests.RollBloodSympathy_TargetBeyondRange_ReturnsFailure`
 
 **Social Maneuvering Interception (Track C)**
 - [x] `ManeuverInterceptor` + migration + `SocialManeuveringService` + engine + Glimpse ST UI
-- [ ] Application tests — `AddInterceptorAsync`, `RecordInterceptorRollAsync`; Domain test — `ApplyInterceptorReductionToSuccesses` (see phase18 doc)
+- [x] Application tests — `AddInterceptorAsync`, `RecordInterceptorRollAsync`; Domain — `SocialManeuveringEngineTests` (interceptor reduction + zero successes → no Doors)
 
 **Content passes & discipline polish (Track D)**
 - [ ] D1 — Theban Sorcery catalog audit — `rituals.json`
@@ -562,8 +562,8 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - [ ] D4 — Necromancy rites — `necromancyRites.json` (core book only)
 - [ ] D5 — Devotions — `devotions.json`
 - [ ] D6 — Loresheet Merits — `loresheetMerits.json`
-- [ ] D7 — `poolDefinitionJson` on rollable powers — `Disciplines.json`
-- [ ] D8 — Vitae **or** Willpower activation: domain flag on `ActivationCost` + modal choice + `DisciplineActivationService` (no string matching in UI)
+- [x] D7 — `poolDefinitionJson` on rollable powers — `Disciplines.json` (all non-empty `roll` entries in seed)
+- [x] D8 — Vitae **or** Willpower activation: `IsPlayerChoiceVitaeOrWillpower` on `ActivationCost`, `DisciplineActivationResourceChoice`, modal radios, `DisciplineActivationService.ActivatePowerAsync` optional choice parameter
 
 **Phase 18 completion**
 - [ ] All checkboxes above `[x]`; `dotnet build`, format, `.\scripts\test-local.ps1` green

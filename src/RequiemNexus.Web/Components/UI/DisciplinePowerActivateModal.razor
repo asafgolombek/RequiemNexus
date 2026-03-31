@@ -25,7 +25,23 @@
                         @Power.Cost
                     </p>
                 }
-                @if (!IsFreeCost(Power.Cost))
+                @if (ParsedCost.IsPlayerChoiceVitaeOrWillpower)
+                {
+                    <fieldset class="rn-fieldset-plain" style="margin-top: 0.75rem; border: 0; padding: 0;">
+                        <legend class="trait-subheading" style="margin-bottom: 0.35rem;">Spend</legend>
+                        <label class="rn-radio-row" style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem;">
+                            <input type="radio" name="discipline-cost-choice" checked="@(_playerChoiceSelection == DisciplineActivationResourceChoice.Vitae)"
+                                   @onchange="@(() => _playerChoiceSelection = DisciplineActivationResourceChoice.Vitae)" />
+                            <span>Vitae (@ParsedCost.Amount)</span>
+                        </label>
+                        <label class="rn-radio-row" style="display: flex; align-items: center; gap: 0.35rem;">
+                            <input type="radio" name="discipline-cost-choice" checked="@(_playerChoiceSelection == DisciplineActivationResourceChoice.Willpower)"
+                                   @onchange="@(() => _playerChoiceSelection = DisciplineActivationResourceChoice.Willpower)" />
+                            <span>Willpower (@ParsedCost.PlayerChoiceWillpowerAmount)</span>
+                        </label>
+                    </fieldset>
+                }
+                else if (!IsFreeCost(Power.Cost))
                 {
                     <p class="text-muted-rn" style="font-size: 0.9em;">
                         Confirming spends Vitae or Willpower before you roll, as shown above.
@@ -54,7 +70,27 @@
     public int ResolvedPool { get; set; }
 
     [Parameter]
-    public EventCallback OnConfirmed { get; set; }
+    public EventCallback<DisciplineActivationResourceChoice?> OnConfirmed { get; set; }
+
+    private DisciplineActivationResourceChoice _playerChoiceSelection = DisciplineActivationResourceChoice.Vitae;
+
+    private int? _lastPowerIdForChoiceReset;
+
+    private ActivationCost ParsedCost => Power != null ? ActivationCost.Parse(Power.Cost) : ActivationCost.None;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && Power != null && _lastPowerIdForChoiceReset != Power.Id)
+        {
+            _lastPowerIdForChoiceReset = Power.Id;
+            _playerChoiceSelection = DisciplineActivationResourceChoice.Vitae;
+        }
+
+        if (!IsOpen)
+        {
+            _lastPowerIdForChoiceReset = null;
+        }
+    }
 
     private static bool IsFreeCost(string? cost)
     {
@@ -68,6 +104,19 @@
 
     private async Task ConfirmAsync()
     {
-        await OnConfirmed.InvokeAsync();
+        if (Power == null)
+        {
+            return;
+        }
+
+        ActivationCost parsed = ActivationCost.Parse(Power.Cost);
+        if (parsed.IsPlayerChoiceVitaeOrWillpower)
+        {
+            await OnConfirmed.InvokeAsync(_playerChoiceSelection);
+        }
+        else
+        {
+            await OnConfirmed.InvokeAsync(null);
+        }
     }
 }

@@ -1,6 +1,6 @@
 # Phase 18 — The Wider Web: Edge Systems & Content
 
-**Status: 🔄 In progress.** Tracks A–C are implemented in code. Track D (content), D8 (activation cost UI), tests, and final ✅ on `mission.md` / `claude.md` remain. **Task checkboxes:** [`mission.md`](./mission.md) Phase 18 section. **Detail, file paths, and test names:** this document.
+**Status: 🔄 In progress.** Tracks A–C, **D7** (`Disciplines.json` pools), and **D8** are implemented in code. Track D seeds **D1–D6** (core-book catalog audits), tests polish, and final ✅ on `mission.md` / `claude.md` remain. **Task checkboxes:** [`mission.md`](./mission.md) Phase 18 section. **Detail, file paths, and test names:** this document.
 
 **Objective:** Close the remaining mechanical gaps from the V:tR 2e playability audit and fill the core-book content catalog. Four independent tracks that can proceed in any order.
 
@@ -52,11 +52,7 @@ When two Kindred enter the same scene, Predatory Aura contests automatically —
 
 ### Remaining Work
 
-- [ ] **Tests (new file: `EncounterParticipantServiceTests`)** — no test class exists for this service. Create one with a mock `IPredatoryAuraService` and cover all three add-to-encounter paths:
-  - `BulkAddOnlinePlayers_VampirePair_TriggersPassiveAura` — adding two vampires calls `ResolvePassiveContestAsync` once for the pair.
-  - `AddCharacterToEncounter_VampireJoinsVampire_TriggersPassiveAura` — single add path.
-  - `AddCharacterToEncounter_MortalJoinsVampire_SkipsPassiveAura` — non-Kindred does not trigger.
-  - `BulkAddOnlinePlayers_SamePairTwice_CallsOncePerNewArrivant` — duplicate dedup behavior (second call returns null, which the service ignores).
+- [x] **Tests** — `EncounterParticipantServiceTests` with mock `IPredatoryAuraService`: bulk vampire pair, single add, mortal skip, repeated bulk does not re-invoke aura.
 
 ---
 
@@ -84,7 +80,7 @@ A "Sense Blood Kin" button on the character sheet Lineage section that rolls `Wi
 
 ### Remaining Work
 
-- [ ] **Regression test** — add to `Domain.Tests` (or `Application.Tests` if it requires DB): `RollBloodSympathy_TargetBeyondRange_ReturnsFailure` verifies that a character out of lineage range gets `Result.Failure` rather than a 0-die roll. This guards the range-guard branch from accidental deletion during refactors.
+- [x] **Regression test** — `BloodSympathyRollServiceTests.RollBloodSympathy_TargetBeyondRange_ReturnsFailure` (Application.Tests, in-memory lineage chain).
 
 ---
 
@@ -104,7 +100,7 @@ A third party (`ManeuverInterceptor`) can oppose an active social maneuver. Thei
 | `ISocialManeuveringService.AddInterceptorAsync` | `Application/Contracts/ISocialManeuveringService.cs` | ST-only; unique per maneuver + character; maneuver must be Active |
 | `ISocialManeuveringService.RecordInterceptorRollAsync` | `Application/Contracts/ISocialManeuveringService.cs` | ST-only; successes capped at `Manipulation + Persuasion` on interceptor's sheet |
 | Both impls | `Application/Services/SocialManeuveringService.cs` | Full Masquerade sequence; structured logging |
-| `SocialManeuveringEngine` interception | `Domain/Services/SocialManeuveringEngine.cs` | `ApplyInterceptorReductionToSuccesses(int rollSuccesses, IEnumerable<ManeuverInterceptor> interceptors)` — subtracts total active interceptor successes, floors at 0 |
+| `SocialManeuveringEngine` interception | `Domain/Services/SocialManeuveringEngine.cs` | `ApplyInterceptorReductionToSuccesses(int initiatorSuccesses, int totalInterceptorSuccesses)` — subtracts interceptor total, floors at 0 |
 | ST UI | `Web/Components/Pages/Campaigns/GlimpseSocialManeuvers.razor` | Interceptors section per maneuver: list of active interceptors with recorded successes; character picker; "Add interceptor" button; "Record opposition" button opens dice modal |
 | Rules log | `docs/rules-interpretations.md` **Phase 18** section | Subtraction order, cap formula, tie/zero-adjusted-success behaviour |
 
@@ -117,17 +113,8 @@ A third party (`ManeuverInterceptor`) can oppose an active social maneuver. Thei
 
 ### Remaining Work
 
-- [ ] **Tests** — `SocialManeuveringServiceTests` currently has 13 methods; none cover `AddInterceptorAsync` or `RecordInterceptorRollAsync`. Add:
-  - `AddInterceptor_Success_ReturnsInterceptorRow` — ST adds an interceptor to an Active maneuver.
-  - `AddInterceptor_NotStoryteller_Throws` — non-ST caller rejected (Masquerade guard).
-  - `AddInterceptor_WrongChronicle_Throws` — interceptor character not in the maneuver's campaign.
-  - `AddInterceptor_DuplicateCharacter_Throws` — second add of same character fails.
-  - `AddInterceptor_ClosedManeuver_Throws` — interceptor cannot be added to a non-Active maneuver.
-  - `RecordInterceptorRoll_CapsAtPoolMax` — recorded successes clamped to `Manipulation + Persuasion`.
-  - `RecordInterceptorRoll_NotStoryteller_Throws` — auth guard.
-- [ ] **Domain unit test** — add to `SocialManeuveringEngineTests`:
-  - `Engine_InterceptorReducesEffectiveSuccesses` — verifies `ApplyInterceptorReductionToSuccesses` subtracts correctly and floors at 0.
-  - `Engine_InterceptorAtZero_NoDoorsFromRoll` — confirms zero-adjusted-successes takes the failure branch.
+- [x] **Application tests** — `SocialManeuveringServiceTests`: add interceptor success, non-ST, wrong campaign, duplicate, closed maneuver; record roll at pool max, above max throws (service rejects over `Manipulation + Persuasion`), non-ST record throws.
+- [x] **Domain** — `ApplyInterceptorReductionToSuccesses` covered by existing theory tests; `GetDoorsOpenedByOpenDoorRoll_AfterInterceptorReductionToZero_OpensNoDoors` links zero adjusted successes to no Doors.
 
 ---
 
@@ -183,32 +170,26 @@ Per `docs/mission.md` Non-Goals:
 - Merit schema: `name`, `description`, `meritType`, `maxRating`, `meritCategory = "Loresheet"`.
 - File: `src/RequiemNexus.Data/SeedSource/loresheetMerits.json`
 
-**D7 — `PoolDefinitionJson` population for Discipline powers**
-- [ ] For any `DisciplinePower` whose `PoolDefinitionJson` is currently `null` and which has a rollable pool described in the rulebook, populate the JSON using the same `PoolDefinition` format as Devotions.
-  - Format reference: `{"traits":[{"traitType":"Attribute","attributeId":"Wits"},{"traitType":"Skill","skillId":"Empathy"}]}`
-  - Powers that are always display-only (e.g., passive aura, always-on buffs) should remain `null`.
-- File: `src/RequiemNexus.Data/SeedSource/Disciplines.json` — update `poolDefinitionJson` fields. Batch by discipline to keep reviews manageable (one PR per discipline line, not one giant JSON diff).
-- No new migration required; `DisciplineJsonImporter` upserts by power name.
+**D7 — `PoolDefinitionJson` population for Discipline powers** ✅ *(seed file scope)*
+- [x] All powers in `Disciplines.json` that carry a non-empty `roll` now have `poolDefinitionJson` (same shape as existing Feral Whispers: `traits` with `type` / `attributeId` / `skillId` / `disciplineId: 0`; `DbInitializer.NormalizePoolDefinitionJson` rewrites `0` to the parent discipline id).
+- Contested powers (e.g. vs Resolve + Blood Potency) encode the **actor** pool only; defender-side dice are not modeled in `TraitReference` today — the `roll` string remains the rulebook reference.
+- Powers with empty `roll` (Celerity, Resilience, Vigor, most Protean, etc.) correctly remain without `poolDefinitionJson`.
+- `Crúac` / `Theban Sorcery` stanzas in this file still have empty `powers` arrays — their rollable pools live on sorcery rite seeds, not here.
+- No new migration required; discipline JSON refresh path upserts by power name.
 
-**D8 — `"1 Vitae or 1 Willpower"` cost — player-choice UI**
-- Background: `ActivationCost.Parse` defaults to `Vitae` when the cost string is `"1 Vitae or 1 Willpower"`. Player-choice UI was deferred to Phase 18 (see `docs/rules-interpretations.md` line 89).
-- [ ] Extend `ActivationCost` (Domain) with an explicit `IsPlayerChoice` flag (or `PlayerChoiceVitaeOrWillpower` enum value) set during parsing. **Do not detect `"or"` in the description string in the UI** — that is fragile and will misfire on unrelated text. The flag must come from the domain type.
-- [ ] In the discipline activation confirmation modal, render a radio-button or segmented control when `ActivationCost.IsPlayerChoice == true`.
-- [ ] Pass the choice as a new `CostChoice` parameter to `DisciplineActivationService.ActivatePowerAsync`.
-- [ ] `DisciplineActivationService` respects the choice when both options are valid. When **neither** Vitae nor Willpower is available, return `Result.Failure("Insufficient resources: neither Vitae nor Willpower available to activate this power.")` — do not roll.
-- This is a small UI polish task with one domain model change and no schema changes.
+**D8 — `"1 Vitae or 1 Willpower"` cost — player-choice UI** ✅
+- **Delivered:** `ActivationCost.Parse` recognises `N Vitae or M Willpower` (regex in Domain), sets `IsPlayerChoiceVitaeOrWillpower` + `PlayerChoiceWillpowerAmount`. `DisciplineActivationResourceChoice` enum; `DisciplinePowerActivateModal` shows Vitae/Willpower radios driven by parsed cost (no substring heuristics in UI). `ActivatePowerAsync(..., DisciplineActivationResourceChoice? resourceChoice)` requires a choice when the cost is a player choice; throws `InvalidOperationException` if choice is missing or if **neither** resource can pay the respective amounts (no roll). See `docs/rules-interpretations.md` (Phase 16b).
 
 ---
 
 ## Test Coverage Targets
 
-| Area | Test project | Test class | Gap to fill |
-|------|-------------|------------|-------------|
-| Passive Predatory Aura auto-trigger | Application.Tests | `EncounterParticipantServiceTests` (new) | Three add-to-encounter paths; mortal-skip path; duplicate dedup |
-| Blood Sympathy range guard | Domain.Tests or Application.Tests | `BloodSympathyRollServiceTests` or `BloodSympathyRulesTests` | Out-of-range target returns `Result.Failure` |
-| Interceptor — add | Application.Tests | `SocialManeuveringServiceTests` | Success, duplicate, non-ST, wrong-chronicle, non-Active cases |
-| Interceptor — record roll | Application.Tests | `SocialManeuveringServiceTests` | Cap enforcement, non-ST case |
-| Interceptor — engine reduction | Domain.Tests | `SocialManeuveringEngineTests` | `ApplyInterceptorReductionToSuccesses`; zero-adjusted-successes branch |
+| Area | Test project | Test class | Status |
+|------|-------------|------------|--------|
+| Passive Predatory Aura auto-trigger | Application.Tests | `EncounterParticipantServiceTests` | ✅ |
+| Blood Sympathy range guard | Application.Tests | `BloodSympathyRollServiceTests` | ✅ |
+| Interceptor — add / record | Application.Tests | `SocialManeuveringServiceTests` | ✅ |
+| Interceptor — engine + Doors | Domain.Tests | `SocialManeuveringEngineTests` | ✅ (incl. zero-adjusted → no Doors) |
 
 ---
 
@@ -246,9 +227,8 @@ Phase 18 is **complete** when all of the following are true:
 
 Since all tracks are independent, prioritize by value:
 
-1. **D7 + D8** (pool data + cost choice) — unblocks existing discipline activation UX polish. D8 requires a small domain-model change; do that first.
-2. **Tests (A + C)** — close the test gap before Phase 20.
-3. **D1–D6** (content audit) — pure data work; one PR per seed file.
-4. **Doc sync** — when Phase 18 closes, set `mission.md` status to ✅ and `claude.md` active-phase bullet to complete.
+1. **D7** ✅ — `poolDefinitionJson` on all rollable clan/Necromancy (Death Sight) powers in `Disciplines.json`. **D8** (cost choice) is ✅.
+2. **D1–D6** (core-book seed audits) — one PR per seed file where practical.
+3. **Doc sync** — when Phase 18 closes, set `mission.md` status to ✅ and `claude.md` active-phase bullet to complete.
 
 > *"The blood remembers. The catalog must too."*

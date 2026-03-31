@@ -1,4 +1,4 @@
-﻿[
+[
     {
         "name":  "Animalism",
         "description":  "Dominion over beasts and the feral nature.",
@@ -30,14 +30,16 @@
                            "ranking":  3,
                            "description":  "Call animals to a location or target with spilled blood.",
                            "roll":  "Presence + Animal Ken + Animalism",
-                           "cost":  "1 Vitae"
+                           "cost":  "1 Vitae",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"AnimalKen\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Feral Infection",
                            "ranking":  4,
                            "description":  "Drives animals, humans and vampires into a frenzy.",
                            "roll":  "Presence + Intimidation + Animalism",
-                           "cost":  "1 Vitae"
+                           "cost":  "1 Vitae",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Intimidation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Lord of the Land",
@@ -71,21 +73,24 @@
                            "ranking":  2,
                            "description":  "Read the emotional resonance and nature of a subject.",
                            "roll":  "Wits + Empathy + Auspex",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Wits\"},{\"type\":\"Skill\",\"skillId\":\"Empathy\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "The Spirit\u0027s Touch",
                            "ranking":  3,
                            "description":  "Read psychic residue from objects.",
                            "roll":  "Wits + Occult + Auspex",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Wits\"},{\"type\":\"Skill\",\"skillId\":\"Occult\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Lay Open the Mind",
                            "ranking":  4,
                            "description":  "Read the surface thoughts of a target.",
                            "roll":  "Intelligence + Investigation + Auspex vs Resolve + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Intelligence\"},{\"type\":\"Skill\",\"skillId\":\"Investigation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Twilight Projection",
@@ -160,21 +165,24 @@
                            "ranking":  1,
                            "description":  "Plant a single command in a hypnotic trance.",
                            "roll":  "Intelligence + Expression + Dominate vs Resolve + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Intelligence\"},{\"type\":\"Skill\",\"skillId\":\"Expression\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Command",
                            "ranking":  2,
                            "description":  "Give a simple, immediate order.",
                            "roll":  "Manipulation + Intimidation + Dominate vs Resolve + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Manipulation\"},{\"type\":\"Skill\",\"skillId\":\"Intimidation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "The Forgetful Mind",
                            "ranking":  3,
                            "description":  "Alter or erase recent memories.",
                            "roll":  "Wits + Subterfuge + Dominate vs Resolve + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Wits\"},{\"type\":\"Skill\",\"skillId\":\"Subterfuge\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Conditioning",
@@ -188,7 +196,8 @@
                            "ranking":  5,
                            "description":  "Take direct control of a mortal\u0027s body.",
                            "roll":  "Intelligence + Intimidation + Dominate vs Resolve + Blood Potency",
-                           "cost":  "1 Willpower"
+                           "cost":  "1 Willpower",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Intelligence\"},{\"type\":\"Skill\",\"skillId\":\"Intimidation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        }
                    ]
     },
@@ -208,35 +217,40 @@
                            "ranking":  1,
                            "description":  "Draw all eyes and fascinate onlookers.",
                            "roll":  "Presence + Expression + Majesty vs Composure + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Expression\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Confidant",
                            "ranking":  2,
                            "description":  "Make a target view you as an intimately trusted friend.",
                            "roll":  "Manipulation + Empathy + Majesty vs Composure + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Manipulation\"},{\"type\":\"Skill\",\"skillId\":\"Empathy\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Entrancement",
                            "ranking":  3,
                            "description":  "Inspire terrifying devotion.",
                            "roll":  "Manipulation + Persuasion + Majesty vs Composure + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Manipulation\"},{\"type\":\"Skill\",\"skillId\":\"Persuasion\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Summoning",
                            "ranking":  4,
                            "description":  "Call a person to your side.",
                            "roll":  "Presence + Persuasion + Majesty vs Composure + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Persuasion\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Sovereignty",
                            "ranking":  5,
                            "description":  "Paralyze others with submissive fear and worship.",
                            "roll":  "Presence + Intimidation + Majesty vs Composure + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Intimidation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        }
                    ]
     },
@@ -256,7 +270,8 @@
                            "ranking":  1,
                            "description":  "Elicit creeping paranoia and fear.",
                            "roll":  "Presence + Empathy + Nightmare vs Composure + Blood Potency",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Empathy\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Face of the Beast",
@@ -270,7 +285,8 @@
                            "ranking":  3,
                            "description":  "Radiate overwhelming fear.",
                            "roll":  "Presence + Intimidation + Nightmare vs Composure + Blood Potency",
-                           "cost":  "1 Vitae"
+                           "cost":  "1 Vitae",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Intimidation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Waking Nightmare",
@@ -284,7 +300,8 @@
                            "ranking":  5,
                            "description":  "A terrifying shock to the system.",
                            "roll":  "Presence + Intimidation + Nightmare vs Composure + Blood Potency",
-                           "cost":  "1 Vitae"
+                           "cost":  "1 Vitae",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Presence\"},{\"type\":\"Skill\",\"skillId\":\"Intimidation\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        }
                    ]
     },
@@ -304,7 +321,8 @@
                            "ranking":  1,
                            "description":  "Hide an object on your person.",
                            "roll":  "Wits + Larceny + Obfuscate",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Wits\"},{\"type\":\"Skill\",\"skillId\":\"Larceny\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Mask of Tranquility",
@@ -318,7 +336,8 @@
                            "ranking":  3,
                            "description":  "Turn utterly invisible.",
                            "roll":  "Intelligence + Stealth + Obfuscate",
-                           "cost":  "1 Vitae"
+                           "cost":  "1 Vitae",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Intelligence\"},{\"type\":\"Skill\",\"skillId\":\"Stealth\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "The Familiar Stranger",
@@ -524,7 +543,8 @@
                            "ranking":  1,
                            "description":  "Perceive ghosts and deathly resonance.",
                            "roll":  "Wits + Occult + Necromancy",
-                           "cost":  "—"
+                           "cost":  "—",
+                           "poolDefinitionJson":  "{\"traits\":[{\"type\":\"Attribute\",\"attributeId\":\"Wits\"},{\"type\":\"Skill\",\"skillId\":\"Occult\"},{\"type\":\"Discipline\",\"disciplineId\":0}]}"
                        },
                        {
                            "name":  "Summon Shade",

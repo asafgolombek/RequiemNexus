@@ -11,7 +11,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 19 delivered:** The Blood Lineage — `Discipline` acquisition metadata, `DisciplineJsonImporter`, two-pass seed pipeline, 7 acquisition gates in `CharacterDisciplineService`, `IHumanityService`, `DegenerationCheckRequiredEvent`.
 - **Phase 16b delivered:** The Discipline Engine — `DisciplineActivationService`, `ActivationCost`, activation UI; pool size returned to `DiceRollerModal` for feed publication (rite pattern). See `docs/phase16b-the-discipline-engine.md`.
 - **Phase 17 delivered:** The Fog of Eternity — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. See `docs/mission.md` (Phase 17 section) and `docs/rules-interpretations.md`.
-- **Phase 18 in progress 🔄:** The Wider Web — Tracks A–C delivered (passive Predatory Aura, Blood Sympathy roll, social maneuver interception); Track D content, D8 cost-choice UI, and tests remain. See `docs/phase18-the-wider-web.md` and `docs/mission.md` (Phase 18 section).
+- **Phase 18 in progress 🔄:** The Wider Web — Tracks A–C + D8 + **A–C tests** delivered; Track D content (D1–D7) and final polish remain. See `docs/phase18-the-wider-web.md` and `docs/mission.md` (Phase 18 section).
 - **Phase 20 — The Global Embrace** is the **last planned phase** after **Phase 18** on the V:tR 2e roadmap (see `docs/mission.md`).
 
 ## 📜 Architectural DNA
