@@ -19,7 +19,8 @@ public class CharacterManagementService(
     IBeatLedgerService beatLedger,
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
-    ICharacterCreationService characterCreationService) : ICharacterService
+    ICharacterCreationService characterCreationService,
+    IHumanityService humanityService) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
@@ -28,6 +29,7 @@ public class CharacterManagementService(
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
     private readonly ICharacterCreationService _characterCreationService = characterCreationService;
+    private readonly IHumanityService _humanityService = humanityService;
 
     /// <inheritdoc />
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
@@ -171,6 +173,7 @@ public class CharacterManagementService(
 
     public async Task SaveAsync(Character character)
     {
+        await _humanityService.EnforceHumanityCapForPersistenceAsync(character);
         await _dbContext.SaveChangesAsync();
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }

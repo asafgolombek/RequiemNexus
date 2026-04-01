@@ -137,6 +137,8 @@ public sealed class TorporService(
     public async Task CheckStarvationIntervalAsync(int characterId, CancellationToken cancellationToken = default)
     {
         Character? character = await _dbContext.Characters
+            .Include(c => c.Disciplines)
+            .ThenInclude(d => d.Discipline)
             .FirstOrDefaultAsync(c => c.Id == characterId, cancellationToken);
 
         if (character?.TorporSince is not DateTime torporSince)
@@ -144,7 +146,11 @@ public sealed class TorporService(
             return;
         }
 
-        int thresholdDays = TorporDurationTable.GetMinimumDays(character.BloodPotency);
+        int necromancyDots = character.GetDisciplineRating("Necromancy");
+        int effectiveBp = TorporDurationTable.GetEffectiveBloodPotencyForTorporDuration(
+            character.BloodPotency,
+            necromancyDots);
+        int thresholdDays = TorporDurationTable.GetMinimumDays(effectiveBp);
         if (thresholdDays == int.MaxValue)
         {
             return;
@@ -167,10 +173,12 @@ public sealed class TorporService(
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogWarning(
-            "Torpor starvation milestone for character {CharacterId} ({Name}): BP {BloodPotency}, torpor since {TorporSince}, threshold {ThresholdDays} days. Storyteller should advance Hunger / Starvation frenzy when ready.",
+            "Torpor starvation milestone for character {CharacterId} ({Name}): effective BP {EffectiveBloodPotency} (base BP {BloodPotency}, Necromancy {NecromancyDots}), torpor since {TorporSince}, threshold {ThresholdDays} days. Storyteller should advance Hunger / Starvation frenzy when ready.",
             characterId,
             character.Name,
+            effectiveBp,
             character.BloodPotency,
+            necromancyDots,
             torporSince,
             thresholdDays);
     }

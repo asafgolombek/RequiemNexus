@@ -124,12 +124,13 @@ else
                             <h2>Advantages</h2>
                             <DotScale @bind-Value="_character.BloodPotency" Label="Blood Potency" Max="10"
                                 OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                            <DotScale @bind-Value="_character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
-                                OnRollClick="OpenRoller" />
                             @{
                                 int crucDots = _character.GetDisciplineRating("Crúac");
                                 int effectiveMaxHumanity = HumanityService.GetEffectiveMaxHumanity(_character);
+                                int humanityDotScaleMax = crucDots > 0 ? effectiveMaxHumanity : 10;
                             }
+                            <DotScale @bind-Value="_character.Humanity" Label="Humanity" Max="@humanityDotScaleMax" OnLabelClick="OpenReference"
+                                OnRollClick="OpenRoller" />
                             @if (crucDots > 0)
                             {
                                 <div class="cruac-humanity-cap @( _character.Humanity >= effectiveMaxHumanity ? "cruac-humanity-cap--warn" : string.Empty)"

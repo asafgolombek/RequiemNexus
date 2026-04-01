@@ -80,7 +80,7 @@ public class CharacterDisciplineService(
                 $"Insufficient XP. Required: {xpCost}, Available: {character.ExperiencePoints}");
         }
 
-        MaybeDispatchCruacDegeneration(character, discipline, request.TargetRating);
+        MaybeDispatchCruacLearnedDegeneration(character, discipline, previousRating: 0, newRating: request.TargetRating);
 
         character.ExperiencePoints -= xpCost;
 
@@ -154,6 +154,9 @@ public class CharacterDisciplineService(
             return Result<CharacterDiscipline>.Failure(
                 $"Insufficient XP. Required: {xpCost}, Available: {character.ExperiencePoints}");
         }
+
+        int previousRating = cd.Rating;
+        MaybeDispatchCruacLearnedDegeneration(character, discipline, previousRating, request.TargetRating);
 
         character.ExperiencePoints -= xpCost;
         cd.Rating = request.TargetRating;
@@ -247,19 +250,21 @@ public class CharacterDisciplineService(
         return null;
     }
 
-    private void MaybeDispatchCruacDegeneration(Character character, Discipline discipline, int targetRating)
+    /// <summary>
+    /// V:tR 2e: learning a new Crúac dot at Humanity 4+ is a breaking point. Fires on first purchase and on each dot increase.
+    /// </summary>
+    private void MaybeDispatchCruacLearnedDegeneration(
+        Character character,
+        Discipline discipline,
+        int previousRating,
+        int newRating)
     {
         if (!string.Equals(discipline.Name, _cruacDisciplineName, StringComparison.Ordinal))
         {
             return;
         }
 
-        if (character.GetDisciplineRating("Crúac") != 0)
-        {
-            return;
-        }
-
-        if (targetRating < 1)
+        if (newRating <= previousRating || newRating < 1)
         {
             return;
         }

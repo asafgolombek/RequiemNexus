@@ -6,7 +6,7 @@ public enum DegenerationReason
     /// <summary>Humanity stains have crossed the threshold for the current Humanity dot.</summary>
     StainsThreshold,
 
-    /// <summary>The character has purchased their first dot of Crúac at Humanity 4 or higher.</summary>
+    /// <summary>The character has gained a new Crúac dot (including the first) at Humanity 4 or higher.</summary>
     CrúacPurchase,
 
     /// <summary>The character used a Kindred Necromancy ritual at Humanity 7 or higher.</summary>

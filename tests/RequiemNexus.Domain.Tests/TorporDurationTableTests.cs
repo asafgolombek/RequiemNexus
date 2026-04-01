@@ -38,4 +38,17 @@ public class TorporDurationTableTests
         Assert.Equal(TorporDurationTable.MinimumDaysById[1], TorporDurationTable.GetMinimumDays(0));
         Assert.Equal(TorporDurationTable.MinimumDaysById[1], TorporDurationTable.GetMinimumDays(99));
     }
+
+    [Fact]
+    public void GetEffectiveBloodPotencyForTorporDuration_AddsNecromancy_CappedAtTen()
+    {
+        Assert.Equal(3, TorporDurationTable.GetEffectiveBloodPotencyForTorporDuration(1, 2));
+        Assert.Equal(10, TorporDurationTable.GetEffectiveBloodPotencyForTorporDuration(8, 5));
+    }
+
+    [Fact]
+    public void GetEffectiveBloodPotencyForTorporDuration_NegativeNecromancy_TreatedAsZero()
+    {
+        Assert.Equal(2, TorporDurationTable.GetEffectiveBloodPotencyForTorporDuration(2, -1));
+    }
 }
