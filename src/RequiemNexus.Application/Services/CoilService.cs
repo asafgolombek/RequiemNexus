@@ -21,8 +21,6 @@ public class CoilService(
     ISessionService sessionService,
     ILogger<CoilService> logger) : ICoilService
 {
-    private const string _ordoDraculName = "The Ordo Dracul";
-
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
@@ -59,7 +57,7 @@ public class CoilService(
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
-        if (!IsOrdoDraculMember(character))
+        if (!CoilOrdoEligibility.IsOrdoDraculMember(character))
         {
             return [];
         }
@@ -74,7 +72,7 @@ public class CoilService(
             .Select(cc => cc.CoilDefinitionId)
             .ToHashSet();
 
-        int ordoStatusDots = GetOrdoStatusDots(character);
+        int ordoStatusDots = CoilOrdoEligibility.GetOrdoStatusDots(character);
 
         var allCoils = await _dbContext.CoilDefinitions
             .AsNoTracking()
@@ -111,7 +109,7 @@ public class CoilService(
                 }
             }
 
-            int xpCost = CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
+            int xpCost = CoilOrdoEligibility.CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
 
             result.Add(new CoilSummaryDto(
                 coil.Id,
@@ -146,7 +144,7 @@ public class CoilService(
             throw new InvalidOperationException("Character must be in a campaign to purchase Coils.");
         }
 
-        if (!IsOrdoDraculMember(character))
+        if (!CoilOrdoEligibility.IsOrdoDraculMember(character))
         {
             throw new InvalidOperationException("Only Ordo Dracul members can purchase Coils.");
         }
@@ -172,7 +170,7 @@ public class CoilService(
         // Ordo Status cap for non-chosen Coils
         if (!isChosenMystery && character.ChosenMysteryScaleId.HasValue)
         {
-            int ordoStatusDots = GetOrdoStatusDots(character);
+            int ordoStatusDots = CoilOrdoEligibility.GetOrdoStatusDots(character);
             int existingNonChosenDots = character.Coils
                 .Count(cc => cc.Status == CoilLearnStatus.Approved && cc.CoilDefinition?.ScaleId != character.ChosenMysteryScaleId);
 
@@ -193,7 +191,7 @@ public class CoilService(
             throw new InvalidOperationException("Character has already learned this Coil.");
         }
 
-        int xpCost = CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
+        int xpCost = CoilOrdoEligibility.CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
 
         if (character.ExperiencePoints < xpCost)
         {
@@ -290,7 +288,7 @@ public class CoilService(
         var character = cc.Character!;
 
         bool isChosenMystery = character.ChosenMysteryScaleId.HasValue && coil.ScaleId == character.ChosenMysteryScaleId.Value;
-        int xpCost = CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
+        int xpCost = CoilOrdoEligibility.CalculateXpCost(isChosenMystery, character.HasCrucibleRitualAccess);
 
         _logger.LogInformation(
             "Deducting {XpCost} XP for Coil '{CoilName}' on character {CharacterId}",
@@ -378,7 +376,7 @@ public class CoilService(
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
-        if (!IsOrdoDraculMember(character))
+        if (!CoilOrdoEligibility.IsOrdoDraculMember(character))
         {
             throw new InvalidOperationException("Only Ordo Dracul members can select a Chosen Mystery.");
         }
@@ -485,7 +483,7 @@ public class CoilService(
 
         await _authHelper.RequireStorytellerAsync(character.CampaignId.Value, storyTellerUserId, "grant crucible ritual access");
 
-        if (!IsOrdoDraculMember(character))
+        if (!CoilOrdoEligibility.IsOrdoDraculMember(character))
         {
             throw new InvalidOperationException("Only Ordo Dracul members can have Crucible Ritual access.");
         }
@@ -520,33 +518,5 @@ public class CoilService(
         _logger.LogInformation("Crucible Ritual access revoked: Character {CharacterId}", characterId);
 
         await _sessionService.BroadcastCharacterUpdateAsync(characterId);
-    }
-
-    private static bool IsOrdoDraculMember(Character character)
-    {
-        return character.Covenant?.Name == _ordoDraculName
-            && character.CovenantJoinStatus != Data.Models.Enums.CovenantJoinStatus.Pending;
-    }
-
-    private static int CalculateXpCost(bool isChosenMystery, bool hasCrucibleAccess)
-    {
-        return (isChosenMystery, hasCrucibleAccess) switch
-        {
-            (true, true) => 2,
-            (true, false) => 3,
-            (false, true) => 3,
-            (false, false) => 4,
-        };
-    }
-
-    private static int GetOrdoStatusDots(Character character)
-    {
-        // Ordo Dracul Status is a covenant-gated Merit. Check character merits for any
-        // Status merit (naming convention: "Status (Ordo Dracul)" or similar).
-        return character.Merits
-            .Where(m => m.Merit != null
-                && m.Merit.Name.Contains("Status", StringComparison.OrdinalIgnoreCase)
-                && m.Merit.Name.Contains("Ordo", StringComparison.OrdinalIgnoreCase))
-            .Sum(m => m.Rating);
     }
 }

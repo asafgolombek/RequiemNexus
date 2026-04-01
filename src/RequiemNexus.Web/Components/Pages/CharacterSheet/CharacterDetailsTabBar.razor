@@ -1,0 +1,17 @@
+<div class="tab-bar" role="tablist" aria-label="Character sheet sections">
+    <button type="button" class="tab-btn @(ActiveTab == "sheet" ? "active" : "")" role="tab" aria-selected="@(ActiveTab == "sheet" ? "true" : "false")" id="tab-sheet" @onclick='() => OnTabSelected.InvokeAsync("sheet")' @onkeydown="OnTabKeydown">Character Sheet</button>
+    <button type="button" class="tab-btn @(ActiveTab == "pack" ? "active" : "")" role="tab" aria-selected="@(ActiveTab == "pack" ? "true" : "false")" id="tab-pack" @onclick='() => OnTabSelected.InvokeAsync("pack")' @onkeydown="OnTabKeydown">The Pack</button>
+    <button type="button" class="tab-btn @(ActiveTab == "identity" ? "active" : "")" role="tab" aria-selected="@(ActiveTab == "identity" ? "true" : "false")" id="tab-identity" @onclick='() => OnTabSelected.InvokeAsync("identity")' @onkeydown="OnTabKeydown">Identity &amp; Backstory</button>
+    <button type="button" class="tab-btn @(ActiveTab == "history" ? "active" : "")" role="tab" aria-selected="@(ActiveTab == "history" ? "true" : "false")" id="tab-history" @onclick='() => OnTabSelected.InvokeAsync("history")' @onkeydown="OnTabKeydown">XP History</button>
+</div>
+
+@code {
+    [Parameter]
+    public string ActiveTab { get; set; } = "sheet";
+
+    [Parameter]
+    public EventCallback<string> OnTabSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<KeyboardEventArgs> OnTabKeydown { get; set; }
+}

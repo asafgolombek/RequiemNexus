@@ -216,15 +216,38 @@ public partial class CharacterDetails : IAsyncDisposable
         return Task.CompletedTask;
     }
 
-    private static IEnumerable<CharacterAsset> PackInventoryOrder(ICollection<CharacterAsset> assets) =>
-        assets.OrderByDescending(ca => ca.IsEquipped)
-            .ThenBy(ca => ca.BackpackSlotIndex ?? 100)
-            .ThenBy(ca => ca.Asset?.Name ?? string.Empty);
+    private Task BeginEditingNameAsync()
+    {
+        _isEditingName = true;
+        return Task.CompletedTask;
+    }
 
-    private static string BackpackSlotSelectValue(CharacterAsset ca) =>
-        ca.BackpackSlotIndex.HasValue
-            ? ca.BackpackSlotIndex.Value.ToString(CultureInfo.InvariantCulture)
-            : string.Empty;
+    private Task OnTabBarSelectAsync(string tab)
+    {
+        SelectTab(tab);
+        return Task.CompletedTask;
+    }
+
+    private Task HandleTabBarKeydownAsync(KeyboardEventArgs e)
+    {
+        HandleTabKeydown(e);
+        return Task.CompletedTask;
+    }
+
+    private void OnTraitLabelClick(string traitName) => OpenReference(traitName);
+
+    private void OnTraitRollClick(string traitName) => OpenRoller(traitName);
+
+    private Task OnAttributeOrSkillDotsChangedAsync((string TraitName, int NewValue) change) => SaveCharacter();
+
+    private Task HandlePackAssetEquippedAsync((CharacterAsset Asset, ChangeEventArgs Args) x) =>
+        OnAssetEquippedChanged(x.Asset, x.Args);
+
+    private Task HandlePackStructureChangedAsync((CharacterAsset Asset, ChangeEventArgs Args) x) =>
+        OnStructureChanged(x.Asset, x.Args);
+
+    private Task HandlePackBackpackSlotSelectAsync((CharacterAsset Asset, ChangeEventArgs Args) x) =>
+        OnBackpackSlotSelectAsync(x.Asset, x.Args);
 
     private void HandleTabKeydown(KeyboardEventArgs e)
     {
@@ -295,9 +318,10 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
-    private void GoToAdvancement()
+    private Task GoToAdvancement()
     {
         NavigationManager.NavigateTo($"/character/{Id}/advancement");
+        return Task.CompletedTask;
     }
 
     private async Task SaveNameOffBlur()

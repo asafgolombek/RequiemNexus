@@ -1,0 +1,14 @@
+@if (IsVisible)
+{
+    <div class="incapacitated-sheet-overlay" role="alert" aria-label="Incapacitated. Mechanical actions are suspended until you recover.">
+        <div class="incapacitated-sheet-overlay-inner">
+            <h3 class="incapacitated-sheet-title">Incapacitated</h3>
+            <p>Every health box is aggravated. Mechanical actions on this sheet are suspended until the Storyteller restores you.</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+}

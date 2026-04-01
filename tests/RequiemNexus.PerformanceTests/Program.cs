@@ -29,6 +29,20 @@ public static class Program
             Simulation.Inject(rate: 10, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(30))
         );
 
+        // Lightweight HTTP API surface (no auth) — proxies the "API p95" budget in Architecture.md until an authenticated harness exists.
+        var healthApiScenario = Scenario.Create("health_api_scenario", async context =>
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{targetUrl.TrimEnd('/')}/health");
+            var response = await httpClient.SendAsync(request);
+
+            return response.IsSuccessStatusCode
+                ? Response.Ok(statusCode: ((int)response.StatusCode).ToString())
+                : Response.Fail(statusCode: ((int)response.StatusCode).ToString());
+        })
+        .WithLoadSimulations(
+            Simulation.Inject(rate: 20, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(30))
+        );
+
         var signalrScenario = Scenario.Create("signalr_dispatch_scenario", async context =>
         {
             try
@@ -58,27 +72,43 @@ public static class Program
         );
 
         var stats = NBomberRunner
-            .RegisterScenarios(homePageScenario, signalrScenario)
+            .RegisterScenarios(homePageScenario, healthApiScenario, signalrScenario)
             .WithReportFormats(ReportFormat.Html, ReportFormat.Md)
             .Run();
 
-        // Performance Budget Enforcement
+        bool isLocalTarget = targetUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase);
+
+        // Performance Budget Enforcement — SignalR dice dispatch
         var signalrStats = stats.ScenarioStats.First(s => s.ScenarioName == "signalr_dispatch_scenario");
-        var p95 = signalrStats.Ok.Latency.Percent95;
+        var signalrP95 = signalrStats.Ok.Latency.Percent95;
         var failCount = signalrStats.Fail.Request.Count;
         var totalCount = signalrStats.Ok.Request.Count + failCount;
         var failRate = totalCount > 0 ? (double)failCount / totalCount : 0;
 
-        const int maxP95Ms = 200;
+        const int maxSignalrP95Ms = 200;
         const double maxFailRate = 0.05; // Allow some failure due to auth in local environments
 
         Console.WriteLine($"--- SignalR Performance Results ---");
-        Console.WriteLine($"P95 Latency: {p95}ms (Threshold: {maxP95Ms}ms)");
+        Console.WriteLine($"P95 Latency: {signalrP95}ms (Threshold: {maxSignalrP95Ms}ms)");
         Console.WriteLine($"Failure Rate: {failRate:P2} (Threshold: {maxFailRate:P2})");
 
-        if (p95 > maxP95Ms && !targetUrl.Contains("localhost"))
+        if (signalrP95 > maxSignalrP95Ms && !isLocalTarget)
         {
             Console.WriteLine("❌ SignalR performance budget exceeded! Failing build.");
+            Environment.Exit(1);
+        }
+
+        // Health endpoint HTTP p95 (Architecture.md — API response time budget for monitored surface)
+        var healthStats = stats.ScenarioStats.First(s => s.ScenarioName == "health_api_scenario");
+        var healthP95 = healthStats.Ok.Latency.Percent95;
+        const int maxHealthApiP95Ms = 300;
+
+        Console.WriteLine($"--- Health API Performance Results ---");
+        Console.WriteLine($"P95 Latency: {healthP95}ms (Threshold: {maxHealthApiP95Ms}ms)");
+
+        if (healthP95 > maxHealthApiP95Ms && !isLocalTarget)
+        {
+            Console.WriteLine("❌ Health API performance budget exceeded! Failing build.");
             Environment.Exit(1);
         }
 

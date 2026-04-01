@@ -1,0 +1,147 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
+@using RequiemNexus.Web.Helpers
+
+<section class="cs-section cs-equipment" id="panel-pack" role="tabpanel" aria-labelledby="tab-pack">
+    <h2>The Pack</h2>
+    <p class="pack-intro text-muted-rn">Purchase listed gear and services from the catalog: surplus Resources buys outright; at your Availability tier you may use Reach once per chapter (12 hours); further purchases still add to your pack without a table roll. Illicit items require Storyteller approval.</p>
+
+    <div class="equipment-form">
+        <select class="equipment-select" aria-label="Asset to purchase" value="@SelectedAssetId" @onchange="OnAssetSelectChanged">
+            <option value="0">-- Select asset --</option>
+            @foreach (var g in AvailableAssets.GroupBy(a => a.Kind).OrderBy(x => x.Key.ToString()))
+            {
+                <optgroup label="@g.Key">
+                    @foreach (var a in g.OrderBy(x => x.Name))
+                    {
+                        <option value="@a.Id">@a.Name</option>
+                    }
+                </optgroup>
+            }
+        </select>
+        <input type="number" min="1" class="equipment-quantity" aria-label="Quantity to purchase" value="@SelectedAssetQuantity" @onchange="OnQuantityChanged" />
+        <button class="btn-rn-primary"
+                type="button"
+                id="btn-purchase-asset"
+                disabled="@IsPurchaseDisabled"
+                aria-describedby="@((AvailableAssets.Count == 0 || IsPurchaseDisabled) ? "purchase-hint" : null)"
+                title="@PurchaseButtonTitle"
+                @onclick="OnPurchaseClicked">Purchase</button>
+    </div>
+    @if (AvailableAssets.Count == 0)
+    {
+        <p class="text-muted-rn text-small mt-2" id="purchase-hint" role="status">
+            No listed assets are in the catalog, so Purchase stays disabled.
+        </p>
+    }
+    else if (IsPurchaseDisabled)
+    {
+        <p class="text-muted-rn text-small mt-2" id="purchase-hint" role="note">
+            Select an item from the list and set quantity to at least 1 to enable Purchase.
+        </p>
+    }
+
+    @{
+        var wornWeapons = Character.CharacterAssets
+            .Where(ca => ca.IsEquipped && ca.Asset is WeaponAsset && CharacterAssetActiveHelper.IsEquippedAndActive(ca))
+            .ToList();
+        int wpUsed = wornWeapons.Sum(ca => ca.Asset is WeaponAsset w ? Math.Max(1, w.WeaponSlotPoints) : 0);
+    }
+    <h3 class="mt-3">Worn</h3>
+    <p class="text-muted-rn text-small">At most one armor. Weapons share @EquipmentCarryRules.MaxWeaponSlotPoints slot points (e.g. two 1-slot sidearms or one 2-slot long gun).</p>
+    <p class="text-small mb-2">Weapon slot points used: <strong>@wpUsed / @EquipmentCarryRules.MaxWeaponSlotPoints</strong></p>
+
+    <h3 class="mt-3">Backpack (@EquipmentCarryRules.MaxBackpackSlots slots)</h3>
+    <p class="text-muted-rn text-small">Carried on your person but not worn. Assign slots from each inventory row below.</p>
+    <div class="backpack-grid">
+        @for (int i = 0; i < EquipmentCarryRules.MaxBackpackSlots; i++)
+        {
+            int slot = i;
+            var occ = Character.CharacterAssets.FirstOrDefault(ca => ca.BackpackSlotIndex == slot);
+            <div class="backpack-cell">
+                <span class="text-muted-rn text-small">Slot @(slot + 1)</span>
+                @if (occ?.Asset != null)
+                {
+                    <div class="backpack-cell-body">
+                        <span>@occ.Asset.Name</span>
+                        <button type="button" class="btn-rn-ghost text-small" @onclick="() => OnClearBackpackSlot.InvokeAsync(occ.Id)">Clear</button>
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted-rn">Empty</span>
+                }
+            </div>
+        }
+    </div>
+
+    <h3 class="mt-3">Inventory</h3>
+    <p class="text-muted-rn text-small">Rows not worn and not in a backpack slot are off-person stash (haven, safehouse, etc.).</p>
+    <ul class="equipment-grid">
+        @foreach (var ca in CharacterPackUiHelper.PackInventoryOrder(Character.CharacterAssets))
+        {
+            var broken = ca.CurrentStructure is int st && st <= 0;
+            var isService = ca.Asset?.Kind == AssetKind.Service;
+            <li class="equipment-item @(broken ? "equipment-broken" : "")">
+                <div class="equipment-info">
+                    <strong class="equipment-name">@ca.Asset?.Name (x@ca.Quantity)</strong>
+                    @if (broken)
+                    {
+                        <span class="badge-broken">Broken</span>
+                    }
+                    <div class="equipment-meta">
+                        <span>Kind: @ca.Asset?.Kind</span>
+                        @if (ca.Asset is WeaponAsset w && w.Damage > 0)
+                        {
+                            <span>| Dmg: @w.Damage</span>
+                            <span>| Carry: @(Math.Max(1, w.WeaponSlotPoints)) pt</span>
+                        }
+                        @if (ca.Asset is ArmorAsset ar && ar.ArmorRating > 0)
+                        {
+                            <span>| Arm: @ar.ArmorRating</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(ca.Asset?.Description))
+                    {
+                        <p class="equipment-desc">@ca.Asset.Description</p>
+                    }
+                    @if (isService)
+                    {
+                        <p class="text-muted-rn text-small">Services cannot be worn.</p>
+                    }
+                    else
+                    {
+                        <label class="equipment-equipped-label">
+                            <input type="checkbox" checked="@ca.IsEquipped" disabled="@broken"
+                                   @onchange="e => OnAssetEquippedChanged.InvokeAsync((ca, e))" />
+                            Equipped (worn)
+                        </label>
+                    }
+                    <div class="pack-row mt-1">
+                        <label class="text-small">Structure <input type="number" class="form-control d-inline-block" style="width:4rem" value="@(ca.CurrentStructure?.ToString() ?? "")" placeholder="—" @onchange="e => OnStructureChanged.InvokeAsync((ca, e))" /></label>
+                        <label class="text-small ms-2">Backpack
+                            <select class="form-select form-select-sm d-inline-block w-auto ms-1" style="max-width:10rem" disabled="@broken" value="@CharacterPackUiHelper.BackpackSlotSelectValue(ca)" @onchange="e => OnBackpackSlotSelect.InvokeAsync((ca, e))">
+                                <option value="">—</option>
+                                @for (int bi = 0; bi < EquipmentCarryRules.MaxBackpackSlots; bi++)
+                                {
+                                    <option value="@bi">Slot @(bi + 1)</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+                    <div class="equipment-actions mt-1">
+                        @if (broken)
+                        {
+                            <button type="button" class="btn-rn-action btn-sm" @onclick="() => OnOpenRepairRoller.InvokeAsync(ca)">Repair</button>
+                        }
+                        else if (!isService)
+                        {
+                            <button type="button" class="btn-rn-action btn-sm" @onclick="() => OnOpenForgeModal.InvokeAsync(ca)">Forge</button>
+                        }
+                        <button class="equipment-remove-btn ms-2" type="button" @onclick="() => OnRemoveCharacterAsset.InvokeAsync(ca.Id)">Remove</button>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+</section>

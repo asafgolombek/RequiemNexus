@@ -285,9 +285,9 @@ Performance is a feature, not an optimization applied after the fact. These budg
 
 | Metric | Target | Enforcement |
 |--------|--------|-------------|
-| Dice roll latency | < 200ms | NBomber in CI (`RequiemNexus.PerformanceTests`) |
+| Dice roll latency | < 200ms | NBomber `signalr_dispatch_scenario` in nightly CI (`RequiemNexus.PerformanceTests`) |
 | Character sheet TTI | < 1.5s | Lighthouse CI audit against staging URL |
-| API response time (p95) | < 300ms | NBomber in CI + OpenTelemetry alerts |
+| HTTP API response time (p95) | < 300ms | NBomber `health_api_scenario` (`GET /health`) in nightly CI; authenticated business APIs — monitor via OpenTelemetry in production |
 
 ### Lighthouse CI Configuration
 

@@ -1,0 +1,126 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Components.UI
+
+<header class="cs-header">
+    <CharacterSheetInitialsAvatar CharacterName="@Character.Name" />
+    <div class="char-info">
+        @if (IsEditingName)
+        {
+            <input type="text" class="char-name-input" @bind="Character.Name" @onblur="OnNameBlur" @onkeyup="OnNameKeyUp" autofocus />
+        }
+        else
+        {
+            <div class="char-title-row">
+                <h1 @onclick="OnBeginEditName" class="edit-name-trigger" title="Click to edit name">@Character.Name <i class="edit-icon">✎</i></h1>
+                <span class="char-session-status @(SessionConnected ? "char-session-status-live" : "char-session-status-idle")"
+                      role="img"
+                      title="@(SessionConnected ? "Connected to a live session" : "Not in a live session")"
+                      aria-label="@(SessionConnected ? "Live session connected" : "No live session")"></span>
+            </div>
+        }
+        <div class="char-meta">
+            <span><strong>Concept:</strong> @(string.IsNullOrEmpty(Character.Concept) ? "???" : Character.Concept)</span>
+            <span><strong>Clan:</strong> @(Character.Clan?.Name ?? "None")</span>
+            <span><strong>Covenant:</strong> @(Character.Covenant?.Name ?? "Unaligned")</span>
+            <span><strong>Chronicle:</strong> @(Character.Campaign?.Name ?? "None")</span>
+            <span><strong>Mask:</strong> @(string.IsNullOrEmpty(Character.Mask) ? "???" : Character.Mask)</span>
+            <span><strong>Dirge:</strong> @(string.IsNullOrEmpty(Character.Dirge) ? "???" : Character.Dirge)</span>
+            @if (IsFreeEditMode)
+            {
+                <span><strong>Touchstone:</strong> <input type="text" @bind="Character.Touchstone" class="char-meta-input" placeholder="e.g. My sibling" /></span>
+            }
+            else
+            {
+                <span><strong>Touchstone:</strong> @(string.IsNullOrEmpty(Character.Touchstone) ? "???" : Character.Touchstone)</span>
+            }
+        </div>
+        <div class="char-xp">
+            <div class="char-xp-trackers">
+                <div class="xp-counter">
+                    <strong class="xp-counter-label">Beats</strong>
+                    <button class="xp-counter-btn" @onclick="OnRemoveBeat"
+                            disabled="@(Character.Beats <= 0)">-</button>
+                    <span class="xp-counter-value">@Character.Beats</span>
+                    <button class="xp-counter-btn" @onclick="OnAddBeat">+</button>
+                </div>
+                <div class="xp-counter">
+                    <strong class="xp-counter-label">Experiences</strong>
+                    <button class="xp-counter-btn" @onclick="OnRemoveXp"
+                            disabled="@(Character.ExperiencePoints <= 0)">-</button>
+                    <span class="xp-counter-value">@Character.ExperiencePoints</span>
+                    <button class="xp-counter-btn" @onclick="OnAddXp">+</button>
+                </div>
+                <div class="xp-total">
+                    <strong class="xp-counter-label">Total XP</strong>
+                    <span class="xp-counter-value">@Character.TotalExperiencePoints</span>
+                </div>
+            </div>
+            <div class="char-xp-actions">
+                <button class="btn-rn-ghost mode-toggle-btn"
+                        @onclick="OnGoToAdvancement">
+                    Enter Advancement
+                </button>
+                <button class="btn-rn-ghost mode-toggle-btn @(IsFreeEditMode ? "active" : "")"
+                        @onclick="OnToggleFreeEditMode">
+                    @(IsFreeEditMode ? "Finish Edit" : "Edit Character")
+                </button>
+                <button class="btn-rn-ghost mode-toggle-btn" @onclick="OnExportJson" disabled="@IsExporting">
+                    @(IsExporting ? "Exporting…" : "Export JSON")
+                </button>
+                <button class="btn-rn-ghost mode-toggle-btn" @onclick="OnExportPdf" disabled="@IsExporting">
+                    @(IsExporting ? "Exporting…" : "Export PDF")
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter]
+    public bool SessionConnected { get; set; }
+
+    [Parameter]
+    public bool IsEditingName { get; set; }
+
+    [Parameter]
+    public bool IsFreeEditMode { get; set; }
+
+    [Parameter]
+    public bool IsExporting { get; set; }
+
+    [Parameter]
+    public EventCallback OnBeginEditName { get; set; }
+
+    [Parameter]
+    public EventCallback OnNameBlur { get; set; }
+
+    [Parameter]
+    public EventCallback<KeyboardEventArgs> OnNameKeyUp { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddBeat { get; set; }
+
+    [Parameter]
+    public EventCallback OnRemoveBeat { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddXp { get; set; }
+
+    [Parameter]
+    public EventCallback OnRemoveXp { get; set; }
+
+    [Parameter]
+    public EventCallback OnGoToAdvancement { get; set; }
+
+    [Parameter]
+    public EventCallback OnToggleFreeEditMode { get; set; }
+
+    [Parameter]
+    public EventCallback OnExportJson { get; set; }
+
+    [Parameter]
+    public EventCallback OnExportPdf { get; set; }
+}
