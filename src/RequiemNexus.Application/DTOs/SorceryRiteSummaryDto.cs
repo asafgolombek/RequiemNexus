@@ -11,10 +11,12 @@ namespace RequiemNexus.Application.DTOs;
 /// <param name="SorceryType">Tradition (Crúac, Theban, Necromancy, Ordo ritual).</param>
 /// <param name="XpCost">XP cost to learn.</param>
 /// <param name="CovenantName">Covenant name, clan gate summary, or "—" when not covenant-gated.</param>
+/// <param name="TargetSuccesses">Extended-action successes required (V:tR 2e ritual casting).</param>
 public record SorceryRiteSummaryDto(
     int Id,
     string Name,
     int Level,
     SorceryType SorceryType,
     int XpCost,
-    string CovenantName);
+    string CovenantName,
+    int TargetSuccesses);

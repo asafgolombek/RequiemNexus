@@ -22,5 +22,9 @@ public class SorceryRiteSeedDataCatalogTests
         int actualCruac = catalog.Count(e => e.SorceryType == SorceryType.Cruac);
 
         Assert.Equal(expectedCruac, actualCruac);
+        Assert.All(catalog, e => Assert.True(e.TargetSuccesses >= 1));
+        SorceryRiteCatalogEntry? pangs = catalog.FirstOrDefault(e => e.Name == "Pangs of Proserpina");
+        Assert.NotNull(pangs);
+        Assert.Equal(6, pangs!.TargetSuccesses);
     }
 }

@@ -25,7 +25,7 @@
                                  role="button"
                                  tabindex="0"
                                  @onkeydown="(e) => HandleKeydown(e, rite.Id)">
-                                <div class="bloodline-name">@rite.Name — Level @rite.Level @TraditionLabel(rite.SorceryType) (@rite.XpCost XP)</div>
+                                <div class="bloodline-name">@rite.Name — Level @rite.Level @TraditionLabel(rite.SorceryType) (@rite.XpCost XP, @rite.TargetSuccesses successes)</div>
                                 <div class="bloodline-desc">@rite.CovenantName</div>
                             </div>
                         }

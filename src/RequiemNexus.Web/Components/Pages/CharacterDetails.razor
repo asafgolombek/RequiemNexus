@@ -397,7 +397,7 @@ else
                                             {
                                                 <li class="trait-item">
                                                     <span>@cr.SorceryRiteDefinition.Name</span>
-                                                    <span class="tradition-label">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType))</span>
+                                                    <span class="tradition-label">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType)), @cr.SorceryRiteDefinition.TargetSuccesses successes</span>
                                                     @if (!string.IsNullOrWhiteSpace(cr.SorceryRiteDefinition.ActivationCostDescription))
                                                     {
                                                         <span class="activation-cost">@cr.SorceryRiteDefinition.ActivationCostDescription</span>

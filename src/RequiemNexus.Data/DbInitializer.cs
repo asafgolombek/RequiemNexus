@@ -408,7 +408,7 @@ public static class DbInitializer
         var entries = SorceryRiteSeedData.LoadFromDocs(logger);
         var rites = new List<SorceryRiteDefinition>();
 
-        foreach (var (name, rating, prerequisites, effect, sorceryType) in entries)
+        foreach (var (name, rating, prerequisites, effect, sorceryType, targetSuccesses) in entries)
         {
             int requiredCovenantId = sorceryType == Domain.Enums.SorceryType.Cruac ? crone.Id : lancea.Id;
             int disciplineId = sorceryType == Domain.Enums.SorceryType.Cruac ? cruacDisc.Id : thebanDisc.Id;
@@ -422,6 +422,7 @@ public static class DbInitializer
                 Level = rating,
                 SorceryType = sorceryType,
                 XpCost = rating,
+                TargetSuccesses = targetSuccesses,
                 PoolDefinitionJson = poolJson,
                 ActivationCostDescription = costDesc,
                 RequiredCovenantId = requiredCovenantId,
@@ -553,6 +554,7 @@ public static class DbInitializer
                 RequirementsJson = """[{"type":"MaterialFocus","value":1,"isConsumed":false},{"type":"InternalVitae","value":1,"isConsumed":true}]""",
                 Prerequisites = "Corpse present; narrative focus required (acknowledge in app).",
                 Effect = "Prepares the remains for further necromantic workings.",
+                TargetSuccesses = SorceryRiteSeedData.DefaultTargetSuccessesForRating(1),
             });
         }
 
@@ -573,6 +575,7 @@ public static class DbInitializer
                 RequirementsJson = """[{"type":"InternalVitae","value":2,"isConsumed":true}]""",
                 Prerequisites = "Member of the Ordo Dracul.",
                 Effect = "Produces draconic flame; combat and duration resolved at the table.",
+                TargetSuccesses = SorceryRiteSeedData.DefaultTargetSuccessesForRating(2),
             });
         }
 
@@ -580,6 +583,7 @@ public static class DbInitializer
         await EnsureMissingSorceryRiteCatalogEntriesAsync(context, logger);
         await EnsureSorceryRiteCostsCorrectAsync(context);
         await ClearNecromancyRequiredClanGateAsync(context);
+        await EnsureSorceryRiteTargetSuccessesFromCatalogAsync(context, logger);
     }
 
     /// <summary>
@@ -721,6 +725,7 @@ public static class DbInitializer
             Level = entry.Rating,
             SorceryType = entry.SorceryType,
             XpCost = entry.Rating,
+            TargetSuccesses = entry.TargetSuccesses,
             PoolDefinitionJson = poolJson,
             ActivationCostDescription = costDesc,
             RequiredCovenantId = requiredCovenantId,
@@ -729,6 +734,42 @@ public static class DbInitializer
             Prerequisites = entry.Prerequisites,
             Effect = entry.Effect,
         };
+    }
+
+    /// <summary>
+    /// Aligns <see cref="SorceryRiteDefinition.TargetSuccesses"/> with the seed catalog so existing databases pick up PDF-correct thresholds.
+    /// </summary>
+    private static async Task EnsureSorceryRiteTargetSuccessesFromCatalogAsync(ApplicationDbContext context, ILogger logger)
+    {
+        IReadOnlyList<SorceryRiteCatalogEntry> catalog = SorceryRiteSeedData.LoadCatalogEntries(logger);
+        Dictionary<string, int> byName = catalog.ToDictionary(
+            e => e.Name,
+            e => e.TargetSuccesses,
+            StringComparer.OrdinalIgnoreCase);
+
+        List<SorceryRiteDefinition> rows = await context.SorceryRiteDefinitions.ToListAsync();
+        int changed = 0;
+        foreach (SorceryRiteDefinition row in rows)
+        {
+            if (byName.TryGetValue(row.Name, out int ts) && row.TargetSuccesses != ts)
+            {
+                row.TargetSuccesses = ts;
+                changed++;
+            }
+            else if (row.TargetSuccesses < 1)
+            {
+                row.TargetSuccesses = SorceryRiteSeedData.DefaultTargetSuccessesForRating(row.Level);
+                changed++;
+            }
+        }
+
+        if (changed > 0)
+        {
+            await context.SaveChangesAsync();
+            logger.LogInformation(
+                "Updated TargetSuccesses on {Changed} sorcery rite row(s) from seed catalog.",
+                changed);
+        }
     }
 
     private static async Task EnsureDisciplineExistsAsync(ApplicationDbContext context, string name, string description)

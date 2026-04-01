@@ -74,12 +74,17 @@ public static class SorceryRiteSeedData
     /// <summary>
     /// Loads rites from SeedSource JSON. Legacy tuple shape for <see cref="DbInitializer.SeedSorceryRitesAsync"/>.
     /// </summary>
-    public static List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType)> LoadFromDocs(ILogger logger)
+    public static List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType, int TargetSuccesses)> LoadFromDocs(ILogger logger)
     {
         return LoadCatalogEntries(logger)
-            .Select(e => (e.Name, e.Rating, e.Prerequisites, e.Effect, e.SorceryType))
+            .Select(e => (e.Name, e.Rating, e.Prerequisites, e.Effect, e.SorceryType, e.TargetSuccesses))
             .ToList();
     }
+
+    /// <summary>
+    /// Fallback when seed JSON omits <c>TargetSuccesses</c>: keeps extended-action UI non-zero (audit P1-2).
+    /// </summary>
+    public static int DefaultTargetSuccessesForRating(int rating) => Math.Clamp(5 + rating, 1, 30);
 
     private static void AppendArray(JsonElement root, SorceryType sorceryType, List<SorceryRiteCatalogEntry> target)
     {
@@ -89,9 +94,17 @@ public static class SorceryRiteSeedData
             int rating = el.TryGetProperty("Rating", out var r) ? r.GetInt32() : 1;
             string prereq = el.TryGetProperty("Prerequisites", out var p) ? p.GetString() ?? string.Empty : string.Empty;
             string effect = el.TryGetProperty("Effect", out var e) ? e.GetString() ?? string.Empty : string.Empty;
+            int targetSuccesses = el.TryGetProperty("TargetSuccesses", out var ts) && ts.ValueKind == JsonValueKind.Number
+                ? ts.GetInt32()
+                : DefaultTargetSuccessesForRating(rating);
+            if (targetSuccesses < 1)
+            {
+                targetSuccesses = DefaultTargetSuccessesForRating(rating);
+            }
+
             if (!string.IsNullOrEmpty(name))
             {
-                target.Add(new SorceryRiteCatalogEntry(name, rating, prereq, effect, sorceryType));
+                target.Add(new SorceryRiteCatalogEntry(name, rating, prereq, effect, sorceryType, targetSuccesses));
             }
         }
     }
@@ -103,19 +116,22 @@ public static class SorceryRiteSeedData
             1,
             "Smear Vitae over a central point of the territory.",
             "Extends the vampire's Predatory Aura over the entire territory.",
-            SorceryType.Cruac);
+            SorceryType.Cruac,
+            6);
         yield return new SorceryRiteCatalogEntry(
             "Pangs of Proserpina",
             2,
             "Target must be within a mile.",
             "Inflicts intense hunger on a victim, provoking frenzy in vampires.",
-            SorceryType.Cruac);
+            SorceryType.Cruac,
+            6);
         yield return new SorceryRiteCatalogEntry(
             "The Hydra's Vitae",
             3,
             "None specified.",
             "Transforms the ritualist's own blood into a toxic poison.",
-            SorceryType.Cruac);
+            SorceryType.Cruac,
+            5);
     }
 
     private static IEnumerable<SorceryRiteCatalogEntry> GetMinimalThebanEntries()
@@ -125,18 +141,21 @@ public static class SorceryRiteSeedData
             1,
             "Sacrament: An apple, a drop of Vitae.",
             "Grants temporary Intelligence and Wits dots.",
-            SorceryType.Theban);
+            SorceryType.Theban,
+            5);
         yield return new SorceryRiteCatalogEntry(
             "Blood Scourge",
             1,
             "Sacrament: The ritualist's own blood (at least one Vitae).",
             "Transforms blood into a stinging whip.",
-            SorceryType.Theban);
+            SorceryType.Theban,
+            6);
         yield return new SorceryRiteCatalogEntry(
             "Marian Apparition",
             2,
             "Sacrament: A piece of pure white cloth.",
             "Creates an apparition of a holy figure.",
-            SorceryType.Theban);
+            SorceryType.Theban,
+            6);
     }
 }

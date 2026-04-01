@@ -70,7 +70,8 @@ public class SorceryService(
             r.Level,
             r.SorceryType,
             r.XpCost,
-            SummarizeRiteGate(r))).ToList();
+            SummarizeRiteGate(r),
+            r.TargetSuccesses)).ToList();
     }
 
     /// <inheritdoc />

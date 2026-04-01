@@ -23,6 +23,11 @@ public class SorceryRiteDefinition
     /// <summary>Rite level (1–5). Character must have matching Discipline dots to learn.</summary>
     public int Level { get; set; }
 
+    /// <summary>
+    /// Successes required to complete the ritual as an extended action (V:tR 2e p. 152). Seed from PDF; surfaced in the casting UI.
+    /// </summary>
+    public int TargetSuccesses { get; set; }
+
     /// <summary>Crúac (Circle of the Crone) or Theban Sorcery (Lancea et Sanctum).</summary>
     public SorceryType SorceryType { get; set; }
 
