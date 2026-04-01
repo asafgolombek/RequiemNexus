@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 
@@ -65,4 +66,9 @@ public class SorceryRiteDefinition
 
     /// <summary>Effect text from source material.</summary>
     public string? Effect { get; set; }
+
+    /// <summary>
+    /// When true, only vampires meeting <see cref="SorceryElderRules.MinimumBloodPotency"/> may learn or cast this rite (catalog Ranking: Elder).
+    /// </summary>
+    public bool RequiresElder { get; set; }
 }

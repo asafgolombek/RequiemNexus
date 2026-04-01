@@ -381,7 +381,7 @@ else
                         <CharacterSheetWornCard Character="_character" />
                         <CharacterSheetBackpackCard Character="_character" OnManagePack="GoToPackTab" />
 
-                        <!-- BLOOD SORCERY: Cr├║ac/Theban covenants, Ordo rituals, or characters with Necromancy -->
+                        <!-- BLOOD SORCERY: Crúac/Theban covenants or characters with Necromancy -->
                         @if (ShowBloodSorcerySection)
                         {
                             <section class="cs-section cs-blood-sorcery">
@@ -424,7 +424,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="unaligned-note">No rites yet. Purchase Crúac, Theban Sorcery, Necromancy, or Ordo Sorcery dots via Advancement where appropriate, then request to learn rites.</p>
+                                    <p class="unaligned-note">No rites yet. Purchase Crúac, Theban Sorcery, or Necromancy dots via Advancement where appropriate, then request to learn rites.</p>
                                     <button class="btn-rn-primary text-small" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
                                 }
                             </section>

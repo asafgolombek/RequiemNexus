@@ -84,6 +84,12 @@ Mechanical choices for predator-type pools, territory bonus dice, resonance disp
 - **Coils vs. creation dots:** The 2-of-3 in-clan rule applies to **`CharacterDiscipline`** rows only. Coils use `CharacterCoil` and a separate purchase flow.
 - **Crúac / Theban at character creation:** The creation wizard lists **all** catalogue disciplines (including covenant sorcery tracks). Characters without covenant membership still hit the same covenant gate at **advancement** when buying with XP. At creation, dots are assigned without the covenant service gate; groups that require strict in-play acquisition should restrict choices at the table. The app enforces the **2-of-3 in-clan** rule for starting dots regardless.
 
+## Phase 19.5 — The Rite Perfected (blood sorcery catalogs)
+
+- **Canonical ritual JSON:** Runtime seeding reads only `SeedSource/cruac_rituales.json`, `SeedSource/Theban_Sorcery_rituals.json`, and `SeedSource/kindred_necromancy_rituals.json` (unified shape: `Effect`, `Roll`, `Prerequisites`, `Target Successes`, `Ranking`). Do not add parallel ritual catalogs under `SeedSource`.
+- **Ranking (discipline dots):** For learn, request, and cast eligibility, the character’s dots in the matching ritual discipline (**Crúac**, **Theban Sorcery**, or **Necromancy**) must be **≥** the catalog minimum (first parseable integer in `Ranking` when numeric). Theban also keeps the **Humanity floor** per dot (Phase 19).
+- **Elder-ranked rites:** When catalog `Ranking` is the **Elder** token (case-insensitive), `SorceryRiteDefinition.RequiresElder` is set. Learn and cast require `BloodPotency >= SorceryElderRules.MinimumBloodPotency` (**5** in code — audit default; adjust only with an explicit rules pass and seed review).
+
 ## Phase 16b — The Discipline Engine (power activation)
 
 - **`"1 Vitae or 1 Willpower"` cost string:** `ActivationCost.Parse` recognises `N Vitae or M Willpower` and sets **`IsPlayerChoiceVitaeOrWillpower`** plus amounts — **do not** infer choice from substring matching in the Blazor UI; the modal uses the parsed flag. The player picks **Vitae** or **Willpower** (`DisciplineActivationResourceChoice`); `DisciplineActivationService.ActivatePowerAsync` takes that choice. If **neither** pool can pay the required amounts, the service throws **`InvalidOperationException`** before rolling (same exception style as other activation failures).

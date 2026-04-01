@@ -6,6 +6,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Application.Services;
@@ -62,7 +63,8 @@ public class SorceryService(
         return candidates
             .Where(r => GetSorceryDisciplineRating(character, r.SorceryType) >= r.Level
                 && IsTraditionAllowedForCharacter(character, r.SorceryType)
-                && MeetsThebanHumanityForMiracle(character, r))
+                && MeetsThebanHumanityForMiracle(character, r)
+                && MeetsElderRequirement(character, r))
             .OrderBy(r => r.SorceryType)
             .ThenBy(r => r.Level)
             .ThenBy(r => r.Name)
@@ -130,6 +132,12 @@ public class SorceryService(
         {
             throw new InvalidOperationException(
                 $"Theban Sorcery requires Humanity {rite.Level} or higher to learn this miracle (character has Humanity {character.Humanity}).");
+        }
+
+        if (!MeetsElderRequirement(character, rite))
+        {
+            throw new InvalidOperationException(
+                $"This rite requires Blood Potency {SorceryElderRules.MinimumBloodPotency} or higher (elder-ranked miracle). Character has Blood Potency {character.BloodPotency}.");
         }
 
         if (character.Rites.Any(r => r.SorceryRiteDefinitionId == sorceryRiteDefinitionId && r.Status == RiteLearnStatus.Pending))
@@ -222,6 +230,12 @@ public class SorceryService(
                 $"Theban Sorcery requires Humanity {rite.Level} or higher to approve learning this miracle (character has Humanity {character.Humanity}).");
         }
 
+        if (!MeetsElderRequirement(character, rite))
+        {
+            throw new InvalidOperationException(
+                $"Cannot approve: this rite requires Blood Potency {SorceryElderRules.MinimumBloodPotency}+ (elder-ranked). Character has Blood Potency {character.BloodPotency}.");
+        }
+
         _logger.LogInformation(
             "Deducting {XpCost} XP for rite '{RiteName}' on character {CharacterId}",
             rite.XpCost,
@@ -298,7 +312,6 @@ public class SorceryService(
             SorceryType.Cruac => character.GetDisciplineRating("Crúac"),
             SorceryType.Theban => character.GetDisciplineRating("Theban Sorcery"),
             SorceryType.Necromancy => character.GetDisciplineRating("Necromancy"),
-            SorceryType.OrdoDraculRitual => character.GetDisciplineRating("Ordo Sorcery"),
             _ => 0,
         };
 
@@ -306,7 +319,6 @@ public class SorceryService(
         type switch
         {
             SorceryType.Cruac or SorceryType.Theban => character.Covenant?.SupportsBloodSorcery == true,
-            SorceryType.OrdoDraculRitual => character.Covenant?.SupportsOrdoRituals == true,
             SorceryType.Necromancy => true,
             _ => false,
         };
@@ -314,6 +326,9 @@ public class SorceryService(
     // Theban miracles require Humanity >= miracle rating (matches cast-time check in SorceryActivationService).
     private static bool MeetsThebanHumanityForMiracle(Character character, SorceryRiteDefinition rite) =>
         rite.SorceryType != SorceryType.Theban || character.Humanity >= rite.Level;
+
+    private static bool MeetsElderRequirement(Character character, SorceryRiteDefinition rite) =>
+        !rite.RequiresElder || character.BloodPotency >= SorceryElderRules.MinimumBloodPotency;
 
     private static string SummarizeRiteGate(SorceryRiteDefinition r)
     {

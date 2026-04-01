@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01 (updated 2026-04-01 — implementation status)
 **Source of truth:** *Vampire: The Requiem 2e* PDF (pages 150–165) + `docs/magic_types_and_rules.txt`
-**Status:** **Delivered in codebase for P0, P1-2, P2, seed/P3-1–2, P3-4/5 reference JSON, and P4 Theban learn/eligible gate; deferred P1-1, P1-3, P1-4, remaining P4 verification.**  
+**Status:** **Delivered in codebase for P0, P1-2, P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, and P4 Theban learn/eligible gate; deferred P1-1, P1-3, P1-4, remaining P4 verification.**  
 **Companion review:** [plan-blood-sorcery-audit-review.md](./plan-blood-sorcery-audit-review.md) (open questions, backlog gaps, doc fixes)
 
 ---
@@ -11,7 +11,7 @@
 
 | Audit block | Status | Notes |
 |-------------|--------|--------|
-| **P0-1** BOM + encoding | Done | `SeedDataLoader.TryLoadJson` uses UTF-8 with BOM detection; `rites.json` uses proper `Crúac` escapes. |
+| **P0-1** BOM + encoding | Done | `SeedDataLoader.TryLoadJson` uses UTF-8 with BOM detection; Crúac catalog (`cruac_rituales.json`) uses proper `Crúac` escapes. |
 | **P0-2** Theban sacrament | Done | `DbInitializer` builds `PhysicalSacrament` in `RequirementsJson`; tests cover cast without acknowledgment. |
 | **P1-2** `TargetSuccesses` | Done | Column + seed JSON + UI (sheet + learn modal); catalog sync in `DbInitializer`. |
 | **P1-1** Extended actions | **Not done** | Requires session persistence + cost-timing decisions (see § P1-1). |
@@ -22,10 +22,12 @@
 | **P2-3** Crúac Humanity cap | Done | `HumanityService` / `CharacterDisciplineService` clamp + degeneration hooks (Phase 19). |
 | **P2-4** Necromancy torpor | Done | `TorporDurationTable` + `TorporService` effective BP. |
 | **P2-5** Necromancy clan gate | Done | Seed cleanup + `IsTraditionAllowedForCharacter` + `ClearNecromancyRequiredClanGateAsync`. |
-| **P3-1 / P3-2** Ratings | Done in seed | `rites.json` / `rituals.json` aligned with audit tables (verify periodically vs PDF). |
-| **P3-3** Necromancy catalog | **Option A** | Keep `necromancyRites.json` custom set; supplement reference lives in `docs/kindred_necromancy_rituals.json` (file renamed from typo). |
-| **P3-4 / P3-5** Docs JSON tables | Done | `targetSuccesses` on 10 core Crúac entries; Theban core miracles: `ranking` + `targetSuccesses` (Marian Apparition rating only). |
-| **P4** Backlog | Partial | Theban Humanity floor at learn + eligible + approve (`SorceryService`); Necromancy event UI path + `ResolveRiteActivationPoolAsync` still open. |
+| **P3-1 / P3-2** Ratings | Done (historical) | Pre–P5, `rites.json` / `rituals.json` were corrected vs PDF; **P5** now owns authoritative Crúac/Theban rows in `cruac_rituales.json` / `Theban_Sorcery_rituals.json`. |
+| **P3-3** Necromancy catalog | **Superseded by P5** | Shipped set = `SeedSource/kindred_necromancy_rituals.json` only; no parallel `necromancyRites.json`. |
+| **P5** Canonical catalogs in Data | Done | Three unified-schema files under `src/RequiemNexus.Data/SeedSource/`; `SorceryRiteSeedData` + `RequiresElder`; old SeedSource trio removed. |
+| **P6** Ordo Dracul rituals | Done | `OrdoDraculRitual` removed from `SorceryType`; ritual rows and UI paths stripped; Coils / `CoilOrdoEligibility` unchanged. |
+| **P3-4 / P3-5** Docs JSON tables | Done | Reference tables updated when files lived under `docs/`; **authoritative** `Target Successes` / `Ranking` now live in the three SeedSource catalogs (optional human mirrors under `docs/` only). |
+| **P4** Backlog | Partial | Necromancy event UI path + `ResolveRiteActivationPoolAsync` still open. Theban Humanity floor enforced at learn + eligible + approve. |
 
 ---
 
@@ -37,17 +39,17 @@ The core learning/approval pipeline and basic activation costs are implemented c
 
 ## P0 — Bugs (Break Existing Functionality)
 
-### P0-1 · `rites.json` has a UTF-8 BOM that breaks JSON parsing
+### P0-1 · Crúac catalog JSON has a UTF-8 BOM that breaks JSON parsing
 
-**File:** `src/RequiemNexus.Data/SeedSource/rites.json`
-**Symptom:** Python's `json.load()` raises `JSONDecodeError: Expecting value` when reading the file directly without BOM handling. Seeding uses `File.ReadAllText` + `JsonDocument.Parse` in `SeedDataLoader.TryLoadJson`; verify whether a leading UTF-8 BOM still causes parse failure and fallback to the minimal in-memory Crúac set (meaning **all full-catalog Crúac rites are missing from the database**).
+**File:** `src/RequiemNexus.Data/SeedSource/cruac_rituales.json` (historical note: formerly `rites.json`)
+**Symptom:** Python's `json.load()` raises `JSONDecodeError: Expecting value` when reading the file directly without BOM handling. Seeding uses `File.ReadAllText` + `JsonDocument.Parse` in `SeedDataLoader.TryLoadJson`; verify whether a leading UTF-8 BOM still causes parse failure and fallback to the minimal in-memory Crúac set (meaning **all full-catalog Crúac rites are missing from the database**). Same invariant applies to the current canonical filename.
 
-**Fix:** Fix once in `SeedDataLoader.TryLoadJson` (not just for `rites.json`) so all seed JSON files share the same BOM-tolerant read path. Either resave `rites.json` without the BOM or pass `new UTF8Encoding(detectEncodingFromByteOrderMarks: true)` to the reader.
+**Fix:** Fix once in `SeedDataLoader.TryLoadJson` so all seed JSON files share the same BOM-tolerant read path. Either resave the catalog without the BOM or pass `new UTF8Encoding(detectEncodingFromByteOrderMarks: true)` to the reader.
 
-**Side effect:** Several `Effect` strings in `rites.json` contain mojibake (`Cr├║ac` instead of `Crúac`). Fix encoding at the same time as the BOM normalization pass (see also P3-1).
+**Side effect:** Several `Effect` strings in the Crúac catalog contained mojibake (`Cr├║ac` instead of `Crúac`). Fix encoding at the same time as the BOM normalization pass (see also P3-1).
 
 **Acceptance tests:**
-- After seeding, the Crúac row count in `SorceryRiteDefinitions` must match the number of Crúac entries loaded from `rites.json` (not a fixed magic number: P3-1 can add or rename rites, e.g. *Donning the Beast’s Flesh*). Prefer asserting against a **seed-derived expected count** (parse `rites.json` or `SorceryRiteSeedData.LoadCatalogEntries` in the test) or a documented minimum baseline that tracks seed changes.
+- After seeding, the Crúac row count in `SorceryRiteDefinitions` must match the number of Crúac entries loaded from `cruac_rituales.json` (not a fixed magic number: P3-1 can add or rename rites, e.g. *Donning the Beast’s Flesh*). Prefer asserting against a **seed-derived expected count** (parse the catalog or `SorceryRiteSeedData.LoadCatalogEntries` in the test) or a documented minimum baseline that tracks seed changes.
 - Add a seed assertion integration test: `SorceryRiteSeedData_Cruac_LoadsAllEntries` — e.g. `Assert.Equal(expectedFromSeed, dbCount)` or `dbCount >= BaselineDocumentedInTest` so the test does not rot when the catalog grows.
 - **Failure mode:** 0 or “minimal fallback” Crúac rows indicates BOM/parse failure or empty catalog load.
 
@@ -56,9 +58,9 @@ The core learning/approval pipeline and basic activation costs are implemented c
 ### P0-2 · Theban Sorcery sacrament requirement not enforced per miracle
 
 **File:** `src/RequiemNexus.Application/Services/SorceryActivationService.cs`
-**Symptom:** The activation service checks `RiteRequirementValidator.ValidateAcknowledgments()` against the `RequirementsJson` column. However, the Theban miracles in `rituals.json` store sacrament text in the human-readable `Prerequisites` field — not as structured `RiteRequirement(PhysicalSacrament)` entries in `RequirementsJson`. Therefore **no sacrament acknowledgment is demanded at runtime**, violating the core cost of every Theban miracle.
+**Symptom:** The activation service checks `RiteRequirementValidator.ValidateAcknowledgments()` against the `RequirementsJson` column. However, the Theban miracles in `Theban_Sorcery_rituals.json` store sacrament text in the human-readable `Prerequisites` field — not as structured `RiteRequirement(PhysicalSacrament)` entries in `RequirementsJson`. Therefore **no sacrament acknowledgment is demanded at runtime**, violating the core cost of every Theban miracle.
 
-**Fix:** Add a `RequirementsJson` population pass to the seed importer for Theban miracles. Each entry in `rituals.json` must emit at least one `{ "Type": "PhysicalSacrament", "Value": 1, "DisplayHint": "<sacrament text>" }` requirement. The sacrament hint text comes from the existing `Prerequisites` field (already in the format "Sacrament: …").
+**Fix:** Add a `RequirementsJson` population pass to the seed importer for Theban miracles. Each catalog entry must emit at least one `{ "Type": "PhysicalSacrament", "Value": 1, "DisplayHint": "<sacrament text>" }` requirement. The sacrament hint text comes from the existing `Prerequisites` field (already in the format "Sacrament: …"). If a row lacks `Sacrament:` in `Prerequisites`, use overlay or code — **do not** rewrite the canonical JSON for that.
 
 **Open question — UX:** Should the acknowledgment UI show a single "I have the sacrament" checkbox (current generic pattern), or display the per-miracle sacrament text as the label? Confirm also whether the sacrament is consumed at the **first roll** or only when the ritual reaches its crescendo (per PDF: "the sacrament crumbles to dust when the ritual reaches a crescendo" — implies on success or terminal failure, not on first roll). Acknowledge this in the UI copy.
 
@@ -108,7 +110,7 @@ The core learning/approval pipeline and basic activation costs are implemented c
 **Rule (PDF p. 152–154):** Each rite/miracle has a specific target success count (e.g., *Pangs of Proserpina* = 6, *Rigor Mortis* = 5, *Blood Scourge* = 6, *Vitae Reliquary* = 5, *Malediction of Despair* = 13).
 
 **Required changes:**
-1. Add `"TargetSuccesses": <int>` to every entry in `rites.json`, `rituals.json`, and `necromancyRites.json`.
+1. Ensure every catalog row carries target successes (unified key **`Target Successes`** in the three canonical SeedSource JSON files, or importer defaults per tradition).
 2. Add `TargetSuccesses` column to `SorceryRiteDefinition` (EF migration required).
 3. Display target successes in the ritual casting UI so players know how many successes they need.
 
@@ -229,7 +231,7 @@ The core learning/approval pipeline and basic activation costs are implemented c
 **Current state:** Necromancy rites may have `RequiredClanId` set to Mekhet in seed data, effectively making it Mekhet-only. This contradicts the rules — Necromancy is **not** clan-restricted.
 
 **Required changes:**
-1. Verify `necromancyRites.json` entries: remove any `RequiredClanId`/`RequiredCovenantId` from seed data (they should be null).
+1. Verify Necromancy catalog entries: remove any `RequiredClanId`/`RequiredCovenantId` from seed data (they should be null).
 2. The Storyteller approval step (`ApproveRiteLearnAsync`) is the correct gate for validating teacher/cultural/bloodline qualifications narratively. No hard code gate at the clan level should exist for Necromancy.
 3. Review `SorceryService.GetEligibleRitesAsync()` *and* `IsTraditionAllowedForCharacter` (and any related helpers) — confirm neither applies a clan filter for Necromancy. Fixing only the seed data is insufficient if the service layer also contains a hard gate.
 
@@ -237,7 +239,7 @@ The core learning/approval pipeline and basic activation costs are implemented c
 
 ## P3 — Seed Data Rating Corrections
 
-> **Context:** A comparison of `docs/*.json`, `src/RequiemNexus.Data/SeedSource/*.json`, and the PDF revealed systematic rating inflation in the seed data and divergent rite sets for Necromancy. **Do not swap docs files for seed files** — seed files have the correct structure (int `Rating`, `Effect`, sacraments in `Prerequisites`). Fix ratings in the seed files using the PDF as the authority.
+> **Context (historical):** A comparison of `docs/*.json`, `src/RequiemNexus.Data/SeedSource/*.json`, and the PDF revealed systematic rating inflation in the seed data and divergent Necromancy sets. **P5 supersedes file layout:** the only runtime ritual catalogs are the three unified-schema files under `SeedSource/` (see **P5**). The subsections below remain as a **PDF cross-check log** for ratings; filenames `rites.json`, `rituals.json`, and `necromancyRites.json` are **retired**.
 
 ### P3-1 · `src/RequiemNexus.Data/SeedSource/rites.json` — Crúac ratings inflated by +1 on many rites
 
@@ -292,18 +294,11 @@ Blood Scourge (1), Blandishment of Sin (1), Marian Apparition (2), Gift of Lazar
 
 ---
 
-### P3-3 · `src/RequiemNexus.Data/SeedSource/necromancyRites.json` vs `docs/kindred_necromancy_rituals.json` — completely different rite sets
+### P3-3 · Necromancy catalog (superseded by P5)
 
-These two files have **zero overlapping rites**:
+**Supersedes prior “Option A vs B” decision.** The shipped Necromancy rite set is **exactly** the entries in `src/RequiemNexus.Data/SeedSource/kindred_necromancy_rituals.json` (unified schema: `name`, `Effect`, `Roll`, `Prerequisites`, `Target Successes`, `Ranking`). The old `necromancyRites.json` custom eight-rite set is **removed** — do not maintain a parallel catalog.
 
-| File | Rites | Notes |
-|------|-------|-------|
-| `docs/kindred_necromancy_rituals.json` | 19 rites (Appraise the Dead, Soul Jar, Voodoo Doll, etc.) | Canonical V:tR 2e supplement rites; all rankings `"None"` |
-| `src/RequiemNexus.Data/SeedSource/necromancyRites.json` | 8 rites (Touch of Death, The Caul, Legion of the Pit, etc.) | Custom/homebrew set; proper int Ratings |
-
-**Decision (2026-04-01): Option A** — Keep the custom seed rites as the shipped catalog. The docs file remains a **supplement reference** only (filename typo fixed: former `kindred_necromancyu_rituals.json`).
-
-**Future options** if chronicles need canon-only Necromancy: **Option B** (replace seed) or **Option C** (dual-track + `Source` field on `SorceryRiteDefinition`).
+**Mechanics:** Prefer no overlay for `Target Successes` and numeric `Ranking` when present in JSON. Use a **small overlay or code-only split** only for variants not expressible as one row (e.g. dual-rating Theban entries such as Blandishment aggravated — **one DB row per playable variant** without editing the canonical JSON line).
 
 ---
 
@@ -344,6 +339,43 @@ All rankings are `"None"`. Add correct integer ratings from the PDF and target s
 
 ---
 
+## P5 — Canonical ritual lists in RequiemNexus.Data
+
+| Canonical file (under `src/RequiemNexus.Data/SeedSource/`) | Replaces (removed) | Role |
+|--------------------------------------------------------------|--------------------|------|
+| `cruac_rituales.json` | `rites.json` | **Authoritative** list of Crúac rites that exist |
+| `Theban_Sorcery_rituals.json` | `rituals.json` | **Authoritative** list of Theban miracles |
+| `kindred_necromancy_rituals.json` | `necromancyRites.json` | **Authoritative** list of Kindred Necromancy rites |
+
+**Rules**
+
+1. **Single source of truth:** These three JSON files are the **only** authoritative source for which rites exist and for authored fields (`Effect`, `Roll`, `Prerequisites`, `Target Successes`, `Ranking`). Do not maintain parallel SeedSource ritual catalogs. Editorial changes happen **only** in these files.
+2. **Relocation:** Files were **git mv**’d from `docs/` into `SeedSource/`; `docs/` must not remain the runtime source (optional markdown pointers for humans only).
+3. **Importer:** Parse the unified keys (case-insensitive / alias fallbacks only if needed for older tooling). Parse `Target Successes` to `int`. Parse `Ranking` per **Ranking semantics** below. Missing fields fall back to code defaults **for that field only**.
+4. **Ranking semantics (all three traditions):**
+   - **Numeric:** A character may **learn / request / cast** the rite only if their dots in the matching ritual discipline are **≥** the parsed minimum (first integer in the string, e.g. `"2 (or 4 for the aggravated variant)"` → 2 for the base row). **Crúac** / **Theban Sorcery** / **Necromancy** respectively. Learn and activation use the **same** check (aligned with Theban Humanity floor pattern for Theban).
+   - **`Elder` token** (case-insensitive): **Elder-only** learn + cast. Defined in code as `SorceryElderRules.MinimumBloodPotency` (see `docs/rules-interpretations.md`). Stored on `SorceryRiteDefinition.RequiresElder`.
+   - **Compound rows:** Emit **one DB row per playable variant** via code-side splitting / distinct names **without** editing the canonical JSON (e.g. Blandishment aggravated).
+5. **Theban sacraments:** `DbInitializer.BuildThebanRequirementsJson` uses `Prerequisites` text. If `Sacrament:` lines are missing, handle via overlay or code — **do not** rewrite canonical Theban JSON for that.
+6. **Deletion:** `rites.json`, `rituals.json`, `necromancyRites.json` are removed from `SeedSource` after cutover. Catalog tests load the new filenames.
+7. **Cross-doc:** `plan-blood-sorcery-audit-review.md` and `docs/mission.md` Track D state that **Data/SeedSource** holds the three canonical lists.
+
+---
+
+## P6 — Ordo Dracul rituals removed (Coils only)
+
+Per `docs/magic_types_and_rules.txt` (Mysteries of the Dragon), **Coils and Scales** are the mechanical dragon “sorcery” track; **Ordo ritual spells** are not modeled as a fourth `SorceryType` in this codebase.
+
+**Delivered**
+
+- Remove `SorceryType.OrdoDraculRitual` and all Ordo ritual seed rows (e.g. Dragon’s Own Fire).
+- Strip Ordo ritual branches from `SorceryService`, `DbInitializer`, and Web UI; keep `CoilOrdoEligibility` and coil seed paths.
+- EF migration: delete `SorceryRiteDefinitions` with legacy stored enum value **3** (and dependent `CharacterRites`); add `RequiresElder` column as applicable.
+
+`CovenantDefinition.SupportsOrdoRituals` may remain as a dormant column for now (optional future migration to drop).
+
+---
+
 ## P4 — Backlog (Rules from `magic_types_and_rules.txt` not yet prioritized)
 
 These appear in the narrative source-of-truth doc and are correctly implemented or out-of-scope for the current phase, but warrant verification or a future ticket.
@@ -363,11 +395,13 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 
 | Priority | Item | Effort | Blocks | Key Tests |
 |----------|------|--------|--------|-----------|
-| P0-1 | Fix rites.json BOM + mojibake; centralize in `SeedDataLoader` | XS | P1-2, P3-1 | Seed assertion: Crúac row count matches seed-derived expected count |
+| P5 | Canonical trio in `SeedSource/` + importer + remove old trio + catalog tests | M | — | `SorceryRiteSeedData` tests; DB row counts match catalogs |
+| P6 | Remove Ordo ritual enum + rows + UI; migration cleanup | S | — | No `SorceryType` 3 rows; build green |
+| P0-1 | Fix catalog JSON BOM + mojibake; centralize in `SeedDataLoader` | XS | P1-2, P3-1 | Seed assertion: Crúac row count matches seed-derived expected count |
 | P0-2 | Wire Theban sacrament to `RequirementsJson` | S | — | `BeginRiteActivationAsync` fails without sacrament ack |
 | P2-5 | Fix Necromancy clan gate (seed + `IsTraditionAllowedForCharacter`) | XS | — | Non-Mekhet character sees Necromancy rites |
 | P1-2 | Add `TargetSuccesses` to seed data + EF migration | S | P1-1 | All rite rows have `TargetSuccesses > 0` |
-| P3-1/2 | Correct inflated ratings in `rites.json` and `rituals.json` | S | — | Verified against PDF table above |
+| P3-1/2 | Correct inflated ratings (historical; pre–P5 filenames) | S | — | Verified against PDF table above |
 | P2-3 | Crúac Humanity cap + learning breaking point | S | — | Crúac 3 → Humanity capped at 7 |
 | P2-4 | Necromancy torpor duration penalty | S | — | Torpor duration uses `min(BP + NecroDoTS, 10)` |
 | P1-1 | Implement extended action system (decide session persistence + cost timing first) | L | P1-3, P1-4 | Roll cap; Stumbled on continue; sacrifice consumed on abandon; Vitae/WP timing per P1-1 |
@@ -375,7 +409,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 | P1-4 | Implement Potency return value (informational) | S | P1-1 | Potency = 1 + excess successes; exceptional success → optional Discipline dots via UI opt-in |
 | P2-1 | Extra Vitae bonus for Crúac | S | — | Pool +2 when 2 extra Vitae spent |
 | P2-2 | Blood Sympathy modifier for ritual pools | M | — | Targeted rite only; bonus absent for environmental rites |
-| P3-3 | Decide Necromancy catalog; rename docs typo file | XS | — | Grep old filename; update all references |
+| P3-3 | ~~Decide Necromancy catalog~~ — **done via P5** (`kindred_necromancy_rituals.json` only) | — | — | — |
 | P3-4/5 | Add `TargetSuccesses` + correct ratings to docs JSON files | XS | — | — |
 | P4 | Backlog verification (Humanity floor at learn-time, Necromancy BP event end-to-end) | XS | — | — |
 

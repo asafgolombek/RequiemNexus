@@ -13,7 +13,7 @@
                 <p class="apply-bloodline-hint">Select a rite to request. Requires covenant membership, matching discipline dots, and sufficient XP. Storyteller approval required.</p>
                 @if (EligibleRites.Count == 0)
                 {
-                    <p class="apply-bloodline-empty">No eligible rites. Check covenant/clan gates and matching discipline dots (Crúac, Theban Sorcery, Necromancy, Ordo Sorcery).</p>
+                    <p class="apply-bloodline-empty">No eligible rites. Check covenant/clan gates and matching discipline dots (Crúac, Theban Sorcery, Necromancy).</p>
                 }
                 else
                 {
@@ -67,7 +67,6 @@
             SorceryType.Cruac => "Crúac",
             SorceryType.Theban => "Theban",
             SorceryType.Necromancy => "Necromancy",
-            SorceryType.OrdoDraculRitual => "Ordo ritual",
             _ => t.ToString(),
         };
 

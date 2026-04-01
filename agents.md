@@ -173,6 +173,13 @@ When authoring or modifying `.github/workflows/` files:
 - All artifact upload steps use `if: always()` so results are preserved even on failure.
 - Changes to `.github/workflows/`, `infra/`, `src/RequiemNexus.Data/Migrations/`, and `src/RequiemNexus.Application/Services/AuthorizationHelper.cs` require owner review per `.github/CODEOWNERS`.
 
+### Security scanning triage (CodeQL, Dependabot, Trivy)
+
+1. **CodeQL** — Repository **Security** tab → **Code scanning** alerts. For each open alert: classify **True positive** (fix or track), **False positive** (dismiss with reason), or **Won’t fix** (document risk acceptance). Prefer fixes in **Application** / **Domain** over suppressions; suppress only with a code comment or CodeQL configuration justified in the PR. Re-run analysis on the branch after fixes before merge.
+2. **Dependabot** — Review Dependabot pull requests and the **Dependency graph** for known vulnerabilities. Apply **patch** and **minor** updates per project policy; **major** bumps require explicit review (see `.github/CODEOWNERS` and this file). If a CVE has no fixed version yet, document mitigation (e.g. feature flags, input validation, network boundaries) in the tracking issue.
+3. **Container images (Trivy)** — Release and `container-scan` workflows run Trivy with `exit-code: 1` for HIGH/CRITICAL. Triage failures by updating base images or dependencies; do not lower severity without owner approval.
+4. **Local baseline** — Run `dotnet build` and `.\scripts\test-local.ps1` before declaring a security-related change complete. Performance smoke: `.\scripts\run-performance.ps1` requires a **running** app at `TARGET_URL` (see script header).
+
 ---
 
 ## SignalR Hub Rules (Phase 7)

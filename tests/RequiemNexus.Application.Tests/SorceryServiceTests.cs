@@ -105,6 +105,15 @@ public class SorceryServiceTests
         return mock.Object;
     }
 
+    /// <summary>Rite activation checks ritual discipline dots vs. rite level (Phase 19.5 Ranking alignment).</summary>
+    private static void SeedDisciplineRating(ApplicationDbContext ctx, int characterId, int disciplineId, int rating) =>
+        ctx.CharacterDisciplines.Add(new CharacterDiscipline
+        {
+            CharacterId = characterId,
+            DisciplineId = disciplineId,
+            Rating = rating,
+        });
+
     [Fact]
     public async Task BeginRiteActivationAsync_DeductsVitaeAndReturnsPool()
     {
@@ -162,6 +171,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 1, 10, 1);
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(7));
@@ -227,6 +237,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 1, 10, 1);
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(1));
@@ -292,6 +303,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 1, 10, 1);
             await ctx.SaveChangesAsync();
 
             var humanity = new Mock<IHumanityService>();
@@ -364,6 +376,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 1, 11, 1);
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(3));
@@ -429,6 +442,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 1, 10, 1);
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(4));
@@ -502,6 +516,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 1, 11, 1);
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(3));
@@ -587,6 +602,7 @@ public class SorceryServiceTests
                 SorceryRiteDefinitionId = 1,
                 Status = RiteLearnStatus.Approved,
             });
+            SeedDisciplineRating(ctx, 2, 10, 1);
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(2));

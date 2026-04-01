@@ -110,13 +110,12 @@ public partial class CharacterDetails : IAsyncDisposable
         Converters = { new JsonStringEnumConverter() },
     };
 
-    /// <summary>True when the character may use the Blood Sorcery sheet section (Crúac/Theban covenant, Ordo rituals, or Necromancy dots).</summary>
+    /// <summary>True when the character may use the Blood Sorcery sheet section (Crúac/Theban covenant or Necromancy dots).</summary>
     private bool ShowBloodSorcerySection =>
         _character != null
         && _character.CovenantJoinStatus == null
         && (
             (_character.Covenant?.SupportsBloodSorcery == true)
-            || (_character.Covenant?.SupportsOrdoRituals == true)
             || _character.GetDisciplineRating("Necromancy") > 0);
 
     private bool IsOrdoDraculMember =>
@@ -1295,7 +1294,6 @@ public partial class CharacterDetails : IAsyncDisposable
             Domain.Enums.SorceryType.Cruac => "Crúac",
             Domain.Enums.SorceryType.Theban => "Theban",
             Domain.Enums.SorceryType.Necromancy => "Necromancy",
-            Domain.Enums.SorceryType.OrdoDraculRitual => "Ordo ritual",
             _ => t.ToString(),
         };
 

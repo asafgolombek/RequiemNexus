@@ -16,13 +16,13 @@ All items are marked **✅ Applied** (merged into the audit) or **⏳ Open** (st
 
 - ✅ **P0-1 vs actual loader:** P0-1 now correctly names `File.ReadAllText` + `JsonDocument.Parse` in `SeedDataLoader.cs` and notes that BOM behavior needs runtime verification. Fix targets `SeedDataLoader` centrally.
 
-- ✅ **Encoding quality / mojibake:** Added to P0-1 as a companion fix alongside BOM normalization. `rites.json` Effect strings containing `Cr├║ac` will be corrected in the same pass.
+- ✅ **Encoding quality / mojibake:** Added to P0-1 as a companion fix alongside BOM normalization. Crúac catalog `Effect` strings containing `Cr├║ac` were corrected in the same pass.
 
 ---
 
 ## 2. Open questions
 
-- ✅ **Necromancy catalog (P3-3):** **Option A** recorded in the audit (custom `necromancyRites.json` remains canonical for the app; supplement list in `docs/kindred_necromancy_rituals.json`). A future `Source` field remains optional if dual-track (Option C) is chosen later.
+- ✅ **Necromancy catalog (P3-3):** **Superseded by P5** in the audit — the shipped set is `SeedSource/kindred_necromancy_rituals.json` only; `necromancyRites.json` is retired. A future `Source` field remains optional only if product explicitly needs dual-track content (not the default).
 
 - ✅ **Extended actions (P1-1):** Session persistence question added to P1-1 as an explicit pre-implementation decision point (ephemeral Blazor state vs persisted entity vs SignalR). Disconnect/refresh behavior documented as a Storyteller call if ephemeral option is chosen.
 
@@ -55,7 +55,7 @@ All items moved into the audit as a **P4 Backlog** table with current status and
 
 ## 4. Suggestions to strengthen the execution plan
 
-- ✅ **Centralize robust JSON reads:** P0-1 now targets `SeedDataLoader` centrally rather than only `rites.json`.
+- ✅ **Centralize robust JSON reads:** P0-1 targets `SeedDataLoader` centrally for all seed JSON files.
 
 - ✅ **Tests:** Explicit test callouts added to P0-1 (seed assertion), P0-2 (sacrament validation), and P1-1 (roll cap, Stumbled, sacrifice-on-abandon). `SorceryServiceTests` extension noted.
 
@@ -71,7 +71,7 @@ All items moved into the audit as a **P4 Backlog** table with current status and
 
 ```mermaid
 flowchart LR
-  seed[SeedSource_JSON]
+  seed[SeedSource_3_ritual_JSON]
   loader[SeedDataLoader]
   db[SorceryRiteDefinitions]
   begin[BeginRiteActivationAsync]
@@ -112,7 +112,7 @@ These were promoted from review into [plan-blood-sorcery-audit.md](./plan-blood-
 
 ### 7.3 Companion doc maintenance
 
-Sections **2–4** largely **mirror** the audit after the merge. To avoid dual edits going forward, treat [plan-blood-sorcery-audit.md](./plan-blood-sorcery-audit.md) as the **source of truth** for execution; keep this file for **§7-style deltas**, code verification, and the single **⏳** item until P3-3 is decided.
+Sections **2–4** largely **mirror** the audit after the merge. To avoid dual edits going forward, treat [plan-blood-sorcery-audit.md](./plan-blood-sorcery-audit.md) as the **source of truth** for execution; keep this file for **§7-style deltas**, code verification, and remaining **⏳** items (P1-1 persistence, etc.).
 
 ### 7.4 Remaining open decisions
 
@@ -120,7 +120,7 @@ All ⏳ items currently in the audit that require a product/chronicle/architectu
 
 | Item | Audit location | Decision needed |
 |------|---------------|-----------------|
-| ✅ **Necromancy catalog** | P3-3 | **Option A** (keep custom seed); `docs/kindred_necromancy_rituals.json` = supplement reference only |
+| ✅ **Necromancy catalog** | P5 / P3-3 | **Canonical** `SeedSource/kindred_necromancy_rituals.json` only; P3-3 Option A **retired** |
 | ⏳ **Ritual session persistence** | P1-1 | Ephemeral Blazor state vs persisted `CharacterRiteSession` entity vs SignalR (Phase 7) |
 | ⏳ **Cost timing for extended rituals** | P1-1 | Vitae/WP deducted up-front once, per roll, or on completion; whether API needs `OpenRiteActivationSessionAsync` / `CommitRiteRollAsync` split |
 | ⏳ **Theban sacrament UX** | P0-2 | Per-miracle sacrament text as checkbox label vs generic "I have the sacrament"; UI copy timing (consumed at crescendo, not first roll) |

@@ -8,6 +8,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Events;
 using RequiemNexus.Domain.Models;
@@ -52,7 +53,7 @@ public class SorceryActivationService(
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "activate rite");
 
         Character? character = await _dbContext.Characters
-            .Include(c => c.Disciplines)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
             .Include(c => c.Rites)
@@ -100,7 +101,7 @@ public class SorceryActivationService(
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "begin rite activation");
 
         Character? character = await _dbContext.Characters
-            .Include(c => c.Disciplines)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
             .Include(c => c.Rites)
@@ -126,6 +127,19 @@ public class SorceryActivationService(
         {
             throw new InvalidOperationException(
                 $"Theban Sorcery requires Humanity {def.Level} or higher to cast this miracle (character has Humanity {character.Humanity}).");
+        }
+
+        int traditionDots = GetTraditionDisciplineDots(character, def.SorceryType);
+        if (traditionDots < def.Level)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient {def.SorceryType} dots to cast this rite (need {def.Level}, have {traditionDots}).");
+        }
+
+        if (def.RequiresElder && character.BloodPotency < SorceryElderRules.MinimumBloodPotency)
+        {
+            throw new InvalidOperationException(
+                $"This rite requires Blood Potency {SorceryElderRules.MinimumBloodPotency} or higher (elder-ranked miracle). Character has Blood Potency {character.BloodPotency}.");
         }
 
         Result<IReadOnlyList<RiteRequirement>> parsed = RiteRequirementValidator.ParseRequirements(def.RequirementsJson);
@@ -238,7 +252,7 @@ public class SorceryActivationService(
             string.Join(';', requirements.Select(r => $"{r.Type}:{r.Value}")));
 
         character = await _dbContext.Characters
-            .Include(c => c.Disciplines)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
             .FirstAsync(c => c.Id == characterId);
@@ -346,4 +360,13 @@ public class SorceryActivationService(
         int baseBonus = BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy(degree.Value);
         return tradition == SorceryType.Cruac ? baseBonus * 2 : baseBonus;
     }
+
+    private int GetTraditionDisciplineDots(Character character, SorceryType type) =>
+        type switch
+        {
+            SorceryType.Cruac => character.GetDisciplineRating("Crúac"),
+            SorceryType.Theban => character.GetDisciplineRating("Theban Sorcery"),
+            SorceryType.Necromancy => character.GetDisciplineRating("Necromancy"),
+            _ => 0,
+        };
 }

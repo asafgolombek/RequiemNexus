@@ -24,7 +24,7 @@ public class CovenantDefinition
     /// <summary>When true, this covenant grants access to Blood Sorcery (Crúac or Theban Sorcery).</summary>
     public bool SupportsBloodSorcery { get; set; }
 
-    /// <summary>When true, members may learn Ordo Dracul ritual definitions (<see cref="SorceryType.OrdoDraculRitual"/>).</summary>
+    /// <summary>Legacy flag; Ordo Dracul mystical powers use Coils/Scales, not <see cref="SorceryRiteDefinition"/> rows.</summary>
     public bool SupportsOrdoRituals { get; set; }
 
     /// <summary>Merits gated by this covenant (e.g., Covenant Status).</summary>
