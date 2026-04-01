@@ -783,7 +783,7 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **P1 — Critical missing rules**
 - [x] **P1-2 `TargetSuccesses` per rite** — Seed + EF + UI.
-- [ ] **P1-1 Extended action system** — Rituals use extended actions (max rolls = unmodified pool, 30 min/roll). `RiteActivationSession` to track accumulated successes, rolls remaining, and abandonment. Decide session persistence before implementation (ephemeral / entity / SignalR — see open questions).
+- [ ] **P1-1 Extended action system** — Rituals use extended actions (max rolls = unmodified pool, 30 min/roll). Track accumulated successes, rolls remaining, and abandonment in **Blazor UI state** (like `DiceRollerModal`); each roll → **chronicle roll feed**; costs **once** on `BeginRiteActivationAsync` (decided 2026-04-02 — see audit § P1-1).
 - [ ] **P1-3 Roll outcome Conditions** — Dramatic failure → Tempted (Crúac) or Humbled (Theban); failure-continue → Stumbled; exceptional success → Ecstatic (Crúac) or Raptured (Theban). Necromancy: no tradition-specific Conditions (Storyteller ruling).
 - [ ] **P1-4 Potency mechanic** — `Potency = 1 + (successes − TargetSuccesses)`; exceptional success → optional UI opt-in to add Discipline dots. Informational output only in this phase.
 
@@ -806,17 +806,18 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **P4 — Backlog (verify, no new code)**
 - [x] Theban Humanity floor at learn + eligible + approve (`SorceryService`; verify in tests as needed)
-- [ ] Necromancy degeneration event end-to-end UI verification
-- [ ] `ResolveRiteActivationPoolAsync` fate (dead API — remove, gate-mirror, or document)
+- [x] Necromancy degeneration on ritual use — `SorceryServiceTests` assert dispatch; `DegenerationCheckRequiredEventHandler` → Glimpse (optional Playwright smoke remains)
+- [x] `ResolveRiteActivationPoolAsync` removed (dead API; preview must use gated path)
 
-### Open decisions (must resolve before P1-1)
+### Open decisions
+
+**Resolved for P1-1 (2026-04-02):** Ritual extended-action **persistence** = Blazor/circuit UI state + each roll published to the chronicle Redis roll history (same pattern as other dice). **Cost timing** = Vitae/WP/stains/Necromancy degeneration dispatch **only** on `BeginRiteActivationAsync`. Details: [`plan-blood-sorcery-audit.md`](./plan-blood-sorcery-audit.md) § P1-1.
 
 | Decision | Where |
 |----------|-------|
-| Ritual session persistence (ephemeral / entity / SignalR) | P1-1 |
-| Vitae/WP cost timing (up-front once vs. per roll vs. on completion) | P1-1 |
 | Potency scope boundary (informational only vs. effect interpreter) | P1-4 |
 | Theban sacrament UX (label text; consumed at crescendo not first roll) | P0-2 |
+| Necromancy outcome Conditions (PDF silent — ST vs supplement) | P1-3 |
 | Necromancy catalog | **P5** — `kindred_necromancy_rituals.json` is the only shipped list |
 | Elder-ranked rites | Catalog `Ranking: Elder` → `RequiresElder`; BP gate = `SorceryElderRules` (see `rules-interpretations.md`) |
 

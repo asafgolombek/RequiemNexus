@@ -48,50 +48,6 @@ public class SorceryActivationService(
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<int> ResolveRiteActivationPoolAsync(int characterId, int characterRiteId, string userId)
-    {
-        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "activate rite");
-
-        Character? character = await _dbContext.Characters
-            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
-            .Include(c => c.Attributes)
-            .Include(c => c.Skills)
-            .Include(c => c.Rites)
-            .FirstOrDefaultAsync(c => c.Id == characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        CharacterRite? cr = character.Rites.FirstOrDefault(r => r.Id == characterRiteId && r.Status == RiteLearnStatus.Approved);
-        if (cr == null)
-        {
-            cr = await _dbContext.CharacterRites
-                .Include(r => r.SorceryRiteDefinition)
-                .FirstOrDefaultAsync(r => r.Id == characterRiteId && r.CharacterId == characterId && r.Status == RiteLearnStatus.Approved);
-        }
-
-        if (cr?.SorceryRiteDefinition == null || string.IsNullOrEmpty(cr.SorceryRiteDefinition.PoolDefinitionJson))
-        {
-            return 0;
-        }
-
-        try
-        {
-            PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(cr.SorceryRiteDefinition.PoolDefinitionJson, _jsonOptions);
-            return pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Failed to resolve activation pool for rite {RiteId} ({RiteName}) on character {CharacterId}. PoolJson: {PoolJson}",
-                cr.SorceryRiteDefinitionId,
-                cr.SorceryRiteDefinition.Name,
-                characterId,
-                cr.SorceryRiteDefinition.PoolDefinitionJson);
-            return 0;
-        }
-    }
-
-    /// <inheritdoc />
     public async Task<int> BeginRiteActivationAsync(
         int characterId,
         int characterRiteId,

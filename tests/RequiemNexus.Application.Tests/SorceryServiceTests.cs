@@ -11,6 +11,7 @@ using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
+using RequiemNexus.Domain.Events;
 using RequiemNexus.Domain.Models;
 using Xunit;
 
@@ -39,7 +40,8 @@ public class SorceryServiceTests
         ApplicationDbContext ctx,
         ITraitResolver traitResolver,
         IAuthorizationHelper? authHelper = null,
-        Mock<IHumanityService>? humanityServiceMock = null)
+        Mock<IHumanityService>? humanityServiceMock = null,
+        IDomainEventDispatcher? domainEventDispatcher = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var sessionService = new Mock<ISessionService>();
@@ -69,7 +71,7 @@ public class SorceryServiceTests
             vitaeService,
             willpowerService,
             humanity.Object,
-            new Mock<IDomainEventDispatcher>().Object,
+            domainEventDispatcher ?? new Mock<IDomainEventDispatcher>().Object,
             logger);
     }
 
@@ -610,6 +612,129 @@ public class SorceryServiceTests
             int dice = await sut.BeginRiteActivationAsync(2, 1, "player1", req);
 
             Assert.Equal(8, dice);
+        }
+    }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_Necromancy_HumanitySevenOrHigher_DispatchesDegenerationCheck()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 12, Name = "Necromancy" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Mort",
+                ApplicationUserId = "player1",
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                Humanity = 8,
+                HumanityStains = 0,
+                BloodPotency = 2,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Shade Walk",
+                Description = "Test",
+                Level = 1,
+                SorceryType = SorceryType.Necromancy,
+                XpCost = 1,
+                TargetSuccesses = 5,
+                RequirementsJson = _defaultRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 1,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            SeedDisciplineRating(ctx, 1, 12, 1);
+            await ctx.SaveChangesAsync();
+
+            var dispatcher = new Mock<IDomainEventDispatcher>();
+            var sut = CreateService(ctx, CreateTraitResolverMock(3), domainEventDispatcher: dispatcher.Object);
+            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+
+            Assert.Equal(3, dice);
+            dispatcher.Verify(
+                d => d.Dispatch(It.Is<DegenerationCheckRequiredEvent>(e =>
+                    e.CharacterId == 1 && e.Reason == DegenerationReason.NecromancyActivation)),
+                Times.Once);
+        }
+    }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_Necromancy_HumanityBelowSeven_DoesNotDispatchDegenerationCheck()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 12, Name = "Necromancy" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Mort",
+                ApplicationUserId = "player1",
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                Humanity = 6,
+                HumanityStains = 0,
+                BloodPotency = 2,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Shade Walk",
+                Description = "Test",
+                Level = 1,
+                SorceryType = SorceryType.Necromancy,
+                XpCost = 1,
+                TargetSuccesses = 5,
+                RequirementsJson = _defaultRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 1,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            SeedDisciplineRating(ctx, 1, 12, 1);
+            await ctx.SaveChangesAsync();
+
+            var dispatcher = new Mock<IDomainEventDispatcher>();
+            var sut = CreateService(ctx, CreateTraitResolverMock(2), domainEventDispatcher: dispatcher.Object);
+            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+
+            Assert.Equal(2, dice);
+            dispatcher.Verify(d => d.Dispatch(It.IsAny<DegenerationCheckRequiredEvent>()), Times.Never);
         }
     }
 }

@@ -12,7 +12,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 16b delivered:** The Discipline Engine — `DisciplineActivationService`, `ActivationCost`, activation UI; pool size returned to `DiceRollerModal` for feed publication (rite pattern). See `docs/phase16b-the-discipline-engine.md`.
 - **Phase 17 delivered:** The Fog of Eternity — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. See `docs/mission.md` (Phase 17 section) and `docs/rules-interpretations.md`.
 - **Phase 18 delivered ✅:** The Wider Web — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), discipline pool JSON + Vitae/Willpower choice UI. Record: **`docs/mission.md`** (Phase 18 section).
-- **Phase 19.5 — The Rite Perfected** is the **active phase**: correcting Crúac/Theban/Necromancy rules accuracy (extended actions, Potency, ritual Conditions, seed ratings, BOM fix, Theban sacrament enforcement, Necromancy clan gate). Plan: **`docs/plan-blood-sorcery-audit.md`**. Open decisions must be resolved before P1-1 (see plan).
+- **Phase 19.5 — The Rite Perfected** is the **active phase**: correcting Crúac/Theban/Necromancy rules accuracy (extended actions, Potency, ritual Conditions, seed ratings, BOM fix, Theban sacrament enforcement, Necromancy clan gate). Plan: **`docs/plan-blood-sorcery-audit.md`**. P1-1 cost timing + session model **decided** (2026-04-02); other open items in plan § P0-2 / P1-3 / P1-4.
 - **Phase 20 — The Global Embrace** is the **last planned phase** on the V:tR 2e roadmap (i18n, public API, Discord, production polish) — see `docs/mission.md`.
 
 ## 📜 Architectural DNA

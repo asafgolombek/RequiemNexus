@@ -24,7 +24,7 @@ All items are marked **✅ Applied** (merged into the audit) or **⏳ Open** (st
 
 - ✅ **Necromancy catalog (P3-3):** **Superseded by P5** in the audit — the shipped set is `SeedSource/kindred_necromancy_rituals.json` only; `necromancyRites.json` is retired. A future `Source` field remains optional only if product explicitly needs dual-track content (not the default).
 
-- ✅ **Extended actions (P1-1):** Session persistence question added to P1-1 as an explicit pre-implementation decision point (ephemeral Blazor state vs persisted entity vs SignalR). Disconnect/refresh behavior documented as a Storyteller call if ephemeral option is chosen.
+- ✅ **Extended actions (P1-1):** **Decided 2026-04-02** — cost timing: once on `BeginRiteActivationAsync`. Session: Blazor/component state for progress; each roll to chronicle Redis roll history like `DiceRollerModal`; no DB ritual session entity. Disconnect/refresh → ST adjudication.
 
 - ✅ **"Failure → Stumbled" (P1-3):** Clarified in P1-3: Stumbled fires on continue-after-failure only, not on terminal abandonment. Necromancy has no tradition-specific dramatic-failure Condition; documented as a Storyteller ruling rather than a missing implementation.
 
@@ -96,7 +96,7 @@ The audit now contains most earlier review content (P0/P1/P2 clarifications, P4 
 
 - **Theban Humanity floor:** Enforced at **cast** time in `SorceryActivationService.BeginRiteActivationAsync` and at **learn** time in `SorceryService` (`GetEligibleRitesAsync`, `RequestLearnRiteAsync`, `ApproveRiteLearnAsync`) using the same `Humanity >= miracle.Level` rule.
 - **Necromancy breaking point on use:** `BeginRiteActivationAsync` dispatches `DegenerationCheckRequiredEvent` with `DegenerationReason.NecromancyActivation` when Humanity ≥ 7. P4’s “verify end-to-end to UI” remains the right follow-up (event wiring + test).
-- **`ResolveRiteActivationPoolAsync`:** Exposed on `ISorceryActivationService` but **not referenced** from `RequiemNexus.Web` at present. If a future “preview pool” UI calls it without going through `BeginRiteActivationAsync`, it would **skip** Theban Humanity, sacrament ack, resource validation, and Necromancy degeneration — either remove the dead API, or mirror the same gates in preview, or document “preview is informational only.”
+- **`ResolveRiteActivationPoolAsync`:** **Removed** (was unused from Web; bypassed gates). Any future preview must go through `BeginRiteActivationAsync` or a deliberately gated successor.
 
 ### 7.2 Suggestions merged into audit (2026-04-01)
 
@@ -112,7 +112,7 @@ These were promoted from review into [plan-blood-sorcery-audit.md](./plan-blood-
 
 ### 7.3 Companion doc maintenance
 
-Sections **2–4** largely **mirror** the audit after the merge. To avoid dual edits going forward, treat [plan-blood-sorcery-audit.md](./plan-blood-sorcery-audit.md) as the **source of truth** for execution; keep this file for **§7-style deltas**, code verification, and remaining **⏳** items (P1-1 persistence, etc.).
+Sections **2–4** largely **mirror** the audit after the merge. To avoid dual edits going forward, treat [plan-blood-sorcery-audit.md](./plan-blood-sorcery-audit.md) as the **source of truth** for execution; keep this file for **§7-style deltas**, code verification, and remaining **⏳** items (Theban UX, Necromancy outcomes, Potency scope, etc.).
 
 ### 7.4 Remaining open decisions
 
@@ -121,9 +121,9 @@ All ⏳ items currently in the audit that require a product/chronicle/architectu
 | Item | Audit location | Decision needed |
 |------|---------------|-----------------|
 | ✅ **Necromancy catalog** | P5 / P3-3 | **Canonical** `SeedSource/kindred_necromancy_rituals.json` only; P3-3 Option A **retired** |
-| ⏳ **Ritual session persistence** | P1-1 | Ephemeral Blazor state vs persisted `CharacterRiteSession` entity vs SignalR (Phase 7) |
-| ⏳ **Cost timing for extended rituals** | P1-1 | Vitae/WP deducted up-front once, per roll, or on completion; whether API needs `OpenRiteActivationSessionAsync` / `CommitRiteRollAsync` split |
+| ✅ **Ritual session persistence** | P1-1 | **Decided 2026-04-02:** Blazor/circuit UI state for extended progress; each roll → chronicle roll feed (Redis) like other dice; **no** `CharacterRiteSession` DB entity |
+| ✅ **Cost timing for extended rituals** | P1-1 | **Decided 2026-04-02:** **Once** on `BeginRiteActivationAsync` only; no per-roll or on-completion billing; no separate open-session API for costs |
 | ⏳ **Theban sacrament UX** | P0-2 | Per-miracle sacrament text as checkbox label vs generic "I have the sacrament"; UI copy timing (consumed at crescendo, not first roll) |
 | ⏳ **Necromancy outcome table** | P1-3 | No tradition-specific Conditions in PDF — confirm supplement adds none, or treat as Storyteller-only ruling |
 | ⏳ **Potency scope boundary** | P1-4 | Informational-only display vs mechanical effect consumption; what triggers the second phase |
-| ⏳ **`ResolveRiteActivationPoolAsync` fate** | P4 Backlog | Remove dead API, mirror all gates in preview, or document as strictly informational |
+| ✅ **`ResolveRiteActivationPoolAsync` fate** | P4 Backlog | **Removed** from `ISorceryActivationService` / `SorceryActivationService` (2026-04-02) |

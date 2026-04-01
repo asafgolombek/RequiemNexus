@@ -1,8 +1,8 @@
 # Blood Sorcery Audit — Crúac, Theban Sorcery & Kindred Necromancy
 
-**Date:** 2026-04-01 (updated 2026-04-01 — implementation status)
+**Date:** 2026-04-01 (updated 2026-04-02 — P1-1 cost timing + session persistence **decided**; see § P1-1)
 **Source of truth:** *Vampire: The Requiem 2e* PDF (pages 150–165) + `docs/magic_types_and_rules.txt`
-**Status:** **Delivered in codebase for P0, P1-2, P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, and P4 Theban learn/eligible gate; deferred P1-1, P1-3, P1-4, remaining P4 verification.**  
+**Status:** **Delivered in codebase for P0, P1-2, P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, P4 Theban learn/eligible gate, Necromancy-use degeneration dispatch test, and removal of unused `ResolveRiteActivationPoolAsync`; deferred P1-1, P1-3, P1-4.**  
 **Companion review:** [plan-blood-sorcery-audit-review.md](./plan-blood-sorcery-audit-review.md) (open questions, backlog gaps, doc fixes)
 
 ---
@@ -14,7 +14,7 @@
 | **P0-1** BOM + encoding | Done | `SeedDataLoader.TryLoadJson` uses UTF-8 with BOM detection; Crúac catalog (`cruac_rituales.json`) uses proper `Crúac` escapes. |
 | **P0-2** Theban sacrament | Done | `DbInitializer` builds `PhysicalSacrament` in `RequirementsJson`; tests cover cast without acknowledgment. |
 | **P1-2** `TargetSuccesses` | Done | Column + seed JSON + UI (sheet + learn modal); catalog sync in `DbInitializer`. |
-| **P1-1** Extended actions | **Not done** | Requires session persistence + cost-timing decisions (see § P1-1). |
+| **P1-1** Extended actions | **Not done** | **Decided:** costs once on `BeginRiteActivationAsync`; progress like other rolls (Blazor UI state + chronicle roll feed). See § P1-1. |
 | **P1-3** Outcome Conditions | **Not done** | Depends on P1-1 roll pipeline. |
 | **P1-4** Potency | **Not done** | Depends on P1-1; scope remains informational until decided. |
 | **P2-1** Extra Vitae (Crúac) | Done | `BeginRiteActivationRequest.ExtraVitae`, `SorceryActivationService`, `RiteActivationPrepModal`. |
@@ -27,13 +27,13 @@
 | **P5** Canonical catalogs in Data | Done | Three unified-schema files under `src/RequiemNexus.Data/SeedSource/`; `SorceryRiteSeedData` + `RequiresElder`; old SeedSource trio removed. |
 | **P6** Ordo Dracul rituals | Done | `OrdoDraculRitual` removed from `SorceryType`; ritual rows and UI paths stripped; Coils / `CoilOrdoEligibility` unchanged. |
 | **P3-4 / P3-5** Docs JSON tables | Done | Reference tables updated when files lived under `docs/`; **authoritative** `Target Successes` / `Ranking` now live in the three SeedSource catalogs (optional human mirrors under `docs/` only). |
-| **P4** Backlog | Partial | Necromancy event UI path + `ResolveRiteActivationPoolAsync` still open. Theban Humanity floor enforced at learn + eligible + approve. |
+| **P4** Backlog | Partial | Necromancy `DegenerationCheckRequiredEvent` covered by `SorceryServiceTests` (dispatch when Humanity ≥ 7); ST Glimpse path unchanged (`DegenerationCheckRequiredEventHandler`). Dead `ResolveRiteActivationPoolAsync` removed. Theban Humanity floor enforced at learn + eligible + approve. |
 
 ---
 
 ## Summary
 
-The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** extended-action session (P1-1), outcome Conditions (P1-3), and informational Potency (P1-4). Reference doc JSON tables (P3-4/5) are updated; other P4 verification items (Necromancy degeneration UI, preview pool API) remain backlog.
+The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** extended-action session (P1-1), outcome Conditions (P1-3), and informational Potency (P1-4). Reference doc JSON tables (P3-4/5) are updated. P4: Necromancy degeneration dispatch is integration-tested at the activation service; unused pool-preview API removed.
 
 ---
 
@@ -90,9 +90,9 @@ The core learning/approval pipeline and basic activation costs are implemented c
 5. Per-roll failure (0 successes accumulated in a roll) must apply the `Stumbled` Condition and let the player decide to continue or abandon. *(See P1-3 for clarification on Stumbled interactions.)*
 6. Ritualists may not use Defense while casting — if rituals can overlap with combat turns, enforce this at the action-resolution layer (or document as a Storyteller call if combat integration is out of scope for this phase).
 
-**Cost timing (extended actions):** Today `BeginRiteActivationAsync` deducts Vitae/Willpower/stains in one call before the dice pool is returned. For true extended rituals, decide explicitly: costs **up front once** (current shape, matches “sacrifice then roll until done or fail”), **per roll**, or **on completion** — and split the API if needed (e.g. `OpenRiteActivationSessionAsync` vs `CommitRiteRollAsync`) so behavior matches table intent and P1-1 abandonment rules (“lose sacrifice already paid”).
+**✅ Decided — cost timing (2026-04-02):** Apply Vitae, Willpower, Humanity stains, and Necromancy degeneration dispatch **only** in `BeginRiteActivationAsync` (single up-front payment when the player starts the ritual). Extended follow-up rolls **do not** re-deduct costs. Matches “sacrifice then roll until done or fail” and P1-1 abandonment (“lose sacrifice already paid”). **No** separate `OpenRiteActivationSessionAsync` for billing; optional later APIs may record roll outcomes (caps, Conditions, Potency) without charging again.
 
-**Open question — session persistence:** Where does `RiteActivationSession` state live? Options: (a) ephemeral in-memory / Blazor circuit state (lost on refresh/disconnect); (b) persisted `CharacterRiteSession` entity; (c) SignalR session (Phase 7 dependency). Choose before implementation. If ephemeral, document that interrupted rituals must be manually adjudicated.
+**✅ Decided — session persistence (2026-04-02):** **Same model as other dice rolls.** In-progress ritual state (accumulated successes, rolls consumed vs. unmodified pool cap, time-per-roll display, continue/abandon) lives in **Blazor circuit / component state** with the casting UI—there is **no** persisted `CharacterRiteSession` entity and **no** separate Redis ritual-session key. Each individual roll is published to the **chronicle session** via the existing SignalR / Redis roll history (`SessionService` roll feed), like `DiceRollerModal`. Refresh or circuit loss drops local progress; **Storyteller adjudication** for interruption, same as other ephemeral UI state.
 
 **UI shape (deliver alongside API):** The casting dialog must show: current accumulated successes, successes needed, rolls remaining, time per roll, and a "Continue / Abandon" prompt after each failure.
 
@@ -387,7 +387,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 | **Crúac spilled Vitae becomes inert** | Narrative-only for now | Blood spilled during a rite is unsuitable for feeding. Stays narrative unless Vitae economy tracking is added. No code change needed yet. |
 | **Necromancy alternate dice pools** | Not implemented | Some bloodlines use Presence + Persuasion or Composure + Occult instead of Resolve + Occult + Necromancy. Future: data-driven pool override per rite × bloodline combination. |
 | **Defense while casting** | Not enforced | Ritualists may not use Defense during casting. Only relevant if rituals run concurrently with the combat pipeline (Phase 14). Document as Storyteller ruling until combat/ritual overlap is in scope. |
-| **`ResolveRiteActivationPoolAsync`** | Implemented; unused from `RequiemNexus.Web` | A future “preview pool” call that bypasses `BeginRiteActivationAsync` would skip Theban Humanity, sacrament acknowledgment, resource checks, and Necromancy degeneration dispatch. **Options:** remove the dead API, mirror the same gates in preview, or document preview as strictly informational (no enforcement). |
+| **`ResolveRiteActivationPoolAsync`** | **Removed** (2026-04-02) | Unused; any future preview pool must call through `BeginRiteActivationAsync` or a new gated API. |
 
 ---
 
@@ -404,7 +404,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 | P3-1/2 | Correct inflated ratings (historical; pre–P5 filenames) | S | — | Verified against PDF table above |
 | P2-3 | Crúac Humanity cap + learning breaking point | S | — | Crúac 3 → Humanity capped at 7 |
 | P2-4 | Necromancy torpor duration penalty | S | — | Torpor duration uses `min(BP + NecroDoTS, 10)` |
-| P1-1 | Implement extended action system (decide session persistence + cost timing first) | L | P1-3, P1-4 | Roll cap; Stumbled on continue; sacrifice consumed on abandon; Vitae/WP timing per P1-1 |
+| P1-1 | Implement extended action system (persistence + cost timing **decided** 2026-04-02) | L | P1-3, P1-4 | Roll cap; Stumbled on continue; sacrifice on begin only; UI state + chronicle roll feed |
 | P1-3 | Apply ritual Conditions on roll outcomes | S | P1-1 | Tempted/Humbled on dramatic failure; Stumbled on continue |
 | P1-4 | Implement Potency return value (informational) | S | P1-1 | Potency = 1 + excess successes; exceptional success → optional Discipline dots via UI opt-in |
 | P2-1 | Extra Vitae bonus for Crúac | S | — | Pool +2 when 2 extra Vitae spent |
