@@ -36,9 +36,10 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ✅ Complete |
 | 18 | The Wider Web — Edge Systems & Content | ✅ Complete |
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ✅ Complete |
+| 19.5 | The Rite Perfected — Blood Sorcery Rules Completion | 🔄 Active |
 | 20 | The Global Embrace | ⬜ Planned |
 
-> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 18 — The Wider Web is complete ✅** — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), `Disciplines.json` pools, Vitae/Willpower activation choice — record: **Phase 18** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 18 — The Wider Web is complete ✅** — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), `Disciplines.json` pools, Vitae/Willpower activation choice — record: **Phase 18** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 19.5 — The Rite Perfected is active 🔄** — blood sorcery rules completion: extended action system, Potency, ritual Conditions, seed rating corrections, BOM fix, Theban sacrament enforcement — see `docs/plan-blood-sorcery-audit.md`. **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -55,12 +56,17 @@ Phase 19  (Disciplines — model + seed) ✅
     └──► Phase 16b (Discipline Activation) ✅  ← unblocked by Phase 19
 
 Phase 18 (Edge Systems) ✅ ← fully independent; content passes any time
+
+Phase 19.5 (Blood Sorcery Rules Completion) 🔄
+    ├── prereq: Phase 9/9.5/9.6 (sorcery engine) ✅
+    ├── prereq: Phase 17 (condition system) ✅
+    └── prereq: Phase 19 (Crúac Humanity cap + Necromancy gate model) ✅
 ```
 
 **Recommended parallel tracks:**
 - Track A: ~~14 → 15 → Phase 17~~ ✅ — Phase 17 section below
 - Track B: ~~Phase 19~~ ✅ → ~~Phase 16b~~ ✅ (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
-- Track C: ~~Phase 18~~ ✅ — Phase 20 section when scheduled; Phase 18 delivery detail: [`mission.md`](./mission.md) § Phase 18 below
+- Track C: ~~Phase 18~~ ✅ — **Phase 19.5** 🔄 (blood sorcery rules completion — see [`plan-blood-sorcery-audit.md`](./plan-blood-sorcery-audit.md)) → Phase 20 when scheduled
 
 ---
 
@@ -757,9 +763,70 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 ---
 
+## 📅 Phase 19.5: The Rite Perfected — Blood Sorcery Rules Completion 🔄
+
+**Status:** 🔄 **Active.** Plan and open decisions: [`docs/plan-blood-sorcery-audit.md`](./plan-blood-sorcery-audit.md). Review notes: [`docs/plan-blood-sorcery-audit-review.md`](./plan-blood-sorcery-audit-review.md).
+
+**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and `magic_types_and_rules.txt`. All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
+
+### Prerequisites
+
+- Phase 9/9.5/9.6 (Blood Sorcery engine, sacrifice mechanics, Necromancy/Ordo track) ✅
+- Phase 17 (Condition system — `IConditionRules`, `EvaluateStainsAsync`) ✅
+- Phase 19 (Crúac Humanity cap, Necromancy gate model, `IHumanityService`) ✅
+
+### Scope
+
+**P0 — Bugs (break existing functionality)**
+- [ ] **P0-1 BOM fix + mojibake** — `rites.json` has UTF-8 BOM; several Effect strings contain mojibake (`Cr├║ac`). Fix in `SeedDataLoader.TryLoadJson` (centralized). Acceptance: 45 Crúac rows post-seed.
+- [ ] **P0-2 Theban sacrament enforcement** — Theban miracles store sacrament text in `Prerequisites` only, not in `RequirementsJson`. `ValidateAcknowledgments()` never fires. Fix: populate `RequirementsJson` with `{ "Type": "PhysicalSacrament", ... }` per miracle in seed importer. Acceptance: `BeginRiteActivationAsync` fails without sacrament acknowledgment.
+
+**P1 — Critical missing rules**
+- [ ] **P1-2 `TargetSuccesses` per rite** — Add `TargetSuccesses` field to seed JSON and `SorceryRiteDefinition` (EF migration). Display in casting UI.
+- [ ] **P1-1 Extended action system** — Rituals use extended actions (max rolls = unmodified pool, 30 min/roll). `RiteActivationSession` to track accumulated successes, rolls remaining, and abandonment. Decide session persistence before implementation (ephemeral / entity / SignalR — see open questions).
+- [ ] **P1-3 Roll outcome Conditions** — Dramatic failure → Tempted (Crúac) or Humbled (Theban); failure-continue → Stumbled; exceptional success → Ecstatic (Crúac) or Raptured (Theban). Necromancy: no tradition-specific Conditions (Storyteller ruling).
+- [ ] **P1-4 Potency mechanic** — `Potency = 1 + (successes − TargetSuccesses)`; exceptional success → optional UI opt-in to add Discipline dots. Informational output only in this phase.
+
+**P2 — Important missing rules**
+- [ ] **P2-5 Necromancy clan gate** — Remove any Mekhet `RequiredClanId` from seed; review `IsTraditionAllowedForCharacter`. Acceptance: non-Mekhet character can see Necromancy rites.
+- [ ] **P2-3 Crúac Humanity cap enforcement** — Verify `HumanityService.GetEffectiveMaxHumanity` enforces `10 − CrúacDots`; verify `DegenerationCheckRequiredEvent(CrúacPurchase)` fires at Humanity 4+ on learning. (Architecture exists in Phase 19 — confirm wiring.)
+- [ ] **P2-4 Necromancy torpor penalty** — `TorporService`: effective Blood Potency = `min(BP + NecromancyDots, 10)` for torpor duration.
+- [ ] **P2-1 Crúac extra Vitae bonus** — Optional `ExtraVitae` on `BeginRiteActivationRequest`; flat pool bonus; casting dialog UI.
+- [ ] **P2-2 Blood Sympathy modifier for ritual pools** — `+1/+2/+3` bonus (doubled for Crúac) when `TargetCharacterId` is set and sympathy applies. Environmental rites excluded.
+
+**P3 — Seed data rating corrections**
+- [ ] **P3-1 Crúac ratings** — Correct ~20 inflated/deflated ratings in `rites.json` per PDF table in `plan-blood-sorcery-audit.md` § P3-1. Add missing *Donning the Beast's Flesh* at Rating 2.
+- [ ] **P3-2 Theban ratings** — Correct 5 inflated ratings in `rituals.json` per PDF (Vitae Reliquary→1, Curse of Babel→2, Liar's Plague→2, Malediction of Despair→3, Stigmata→4).
+- [ ] **P3-3 Necromancy catalog decision** — Choose Option A (keep custom rites), B (replace with 19 canonical supplement rites), or C (ship both with `Source` field). Rename docs typo: `kindred_necromancyu_rituals.json` → `kindred_necromancy_rituals.json`.
+- [ ] **P3-4/5 Docs JSON** — Add `TargetSuccesses` and correct ratings to `docs/cruac_rituales.json` and `docs/Theban_Sorcery_rituals.json`.
+
+**P4 — Backlog (verify, no new code)**
+- [ ] Theban Humanity floor at `RequestLearnRiteAsync` (currently cast-time only)
+- [ ] Necromancy degeneration event end-to-end UI verification
+- [ ] `ResolveRiteActivationPoolAsync` fate (dead API — remove, gate-mirror, or document)
+
+### Open decisions (must resolve before P1-1)
+
+| Decision | Where |
+|----------|-------|
+| Ritual session persistence (ephemeral / entity / SignalR) | P1-1 |
+| Vitae/WP cost timing (up-front once vs. per roll vs. on completion) | P1-1 |
+| Potency scope boundary (informational only vs. effect interpreter) | P1-4 |
+| Theban sacrament UX (label text; consumed at crescendo not first roll) | P0-2 |
+| Necromancy catalog (Option A / B / C) | P3-3 |
+
+### Non-Goals (Phase 19.5)
+
+- New blood sorcery traditions beyond Crúac, Theban, Necromancy.
+- Mechanical effect interpreter for Potency (deferred).
+- Alternate dice pool overrides per bloodline for Necromancy (deferred).
+- Defense-while-casting enforcement at combat layer (Storyteller ruling until combat overlap in scope).
+
+---
+
 ## 📅 Phase 20: The Global Embrace
 
-**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19.
+**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, 19.5.
 
 - [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
 - [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools; **external client auth** (typically JWT or OAuth2 access tokens) is introduced here. The first-party Blazor app remains cookie-based Identity.

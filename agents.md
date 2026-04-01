@@ -322,11 +322,12 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phases 14–16b, 17, 18, and 19 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition). **Phase 20 — The Global Embrace** is the last planned phase (i18n, public API, Discord, production polish). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
+**Phases 14–16b, 17, 18, and 19 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition). **Phase 19.5 — The Rite Perfected** is the **active phase**: blood sorcery rules accuracy (Crúac / Theban Sorcery / Kindred Necromancy). Plan: [`docs/plan-blood-sorcery-audit.md`](./docs/plan-blood-sorcery-audit.md). Open decisions (session persistence, cost timing, Necromancy catalog, etc.) must be resolved before P1-1 work begins — see audit §7.4 and companion [`docs/plan-blood-sorcery-audit-review.md`](./docs/plan-blood-sorcery-audit-review.md). **Phase 20 — The Global Embrace** follows after 19.5 (i18n, public API, Discord, production polish). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
 See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
+See [`docs/plan-blood-sorcery-audit.md`](./docs/plan-blood-sorcery-audit.md) for the Phase 19.5 execution checklist.
 See [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md) for the completed Phase 16b implementation record.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 
