@@ -301,4 +301,72 @@ public class SorceryServiceTests
             humanity.Verify(h => h.EvaluateStainsAsync(1, "player1"), Times.Once);
         }
     }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_Theban_WithoutSacramentAcknowledgment_Throws()
+    {
+        const string thebanRequirementsJson =
+            """[{"type":"Willpower","value":1,"isConsumed":true},{"type":"PhysicalSacrament","value":1,"isConsumed":true,"displayHint":"An apple, a drop of Vitae."}]""";
+
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.CovenantDefinitions.Add(new CovenantDefinition
+            {
+                Id = 2,
+                Name = "The Lancea et Sanctum",
+                SupportsBloodSorcery = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 11, Name = "Theban Sorcery" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Sister",
+                ApplicationUserId = "player1",
+                CovenantId = 2,
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                Humanity = 8,
+                HumanityStains = 0,
+                BloodPotency = 1,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Apple of Eden",
+                Description = "Test",
+                Level = 1,
+                SorceryType = SorceryType.Theban,
+                XpCost = 1,
+                RequiredCovenantId = 2,
+                RequirementsJson = thebanRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 1,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            await ctx.SaveChangesAsync();
+
+            var sut = CreateService(ctx, CreateTraitResolverMock(3));
+            InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest()));
+
+            Assert.Contains("physical sacrament", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
 }

@@ -219,7 +219,7 @@ The p95 server dispatch latency (hub method invocation → message delivered to 
 
 ## Git & Branch Conventions
 
-- **Branch naming:** `feature/{author}/{short-description}`
+- **Branch naming:** `feature/{author}/{short-description}` for features; `dev/{author}/{short-description}` for phase/dev branches
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) — `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
 - **One logical change per commit.** Do not batch unrelated changes.
 - **Never force-push to `main`.** All changes go through a PR.

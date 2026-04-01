@@ -5,7 +5,7 @@ using RequiemNexus.Domain.Enums;
 namespace RequiemNexus.Data.SeedData;
 
 /// <summary>
-/// Loads Crúac rites, Theban rituals, and Mekhet Necromancy rites from SeedSource JSON for database seeding.
+/// Loads Crúac rites, Theban rituals, and Kindred Necromancy rites from SeedSource JSON for database seeding.
 /// Falls back to a minimal inline set when primary files are not found.
 /// </summary>
 public static class SorceryRiteSeedData

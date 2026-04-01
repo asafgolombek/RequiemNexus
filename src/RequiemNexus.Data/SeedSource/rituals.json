@@ -25,7 +25,7 @@
   },
   {
     "name": "Vitae Reliquary",
-    "Rating": 2,
+    "Rating": 1,
     "Prerequisites": "Sacrament: Any object up to Size 3.",
     "Effect": "Infuses an object with Vitae that can be retrieved later by any vampire, Strix, or ghoul touching it."
   },
@@ -55,13 +55,13 @@
   },
   {
     "name": "Curse of Babel",
-    "Rating": 3,
+    "Rating": 2,
     "Prerequisites": "Sacrament: An animal or human tongue.",
     "Effect": "Renders the victim unable to speak or write until the next sunrise."
   },
   {
     "name": "Liar's Plague",
-    "Rating": 3,
+    "Rating": 2,
     "Prerequisites": "Sacrament: An insect carapace.",
     "Effect": "Curses the victim to vomit a swarm of beetles if they tell any falsehoods during the next scene."
   },
@@ -79,7 +79,7 @@
   },
   {
     "name": "Malediction of Despair",
-    "Rating": 4,
+    "Rating": 3,
     "Prerequisites": "Sacrament: A lock of the victim's hair.",
     "Effect": "Imposes a -5 dice penalty the next time the victim engages in a specific action chosen by the caster."
   },
@@ -133,7 +133,7 @@
   },
   {
     "name": "Stigmata",
-    "Rating": 5,
+    "Rating": 4,
     "Prerequisites": "Sacrament: A crucifix.",
     "Effect": "Inflicts the wounds of Christ on the victim, causing massive blood and Vitae loss and potentially lethal damage."
   },

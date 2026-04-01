@@ -1,4 +1,4 @@
-﻿[
+[
     {
       "name": "Lair of the Beast",
       "Rating": 1,
@@ -7,13 +7,13 @@
     },
     {
       "name": "Pangs of Proserpina",
-      "Rating": 2,
+      "Rating": 1,
       "Prerequisites": "Target must be within a mile.",
       "Effect": "Inflicts intense hunger on a victim, provoking frenzy in vampires."
     },
     {
       "name": "Rigor Mortis",
-      "Rating": 2,
+      "Rating": 1,
       "Prerequisites": "Target must be a vampire within a mile.",
       "Effect": "Suppresses the reanimating power of Vitae in another vampire, penalizing their next physical action."
     },
@@ -24,14 +24,20 @@
       "Effect": "Forms a mystic connection allowing the ritualist to see and hear everything the subject experiences for the rest of the night."
     },
     {
-      "name": "The Mantle of Amorous Fire",
+      "name": "Donning the Beast's Flesh",
       "Rating": 2,
+      "Prerequisites": "None specified.",
+      "Effect": "Skins a beast to craft a mystical accessory that allows the wearer to take the rough shape of that animal."
+    },
+    {
+      "name": "The Mantle of Amorous Fire",
+      "Rating": 1,
       "Prerequisites": "Enact the Blush of Life and dance in an ecstatic trance.",
-      "Effect": "The vampire stands proud, fiery, and lusty, adding her Cr├║ac dots to her Presence for the remainder of the evening."
+      "Effect": "The vampire stands proud, fiery, and lusty, adding her Crúac dots to her Presence for the remainder of the evening."
     },
     {
       "name": "The Pool of Forbidden Truths",
-      "Rating": 2,
+      "Rating": 1,
       "Prerequisites": "Spill blood into a vessel containing a vector for prophecy (tea, bones, etc.).",
       "Effect": "Grants the Primeval Truths Condition. Allows the caster to see truths beyond reality to divine answers to specific questions."
     },
@@ -43,7 +49,7 @@
     },
     {
       "name": "Ahmet's Pursuit",
-      "Rating": 2,
+      "Rating": 3,
       "Prerequisites": "A material focus (effigy) and a living sapient mortal sacrifice if Vitae cost exceeds 1.",
       "Effect": "Victim suffers the Lost Condition regardless of navigation success; the caster always knows where the victim runs."
     },
@@ -61,7 +67,7 @@
     },
     {
       "name": "The Hydra's Vitae",
-      "Rating": 3,
+      "Rating": 2,
       "Prerequisites": "None specified.",
       "Effect": "Transforms the ritualist's own blood into a toxic poison that damages anyone who drinks it and offers no nourishment."
     },
@@ -73,13 +79,13 @@
     },
     {
       "name": "Mantle of the Beast's Breath",
-      "Rating": 3,
+      "Rating": 2,
       "Prerequisites": "Dance in an ecstatic trance, enact Blush of Life, spend a point of Willpower.",
-      "Effect": "Grants the Raptured Condition and adds Cr├║ac dots as a bonus to rolls for riding the wave of frenzy."
+      "Effect": "Grants the Raptured Condition and adds Crúac dots as a bonus to rolls for riding the wave of frenzy."
     },
     {
       "name": "Mantle of the Glorious Dervish",
-      "Rating": 3,
+      "Rating": 4,
       "Prerequisites": "Dance in an ecstatic trance, enact Blush of Life, spend a point of Willpower.",
       "Effect": "Grants a point of armor against all attacks, bonus damage on strikes, and immunity to being ambushed or surprised."
     },
@@ -91,13 +97,13 @@
     },
     {
       "name": "The Hand of Seth",
-      "Rating": 3,
+      "Rating": 4,
       "Prerequisites": "A scrap of the possessed vessel's DNA and a living sapient mortal sacrifice if Vitae cost exceeds 1.",
       "Effect": "Forcibly compels a spirit or Strix out of a possessed body within a mile, preventing it from re-possessing the victim for the scene."
     },
     {
       "name": "Sanguine Auger",
-      "Rating": 3,
+      "Rating": 1,
       "Prerequisites": "Must target a recent victim the caster has fed upon.",
       "Effect": "Grants cryptic visions revealing hidden information about the target, such as Touchstones, bloodlines, Merits, or lineage."
     },
@@ -121,7 +127,7 @@
     },
     {
       "name": "Touch of the Morrigan",
-      "Rating": 4,
+      "Rating": 3,
       "Prerequisites": "None specified.",
       "Effect": "Channels the Beast into the open palm, dealing lethal damage equal to the ritual's Potency on the first strike."
     },
@@ -139,31 +145,31 @@
     },
     {
       "name": "Shed the Virulent Bowels",
-      "Rating": 4,
+      "Rating": 3,
       "Prerequisites": "Must possess a lock of hair, nail clipping, or bodily waste from a living victim.",
       "Effect": "Causes the victim's bowels to violently eject (or choke on materialized nails), inflicting massive lethal damage at a rate of one point per turn."
     },
     {
       "name": "Curse of Aphrodite's Favor",
-      "Rating": 4,
+      "Rating": 3,
       "Prerequisites": "Creates a potion that the victim must consume in three drops on three separate nights.",
       "Effect": "Inflicts an all-consuming obsession functioning as a full Vinculum toward a specific subject."
     },
     {
       "name": "Curse of the Beloved Toy",
-      "Rating": 4,
+      "Rating": 3,
       "Prerequisites": "A victim, a beloved possession, the murder of the victim during casting, and an investment of at least 3 Vitae.",
       "Effect": "Binds the murdered victim's soul to their possession, cursing any new owner with terrible luck and dramatic failures."
     },
     {
       "name": "Mantle of the Predator Goddess",
-      "Rating": 4,
+      "Rating": 5,
       "Prerequisites": "Dance in an ecstatic trance, enact Blush of Life, spend a point of Willpower.",
-      "Effect": "Grants the grace of a perfect predator, adding Cr├║ac dots to feeding and the Herd Merit, and inflicting the Raptured condition on victims."
+      "Effect": "Grants the grace of a perfect predator, adding Crúac dots to feeding and the Herd Merit, and inflicting the Raptured condition on victims."
     },
     {
       "name": "Doom of Osiris",
-      "Rating": 4,
+      "Rating": 2,
       "Prerequisites": "Living sapient mortal sacrifice if Vitae cost exceeds 1.",
       "Effect": "Blesses a bladed weapon to inflict aggravated damage directly to ephemeral beings and Strix."
     },
@@ -205,13 +211,13 @@
     },
     {
       "name": "Bounty of the Storm",
-      "Rating": 5,
+      "Rating": 4,
       "Prerequisites": "A deeply personal object from the victim.",
       "Effect": "Curses the victim with a devastating localized storm that causes bashing damage, followed by a windfall of coincidental wealth."
     },
     {
       "name": "Denying Hades",
-      "Rating": 5,
+      "Rating": 4,
       "Prerequisites": "Feed the Vitae used in the casting to a recently dead mortal's corpse.",
       "Effect": "Forcibly pulls the spirit back into the rotting corpse, keeping the victim conscious but eternally decaying."
     },
@@ -229,7 +235,7 @@
     },
     {
       "name": "Manananggal's Working",
-      "Rating": 5,
+      "Rating": 4,
       "Prerequisites": "The caster must physically cut off parts of her own body; all Vitae sacrificed must be her own.",
       "Effect": "Detached body parts animate and perform independent tasks driven by Vitae, returning at sunrise."
     },
@@ -247,12 +253,12 @@
     },
     {
       "name": "Feast of the Ra",
-      "Rating": 5,
+      "Rating": 3,
       "Prerequisites": "Prepare a feast of Vitae and food, living sapient mortal sacrifice if Vitae cost exceeds 1.",
       "Effect": "Summons a Mekhet's Ka (ghostly shadow), granting it the Materialized condition to bargain with it."
     },
     {
-      "name": "The Thrashing of Apeps Coils",
+      "name": "The Thrashing of Apep's Coils",
       "Rating": 5,
       "Prerequisites": "Impale the sacrifice with a spear, living sapient mortal sacrifice if Vitae cost exceeds 1.",
       "Effect": "Summons extreme storms, imposing the Heavy Rains Tilt (and optionally Heavy Winds) over the area."

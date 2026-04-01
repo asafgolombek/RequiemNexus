@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
@@ -31,7 +32,11 @@ public static class SeedDataLoader
 
         try
         {
-            string json = File.ReadAllText(path);
+            using var reader = new StreamReader(
+                path,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                detectEncodingFromByteOrderMarks: true);
+            string json = reader.ReadToEnd();
             return JsonDocument.Parse(json);
         }
         catch (Exception ex)

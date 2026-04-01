@@ -8,7 +8,7 @@ decision is teachable. When suggesting code, explain *why* the pattern exists, n
 - `agents.md` — agent startup checklist, architectural laws, forbidden patterns, security rules
 - `docs/Architecture.md` — layer diagram, request flow, performance budgets
 - `docs/mission.md` — roadmap and active phase status
-- `docs/phase_8_plan.md` — detailed implementation plan for Phase 8
+- `docs/plan-blood-sorcery-audit.md` — active Phase 19.5 execution checklist
 
 ## Stack
 .NET 10 · C# 14 · Blazor Server · EF Core (SQLite dev / PostgreSQL prod) · Redis · SignalR ·
@@ -192,18 +192,12 @@ demonstrates. Examples:
 
 ## Current Phase & Scope
 
-**Phase 9.5 — Sacrifice Mechanics (Blood Sorcery)** is active. See `docs/mission.md` for full status.
+**Phase 19.5 — The Rite Perfected** is active. See `docs/mission.md` for full status and `docs/plan-blood-sorcery-audit.md` for the execution checklist.
 
-### Phase 9 Complete; Phase 9.5 Architectural Context
+### Phases 1–19 Complete; Phase 19.5 Architectural Context
 - **Content is data:** Covenants, Blood Sorcery (Rites/Miracles), and Coils/Scales are seed data interpreted by a stable engine.
 - **Pool Resolver:** Supports additive, contested, penalty dice, and lower-of. Passive modifier engine integrated.
-- **Next scope:** Sacrifice mechanics, Sin/Stain integration for rites.
+- **Active scope:** Blood sorcery rules accuracy — Crúac / Theban Sorcery / Kindred Necromancy (extended actions, Potency, ritual Conditions, seed ratings, BOM fix, sacrament enforcement, Necromancy clan gate).
 
 Do NOT scaffold the following unless explicitly instructed:
-- Sacrifice Mechanics (Phase 9.5)
-- Additional Blood Sorcery Traditions (Phase 9.6)
-- Social Maneuvering (Phase 10)
-- Equipment & Assets (Phase 11)
-- Relationship Webs (Phase 12)
-- E2E tests with Playwright (Phase 13)
-- Internationalization / i18n (Phase 20 — The Global Embrace)
+- Phase 20 — The Global Embrace (i18n, public API, Discord, production polish)
