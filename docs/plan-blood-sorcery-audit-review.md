@@ -94,7 +94,7 @@ The audit now contains most earlier review content (P0/P1/P2 clarifications, P4 
 
 ### 7.1 P4 vs code (spot check)
 
-- **Theban Humanity floor:** Implemented at **cast** time in `SorceryActivationService.BeginRiteActivationAsync` when `character.Humanity` is below the miracle’s dot rating (`def.Level`). **Not** enforced in `SorceryService.RequestLearnRiteAsync` — the P4 row (“verify learn-request gate”) is accurate; eligible list can still show miracles the character cannot cast until Humanity rises.
+- **Theban Humanity floor:** Enforced at **cast** time in `SorceryActivationService.BeginRiteActivationAsync` and at **learn** time in `SorceryService` (`GetEligibleRitesAsync`, `RequestLearnRiteAsync`, `ApproveRiteLearnAsync`) using the same `Humanity >= miracle.Level` rule.
 - **Necromancy breaking point on use:** `BeginRiteActivationAsync` dispatches `DegenerationCheckRequiredEvent` with `DegenerationReason.NecromancyActivation` when Humanity ≥ 7. P4’s “verify end-to-end to UI” remains the right follow-up (event wiring + test).
 - **`ResolveRiteActivationPoolAsync`:** Exposed on `ISorceryActivationService` but **not referenced** from `RequiemNexus.Web` at present. If a future “preview pool” UI calls it without going through `BeginRiteActivationAsync`, it would **skip** Theban Humanity, sacrament ack, resource validation, and Necromancy degeneration — either remove the dead API, or mirror the same gates in preview, or document “preview is informational only.”
 

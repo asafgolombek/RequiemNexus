@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01 (updated 2026-04-01 — implementation status)
 **Source of truth:** *Vampire: The Requiem 2e* PDF (pages 150–165) + `docs/magic_types_and_rules.txt`
-**Status:** **Delivered in codebase for P0, P1-2, P2, and seed/P3-1–2; deferred P1-1, P1-3, P1-4, P3-4/5 docs tables, P4 verification.**  
+**Status:** **Delivered in codebase for P0, P1-2, P2, seed/P3-1–2, P3-4/5 reference JSON, and P4 Theban learn/eligible gate; deferred P1-1, P1-3, P1-4, remaining P4 verification.**  
 **Companion review:** [plan-blood-sorcery-audit-review.md](./plan-blood-sorcery-audit-review.md) (open questions, backlog gaps, doc fixes)
 
 ---
@@ -24,14 +24,14 @@
 | **P2-5** Necromancy clan gate | Done | Seed cleanup + `IsTraditionAllowedForCharacter` + `ClearNecromancyRequiredClanGateAsync`. |
 | **P3-1 / P3-2** Ratings | Done in seed | `rites.json` / `rituals.json` aligned with audit tables (verify periodically vs PDF). |
 | **P3-3** Necromancy catalog | **Option A** | Keep `necromancyRites.json` custom set; supplement reference lives in `docs/kindred_necromancy_rituals.json` (file renamed from typo). |
-| **P3-4 / P3-5** Docs JSON tables | **Open** | Optional reference-only updates to `docs/cruac_rituales.json` / `docs/Theban_Sorcery_rituals.json`. |
-| **P4** Backlog | Open | Learn-time Theban floor, Necromancy UI event path, `ResolveRiteActivationPoolAsync` disposition. |
+| **P3-4 / P3-5** Docs JSON tables | Done | `targetSuccesses` on 10 core Crúac entries; Theban core miracles: `ranking` + `targetSuccesses` (Marian Apparition rating only). |
+| **P4** Backlog | Partial | Theban Humanity floor at learn + eligible + approve (`SorceryService`); Necromancy event UI path + `ResolveRiteActivationPoolAsync` still open. |
 
 ---
 
 ## Summary
 
-The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** extended-action session (P1-1), outcome Conditions (P1-3), and informational Potency (P1-4). Optional doc JSON reference tables (P3-4/5) and P4 verification items remain backlog.
+The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** extended-action session (P1-1), outcome Conditions (P1-3), and informational Potency (P1-4). Reference doc JSON tables (P3-4/5) are updated; other P4 verification items (Necromancy degeneration UI, preview pool API) remain backlog.
 
 ---
 
@@ -350,7 +350,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 
 | Topic | Status | Note |
 |-------|--------|------|
-| **Theban Humanity floor for casting** | Implemented in `SorceryActivationService` | Verify it also fires at `RequestLearnRiteAsync` for early player feedback (currently only at cast time). |
+| **Theban Humanity floor for casting** | `SorceryActivationService` + `SorceryService` | Enforced at cast, eligible list, `RequestLearnRiteAsync`, and `ApproveRiteLearnAsync`. |
 | **Necromancy breaking point on ritual use** | Dispatches `DegenerationCheckRequiredEvent` (Humanity ≥ 7) per explore | Verify event reaches the degeneration/remorse UI panel end-to-end; add integration test if not covered. |
 | **Crúac spilled Vitae becomes inert** | Narrative-only for now | Blood spilled during a rite is unsuitable for feeding. Stays narrative unless Vitae economy tracking is added. No code change needed yet. |
 | **Necromancy alternate dice pools** | Not implemented | Some bloodlines use Presence + Persuasion or Composure + Occult instead of Resolve + Occult + Necromancy. Future: data-driven pool override per rite × bloodline combination. |
