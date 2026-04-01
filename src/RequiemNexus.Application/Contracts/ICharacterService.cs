@@ -1,3 +1,4 @@
+using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Application.Contracts;
@@ -58,4 +59,11 @@ public interface ICharacterService
     /// </list>
     /// </summary>
     Task<(Character Character, bool IsOwner)?> GetCharacterWithAccessCheckAsync(int characterId, string requestingUserId);
+
+    /// <summary>
+    /// Returns other vampires in the same chronicle as the character for optional Blood Sympathy ritual targeting.
+    /// </summary>
+    /// <param name="characterId">The ritualist's character.</param>
+    /// <param name="userId">The authenticated user (must own the character).</param>
+    Task<IReadOnlyList<CampaignKindredTargetDto>> GetCampaignKindredTargetsForRitesAsync(int characterId, string userId);
 }

@@ -148,6 +148,15 @@ public class SorceryActivationService(
             throw new InvalidOperationException(ackResult.Error);
         }
 
+        if (request.ExtraVitae != 0 && def.SorceryType != SorceryType.Cruac)
+        {
+            throw new InvalidOperationException("Extra Vitae may only be spent on Crúac rituals.");
+        }
+
+        int extraVitae = def.SorceryType == SorceryType.Cruac ? Math.Clamp(request.ExtraVitae, 0, 5) : 0;
+
+        (int vitaeCost, int wpCost, int stainGain) = RiteRequirementValidator.AggregateInternalCosts(requirements);
+
         var resources = new RiteActivationResourceSnapshot(
             character.CurrentVitae,
             character.CurrentWillpower,
@@ -159,19 +168,24 @@ public class SorceryActivationService(
             throw new InvalidOperationException(resOk.Error);
         }
 
-        (int vitaeCost, int wpCost, int stainGain) = RiteRequirementValidator.AggregateInternalCosts(requirements);
+        int totalVitaeSpend = vitaeCost + extraVitae;
+        if (character.CurrentVitae < totalVitaeSpend)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient Vitae. This rite requires {totalVitaeSpend} Vitae (including optional bonus Vitae).");
+        }
 
-        if (vitaeCost > 0 || wpCost > 0 || stainGain > 0)
+        if (totalVitaeSpend > 0 || wpCost > 0 || stainGain > 0)
         {
             await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction tx =
                 await _dbContext.Database.BeginTransactionAsync();
 
-            if (vitaeCost > 0)
+            if (totalVitaeSpend > 0)
             {
                 Result<int> vitaeResult = await _vitaeService.SpendVitaeAsync(
                     characterId,
                     userId,
-                    vitaeCost,
+                    totalVitaeSpend,
                     $"Rite activation: {def.Name}");
 
                 if (!vitaeResult.IsSuccess)
@@ -213,11 +227,12 @@ public class SorceryActivationService(
         }
 
         _logger.LogInformation(
-            "Rite activation costs applied: Character {CharacterId}, CharacterRite {CharacterRiteId}, Rite {RiteName}, Vitae {VitaeCost}, Willpower {WillpowerCost}, Stains {StainGain}, Requirements {RequirementSummary}",
+            "Rite activation costs applied: Character {CharacterId}, CharacterRite {CharacterRiteId}, Rite {RiteName}, Vitae {VitaeCost} (extra {ExtraVitae}), Willpower {WillpowerCost}, Stains {StainGain}, Requirements {RequirementSummary}",
             characterId,
             characterRiteId,
             def.Name,
-            vitaeCost,
+            totalVitaeSpend,
+            extraVitae,
             wpCost,
             stainGain,
             string.Join(';', requirements.Select(r => $"{r.Type}:{r.Value}")));
@@ -247,7 +262,88 @@ public class SorceryActivationService(
             }
         }
 
+        poolSize += extraVitae;
+
+        int sympathyDice = await TryResolveRitualBloodSympathyBonusAsync(
+            characterId,
+            character,
+            def.SorceryType,
+            request.TargetCharacterId);
+
+        poolSize += sympathyDice;
+
+        if (sympathyDice > 0)
+        {
+            _logger.LogInformation(
+                "Ritual Blood Sympathy bonus: Character {CharacterId}, Rite {RiteName}, BonusDice {BonusDice}",
+                characterId,
+                def.Name,
+                sympathyDice);
+        }
+
         await _sessionService.BroadcastCharacterUpdateAsync(characterId);
         return poolSize;
+    }
+
+    /// <summary>
+    /// Applies V:tR 2e p. 153 Blood Sympathy dice to ritual pools when a valid in-chronicle Kindred target is named.
+    /// </summary>
+    private async Task<int> TryResolveRitualBloodSympathyBonusAsync(
+        int ritualistCharacterId,
+        Character ritualist,
+        SorceryType tradition,
+        int? targetCharacterId)
+    {
+        if (targetCharacterId is not int tid || tid == ritualistCharacterId)
+        {
+            return 0;
+        }
+
+        if (tradition is not (SorceryType.Cruac or SorceryType.Theban or SorceryType.Necromancy))
+        {
+            return 0;
+        }
+
+        if (!ritualist.CampaignId.HasValue)
+        {
+            throw new InvalidOperationException(
+                "Blood Sympathy ritual targeting requires the ritualist to belong to a chronicle.");
+        }
+
+        Character? target = await _dbContext.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == tid);
+        if (target == null)
+        {
+            throw new InvalidOperationException($"Ritual target character {tid} was not found.");
+        }
+
+        if (target.CampaignId != ritualist.CampaignId)
+        {
+            throw new InvalidOperationException("Ritual target must belong to the same chronicle as the ritualist.");
+        }
+
+        if (target.CreatureType != CreatureType.Vampire)
+        {
+            throw new InvalidOperationException("Blood Sympathy ritual bonuses apply only when the target is a vampire.");
+        }
+
+        IReadOnlyDictionary<int, int?> sireMap =
+            await KindredLineageSireMapBuilder.BuildForCampaignAsync(_dbContext, ritualist.CampaignId.Value);
+
+        int? degree = KindredLineageDegree.TryGetShortestDegree(ritualistCharacterId, tid, sireMap);
+        if (degree is null or < 1)
+        {
+            return 0;
+        }
+
+        int r1 = BloodSympathyRules.ComputeRating(ritualist.BloodPotency);
+        int r2 = BloodSympathyRules.ComputeRating(target.BloodPotency);
+        int maxRange = BloodSympathyRules.EffectiveRange(r1, r2);
+        if (degree.Value > maxRange)
+        {
+            return 0;
+        }
+
+        int baseBonus = BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy(degree.Value);
+        return tradition == SorceryType.Cruac ? baseBonus * 2 : baseBonus;
     }
 }

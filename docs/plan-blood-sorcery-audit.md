@@ -1,15 +1,37 @@
 # Blood Sorcery Audit — Crúac, Theban Sorcery & Kindred Necromancy
 
-**Date:** 2026-04-01
+**Date:** 2026-04-01 (updated 2026-04-01 — implementation status)
 **Source of truth:** *Vampire: The Requiem 2e* PDF (pages 150–165) + `docs/magic_types_and_rules.txt`
-**Status:** Audit complete — implementation plan ready for execution  
+**Status:** **Delivered in codebase for P0, P1-2, P2, and seed/P3-1–2; deferred P1-1, P1-3, P1-4, P3-4/5 docs tables, P4 verification.**  
 **Companion review:** [plan-blood-sorcery-audit-review.md](./plan-blood-sorcery-audit-review.md) (open questions, backlog gaps, doc fixes)
+
+---
+
+## Implementation status (codebase)
+
+| Audit block | Status | Notes |
+|-------------|--------|--------|
+| **P0-1** BOM + encoding | Done | `SeedDataLoader.TryLoadJson` uses UTF-8 with BOM detection; `rites.json` uses proper `Crúac` escapes. |
+| **P0-2** Theban sacrament | Done | `DbInitializer` builds `PhysicalSacrament` in `RequirementsJson`; tests cover cast without acknowledgment. |
+| **P1-2** `TargetSuccesses` | Done | Column + seed JSON + UI (sheet + learn modal); catalog sync in `DbInitializer`. |
+| **P1-1** Extended actions | **Not done** | Requires session persistence + cost-timing decisions (see § P1-1). |
+| **P1-3** Outcome Conditions | **Not done** | Depends on P1-1 roll pipeline. |
+| **P1-4** Potency | **Not done** | Depends on P1-1; scope remains informational until decided. |
+| **P2-1** Extra Vitae (Crúac) | Done | `BeginRiteActivationRequest.ExtraVitae`, `SorceryActivationService`, `RiteActivationPrepModal`. |
+| **P2-2** Blood Sympathy | Done | `TargetCharacterId`, `KindredLineageDegree` + `BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy`, chronicle roster picker. |
+| **P2-3** Crúac Humanity cap | Done | `HumanityService` / `CharacterDisciplineService` clamp + degeneration hooks (Phase 19). |
+| **P2-4** Necromancy torpor | Done | `TorporDurationTable` + `TorporService` effective BP. |
+| **P2-5** Necromancy clan gate | Done | Seed cleanup + `IsTraditionAllowedForCharacter` + `ClearNecromancyRequiredClanGateAsync`. |
+| **P3-1 / P3-2** Ratings | Done in seed | `rites.json` / `rituals.json` aligned with audit tables (verify periodically vs PDF). |
+| **P3-3** Necromancy catalog | **Option A** | Keep `necromancyRites.json` custom set; supplement reference lives in `docs/kindred_necromancy_rituals.json` (file renamed from typo). |
+| **P3-4 / P3-5** Docs JSON tables | **Open** | Optional reference-only updates to `docs/cruac_rituales.json` / `docs/Theban_Sorcery_rituals.json`. |
+| **P4** Backlog | Open | Learn-time Theban floor, Necromancy UI event path, `ResolveRiteActivationPoolAsync` disposition. |
 
 ---
 
 ## Summary
 
-The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. However, four categories of defects exist: a seed-data bug, missing extended-action architecture, incomplete enforcement of several per-tradition rules, and stale documentation JSON files.
+The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** extended-action session (P1-1), outcome Conditions (P1-3), and informational Potency (P1-4). Optional doc JSON reference tables (P3-4/5) and P4 verification items remain backlog.
 
 ---
 
@@ -270,21 +292,18 @@ Blood Scourge (1), Blandishment of Sin (1), Marian Apparition (2), Gift of Lazar
 
 ---
 
-### P3-3 · `src/RequiemNexus.Data/SeedSource/necromancyRites.json` vs `docs/kindred_necromancyu_rituals.json` — completely different rite sets
+### P3-3 · `src/RequiemNexus.Data/SeedSource/necromancyRites.json` vs `docs/kindred_necromancy_rituals.json` — completely different rite sets
 
 These two files have **zero overlapping rites**:
 
 | File | Rites | Notes |
 |------|-------|-------|
-| `docs/kindred_necromancyu_rituals.json` | 19 rites (Appraise the Dead, Soul Jar, Voodoo Doll, etc.) | Canonical V:tR 2e supplement rites; all rankings `"None"` |
+| `docs/kindred_necromancy_rituals.json` | 19 rites (Appraise the Dead, Soul Jar, Voodoo Doll, etc.) | Canonical V:tR 2e supplement rites; all rankings `"None"` |
 | `src/RequiemNexus.Data/SeedSource/necromancyRites.json` | 8 rites (Touch of Death, The Caul, Legion of the Pit, etc.) | Custom/homebrew set; proper int Ratings |
 
-**Decision required (Storyteller call):** Choose whether to:
-- **Option A:** Keep the custom seed rites only (current behavior).
-- **Option B:** Replace with the 19 canonical supplement rites (requires assigning ratings and adding Effects to each from the supplement source).
-- **Option C:** Ship both sets (mark supplement rites with a `Source` field; mark custom rites as homebrew).
+**Decision (2026-04-01): Option A** — Keep the custom seed rites as the shipped catalog. The docs file remains a **supplement reference** only (filename typo fixed: former `kindred_necromancyu_rituals.json`).
 
-Also fix the filename typo in docs: `kindred_necromancyu_rituals.json` → `kindred_necromancy_rituals.json`. **Before renaming, grep the repo for the old filename and update all references in the same changeset.**
+**Future options** if chronicles need canon-only Necromancy: **Option B** (replace seed) or **Option C** (dual-track + `Source` field on `SorceryRiteDefinition`).
 
 ---
 

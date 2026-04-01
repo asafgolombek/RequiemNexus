@@ -373,4 +373,227 @@ public class SorceryServiceTests
             Assert.Contains("physical sacrament", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_Cruac_ExtraVitae_AddsToPoolAndSpend()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.CovenantDefinitions.Add(new CovenantDefinition
+            {
+                Id = 1,
+                Name = "The Circle of the Crone",
+                SupportsBloodSorcery = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 10, Name = "Crúac" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Rita",
+                ApplicationUserId = "player1",
+                CovenantId = 1,
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                HumanityStains = 0,
+                BloodPotency = 1,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Test Rite",
+                Description = "Test",
+                Level = 1,
+                SorceryType = SorceryType.Cruac,
+                XpCost = 1,
+                TargetSuccesses = 6,
+                RequiredCovenantId = 1,
+                RequirementsJson = _defaultRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 1,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            await ctx.SaveChangesAsync();
+
+            var sut = CreateService(ctx, CreateTraitResolverMock(4));
+            var req = new BeginRiteActivationRequest(ExtraVitae: 2);
+            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", req);
+
+            Assert.Equal(6, dice);
+            Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
+            Assert.Equal(2, reloaded.CurrentVitae);
+        }
+    }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_Theban_ExtraVitae_Throws()
+    {
+        const string thebanRequirementsJson =
+            """[{"type":"Willpower","value":1,"isConsumed":true},{"type":"PhysicalSacrament","value":1,"isConsumed":true,"displayHint":"An apple."}]""";
+
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.Campaigns.Add(new Campaign { Id = 1, Name = "Chronicle", StoryTellerId = "player1" });
+            ctx.CovenantDefinitions.Add(new CovenantDefinition
+            {
+                Id = 2,
+                Name = "The Lancea et Sanctum",
+                SupportsBloodSorcery = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 11, Name = "Theban Sorcery" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Sister",
+                ApplicationUserId = "player1",
+                CovenantId = 2,
+                CampaignId = 1,
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                Humanity = 8,
+                HumanityStains = 0,
+                BloodPotency = 1,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Apple",
+                Description = "Test",
+                Level = 1,
+                SorceryType = SorceryType.Theban,
+                XpCost = 1,
+                TargetSuccesses = 5,
+                RequiredCovenantId = 2,
+                RequirementsJson = thebanRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 1,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            await ctx.SaveChangesAsync();
+
+            var sut = CreateService(ctx, CreateTraitResolverMock(3));
+            var req = new BeginRiteActivationRequest(
+                AcknowledgePhysicalSacrament: true,
+                ExtraVitae: 1);
+            InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                sut.BeginRiteActivationAsync(1, 1, "player1", req));
+
+            Assert.Contains("Extra Vitae", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_Cruac_BloodSympathyTarget_DoublesBonusDice()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.Campaigns.Add(new Campaign { Id = 1, Name = "Chronicle", StoryTellerId = "player1" });
+            ctx.CovenantDefinitions.Add(new CovenantDefinition
+            {
+                Id = 1,
+                Name = "The Circle of the Crone",
+                SupportsBloodSorcery = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 10, Name = "Crúac" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Sire",
+                ApplicationUserId = "player1",
+                CovenantId = 1,
+                CampaignId = 1,
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                HumanityStains = 0,
+                BloodPotency = 2,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.Characters.Add(new Character
+            {
+                Id = 2,
+                Name = "Childe",
+                ApplicationUserId = "player1",
+                CovenantId = 1,
+                CampaignId = 1,
+                SireCharacterId = 1,
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                HumanityStains = 0,
+                BloodPotency = 2,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Test Rite",
+                Description = "Test",
+                Level = 1,
+                SorceryType = SorceryType.Cruac,
+                XpCost = 1,
+                TargetSuccesses = 6,
+                RequiredCovenantId = 1,
+                RequirementsJson = _defaultRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 2,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            await ctx.SaveChangesAsync();
+
+            var sut = CreateService(ctx, CreateTraitResolverMock(2));
+            var req = new BeginRiteActivationRequest(TargetCharacterId: 1);
+            int dice = await sut.BeginRiteActivationAsync(2, 1, "player1", req);
+
+            Assert.Equal(8, dice);
+        }
+    }
 }

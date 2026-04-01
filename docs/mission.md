@@ -778,27 +778,27 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 ### Scope
 
 **P0 — Bugs (break existing functionality)**
-- [ ] **P0-1 BOM fix + mojibake** — `rites.json` has UTF-8 BOM; several Effect strings contain mojibake (`Cr├║ac`). Fix in `SeedDataLoader.TryLoadJson` (centralized). Acceptance: 45 Crúac rows post-seed.
-- [ ] **P0-2 Theban sacrament enforcement** — Theban miracles store sacrament text in `Prerequisites` only, not in `RequirementsJson`. `ValidateAcknowledgments()` never fires. Fix: populate `RequirementsJson` with `{ "Type": "PhysicalSacrament", ... }` per miracle in seed importer. Acceptance: `BeginRiteActivationAsync` fails without sacrament acknowledgment.
+- [x] **P0-1 BOM fix + mojibake** — `SeedDataLoader.TryLoadJson` (BOM-tolerant UTF-8); seed `Effect` strings corrected.
+- [x] **P0-2 Theban sacrament enforcement** — `DbInitializer` / `RequirementsJson` includes `PhysicalSacrament`; cast fails without acknowledgment (tests).
 
 **P1 — Critical missing rules**
-- [ ] **P1-2 `TargetSuccesses` per rite** — Add `TargetSuccesses` field to seed JSON and `SorceryRiteDefinition` (EF migration). Display in casting UI.
+- [x] **P1-2 `TargetSuccesses` per rite** — Seed + EF + UI.
 - [ ] **P1-1 Extended action system** — Rituals use extended actions (max rolls = unmodified pool, 30 min/roll). `RiteActivationSession` to track accumulated successes, rolls remaining, and abandonment. Decide session persistence before implementation (ephemeral / entity / SignalR — see open questions).
 - [ ] **P1-3 Roll outcome Conditions** — Dramatic failure → Tempted (Crúac) or Humbled (Theban); failure-continue → Stumbled; exceptional success → Ecstatic (Crúac) or Raptured (Theban). Necromancy: no tradition-specific Conditions (Storyteller ruling).
 - [ ] **P1-4 Potency mechanic** — `Potency = 1 + (successes − TargetSuccesses)`; exceptional success → optional UI opt-in to add Discipline dots. Informational output only in this phase.
 
 **P2 — Important missing rules**
-- [ ] **P2-5 Necromancy clan gate** — Remove any Mekhet `RequiredClanId` from seed; review `IsTraditionAllowedForCharacter`. Acceptance: non-Mekhet character can see Necromancy rites.
-- [ ] **P2-3 Crúac Humanity cap enforcement** — Verify `HumanityService.GetEffectiveMaxHumanity` enforces `10 − CrúacDots`; verify `DegenerationCheckRequiredEvent(CrúacPurchase)` fires at Humanity 4+ on learning. (Architecture exists in Phase 19 — confirm wiring.)
-- [ ] **P2-4 Necromancy torpor penalty** — `TorporService`: effective Blood Potency = `min(BP + NecromancyDots, 10)` for torpor duration.
-- [ ] **P2-1 Crúac extra Vitae bonus** — Optional `ExtraVitae` on `BeginRiteActivationRequest`; flat pool bonus; casting dialog UI.
-- [ ] **P2-2 Blood Sympathy modifier for ritual pools** — `+1/+2/+3` bonus (doubled for Crúac) when `TargetCharacterId` is set and sympathy applies. Environmental rites excluded.
+- [x] **P2-5 Necromancy clan gate** — Seed + `IsTraditionAllowedForCharacter` + initializer cleanup.
+- [x] **P2-3 Crúac Humanity cap enforcement** — `IHumanityService` / `CharacterDisciplineService` wiring.
+- [x] **P2-4 Necromancy torpor penalty** — `TorporDurationTable` + `TorporService`.
+- [x] **P2-1 Crúac extra Vitae bonus** — `BeginRiteActivationRequest.ExtraVitae`, service + `RiteActivationPrepModal`.
+- [x] **P2-2 Blood Sympathy modifier for ritual pools** — `TargetCharacterId`, lineage graph + `BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy`; Crúac doubled.
 
 **P3 — Seed data rating corrections**
-- [ ] **P3-1 Crúac ratings** — Correct ~20 inflated/deflated ratings in `rites.json` per PDF table in `plan-blood-sorcery-audit.md` § P3-1. Add missing *Donning the Beast's Flesh* at Rating 2.
-- [ ] **P3-2 Theban ratings** — Correct 5 inflated ratings in `rituals.json` per PDF (Vitae Reliquary→1, Curse of Babel→2, Liar's Plague→2, Malediction of Despair→3, Stigmata→4).
-- [ ] **P3-3 Necromancy catalog decision** — Choose Option A (keep custom rites), B (replace with 19 canonical supplement rites), or C (ship both with `Source` field). Rename docs typo: `kindred_necromancyu_rituals.json` → `kindred_necromancy_rituals.json`.
-- [ ] **P3-4/5 Docs JSON** — Add `TargetSuccesses` and correct ratings to `docs/cruac_rituales.json` and `docs/Theban_Sorcery_rituals.json`.
+- [x] **P3-1 Crúac ratings** — `rites.json` aligned with audit (incl. *Donning the Beast's Flesh*, apostrophe fix).
+- [x] **P3-2 Theban ratings** — `rituals.json` aligned with audit.
+- [x] **P3-3 Necromancy catalog decision** — **Option A** (keep custom `necromancyRites.json`). Docs reference renamed to `docs/kindred_necromancy_rituals.json`.
+- [ ] **P3-4/5 Docs JSON** — Add `TargetSuccesses` and correct ratings to `docs/cruac_rituales.json` and `docs/Theban_Sorcery_rituals.json` (reference-only; optional).
 
 **P4 — Backlog (verify, no new code)**
 - [ ] Theban Humanity floor at `RequestLearnRiteAsync` (currently cast-time only)
@@ -813,7 +813,7 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 | Vitae/WP cost timing (up-front once vs. per roll vs. on completion) | P1-1 |
 | Potency scope boundary (informational only vs. effect interpreter) | P1-4 |
 | Theban sacrament UX (label text; consumed at crescendo not first roll) | P0-2 |
-| Necromancy catalog (Option A / B / C) | P3-3 |
+| Necromancy catalog | **Option A** chosen (see P3-3); B/C if product needs canon-only catalog later |
 
 ### Non-Goals (Phase 19.5)
 

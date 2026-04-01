@@ -80,6 +80,9 @@ public partial class CharacterDetails : IAsyncDisposable
     private List<SorceryRiteSummaryDto> _eligibleRites = [];
     private bool _isChosenMysteryModalOpen = false;
     private bool _isLearnCoilModalOpen = false;
+    private bool _isRitePrepModalOpen;
+    private CharacterRite? _pendingRiteForPrep;
+    private IReadOnlyList<CampaignKindredTargetDto> _riteKinTargets = [];
     private List<ScaleSummaryDto> _eligibleScales = [];
     private List<CoilSummaryDto> _eligibleCoils = [];
     private bool _requestingLeave = false;
@@ -1296,6 +1299,15 @@ public partial class CharacterDetails : IAsyncDisposable
             _ => t.ToString(),
         };
 
+    private void HandleRitePrepModalOpenChanged(bool open)
+    {
+        _isRitePrepModalOpen = open;
+        if (!open)
+        {
+            _pendingRiteForPrep = null;
+        }
+    }
+
     private async Task OpenRiteRoller(CharacterRite cr)
     {
         if (_character == null || string.IsNullOrEmpty(_currentUserId))
@@ -1305,39 +1317,73 @@ public partial class CharacterDetails : IAsyncDisposable
 
         try
         {
-            var def = cr.SorceryRiteDefinition;
-            Result<IReadOnlyList<RiteRequirement>> parsed =
-                RiteRequirementValidator.ParseRequirements(def?.RequirementsJson);
-            IReadOnlyList<RiteRequirement> reqs = parsed.IsSuccess ? parsed.Value! : [];
-
-            var request = new BeginRiteActivationRequest();
-            if (RiteRequirementValidator.RequiresExternalAcknowledgment(reqs))
-            {
-                bool ok = await JS.InvokeAsync<bool>(
-                    "confirm",
-                    "This rite requires narrative sacrifices (focus, sacrament, offering, etc.) you must have completed at the table. Confirm to apply Vitae/Willpower/stain costs and roll.");
-                if (!ok)
-                {
-                    return;
-                }
-
-                request = new BeginRiteActivationRequest(
-                    AcknowledgePhysicalSacrament: true,
-                    AcknowledgeHeart: true,
-                    AcknowledgeMaterialOffering: true,
-                    AcknowledgeMaterialFocus: true);
-            }
-
-            int dice = await SorceryActivationService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
-            _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
-            _rollerBaseDice = dice;
-            _isRollerOpen = true;
+            _pendingRiteForPrep = cr;
+            _riteKinTargets = await CharacterService.GetCampaignKindredTargetsForRitesAsync(_character.Id, _currentUserId);
+            _isRitePrepModalOpen = true;
         }
         catch (Exception ex)
         {
             ToastService.Show("Rite activation", ex.Message, ToastType.Error);
         }
+    }
+
+    private async Task HandleRitePrepContinueAsync(RiteActivationPrepResult prep)
+    {
+        CharacterRite? cr = _pendingRiteForPrep;
+        if (cr == null || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await ExecuteRiteActivationRollAsync(cr, prep);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Rite activation", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task ExecuteRiteActivationRollAsync(CharacterRite cr, RiteActivationPrepResult prep)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        var def = cr.SorceryRiteDefinition;
+        Result<IReadOnlyList<RiteRequirement>> parsed =
+            RiteRequirementValidator.ParseRequirements(def?.RequirementsJson);
+        IReadOnlyList<RiteRequirement> reqs = parsed.IsSuccess ? parsed.Value! : [];
+
+        var request = new BeginRiteActivationRequest(
+            ExtraVitae: prep.ExtraVitae,
+            TargetCharacterId: prep.TargetCharacterId);
+        if (RiteRequirementValidator.RequiresExternalAcknowledgment(reqs))
+        {
+            bool ok = await JS.InvokeAsync<bool>(
+                "confirm",
+                "This rite requires narrative sacrifices (focus, sacrament, offering, etc.) you must have completed at the table. Confirm to apply Vitae/Willpower/stain costs and roll.");
+            if (!ok)
+            {
+                return;
+            }
+
+            request = new BeginRiteActivationRequest(
+                AcknowledgePhysicalSacrament: true,
+                AcknowledgeHeart: true,
+                AcknowledgeMaterialOffering: true,
+                AcknowledgeMaterialFocus: true,
+                ExtraVitae: prep.ExtraVitae,
+                TargetCharacterId: prep.TargetCharacterId);
+        }
+
+        int dice = await SorceryActivationService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
+        _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
+        _rollerBaseDice = dice;
+        _isRollerOpen = true;
     }
 }
 

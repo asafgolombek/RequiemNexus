@@ -22,7 +22,7 @@ All items are marked **✅ Applied** (merged into the audit) or **⏳ Open** (st
 
 ## 2. Open questions
 
-- ⏳ **Necromancy catalog (P3-3):** Option A / B / C decision is documented in the audit. Storyteller must choose canon vs homebrew vs dual-track. Whether a `Source` field is added to `SorceryRiteDefinition` for filtering/UX is part of that decision.
+- ✅ **Necromancy catalog (P3-3):** **Option A** recorded in the audit (custom `necromancyRites.json` remains canonical for the app; supplement list in `docs/kindred_necromancy_rituals.json`). A future `Source` field remains optional if dual-track (Option C) is chosen later.
 
 - ✅ **Extended actions (P1-1):** Session persistence question added to P1-1 as an explicit pre-implementation decision point (ephemeral Blazor state vs persisted entity vs SignalR). Disconnect/refresh behavior documented as a Storyteller call if ephemeral option is chosen.
 
@@ -120,7 +120,7 @@ All ⏳ items currently in the audit that require a product/chronicle/architectu
 
 | Item | Audit location | Decision needed |
 |------|---------------|-----------------|
-| ⏳ **Necromancy catalog** (Option A / B / C) | P3-3 | Canon vs homebrew vs dual-track; whether `Source` field added to entity |
+| ✅ **Necromancy catalog** | P3-3 | **Option A** (keep custom seed); `docs/kindred_necromancy_rituals.json` = supplement reference only |
 | ⏳ **Ritual session persistence** | P1-1 | Ephemeral Blazor state vs persisted `CharacterRiteSession` entity vs SignalR (Phase 7) |
 | ⏳ **Cost timing for extended rituals** | P1-1 | Vitae/WP deducted up-front once, per roll, or on completion; whether API needs `OpenRiteActivationSessionAsync` / `CommitRiteRollAsync` split |
 | ⏳ **Theban sacrament UX** | P0-2 | Per-miracle sacrament text as checkbox label vs generic "I have the sacrament"; UI copy timing (consumed at crescendo, not first roll) |

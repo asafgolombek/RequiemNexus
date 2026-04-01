@@ -4,6 +4,7 @@ using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
@@ -381,5 +382,26 @@ public class CharacterManagementService(
         character.ArchivedAt = null;
         await _dbContext.SaveChangesAsync();
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CampaignKindredTargetDto>> GetCampaignKindredTargetsForRitesAsync(
+        int characterId,
+        string userId)
+    {
+        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "select ritual Blood Sympathy targets");
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
+        Character? ch = await ctx.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == characterId);
+        if (ch?.CampaignId is not int campId)
+        {
+            return [];
+        }
+
+        return await ctx.Characters
+            .AsNoTracking()
+            .Where(c => c.CampaignId == campId && c.Id != characterId && c.CreatureType == CreatureType.Vampire)
+            .OrderBy(c => c.Name)
+            .Select(c => new CampaignKindredTargetDto(c.Id, c.Name))
+            .ToListAsync();
     }
 }

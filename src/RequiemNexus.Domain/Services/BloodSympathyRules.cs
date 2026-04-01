@@ -33,4 +33,12 @@ public static class BloodSympathyRules
     /// <returns>Bonus dice, or zero when degree is not positive.</returns>
     public static int BonusDiceForDegree(int rating, int degree) =>
         degree <= 0 ? 0 : rating / degree;
+
+    /// <summary>
+    /// Bonus dice for Theban Sorcery or Kindred Necromancy when the ritual's power applies to a Kindred with active Blood Sympathy (V:tR 2e p. 153). Crúac doubles this value at the call site.
+    /// </summary>
+    /// <param name="degreeOfSeparation">Shortest lineage degree between ritualist and target (1 = immediate kin).</param>
+    /// <returns>1–3 dice for degrees 1–3; zero when separation is absent or too distant for the table.</returns>
+    public static int RitualSympathyBonusThebanOrNecromancy(int degreeOfSeparation) =>
+        degreeOfSeparation < 1 ? 0 : Math.Max(0, Math.Min(3, 4 - degreeOfSeparation));
 }
