@@ -1,4 +1,4 @@
-﻿@page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
+@page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
 @rendermode InteractiveServer
 @using System.Globalization
 @using RequiemNexus.Application.Contracts
@@ -39,15 +39,15 @@
     else if (_accessDenied)
     {
         <div class="alert-rn alert-danger">
-            <strong>Access Denied</strong> â€” you are not a member of this campaign.
+            <strong>Access Denied</strong> — you are not a member of this campaign.
         </div>
-        <a href="/campaigns/@CampaignId" class="btn-rn-ghost">â† Back to Campaign</a>
+        <a href="/campaigns/@CampaignId" class="btn-rn-ghost">← Back to Campaign</a>
     }
     else if (_encounter == null)
     {
         <div class="empty-state-rn">
             <p>Encounter not found.</p>
-            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">â† Back to Encounters</a>
+            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Back to Encounters</a>
         </div>
     }
     else
@@ -56,19 +56,19 @@
         <div class="initiative-page-main">
         <div class="campaign-header">
             <div>
-                <h2>âš”ï¸ @_encounter.Name</h2>
+                <h2>⚔️ @_encounter.Name</h2>
                 <span style="font-size:0.85em;color:var(--gothic-muted);">
                     @if (_encounter.IsActive && !_encounter.IsDraft)
                     {
-                        <text>Round @_encounter.CurrentRound Â· Active</text>
+                        <text>Round @_encounter.CurrentRound · Active</text>
                     }
                     else if (_encounter.IsDraft)
                     {
-                        <text>Draft â€” start from Encounter Manager to begin combat</text>
+                        <text>Draft — start from Encounter Manager to begin combat</text>
                     }
                     else if (_encounter.IsPaused)
                     {
-                        <text>Paused â€” resume from Encounter Manager to continue combat</text>
+                        <text>Paused — resume from Encounter Manager to continue combat</text>
                     }
                     else if (_encounter.ResolvedAt != null)
                     {
@@ -80,7 +80,7 @@
                     }
                 </span>
             </div>
-            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">â† Encounters</a>
+            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Encounters</a>
         </div>
 
         @if (_isSt && _encounter.ResolvedAt == null && !_encounter.IsPaused)
@@ -114,7 +114,7 @@
                     {
                         <div style="flex:1;min-width:160px;">
                             <label style="font-size:0.8em;color:var(--gothic-muted);">NPC name <span aria-hidden="true">(required)</span></label>
-                            <input class="form-control" placeholder="NPC nameâ€¦" required @bind="_addNpcName" />
+                            <input class="form-control" placeholder="NPC name…" required @bind="_addNpcName" />
                         </div>
                     }
                     else
@@ -123,7 +123,7 @@
                             <label style="font-size:0.8em;color:var(--gothic-muted);">Chronicle NPC</label>
                             @if (_chronicleNpcs.Count == 0)
                             {
-                                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">None yet â€” add NPCs in <a href="/campaigns/@CampaignId/danse-macabre">Danse Macabre</a>.</p>
+                                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">None yet — add NPCs in <a href="/campaigns/@CampaignId/danse-macabre">Danse Macabre</a>.</p>
                             }
                             else if (!ChronicleNpcsAvailableForEncounter.Any())
                             {
@@ -165,7 +165,7 @@
                         }
                     }
                     <div>
-                        <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1â€“10)</label>
+                        <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1–10)</label>
                         <input type="number" class="form-control" style="width:80px;" min="1" max="10" @bind="_addRoll" />
                     </div>
                     <button class="btn-rn-primary"
@@ -195,17 +195,17 @@
                     <button class="btn-rn-primary"
                             disabled="@_busy"
                             @onclick="AdvanceTurn">
-                        â–¶ Advance Turn
+                        ▶ Advance Turn
                     </button>
                     <button class="btn-rn-ghost"
                             disabled="@_busy"
                             @onclick="HoldTurn">
-                        â¸ Hold action
+                        ⏸ Hold action
                     </button>
                     <button class="btn-rn-ghost"
                             disabled="@_busy"
                             @onclick="ResolveEncounter">
-                        âœ“ Resolve Encounter
+                        ✓ Resolve Encounter
                     </button>
                 }
                 @if (!string.IsNullOrEmpty(_actionFeedback))
@@ -233,7 +233,7 @@
                             <span class="initiative-name">
                                 @if (isCurrent)
                                 {
-                                    <strong>â–¶ @displayName</strong>
+                                    <strong>▶ @displayName</strong>
                                 }
                                 else
                                 {
@@ -320,7 +320,7 @@
                                                 <button class="tilt-remove-btn"
                                                         disabled="@_busy"
                                                         @onclick="() => RemoveTilt(tilt.Id)">
-                                                    Ã—
+                                                    ×
                                                 </button>
                                             </span>
                                         }
@@ -350,7 +350,7 @@
                                 @if (isNpc)
                                 {
                                     <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcReveal(entry)">
-                                        @(entry.IsRevealed ? "ðŸ™ˆ Hide" : "ðŸ‘ Reveal")
+                                        @(entry.IsRevealed ? "🙈 Hide" : "👁️ Reveal")
                                     </button>
                                     <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcRoll(entry.Id)">
                                         @(_npcRollEntryId == entry.Id ? "Hide roll" : "Roll")

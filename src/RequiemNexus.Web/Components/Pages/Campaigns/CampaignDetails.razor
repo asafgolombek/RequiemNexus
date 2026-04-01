@@ -47,7 +47,7 @@
                 <div>
                     <h2>@_campaign.Name</h2>
                     <div class="storyteller-badge">
-                        <span>ðŸ‘‘ Story Teller:</span> @(_campaign.StoryTeller?.UserName ?? _campaign.StoryTeller?.Email ?? "Unknown")
+                        <span>👑 Story Teller:</span> @(_campaign.StoryTeller?.UserName ?? _campaign.StoryTeller?.Email ?? "Unknown")
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
@@ -55,17 +55,17 @@
                     {
                         @if (!_sessionActive)
                         {
-                            <button class="btn-rn-primary" @onclick="StartSession">ðŸ©¸ Start Live Session</button>
+                            <button class="btn-rn-primary" @onclick="StartSession">🔴 Start Live Session</button>
                         }
                         else
                         {
-                            <button class="btn-rn-danger" @onclick="EndSession">ðŸ›‘ End Session</button>
+                            <button class="btn-rn-danger" @onclick="EndSession">🛑 End Session</button>
                         }
                     }
                     else if (_sessionActive)
                     {
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <span class="badge-live">ðŸ©¸ LIVE SESSION ACTIVE</span>
+                            <span class="badge-live">🔴 LIVE SESSION ACTIVE</span>
                             @if (!CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
                             {
                                 @if (!SessionClient.IsConnected)
@@ -174,20 +174,20 @@
                                 bool isOwn = character.ApplicationUserId == _currentUserId;
                                 <div class="character-card card-rn clickable-card" @onclick="() => NavigateToCharacter(character.Id, isOwn)">
                                     <h4 class="char-name">@character.Name</h4>
-                                    <div class="char-clan">ðŸ©¸ Clan: @(character.Clan?.Name ?? "Unknown")</div>
+                                    <div class="char-clan">🦇 Clan: @(character.Clan?.Name ?? "Unknown")</div>
                                     <div class="player-info">
-                                        <span>ðŸ‘¤ Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
+                                        <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
                                     </div>
                                     <div class="stats">
-                                        <span>â¤ï¸ HP: @character.CurrentHealth / @character.MaxHealth</span>
-                                        <span>ðŸ›¡ï¸ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
-                                        <span>ðŸ©¸ BP: @character.BloodPotency</span>
-                                        <span>ðŸ· Vitae: @character.CurrentVitae / @character.MaxVitae</span>
+                                        <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
+                                        <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
+                                        <span>🩸 BP: @character.BloodPotency</span>
+                                        <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
                                     </div>
                                     @if (CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty))
                                     {
                                         <div @onclick:stopPropagation="true" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border-subtle);">
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" @onclick="() => TogglePerception(character.Id)">ðŸ‘ Hidden perception</button>
+                                            <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" @onclick="() => TogglePerception(character.Id)">👁️ Hidden perception</button>
                                             @if (_perceptionOpenId == character.Id)
                                             {
                                                 <div style="margin-top:0.35rem;display:flex;flex-direction:column;gap:0.35rem;max-width:280px;">
@@ -200,7 +200,7 @@
                                                     <button type="button" class="btn-rn-primary" style="font-size:0.8em;align-self:flex-start;" disabled="@_perceptionBusy" @onclick="() => RollPerception(character.Id)">Roll</button>
                                                     @if (_perceptionBusy)
                                                     {
-                                                        <span style="font-size:0.75em;color:var(--gothic-muted);">Rollingâ€¦</span>
+                                                        <span style="font-size:0.75em;color:var(--gothic-muted);">Rolling…</span>
                                                     }
                                                     @if (_perceptionResults.TryGetValue(character.Id, out string? pr))
                                                     {
@@ -322,12 +322,12 @@
             </div>
 
             <div class="realtime-sidebar">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--brand-crimson);">ðŸ©¸ Blood Logs</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--brand-crimson);">🩸 Blood Logs</h3>
                 <RollHistoryFeed />
             </div>
         </div>
 
-        @* â”€â”€ Danger Zone (Players tab only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ *@
+        @* --- Danger Zone (Players tab only) --- *@
         @if (_rosterTab == "players")
         {
         <div class="danger-zone" style="margin-top:2rem;">
@@ -357,7 +357,7 @@
                 @if (_showConfirmDelete)
                 {
                     <div class="confirm-card card-rn">
-                        <p>âš ï¸ Delete campaign <strong>@_campaign.Name</strong>? This cannot be undone. All enrolled characters will be returned to their players.</p>
+                        <p>⚠️ Delete campaign <strong>@_campaign.Name</strong>? This cannot be undone. All enrolled characters will be returned to their players.</p>
                         <button class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmDeleteCampaign">Yes, Delete</button>
                         <button class="btn-rn-ghost" @onclick="CancelConfirm">Cancel</button>
                         @if (!string.IsNullOrEmpty(_errorMessage))

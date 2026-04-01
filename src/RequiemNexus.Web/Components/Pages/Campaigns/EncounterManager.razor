@@ -30,7 +30,7 @@
     else if (_accessDenied)
     {
         <div class="alert-rn alert-danger">
-            <strong>Access Denied</strong> â€” only the campaign Storyteller may manage encounters.
+            <strong>Access Denied</strong> — only the campaign Storyteller may manage encounters.
         </div>
     }
     else
@@ -52,7 +52,7 @@
             <div class="card-rn" style="margin-bottom:1.5rem;">
                 <div style="display:flex;flex-direction:column;gap:0.75rem;">
                     <label class="font-sm" for="create-enc-name">Encounter name</label>
-                    <input id="create-enc-name" class="form-control" @bind="_formEncounterName" placeholder="Encounter nameâ€¦" maxlength="200" autocomplete="off" />
+                    <input id="create-enc-name" class="form-control" @bind="_formEncounterName" placeholder="Encounter name…" maxlength="200" autocomplete="off" />
                     <label class="font-sm" for="create-enc-notes">Notes (ST only)</label>
                     <textarea id="create-enc-notes" class="form-control" rows="4" @bind="_formEncounterNotes" placeholder="Scene goals, reminders, etc." maxlength="4000"></textarea>
                     <div>
@@ -101,13 +101,13 @@
                 <h3 style="margin-bottom:0.75rem;">From template</h3>
                 <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
                     <select class="form-control" style="min-width:220px;" @bind="_selectedTemplateId">
-                        <option value="0">â€” Select template â€”</option>
+                        <option value="0">— Select template —</option>
                         @foreach (EncounterTemplate t in _templates)
                         {
                             <option value="@t.Id">@t.Name</option>
                         }
                     </select>
-                    <input class="form-control" style="min-width:180px;" placeholder="Encounter nameâ€¦" @bind="_fromTemplateEncounterName" />
+                    <input class="form-control" style="min-width:180px;" placeholder="Encounter name…" @bind="_fromTemplateEncounterName" />
                     <button type="button" class="btn-rn-primary" disabled="@(_selectedTemplateId == 0 || _busy)" @onclick="CreateFromTemplate">Create from template</button>
                 </div>
             </div>
@@ -156,7 +156,7 @@
                         }
                         @if (enc.NpcTemplates == null || !enc.NpcTemplates.Any())
                         {
-                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.5rem 0;">No NPCs yet â€” add from a stat block, Danse Macabre, or an Improvised NPC.</p>
+                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.5rem 0;">No NPCs yet — add from a stat block, Danse Macabre, or an Improvised NPC.</p>
                         }
                         else
                         {
@@ -168,12 +168,12 @@
                                         <div class="stats" style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8em;color:var(--gothic-muted);">
                                             <span>Init mod: @row.InitiativeMod</span>
                                             <span>Health: @row.HealthBoxes</span>
-                                            <span>Willpower: @(row.MaxWillpower < 1 ? "â€”" : row.MaxWillpower.ToString())</span>
+                                            <span>Willpower: @(row.MaxWillpower < 1 ? "—" : row.MaxWillpower.ToString())</span>
                                             @if (row.MaxVitae > 0)
                                             {
                                                 <span>Max vitae: @row.MaxVitae</span>
                                             }
-                                            <span>@(row.IsRevealed ? "Revealed to players" : $"Hidden â€” mask: {row.DefaultMaskedName ?? "â€”"}")</span>
+                                            <span>@(row.IsRevealed ? "Revealed to players" : $"Hidden — mask: {row.DefaultMaskedName ?? "—"}")</span>
                                             @if (!string.IsNullOrEmpty(row.Notes))
                                             {
                                                 <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="@row.Notes">@row.Notes</span>
@@ -190,11 +190,11 @@
                         {
                             <div class="card-rn" style="margin-top:0.75rem;padding:0.75rem;border:1px solid var(--gothic-border, rgba(255,255,255,0.12));">
                                 <h4 style="margin:0 0 0.35rem 0;font-size:1rem;">Ready to begin?</h4>
-                                <p style="font-size:0.9em;margin:0 0 0.5rem 0;">@(_smartLaunchIsPrepStart ? "Start encounter â€” online players" : "Roll initiative for online players")</p>
+                                <p style="font-size:0.9em;margin:0 0 0.5rem 0;">@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")</p>
                                 <p style="font-size:0.85em;color:var(--gothic-muted);">Checked characters must be online in the session and not already in this encounter.</p>
                                 @if (_campaignCharacters.Count == 0)
                                 {
-                                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign â€” only NPC lines will be in initiative.</p>
+                                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign — only NPC lines will be in initiative.</p>
                                 }
                                 @foreach (Character ch in _campaignCharacters)
                                 {
@@ -233,17 +233,17 @@
                     <div class="card-rn">
                         <h4>@enc.Name</h4>
                         <p style="font-size:0.85em;color:var(--gothic-muted);">
-                            Round @enc.CurrentRound Â· Started @enc.CreatedAt.ToLocalTime().ToString("g")
+                            Round @enc.CurrentRound · Started @enc.CreatedAt.ToLocalTime().ToString("g")
                         </p>
                         @if (_smartLaunchEncounterId == enc.Id)
                         {
                             <div class="card-rn" style="margin-top:0.75rem;padding:0.75rem;border:1px solid var(--gothic-border, rgba(255,255,255,0.12));">
                                 <h4 style="margin:0 0 0.35rem 0;font-size:1rem;">Add PCs to this fight</h4>
-                                <p style="font-size:0.9em;margin:0 0 0.5rem 0;">@(_smartLaunchIsPrepStart ? "Start encounter â€” online players" : "Roll initiative for online players")</p>
+                                <p style="font-size:0.9em;margin:0 0 0.5rem 0;">@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")</p>
                                 <p style="font-size:0.85em;color:var(--gothic-muted);">Checked characters must be online in the session and not already in this encounter.</p>
                                 @if (_campaignCharacters.Count == 0)
                                 {
-                                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign â€” only NPC lines will be in initiative.</p>
+                                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign — only NPC lines will be in initiative.</p>
                                 }
                                 @foreach (Character ch in _campaignCharacters)
                                 {
@@ -263,11 +263,11 @@
                             </div>
                         }
                         <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
-                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-primary" style="font-size:0.85em;">âš”ï¸ Open tracker</a>
+                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-primary" style="font-size:0.85em;">⚔️ Open tracker</a>
                             <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenSmartLaunch(enc.Id, prepStart: false)">+ Online players</button>
                             <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="async () => await OpenNpcPickerAsync(enc.Id, isDraft: false, _sourcePicker)">+ Add NPC</button>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => PauseEncounter(enc.Id)">â¸ Pause</button>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">âœ“ Resolve</button>
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => PauseEncounter(enc.Id)">⏸ Pause</button>
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">✓ Resolve</button>
                         </div>
                     </div>
                 }
@@ -283,12 +283,12 @@
                     <div class="card-rn">
                         <h4>@enc.Name</h4>
                         <p style="font-size:0.85em;color:var(--gothic-muted);">
-                            Round @enc.CurrentRound Â· Paused â€” resume to continue combat
+                            Round @enc.CurrentRound · Paused — resume to continue combat
                         </p>
                         <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
-                            <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResumeEncounter(enc.Id)">â–¶ Resume</button>
-                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-ghost" style="font-size:0.85em;">ðŸ‘ View tracker</a>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">âœ“ Resolve</button>
+                            <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResumeEncounter(enc.Id)">▶ Resume</button>
+                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-ghost" style="font-size:0.85em;">👁️ View tracker</a>
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">✓ Resolve</button>
                         </div>
                     </div>
                 }
@@ -312,8 +312,8 @@
                     {
                         <div class="card-rn" style="opacity:0.7;">
                             <h4>@enc.Name</h4>
-                            <p style="font-size:0.85em;color:var(--gothic-muted);">Resolved: @(enc.ResolvedAt?.ToLocalTime().ToString("g") ?? "â€”")</p>
-                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-ghost" style="font-size:0.85em;">ðŸ‘ View</a>
+                            <p style="font-size:0.85em;color:var(--gothic-muted);">Resolved: @(enc.ResolvedAt?.ToLocalTime().ToString("g") ?? "—")</p>
+                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-ghost" style="font-size:0.85em;">👁️ View</a>
                         </div>
                     }
                 </div>
@@ -327,7 +327,7 @@
                 <div class="rn-modal-panel" @onclick:stopPropagation="true" @onkeydown="OnNpcModalKeyDown" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="enc-npc-modal-title">
                     <div class="rn-modal-header">
                         <h2 id="enc-npc-modal-title" class="rn-modal-title">@GetNpcModalTitle()</h2>
-                        <button type="button" class="rn-modal-close" @onclick="CloseNpcPicker" aria-label="Close">Ã—</button>
+                        <button type="button" class="rn-modal-close" @onclick="CloseNpcPicker" aria-label="Close">×</button>
                     </div>
                     <div class="rn-modal-body">
                         @if (_npcPickerMode == _sourcePicker)
@@ -345,7 +345,7 @@
                         }
                         else if (_npcPickerMode == _statPicker)
                         {
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">â† Back</button>
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">← Back</button>
                             @if (_availableBlocks.Count == 0)
                             {
                                 <p class="rn-modal-empty">No stat blocks available for this campaign.</p>
@@ -355,7 +355,7 @@
                                 <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Health and willpower are taken from the stat block when you add.</p>
                                 <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
                                     <select class="form-control" style="flex:1;min-width:200px;" @bind="_selectedBlockId">
-                                        <option value="0">â€” Select a stat block â€”</option>
+                                        <option value="0">— Select a stat block —</option>
                                         @foreach (NpcStatBlock block in _availableBlocks)
                                         {
                                             <option value="@block.Id">@block.Name (@block.Concept)</option>
@@ -378,7 +378,7 @@
                         }
                         else if (_npcPickerMode == _chroniclePicker)
                         {
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">â† Back</button>
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">← Back</button>
                             <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Initiative defaults to Wits + Composure; health and willpower use a linked stat block when set, otherwise attributes.</p>
                             @if (_chronicleNpcs.Count == 0)
                             {
@@ -395,7 +395,7 @@
                                     <label style="display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:200px;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
                                         Chronicle NPC
                                         <select class="form-control" value="@_selectedChronicleNpcId" @onchange="OnChronicleNpcSelectChanged">
-                                            <option value="0">â€” Select an NPC â€”</option>
+                                            <option value="0">— Select an NPC —</option>
                                             @foreach (ChronicleNpc npc in _chronicleNpcs.Where(n => !_excludedChronicleNpcIds.Contains(n.Id)))
                                             {
                                                 <option value="@npc.Id">@npc.Name@(string.IsNullOrEmpty(npc.Title) ? "" : $", {npc.Title}")</option>
@@ -442,7 +442,7 @@
                         }
                         else if (_npcPickerMode == _improvisedPicker)
                         {
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">â† Back</button>
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">← Back</button>
                             <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Initiative mod defaults to 0 (rolled when you start the encounter).</p>
                             <div style="display:flex;flex-direction:column;gap:0.5rem;max-width:22rem;">
                                 <label style="font-size:0.85em;color:var(--gothic-muted);">Name <span aria-hidden="true">(required)</span></label>

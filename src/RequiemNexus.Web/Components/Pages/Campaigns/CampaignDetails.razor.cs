@@ -562,7 +562,7 @@ public partial class CampaignDetails : IDisposable
                 _currentUserId);
             string dice = string.Join(", ", result.DiceRolled);
             _perceptionResults[characterId] =
-                $"{result.PoolDescription}: [{dice}] â†’ {result.Successes} successes" +
+                $"{result.PoolDescription}: [{dice}] → {result.Successes} successes" +
                 (result.IsExceptionalSuccess ? " (exceptional)" : string.Empty) +
                 (result.IsDramaticFailure ? " (dramatic failure)" : string.Empty);
         }

@@ -209,7 +209,7 @@ public partial class InitiativeTracker : IAsyncDisposable
 
         _lastAnnouncedInitiativeEntryId = actor.Id;
         string label = actor.Character?.Name ?? actor.NpcName ?? actor.MaskedDisplayName ?? "Participant";
-        await Announcer.AnnounceAsync($"Initiative order updated â€” {label} is now active.");
+        await Announcer.AnnounceAsync($"Initiative order updated — {label} is now active.");
     }
 
     private async Task AnnounceConditionDeltasAsync(CharacterUpdateDto patch)
