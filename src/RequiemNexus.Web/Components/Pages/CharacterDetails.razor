@@ -542,7 +542,15 @@ else
                              Tradition="@(_pendingRiteForPrep?.SorceryRiteDefinition?.SorceryType ?? SorceryType.Cruac)"
                              KinTargets="_riteKinTargets"
                              OnContinue="HandleRitePrepContinueAsync" />
-    <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" FixedDicePool="_rollerFixedDicePool" />
+    <DiceRollerModal IsVisible="_isRollerOpen"
+                     IsVisibleChanged="OnDiceRollerVisibilityChangedAsync"
+                     TraitName="@_rollerTraitName"
+                     BaseDice="@_rollerBaseDice"
+                     Character="_character"
+                     FixedDicePool="_rollerFixedDicePool"
+                     RiteExtendedMaxRolls="_rollerRiteMaxRolls"
+                     RiteExtendedTargetSuccesses="_rollerRiteTargetSuccesses"
+                     RiteExtendedMinutesPerRoll="_rollerRiteMinutesPerRoll" />
 
     @if (_isForgeModalOpen)
     {

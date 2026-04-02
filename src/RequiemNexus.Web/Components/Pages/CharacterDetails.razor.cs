@@ -71,6 +71,9 @@ public partial class CharacterDetails : IAsyncDisposable
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
     private int? _rollerFixedDicePool;
+    private int? _rollerRiteMaxRolls;
+    private int? _rollerRiteTargetSuccesses;
+    private int? _rollerRiteMinutesPerRoll;
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
@@ -609,6 +612,7 @@ public partial class CharacterDetails : IAsyncDisposable
             _rollerTraitName = power.Name;
             _rollerBaseDice = dice;
             _rollerFixedDicePool = null;
+            ClearRiteExtendedRollerContext();
             _isRollerOpen = true;
         }
         catch (Exception ex)
@@ -668,6 +672,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private void OpenRoller(string traitName)
     {
         _rollerFixedDicePool = null;
+        ClearRiteExtendedRollerContext();
         _rollerTraitName = traitName;
         _rollerBaseDice = GetTraitValue(traitName);
         _isRollerOpen = true;
@@ -831,6 +836,7 @@ public partial class CharacterDetails : IAsyncDisposable
         _rollerTraitName = $"Repair {ca.Asset?.Name} (Wits + Crafts)";
         _rollerBaseDice = _character.GetAttributeRating(AttributeId.Wits) + _character.GetSkillRating(SkillId.Crafts);
         _rollerFixedDicePool = null;
+        ClearRiteExtendedRollerContext();
         _isRollerOpen = true;
     }
 
@@ -856,6 +862,7 @@ public partial class CharacterDetails : IAsyncDisposable
         }
 
         _rollerFixedDicePool = null;
+        ClearRiteExtendedRollerContext();
         _rollerTraitName = cd.DevotionDefinition.Name;
         try
         {
@@ -1377,11 +1384,37 @@ public partial class CharacterDetails : IAsyncDisposable
                 TargetCharacterId: prep.TargetCharacterId);
         }
 
-        int dice = await SorceryActivationService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
+        BeginRiteActivationResult activation = await SorceryActivationService.BeginRiteActivationAsync(
+            _character.Id,
+            cr.Id,
+            _currentUserId,
+            request);
         _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
         _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
-        _rollerBaseDice = dice;
+        _rollerBaseDice = activation.DicePool;
+        _rollerFixedDicePool = activation.DicePool;
+        _rollerRiteMaxRolls = activation.MaxExtendedRolls;
+        _rollerRiteTargetSuccesses = activation.TargetSuccesses;
+        _rollerRiteMinutesPerRoll = activation.MinutesPerRoll;
         _isRollerOpen = true;
+    }
+
+    private void ClearRiteExtendedRollerContext()
+    {
+        _rollerRiteMaxRolls = null;
+        _rollerRiteTargetSuccesses = null;
+        _rollerRiteMinutesPerRoll = null;
+    }
+
+    private Task OnDiceRollerVisibilityChangedAsync(bool visible)
+    {
+        _isRollerOpen = visible;
+        if (!visible)
+        {
+            ClearRiteExtendedRollerContext();
+        }
+
+        return Task.CompletedTask;
     }
 }
 

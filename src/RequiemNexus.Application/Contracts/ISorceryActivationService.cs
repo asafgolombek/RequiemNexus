@@ -9,9 +9,9 @@ public interface ISorceryActivationService
 {
     /// <summary>
     /// Validates acknowledgments, applies internal activation costs (Vitae, Willpower, stains),
-    /// then returns the dice pool size. Costs are not refunded if the roll fails.
+    /// then returns the dice pool and extended-action metadata. Costs are not refunded if the roll fails.
     /// </summary>
-    Task<int> BeginRiteActivationAsync(
+    Task<BeginRiteActivationResult> BeginRiteActivationAsync(
         int characterId,
         int characterRiteId,
         string userId,

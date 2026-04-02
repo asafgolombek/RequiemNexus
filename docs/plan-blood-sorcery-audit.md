@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01 (updated 2026-04-02 — P1-1 cost timing + session persistence **decided**; see § P1-1)
 **Source of truth:** *Vampire: The Requiem 2e* PDF (pages 150–165) + `docs/magic_types_and_rules.txt`
-**Status:** **Delivered in codebase for P0, P1-2, P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, P4 Theban learn/eligible gate, Necromancy-use degeneration dispatch test, and removal of unused `ResolveRiteActivationPoolAsync`; deferred P1-1, P1-3, P1-4.**  
+**Status:** **Delivered in codebase for P0, P1-1 (extended ritual UI + `BeginRiteActivationResult` / unmodified roll cap + chronicle rolls), P1-2, P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, P4 Theban learn/eligible gate, Necromancy-use degeneration dispatch test, and removal of unused `ResolveRiteActivationPoolAsync`; deferred P1-3 (outcome Conditions), P1-4 (Potency).**  
 **Companion review:** [plan-blood-sorcery-audit-review.md](./plan-blood-sorcery-audit-review.md) (open questions, backlog gaps, doc fixes)
 
 ---
@@ -14,7 +14,7 @@
 | **P0-1** BOM + encoding | Done | `SeedDataLoader.TryLoadJson` uses UTF-8 with BOM detection; Crúac catalog (`cruac_rituales.json`) uses proper `Crúac` escapes. |
 | **P0-2** Theban sacrament | Done | `DbInitializer` builds `PhysicalSacrament` in `RequirementsJson`; tests cover cast without acknowledgment. |
 | **P1-2** `TargetSuccesses` | Done | Column + seed JSON + UI (sheet + learn modal); catalog sync in `DbInitializer`. |
-| **P1-1** Extended actions | **Not done** | **Decided:** costs once on `BeginRiteActivationAsync`; progress like other rolls (Blazor UI state + chronicle roll feed). See § P1-1. |
+| **P1-1** Extended actions | Done | `BeginRiteActivationResult` (dice pool, `MaxExtendedRolls` = unmodified pool, `TargetSuccesses`, `MinutesPerRoll`); `DiceRollerModal` tracks successes / rolls / continue–abandon; each roll → session hub like other dice; costs remain once on begin. Stumbled application = P1-3. |
 | **P1-3** Outcome Conditions | **Not done** | Depends on P1-1 roll pipeline. |
 | **P1-4** Potency | **Not done** | Depends on P1-1; scope remains informational until decided. |
 | **P2-1** Extra Vitae (Crúac) | Done | `BeginRiteActivationRequest.ExtraVitae`, `SorceryActivationService`, `RiteActivationPrepModal`. |
@@ -33,7 +33,7 @@
 
 ## Summary
 
-The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** extended-action session (P1-1), outcome Conditions (P1-3), and informational Potency (P1-4). Reference doc JSON tables (P3-4/5) are updated. P4: Necromancy degeneration dispatch is integration-tested at the activation service; unused pool-preview API removed.
+The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** outcome Conditions (P1-3) and informational Potency (P1-4). Extended-action tracking is in the casting UI + chronicle roll feed (P1-1). Reference doc JSON tables (P3-4/5) are updated. P4: Necromancy degeneration dispatch is integration-tested at the activation service; unused pool-preview API removed.
 
 ---
 
@@ -404,7 +404,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 | P3-1/2 | Correct inflated ratings (historical; pre–P5 filenames) | S | — | Verified against PDF table above |
 | P2-3 | Crúac Humanity cap + learning breaking point | S | — | Crúac 3 → Humanity capped at 7 |
 | P2-4 | Necromancy torpor duration penalty | S | — | Torpor duration uses `min(BP + NecroDoTS, 10)` |
-| P1-1 | Implement extended action system (persistence + cost timing **decided** 2026-04-02) | L | P1-3, P1-4 | Roll cap; Stumbled on continue; sacrifice on begin only; UI state + chronicle roll feed |
+| P1-1 | Implement extended action system (persistence + cost timing **decided** 2026-04-02) | L | P1-3, P1-4 | **Done:** `BeginRiteActivationResult` + `DiceRollerModal` extended rite; Stumbled on continue → P1-3 |
 | P1-3 | Apply ritual Conditions on roll outcomes | S | P1-1 | Tempted/Humbled on dramatic failure; Stumbled on continue |
 | P1-4 | Implement Potency return value (informational) | S | P1-1 | Potency = 1 + excess successes; exceptional success → optional Discipline dots via UI opt-in |
 | P2-1 | Extra Vitae bonus for Crúac | S | — | Pool +2 when 2 extra Vitae spent |

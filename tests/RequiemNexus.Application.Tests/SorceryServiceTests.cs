@@ -177,9 +177,12 @@ public class SorceryServiceTests
             await ctx.SaveChangesAsync();
 
             var sut = CreateService(ctx, CreateTraitResolverMock(7));
-            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
-            Assert.Equal(7, dice);
+            Assert.Equal(7, r.DicePool);
+            Assert.Equal(7, r.MaxExtendedRolls);
+            Assert.Equal(6, r.TargetSuccesses);
+            Assert.Equal(30, r.MinutesPerRoll);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(4, reloaded.CurrentVitae);
         }
@@ -310,9 +313,10 @@ public class SorceryServiceTests
 
             var humanity = new Mock<IHumanityService>();
             var sut = CreateService(ctx, CreateTraitResolverMock(0), humanityServiceMock: humanity);
-            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
-            Assert.Equal(0, dice);
+            Assert.Equal(0, r.DicePool);
+            Assert.Equal(0, r.MaxExtendedRolls);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(3, reloaded.HumanityStains);
             humanity.Verify(h => h.EvaluateStainsAsync(1, "player1"), Times.Once);
@@ -449,9 +453,10 @@ public class SorceryServiceTests
 
             var sut = CreateService(ctx, CreateTraitResolverMock(4));
             var req = new BeginRiteActivationRequest(ExtraVitae: 2);
-            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", req);
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", req);
 
-            Assert.Equal(6, dice);
+            Assert.Equal(6, r.DicePool);
+            Assert.Equal(4, r.MaxExtendedRolls);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(2, reloaded.CurrentVitae);
         }
@@ -609,9 +614,75 @@ public class SorceryServiceTests
 
             var sut = CreateService(ctx, CreateTraitResolverMock(2));
             var req = new BeginRiteActivationRequest(TargetCharacterId: 1);
-            int dice = await sut.BeginRiteActivationAsync(2, 1, "player1", req);
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(2, 1, "player1", req);
 
-            Assert.Equal(8, dice);
+            Assert.Equal(8, r.DicePool);
+            Assert.Equal(2, r.MaxExtendedRolls);
+        }
+    }
+
+    [Fact]
+    public async Task BeginRiteActivationAsync_MinutesPerRoll_IsFifteenWhenTraditionDotsExceedRiteLevel()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            ctx.Users.Add(new ApplicationUser
+            {
+                Id = "player1",
+                UserName = "player1@test",
+                NormalizedUserName = "PLAYER1@TEST",
+                Email = "player1@test.com",
+                NormalizedEmail = "PLAYER1@TEST.COM",
+                EmailConfirmed = true,
+            });
+            ctx.CovenantDefinitions.Add(new CovenantDefinition
+            {
+                Id = 1,
+                Name = "The Circle of the Crone",
+                SupportsBloodSorcery = true,
+            });
+            ctx.Disciplines.Add(new Discipline { Id = 10, Name = "Crúac" });
+            ctx.Characters.Add(new Character
+            {
+                Id = 1,
+                Name = "Rita",
+                ApplicationUserId = "player1",
+                CovenantId = 1,
+                CurrentVitae = 5,
+                CurrentWillpower = 4,
+                HumanityStains = 0,
+                BloodPotency = 1,
+                MaxVitae = 10,
+                MaxWillpower = 5,
+            });
+            ctx.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
+            {
+                Id = 1,
+                Name = "Mid Rite",
+                Description = "Test",
+                Level = 2,
+                SorceryType = SorceryType.Cruac,
+                XpCost = 1,
+                TargetSuccesses = 6,
+                RequiredCovenantId = 1,
+                RequirementsJson = _defaultRequirementsJson,
+                PoolDefinitionJson = """{"traits":[]}""",
+            });
+            ctx.CharacterRites.Add(new CharacterRite
+            {
+                Id = 1,
+                CharacterId = 1,
+                SorceryRiteDefinitionId = 1,
+                Status = RiteLearnStatus.Approved,
+            });
+            SeedDisciplineRating(ctx, 1, 10, 3);
+            await ctx.SaveChangesAsync();
+
+            var sut = CreateService(ctx, CreateTraitResolverMock(5));
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+
+            Assert.Equal(15, r.MinutesPerRoll);
         }
     }
 
@@ -668,9 +739,9 @@ public class SorceryServiceTests
 
             var dispatcher = new Mock<IDomainEventDispatcher>();
             var sut = CreateService(ctx, CreateTraitResolverMock(3), domainEventDispatcher: dispatcher.Object);
-            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
-            Assert.Equal(3, dice);
+            Assert.Equal(3, r.DicePool);
             dispatcher.Verify(
                 d => d.Dispatch(It.Is<DegenerationCheckRequiredEvent>(e =>
                     e.CharacterId == 1 && e.Reason == DegenerationReason.NecromancyActivation)),
@@ -731,9 +802,9 @@ public class SorceryServiceTests
 
             var dispatcher = new Mock<IDomainEventDispatcher>();
             var sut = CreateService(ctx, CreateTraitResolverMock(2), domainEventDispatcher: dispatcher.Object);
-            int dice = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
+            BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
-            Assert.Equal(2, dice);
+            Assert.Equal(2, r.DicePool);
             dispatcher.Verify(d => d.Dispatch(It.IsAny<DegenerationCheckRequiredEvent>()), Times.Never);
         }
     }

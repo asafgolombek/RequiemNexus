@@ -48,7 +48,7 @@ public class SorceryActivationService(
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<int> BeginRiteActivationAsync(
+    public async Task<BeginRiteActivationResult> BeginRiteActivationAsync(
         int characterId,
         int characterRiteId,
         string userId,
@@ -213,26 +213,9 @@ public class SorceryActivationService(
             .Include(c => c.Skills)
             .FirstAsync(c => c.Id == characterId);
 
-        int poolSize = 0;
-        if (!string.IsNullOrEmpty(def.PoolDefinitionJson))
-        {
-            try
-            {
-                PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(def.PoolDefinitionJson, _jsonOptions);
-                poolSize = pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Failed to resolve pool after activation for rite {RiteId} on character {CharacterId}",
-                    def.Id,
-                    characterId);
-                poolSize = 0;
-            }
-        }
+        int unmodifiedPoolSize = ResolveRiteTraitPool(character, def);
 
-        poolSize += extraVitae;
+        int dicePool = unmodifiedPoolSize + extraVitae;
 
         int sympathyDice = await TryResolveRitualBloodSympathyBonusAsync(
             characterId,
@@ -240,7 +223,7 @@ public class SorceryActivationService(
             def.SorceryType,
             request.TargetCharacterId);
 
-        poolSize += sympathyDice;
+        dicePool += sympathyDice;
 
         if (sympathyDice > 0)
         {
@@ -251,8 +234,42 @@ public class SorceryActivationService(
                 sympathyDice);
         }
 
+        int minutesPerRoll = traditionDots > def.Level ? 15 : 30;
+        int maxExtendedRolls = Math.Max(0, unmodifiedPoolSize);
+
         await _sessionService.BroadcastCharacterUpdateAsync(characterId);
-        return poolSize;
+        return new BeginRiteActivationResult(
+            dicePool,
+            maxExtendedRolls,
+            def.TargetSuccesses,
+            minutesPerRoll);
+    }
+
+    /// <summary>
+    /// Resolves the ritual dice pool from the rite pool definition only (no extra Vitae or Blood Sympathy).
+    /// This matches the unmodified dice pool cap on extended rolls (V:tR 2e p. 152).
+    /// </summary>
+    private int ResolveRiteTraitPool(Character character, SorceryRiteDefinition def)
+    {
+        if (string.IsNullOrEmpty(def.PoolDefinitionJson))
+        {
+            return 0;
+        }
+
+        try
+        {
+            PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(def.PoolDefinitionJson, _jsonOptions);
+            return pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to resolve pool after activation for rite {RiteId} on character {CharacterId}",
+                def.Id,
+                character.Id);
+            return 0;
+        }
     }
 
     /// <summary>
