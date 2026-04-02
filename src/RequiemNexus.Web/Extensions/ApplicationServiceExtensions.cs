@@ -71,6 +71,7 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.ICovenantService, RequiemNexus.Application.Services.CovenantService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISorceryService, RequiemNexus.Application.Services.SorceryService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISorceryActivationService, RequiemNexus.Application.Services.SorceryActivationService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IRiteRollOutcomeService, RequiemNexus.Application.Services.RiteRollOutcomeService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDisciplineActivationService, RequiemNexus.Application.Services.DisciplineActivationService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICoilService, RequiemNexus.Application.Services.CoilService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterMeritService, RequiemNexus.Application.Services.CharacterMeritService>();

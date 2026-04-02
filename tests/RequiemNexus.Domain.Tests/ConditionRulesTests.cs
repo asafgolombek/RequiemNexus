@@ -33,6 +33,10 @@ public class ConditionRulesTests
     [InlineData(ConditionType.Provoked)]
     [InlineData(ConditionType.Inspired)]
     [InlineData(ConditionType.Bound)]
+    [InlineData(ConditionType.Humbled)]
+    [InlineData(ConditionType.Ecstatic)]
+    [InlineData(ConditionType.Raptured)]
+    [InlineData(ConditionType.Stumbled)]
     public void AwardsBeatOnResolve_ReturnsTrue_ForCanonicalConditions(ConditionType type)
     {
         Assert.True(_rules.AwardsBeatOnResolve(type));
@@ -61,6 +65,10 @@ public class ConditionRulesTests
     [InlineData(ConditionType.Custom)]
     [InlineData(ConditionType.Addicted)]
     [InlineData(ConditionType.Bound)]
+    [InlineData(ConditionType.Humbled)]
+    [InlineData(ConditionType.Ecstatic)]
+    [InlineData(ConditionType.Raptured)]
+    [InlineData(ConditionType.Stumbled)]
     public void GetConditionDescription_ReturnsNonEmptyString(ConditionType type)
     {
         string desc = _rules.GetConditionDescription(type);
@@ -155,5 +163,14 @@ public class ConditionRulesTests
         ConditionPenaltyModifier entry = Assert.Single(penalties);
         Assert.Equal(ConditionPoolTarget.ResolveComposure, entry.PoolTarget);
         Assert.Equal(-1, entry.Delta);
+    }
+
+    [Fact]
+    public void GetPenalties_Stumbled_ReturnsAllPoolsMinusTwo()
+    {
+        IReadOnlyList<ConditionPenaltyModifier> penalties = _rules.GetPenalties(ConditionType.Stumbled);
+        ConditionPenaltyModifier entry = Assert.Single(penalties);
+        Assert.Equal(ConditionPoolTarget.AllPools, entry.PoolTarget);
+        Assert.Equal(-2, entry.Delta);
     }
 }

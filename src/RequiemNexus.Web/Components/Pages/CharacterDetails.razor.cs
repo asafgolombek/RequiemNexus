@@ -74,6 +74,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private int? _rollerRiteMaxRolls;
     private int? _rollerRiteTargetSuccesses;
     private int? _rollerRiteMinutesPerRoll;
+    private SorceryType? _rollerRiteSorceryType;
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
@@ -1396,6 +1397,7 @@ public partial class CharacterDetails : IAsyncDisposable
         _rollerRiteMaxRolls = activation.MaxExtendedRolls;
         _rollerRiteTargetSuccesses = activation.TargetSuccesses;
         _rollerRiteMinutesPerRoll = activation.MinutesPerRoll;
+        _rollerRiteSorceryType = def?.SorceryType;
         _isRollerOpen = true;
     }
 
@@ -1404,6 +1406,7 @@ public partial class CharacterDetails : IAsyncDisposable
         _rollerRiteMaxRolls = null;
         _rollerRiteTargetSuccesses = null;
         _rollerRiteMinutesPerRoll = null;
+        _rollerRiteSorceryType = null;
     }
 
     private Task OnDiceRollerVisibilityChangedAsync(bool visible)
