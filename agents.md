@@ -329,12 +329,11 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phases 14–16b, 17, 18, and 19 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition). **Phase 19.5 — The Rite Perfected** is the **active phase**: blood sorcery rules accuracy (Crúac / Theban Sorcery / Kindred Necromancy). Plan: [`docs/plan-blood-sorcery-audit.md`](./docs/plan-blood-sorcery-audit.md). P1-1 **session persistence** (Blazor UI + chronicle roll feed like other dice) and **cost timing** (once on `BeginRiteActivationAsync`) are **decided** (2026-04-02) — see audit § P1-1. Remaining open items: Theban sacrament UX, Necromancy outcome Conditions, Potency scope — see [`docs/plan-blood-sorcery-audit-review.md`](./docs/plan-blood-sorcery-audit-review.md) §7.4. **Phase 20 — The Global Embrace** follows after 19.5 (i18n, public API, Discord, production polish). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
+**Phases 14–16b, 17, 18, 19, and 19.5 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition, **blood sorcery rules completion** — Crúac / Theban / Necromancy: extended rites, ritual Conditions, informational Potency, canonical ritual JSON in `SeedSource`, sacrament UX, backlog verification). Record: [`docs/mission.md`](./docs/mission.md) Phase 19.5 + [`docs/rules-interpretations.md`](./docs/rules-interpretations.md) Phase 19.5. **Phase 20 — The Global Embrace** is the **active phase** (i18n, public API, Discord, production polish) — [`docs/mission.md`](./docs/mission.md). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
-See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
-See [`docs/plan-blood-sorcery-audit.md`](./docs/plan-blood-sorcery-audit.md) for the Phase 19.5 execution checklist.
+See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, exit criteria, and Phase 19.5 delivery.
 See [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md) for the completed Phase 16b implementation record.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 
