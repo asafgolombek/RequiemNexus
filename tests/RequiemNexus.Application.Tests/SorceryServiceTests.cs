@@ -183,6 +183,7 @@ public class SorceryServiceTests
             Assert.Equal(7, r.MaxExtendedRolls);
             Assert.Equal(6, r.TargetSuccesses);
             Assert.Equal(30, r.MinutesPerRoll);
+            Assert.Equal(1, r.RitualDisciplineDots);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(4, reloaded.CurrentVitae);
         }
@@ -317,6 +318,7 @@ public class SorceryServiceTests
 
             Assert.Equal(0, r.DicePool);
             Assert.Equal(0, r.MaxExtendedRolls);
+            Assert.Equal(1, r.RitualDisciplineDots);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(3, reloaded.HumanityStains);
             humanity.Verify(h => h.EvaluateStainsAsync(1, "player1"), Times.Once);
@@ -457,6 +459,7 @@ public class SorceryServiceTests
 
             Assert.Equal(6, r.DicePool);
             Assert.Equal(4, r.MaxExtendedRolls);
+            Assert.Equal(1, r.RitualDisciplineDots);
             Character? reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == 1);
             Assert.Equal(2, reloaded.CurrentVitae);
         }
@@ -618,6 +621,7 @@ public class SorceryServiceTests
 
             Assert.Equal(8, r.DicePool);
             Assert.Equal(2, r.MaxExtendedRolls);
+            Assert.Equal(1, r.RitualDisciplineDots);
         }
     }
 
@@ -683,6 +687,7 @@ public class SorceryServiceTests
             BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
             Assert.Equal(15, r.MinutesPerRoll);
+            Assert.Equal(3, r.RitualDisciplineDots);
         }
     }
 
@@ -742,6 +747,7 @@ public class SorceryServiceTests
             BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
             Assert.Equal(3, r.DicePool);
+            Assert.Equal(1, r.RitualDisciplineDots);
             dispatcher.Verify(
                 d => d.Dispatch(It.Is<DegenerationCheckRequiredEvent>(e =>
                     e.CharacterId == 1 && e.Reason == DegenerationReason.NecromancyActivation)),
@@ -805,6 +811,7 @@ public class SorceryServiceTests
             BeginRiteActivationResult r = await sut.BeginRiteActivationAsync(1, 1, "player1", new BeginRiteActivationRequest());
 
             Assert.Equal(2, r.DicePool);
+            Assert.Equal(1, r.RitualDisciplineDots);
             dispatcher.Verify(d => d.Dispatch(It.IsAny<DegenerationCheckRequiredEvent>()), Times.Never);
         }
     }

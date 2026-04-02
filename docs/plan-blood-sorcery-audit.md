@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-01 (updated 2026-04-02 — P1-1 cost timing + session persistence **decided**; see § P1-1)
 **Source of truth:** *Vampire: The Requiem 2e* PDF (pages 150–165) + `docs/magic_types_and_rules.txt`
-**Status:** **Delivered in codebase for P0, P1-1 (extended ritual UI + `BeginRiteActivationResult` / unmodified roll cap + chronicle rolls), P1-2, P1-3 (`IRiteRollOutcomeService` + ritual Conditions on roll / continue), P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, P4 Theban learn/eligible gate, Necromancy-use degeneration dispatch test, and removal of unused `ResolveRiteActivationPoolAsync`; deferred P1-4 (Potency).**  
+**Status:** **Delivered in codebase for P0, P1-1 (extended ritual UI + `BeginRiteActivationResult` / unmodified roll cap + chronicle rolls), P1-2, P1-3 (`IRiteRollOutcomeService` + ritual Conditions on roll / continue), P1-4 (informational Potency: `RitePotencyRules`, `RitualDisciplineDots` on begin result, completion panel + optional exceptional Discipline dots in `DiceRollerModal`), P2, P5 (canonical ritual JSON in Data + unified importer + Ranking / Elder gates + Blandishment split), P6 (Ordo Dracul ritual type removed), historical P3-1–2 rating work, P3-4/5 reference JSON, P4 Theban learn/eligible gate, Necromancy-use degeneration dispatch test, and removal of unused `ResolveRiteActivationPoolAsync`.**  
 **Companion review:** [plan-blood-sorcery-audit-review.md](./plan-blood-sorcery-audit-review.md) (open questions, backlog gaps, doc fixes)
 
 ---
@@ -16,7 +16,7 @@
 | **P1-2** `TargetSuccesses` | Done | Column + seed JSON + UI (sheet + learn modal); catalog sync in `DbInitializer`. |
 | **P1-1** Extended actions | Done | `BeginRiteActivationResult` (dice pool, `MaxExtendedRolls` = unmodified pool, `TargetSuccesses`, `MinutesPerRoll`); `DiceRollerModal` tracks successes / rolls / continue–abandon; each roll → session hub like other dice; costs remain once on begin. Stumbled application = P1-3. |
 | **P1-3** Outcome Conditions | Done | `RiteRollOutcomeRules` + `IRiteRollOutcomeService` → `ConditionService`; `DiceRollerModal` on counted extended rolls (dramatic / exceptional) and on Continue (Stumbled). New `ConditionType`: Humbled, Ecstatic, Raptured, Stumbled. Necromancy: no Condition on dramatic/exceptional per audit. |
-| **P1-4** Potency | **Not done** | Depends on P1-1; scope remains informational until decided. |
+| **P1-4** Potency | Done | `RitePotencyRules.ComputeBasePotency`; `BeginRiteActivationResult.RitualDisciplineDots`; extended rite completion UI shows base + total Potency; optional checkbox adds tradition dots after any exceptional success during the ritual (informational only). |
 | **P2-1** Extra Vitae (Crúac) | Done | `BeginRiteActivationRequest.ExtraVitae`, `SorceryActivationService`, `RiteActivationPrepModal`. |
 | **P2-2** Blood Sympathy | Done | `TargetCharacterId`, `KindredLineageDegree` + `BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy`, chronicle roster picker. |
 | **P2-3** Crúac Humanity cap | Done | `HumanityService` / `CharacterDisciplineService` clamp + degeneration hooks (Phase 19). |
@@ -33,7 +33,7 @@
 
 ## Summary
 
-The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Remaining gap for “complete” V:tR ritual casting:** informational Potency (P1-4). Extended-action tracking (P1-1) and ritual outcome Conditions (P1-3) are implemented. Reference doc JSON tables (P3-4/5) are updated. P4: Necromancy degeneration dispatch is integration-tested at the activation service; unused pool-preview API removed.
+The core learning/approval pipeline and basic activation costs are implemented correctly for all three Ritual Disciplines. **Informational Potency (P1-4)** is implemented for display at rite completion; mechanical auto-application of Potency to effects remains out of scope. Extended-action tracking (P1-1) and ritual outcome Conditions (P1-3) are implemented. Reference doc JSON tables (P3-4/5) are updated. P4: Necromancy degeneration dispatch is integration-tested at the activation service; unused pool-preview API removed.
 
 ---
 
@@ -406,7 +406,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 | P2-4 | Necromancy torpor duration penalty | S | — | Torpor duration uses `min(BP + NecroDoTS, 10)` |
 | P1-1 | Implement extended action system (persistence + cost timing **decided** 2026-04-02) | L | P1-3, P1-4 | **Done:** `BeginRiteActivationResult` + `DiceRollerModal` extended rite; Stumbled on continue → P1-3 |
 | P1-3 | Apply ritual Conditions on roll outcomes | S | P1-1 | **Done:** `IRiteRollOutcomeService`; Ecstatic/Raptured on exceptional; Stumbled on continue |
-| P1-4 | Implement Potency return value (informational) | S | P1-1 | Potency = 1 + excess successes; exceptional success → optional Discipline dots via UI opt-in |
+| P1-4 | Implement Potency return value (informational) | S | P1-1 | **Done:** `RitePotencyRules` + roller completion panel; optional Discipline dots after any exceptional roll in the session |
 | P2-1 | Extra Vitae bonus for Crúac | S | — | Pool +2 when 2 extra Vitae spent |
 | P2-2 | Blood Sympathy modifier for ritual pools | M | — | Targeted rite only; bonus absent for environmental rites |
 | P3-3 | ~~Decide Necromancy catalog~~ — **done via P5** (`kindred_necromancy_rituals.json` only) | — | — | — |

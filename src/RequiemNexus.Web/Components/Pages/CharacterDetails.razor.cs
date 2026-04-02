@@ -74,6 +74,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private int? _rollerRiteMaxRolls;
     private int? _rollerRiteTargetSuccesses;
     private int? _rollerRiteMinutesPerRoll;
+    private int? _rollerRiteRitualDisciplineDots;
     private SorceryType? _rollerRiteSorceryType;
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
@@ -1397,6 +1398,7 @@ public partial class CharacterDetails : IAsyncDisposable
         _rollerRiteMaxRolls = activation.MaxExtendedRolls;
         _rollerRiteTargetSuccesses = activation.TargetSuccesses;
         _rollerRiteMinutesPerRoll = activation.MinutesPerRoll;
+        _rollerRiteRitualDisciplineDots = activation.RitualDisciplineDots;
         _rollerRiteSorceryType = def?.SorceryType;
         _isRollerOpen = true;
     }
@@ -1406,6 +1408,7 @@ public partial class CharacterDetails : IAsyncDisposable
         _rollerRiteMaxRolls = null;
         _rollerRiteTargetSuccesses = null;
         _rollerRiteMinutesPerRoll = null;
+        _rollerRiteRitualDisciplineDots = null;
         _rollerRiteSorceryType = null;
     }
 

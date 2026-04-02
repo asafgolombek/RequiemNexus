@@ -125,5 +125,5 @@ All ⏳ items currently in the audit that require a product/chronicle/architectu
 | ✅ **Cost timing for extended rituals** | P1-1 | **Decided 2026-04-02:** **Once** on `BeginRiteActivationAsync` only; no per-roll or on-completion billing; no separate open-session API for costs |
 | ⏳ **Theban sacrament UX** | P0-2 | Per-miracle sacrament text as checkbox label vs generic "I have the sacrament"; UI copy timing (consumed at crescendo, not first roll) |
 | ⏳ **Necromancy outcome table** | P1-3 | No tradition-specific Conditions in PDF — confirm supplement adds none, or treat as Storyteller-only ruling |
-| ⏳ **Potency scope boundary** | P1-4 | Informational-only display vs mechanical effect consumption; what triggers the second phase |
+| ✅ **Potency scope boundary** | P1-4 | **Delivered:** informational display at completion + optional exceptional Discipline dots in UI; mechanical effect consumption remains future work |
 | ✅ **`ResolveRiteActivationPoolAsync` fate** | P4 Backlog | **Removed** from `ISorceryActivationService` / `SorceryActivationService` (2026-04-02) |

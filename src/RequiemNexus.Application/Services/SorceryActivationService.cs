@@ -242,7 +242,8 @@ public class SorceryActivationService(
             dicePool,
             maxExtendedRolls,
             def.TargetSuccesses,
-            minutesPerRoll);
+            minutesPerRoll,
+            traditionDots);
     }
 
     /// <summary>

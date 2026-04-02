@@ -52,6 +52,25 @@
                         @if (ShowRiteCompletedBanner)
                         {
                             <p style="margin: 0.5rem 0 0 0; color: var(--gold, #c9a227);"><strong>Rite completed</strong> — apply the effect at the table.</p>
+                            int basePotency = RitePotencyRules.ComputeBasePotency(_riteAccumulatedSuccesses, RiteExtendedTargetSuccesses!.Value);
+                            int ritualDots = RiteExtendedRitualDisciplineDots ?? 0;
+                            bool canAddDots = _riteHadExceptionalSuccess && ritualDots > 0;
+                            int totalPotency = basePotency + (canAddDots && _addRiteDisciplineDotsToPotency ? ritualDots : 0);
+                            <div class="rite-potency-panel" style="margin-top: 0.65rem; padding: 0.6rem 0.75rem; background: rgba(0, 40, 60, 0.35); border: 1px solid rgba(180, 220, 255, 0.2); border-radius: 6px;">
+                                <p style="margin: 0 0 0.35rem 0;"><strong>Potency (informational)</strong> — V:tR 2e p. 152</p>
+                                <p style="margin: 0; font-size: 0.92em;">Base potency after meeting target: <strong>@basePotency</strong>. Many rite effects reference Potency for damage, duration, or scale; this value is for the table — it is not auto-applied by the app.</p>
+                                @if (canAddDots)
+                                {
+                                    <label class="option-label" style="display: block; margin-top: 0.55rem;">
+                                        <input type="checkbox" @bind="_addRiteDisciplineDotsToPotency" />
+                                        Exceptional success during this ritual: add <strong>@ritualDots</strong> @RiteTraditionDotsLabel Discipline dots to Potency (optional).
+                                    </label>
+                                }
+                                @if (basePotency > 0)
+                                {
+                                    <p style="margin: 0.45rem 0 0 0;"><strong>Total Potency:</strong> @totalPotency</p>
+                                }
+                            </div>
                         }
                         else if (ShowRiteFailedNoRollsBanner)
                         {
@@ -221,6 +240,9 @@
     /// <summary>Tradition for ritual outcome Conditions (Crúac / Theban / Necromancy). Set with extended rite parameters.</summary>
     [Parameter] public SorceryType? RiteOutcomeTradition { get; set; }
 
+    /// <summary>Ritual Discipline dots (from begin activation) for optional Potency on exceptional success.</summary>
+    [Parameter] public int? RiteExtendedRitualDisciplineDots { get; set; }
+
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private const string RiteExtendedDescriptionMarker = "extended rite";
@@ -247,7 +269,18 @@
     private int _riteAccumulatedSuccesses;
     private bool _riteFailureNeedsChoice;
     private bool _riteRollInFlight;
+    private bool _riteHadExceptionalSuccess;
+    private bool _addRiteDisciplineDotsToPotency;
     private bool _rollerWasVisible;
+
+    private string RiteTraditionDotsLabel =>
+        RiteOutcomeTradition switch
+        {
+            SorceryType.Cruac => "Crúac",
+            SorceryType.Theban => "Theban Sorcery",
+            SorceryType.Necromancy => "Necromancy",
+            _ => "ritual",
+        };
 
     private readonly string[] _attributes = RequiemNexus.Domain.Services.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
     private readonly string[] _skills = RequiemNexus.Domain.Services.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
@@ -267,6 +300,8 @@
             _riteAccumulatedSuccesses = 0;
             _riteFailureNeedsChoice = false;
             _riteRollInFlight = false;
+            _riteHadExceptionalSuccess = false;
+            _addRiteDisciplineDotsToPotency = false;
         }
 
         _rollerWasVisible = IsVisible;
@@ -369,6 +404,8 @@
         _riteAccumulatedSuccesses = 0;
         _riteFailureNeedsChoice = false;
         _riteRollInFlight = false;
+        _riteHadExceptionalSuccess = false;
+        _addRiteDisciplineDotsToPotency = false;
         await IsVisibleChanged.InvokeAsync(IsVisible);
     }
 
@@ -646,6 +683,11 @@
         _riteRollsUsed++;
         _riteAccumulatedSuccesses += rollResult.Successes;
         _riteRollInFlight = false;
+
+        if (rollResult.IsExceptionalSuccess)
+        {
+            _riteHadExceptionalSuccess = true;
+        }
 
         _riteFailureNeedsChoice = rollResult.Successes == 0
             && _riteRollsUsed < max
