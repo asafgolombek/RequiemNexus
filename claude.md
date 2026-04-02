@@ -14,6 +14,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 18 delivered ✅:** The Wider Web — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), discipline pool JSON + Vitae/Willpower choice UI. Record: **`docs/mission.md`** (Phase 18 section).
 - **Phase 19.5 — The Rite Perfected** is **complete** (2026-04-02): Crúac/Theban/Necromancy rules accuracy — extended rites, informational Potency, ritual Conditions, canonical SeedSource catalogs, BOM fix, Theban sacrament UX, Necromancy clan gate, P4 backlog verified. Record: **`docs/mission.md`** (Phase 19.5) and **`docs/rules-interpretations.md`** (Phase 19.5).
 - **Phase 20 — The Global Embrace** is the **active / last planned phase** on the V:tR 2e roadmap — see `docs/mission.md`.
+- **Phase 20 technical polish:** [`docs/plan-improvement.md`](docs/plan-improvement.md) — performance, decomposition, UI/SOLID backlog (Waves 1–4). Wave 1 seed/logging/index-fluent work started 2026-04-02; review log: [`docs/plan-improvement-review.md`](docs/plan-improvement-review.md).
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.
@@ -26,6 +27,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - `docs/mission.md` — Roadmap, dependency graph, and per-phase delivery (including **Phase 18: The Wider Web** — ✅ complete).
 - `docs/phase16b-the-discipline-engine.md` — Phase 16b delivery record (discipline activation).
 - `docs/plan.md` — Detailed Phase 7 SignalR implementation.
+- `docs/plan-improvement.md` — Phase 20+ technical improvement backlog (Waves 1–4).
 
 ## ⚡ Workflow
 1. Read `agents.md` first.

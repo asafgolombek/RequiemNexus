@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Domain.Enums;
 
 namespace RequiemNexus.Data.SeedData;
@@ -44,7 +45,7 @@ public static partial class SorceryRiteSeedData
     }
 
     /// <summary>
-    /// Loads rites from SeedSource JSON. Legacy tuple shape for <see cref="DbInitializer.SeedSorceryRitesAsync"/>.
+    /// Loads rites from SeedSource JSON. Legacy tuple shape for <see cref="SorceryRiteSeeder"/>.
     /// </summary>
     public static List<(string Name, int Rating, string Prerequisites, string Effect, SorceryType SorceryType, int TargetSuccesses)> LoadFromDocs(ILogger logger)
     {

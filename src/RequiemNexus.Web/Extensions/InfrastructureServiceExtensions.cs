@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Web.Hubs;
 using Serilog;
 using StackExchange.Redis;
@@ -89,6 +90,8 @@ internal static class InfrastructureServiceExtensions
             ServiceLifetime.Scoped);
 
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+        builder.Services.AddRequiemDataSeeders();
 
         builder.Services.AddFido2(options =>
         {

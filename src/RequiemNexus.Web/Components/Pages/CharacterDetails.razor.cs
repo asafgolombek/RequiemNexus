@@ -667,9 +667,9 @@ public partial class CharacterDetails : IAsyncDisposable
         }
     }
 
-    private static void OpenReference(string traitName)
+    private void OpenReference(string traitName)
     {
-        Console.WriteLine($"Show Reference for: {traitName}");
+        Logger.LogDebug("Rules reference for trait {TraitName} is not implemented yet.", traitName);
     }
 
     private void OpenRoller(string traitName)

@@ -851,6 +851,8 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, and 19.5.
 
+**Technical improvement track (Phase 20 polish):** Performance, large-file decomposition, UI consistency, and SOLID refactors are scheduled in **[`docs/plan-improvement.md`](./plan-improvement.md)** (P1–P2 in Phase 20; P3–P4 after). Delivery uses **Wave 1–4** sequencing in that document (not the same numbering as roadmap phases). Review resolutions: [`docs/plan-improvement-review.md`](./plan-improvement-review.md).
+
 - [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
 - [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools; **external client auth** (typically JWT or OAuth2 access tokens) is introduced here. The first-party Blazor app remains cookie-based Identity.
 - [ ] **Discord Rich Presence** — Enhanced webhooks for detailed session summaries and "Coterie Status" updates

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Web.Components;
 using RequiemNexus.Web.Extensions;
 using RequiemNexus.Web.Hubs;
@@ -33,9 +34,10 @@ using (IServiceScope scope = app.Services.CreateScope())
 {
     ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    IEnumerable<ISeeder> seeders = scope.ServiceProvider.GetServices<ISeeder>();
     if (!app.Environment.IsEnvironment("Testing"))
     {
-        await DbInitializer.InitializeAsync(context, roleManager, app.Logger, runMigrations);
+        await DbInitializer.InitializeAsync(context, roleManager, app.Logger, seeders, runMigrations);
     }
 
     if (app.Environment.IsDevelopment())

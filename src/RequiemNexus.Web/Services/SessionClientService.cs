@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data.RealTime;
@@ -13,7 +14,10 @@ namespace RequiemNexus.Web.Services;
 /// Client-side service for interacting with the real-time SessionHub.
 /// Injected into Blazor components to handle broadcasts and invoke hub methods.
 /// </summary>
-public class SessionClientService(NavigationManager navManager, ToastService toastService) : IAsyncDisposable
+public class SessionClientService(
+    NavigationManager navManager,
+    ToastService toastService,
+    ILogger<SessionClientService> logger) : IAsyncDisposable
 {
     private HubConnection? _hubConnection;
     private int? _currentChronicleId;
@@ -486,7 +490,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
             else
             {
                 toastService.Show("Link Failure", "The real-time link encountered an error.", ToastType.Error);
-                Console.WriteLine($"Hub Invocation Error ({methodName}): {ex.Message}");
+                logger.LogError(ex, "Hub invocation error: {Method}", methodName);
             }
         }
     }
