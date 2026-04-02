@@ -58,6 +58,7 @@ public class HumanityServiceDegenerationTests
             dice,
             session.Object,
             cond.Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
             Mock.Of<ILogger<HumanityService>>());
     }
 

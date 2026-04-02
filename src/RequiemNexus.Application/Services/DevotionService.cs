@@ -13,44 +13,41 @@ namespace RequiemNexus.Application.Services;
 public class DevotionService(
     ApplicationDbContext dbContext,
     IBeatLedgerService beatLedger,
+    IReferenceDataCache referenceData,
     ILogger<DevotionService> logger) : IDevotionService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
+    private readonly IReferenceDataCache _referenceData = referenceData;
     private readonly ILogger<DevotionService> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<List<DevotionDefinition>> GetAllDevotionsAsync()
+    public Task<List<DevotionDefinition>> GetAllDevotionsAsync()
     {
-        return await _dbContext.DevotionDefinitions
-            .Include(d => d.Prerequisites).ThenInclude(p => p.Discipline)
+        List<DevotionDefinition> list = _referenceData.DevotionDefinitions
             .OrderBy(d => d.Name)
-            .AsNoTracking()
-            .ToListAsync();
+            .ToList();
+        return Task.FromResult(list);
     }
 
     /// <inheritdoc />
-    public async Task<List<DevotionDefinition>> GetEligibleDevotionsAsync(Character character)
+    public Task<List<DevotionDefinition>> GetEligibleDevotionsAsync(Character character)
     {
         var ownedDevotionIds = character.Devotions.Select(d => d.DevotionDefinitionId).ToHashSet();
 
-        var allDevotions = await _dbContext.DevotionDefinitions
-            .Include(d => d.Prerequisites)
-            .AsNoTracking()
-            .ToListAsync();
+        List<DevotionDefinition> allDevotions = _referenceData.DevotionDefinitions.ToList();
 
-        return allDevotions
+        List<DevotionDefinition> result = allDevotions
             .Where(d => !ownedDevotionIds.Contains(d.Id) && MeetsPrerequisites(character, d))
             .OrderBy(d => d.Name)
             .ToList();
+        return Task.FromResult(result);
     }
 
     /// <inheritdoc />
     public async Task<CharacterDevotion> PurchaseDevotionAsync(Character character, int devotionDefinitionId, string? userId)
     {
-        var devotion = await _dbContext.DevotionDefinitions
-            .Include(d => d.Prerequisites)
-            .FirstOrDefaultAsync(d => d.Id == devotionDefinitionId)
+        DevotionDefinition? devotion = _referenceData.DevotionDefinitions.FirstOrDefault(d => d.Id == devotionDefinitionId)
             ?? throw new InvalidOperationException($"Devotion {devotionDefinitionId} not found.");
 
         if (character.Devotions.Any(d => d.DevotionDefinitionId == devotionDefinitionId))

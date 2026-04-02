@@ -41,6 +41,7 @@ public class CampaignServiceTests
     {
         IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
         var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
+        IReferenceDataCache referenceCache = ReferenceDataCacheTestDoubles.EmptyButInitialized();
         var humanity = new HumanityService(
             ctx,
             Mock.Of<IAuthorizationHelper>(),
@@ -48,6 +49,7 @@ public class CampaignServiceTests
             Mock.Of<IDiceService>(),
             Mock.Of<ISessionService>(),
             Mock.Of<IConditionService>(),
+            referenceCache,
             NullLogger<HumanityService>.Instance);
         return new CharacterManagementService(
             ctx,
@@ -57,7 +59,8 @@ public class CampaignServiceTests
             auth,
             new Mock<ISessionService>().Object,
             new CharacterCreationService(),
-            humanity);
+            humanity,
+            referenceCache);
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>

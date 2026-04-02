@@ -21,7 +21,8 @@ public class CharacterManagementService(
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
     ICharacterCreationService characterCreationService,
-    IHumanityService humanityService) : ICharacterService
+    IHumanityService humanityService,
+    IReferenceDataCache referenceData) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
@@ -31,6 +32,7 @@ public class CharacterManagementService(
     private readonly ISessionService _sessionService = sessionService;
     private readonly ICharacterCreationService _characterCreationService = characterCreationService;
     private readonly IHumanityService _humanityService = humanityService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
 
     /// <inheritdoc />
     public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
@@ -133,20 +135,39 @@ public class CharacterManagementService(
 
         if (newCharacter.Clan == null && newCharacter.ClanId.HasValue)
         {
-            newCharacter.Clan = await _dbContext.Clans
-                .Include(c => c.ClanDisciplines)
-                .FirstOrDefaultAsync(c => c.Id == newCharacter.ClanId.Value);
+            newCharacter.Clan = _referenceData.ReferenceClans.FirstOrDefault(c => c.Id == newCharacter.ClanId.Value)
+                ?? await _dbContext.Clans
+                    .Include(c => c.ClanDisciplines)
+                    .FirstOrDefaultAsync(c => c.Id == newCharacter.ClanId.Value);
         }
 
         List<int> disciplineIds = newCharacter.Disciplines.Select(d => d.DisciplineId).Distinct().ToList();
         if (disciplineIds.Count > 0)
         {
-            Dictionary<int, Discipline> disciplineMap = await _dbContext.Disciplines
-                .AsNoTracking()
-                .Include(d => d.Covenant)
-                .Include(d => d.Bloodline)
-                .Where(d => disciplineIds.Contains(d.Id))
-                .ToDictionaryAsync(d => d.Id);
+            var disciplineMap = new Dictionary<int, Discipline>();
+            foreach (int id in disciplineIds)
+            {
+                Discipline? d = _referenceData.ReferenceDisciplines.FirstOrDefault(x => x.Id == id);
+                if (d != null)
+                {
+                    disciplineMap[id] = d;
+                }
+            }
+
+            List<int> missingIds = disciplineIds.Where(id => !disciplineMap.ContainsKey(id)).ToList();
+            if (missingIds.Count > 0)
+            {
+                Dictionary<int, Discipline> fromDb = await _dbContext.Disciplines
+                    .AsNoTracking()
+                    .Include(d => d.Covenant)
+                    .Include(d => d.Bloodline)
+                    .Where(d => missingIds.Contains(d.Id))
+                    .ToDictionaryAsync(d => d.Id);
+                foreach (KeyValuePair<int, Discipline> pair in fromDb)
+                {
+                    disciplineMap[pair.Key] = pair.Value;
+                }
+            }
 
             if (disciplineMap.Count != disciplineIds.Count)
             {

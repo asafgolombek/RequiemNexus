@@ -1,5 +1,6 @@
 using RequiemNexus.Application.Events;
 using RequiemNexus.Application.Events.Handlers;
+using RequiemNexus.Application.Services;
 using RequiemNexus.Domain.Events;
 
 namespace RequiemNexus.Web.Extensions;
@@ -11,6 +12,10 @@ internal static class ApplicationServiceExtensions
 {
     internal static void AddApplicationServices(this IServiceCollection services)
     {
+        services.AddSingleton<ReferenceDataCache>();
+        services.AddSingleton<RequiemNexus.Application.Contracts.IReferenceDataCache>(sp => sp.GetRequiredService<ReferenceDataCache>());
+        services.AddHostedService<RequiemNexus.Web.BackgroundServices.ReferenceDataCacheWarmupHostedService>();
+
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<RequiemNexus.Application.Contracts.IVitaeService, RequiemNexus.Application.Services.VitaeService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IWillpowerService, RequiemNexus.Application.Services.WillpowerService>();

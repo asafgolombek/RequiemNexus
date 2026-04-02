@@ -39,7 +39,8 @@ public class DevotionServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        var service = new DevotionService(ctx, _beatLedgerMock.Object, _loggerMock.Object);
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+        var service = new DevotionService(ctx, _beatLedgerMock.Object, cache, _loggerMock.Object);
 
         // Act
         var result = await service.PurchaseDevotionAsync(character, 1, "user1");
@@ -66,7 +67,11 @@ public class DevotionServiceTests
         var character = new Character { Id = 1 };
         character.Disciplines.Add(new CharacterDiscipline { DisciplineId = 2, Rating = 2 }); // Has Resilience 2
 
-        var service = new DevotionService(ctx, _beatLedgerMock.Object, _loggerMock.Object);
+        var service = new DevotionService(
+            ctx,
+            _beatLedgerMock.Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
+            _loggerMock.Object);
 
         // Act
         bool result = service.MeetsPrerequisites(character, devotion);
@@ -85,7 +90,11 @@ public class DevotionServiceTests
         var character = new Character { Id = 1 };
         // No bloodline
 
-        var service = new DevotionService(ctx, _beatLedgerMock.Object, _loggerMock.Object);
+        var service = new DevotionService(
+            ctx,
+            _beatLedgerMock.Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
+            _loggerMock.Object);
 
         // Act
         bool result = service.MeetsPrerequisites(character, devotion);
@@ -104,7 +113,11 @@ public class DevotionServiceTests
         var character = new Character { Id = 1 };
         character.Bloodlines.Add(new CharacterBloodline { BloodlineDefinitionId = 5, Status = RequiemNexus.Data.Models.Enums.BloodlineStatus.Active });
 
-        var service = new DevotionService(ctx, _beatLedgerMock.Object, _loggerMock.Object);
+        var service = new DevotionService(
+            ctx,
+            _beatLedgerMock.Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
+            _loggerMock.Object);
 
         // Act
         bool result = service.MeetsPrerequisites(character, devotion);

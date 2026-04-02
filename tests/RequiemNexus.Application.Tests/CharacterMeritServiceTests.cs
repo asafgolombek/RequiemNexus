@@ -25,9 +25,10 @@ public class CharacterMeritServiceTests
         return new ApplicationDbContext(options);
     }
 
-    private static CharacterMeritService CreateService(ApplicationDbContext ctx)
+    private static async Task<CharacterMeritService> CreateServiceAsync(ApplicationDbContext ctx)
     {
-        return new CharacterMeritService(ctx, new Mock<IBeatLedgerService>().Object);
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+        return new CharacterMeritService(ctx, new Mock<IBeatLedgerService>().Object, cache);
     }
 
     private static Character BuildCharacter(int id = 1)
@@ -66,7 +67,7 @@ public class CharacterMeritServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
         var loadedChar = await ctx.Characters
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
@@ -98,7 +99,7 @@ public class CharacterMeritServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
         var loadedChar = await ctx.Characters
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
@@ -134,7 +135,7 @@ public class CharacterMeritServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
         var loadedChar = await ctx.Characters
             .Include(c => c.Attributes)
             .Include(c => c.Skills)

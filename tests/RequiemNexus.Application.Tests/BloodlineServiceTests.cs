@@ -16,7 +16,7 @@ namespace RequiemNexus.Application.Tests;
 /// </summary>
 public class BloodlineServiceTests
 {
-    private static BloodlineService CreateService(ApplicationDbContext ctx)
+    private static async Task<BloodlineService> CreateServiceAsync(ApplicationDbContext ctx)
     {
         var authHelper = new Mock<IAuthorizationHelper>();
         authHelper
@@ -35,8 +35,8 @@ public class BloodlineServiceTests
             .Returns(Task.CompletedTask);
 
         var logger = new Mock<ILogger<BloodlineService>>().Object;
-
-        return new BloodlineService(ctx, authHelper.Object, sessionService.Object, logger);
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+        return new BloodlineService(ctx, authHelper.Object, sessionService.Object, cache, logger);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
@@ -79,7 +79,7 @@ public class BloodlineServiceTests
     {
         using var ctx = CreateContext(nameof(ApplyForBloodlineAsync_OwnerApplies_CreatesPending));
         await SeedCampaignAndCharacter(ctx);
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
 
         var result = await service.ApplyForBloodlineAsync(1, 1, "owner");
 
@@ -104,10 +104,12 @@ public class BloodlineServiceTests
             .Setup(a => a.RequireCharacterOwnerAsync(1, "other", It.IsAny<string>()))
             .ThrowsAsync(new UnauthorizedAccessException());
 
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
         var service = new BloodlineService(
             ctx,
             authHelper.Object,
             new Mock<ISessionService>().Object,
+            cache,
             new Mock<ILogger<BloodlineService>>().Object);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
@@ -128,7 +130,7 @@ public class BloodlineServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.ApplyForBloodlineAsync(1, 1, "owner"));
@@ -148,7 +150,7 @@ public class BloodlineServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.ApplyForBloodlineAsync(1, 1, "owner"));
@@ -174,10 +176,12 @@ public class BloodlineServiceTests
             .Setup(a => a.RequireStorytellerAsync(1, "st", It.IsAny<string>()))
             .Returns(Task.CompletedTask);
 
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
         var service = new BloodlineService(
             ctx,
             authHelper.Object,
             new Mock<ISessionService>().Object,
+            cache,
             new Mock<ILogger<BloodlineService>>().Object);
 
         await service.ApproveBloodlineAsync(10, null, "st");
@@ -208,10 +212,12 @@ public class BloodlineServiceTests
             .Setup(a => a.RequireStorytellerAsync(1, "st", It.IsAny<string>()))
             .Returns(Task.CompletedTask);
 
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
         var service = new BloodlineService(
             ctx,
             authHelper.Object,
             new Mock<ISessionService>().Object,
+            cache,
             new Mock<ILogger<BloodlineService>>().Object);
 
         await service.RejectBloodlineAsync(20, "Not a fit", "st");
@@ -262,7 +268,7 @@ public class BloodlineServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
 
         await service.RemoveBloodlineAsync(30, "owner");
 
@@ -301,10 +307,12 @@ public class BloodlineServiceTests
             .Setup(a => a.RequireCharacterOwnerAsync(1, "other", It.IsAny<string>()))
             .ThrowsAsync(new UnauthorizedAccessException());
 
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
         var service = new BloodlineService(
             ctx,
             authHelper.Object,
             new Mock<ISessionService>().Object,
+            cache,
             new Mock<ILogger<BloodlineService>>().Object);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(
@@ -326,7 +334,7 @@ public class BloodlineServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = CreateService(ctx);
+        var service = await CreateServiceAsync(ctx);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.RemoveBloodlineAsync(50, "owner"));

@@ -42,7 +42,8 @@ public class CharacterDisciplineServiceTests
             new ExperienceCostRules(),
             (auth ?? CreateAuthMock()).Object,
             (dispatcher ?? new Mock<IDomainEventDispatcher>()).Object,
-            (humanity ?? CreateHumanityMock()).Object);
+            (humanity ?? CreateHumanityMock()).Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized());
     }
 
     private static Mock<IHumanityService> CreateHumanityMock()
@@ -108,7 +109,8 @@ public class CharacterDisciplineServiceTests
             _experienceCostRules,
             auth.Object,
             new Mock<IDomainEventDispatcher>().Object,
-            CreateHumanityMock().Object);
+            CreateHumanityMock().Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
         var clan = new Clan { Id = 1, Name = "Ventrue" };
         var disc = new Discipline { Id = 1, Name = "Resilience" };
@@ -146,7 +148,8 @@ public class CharacterDisciplineServiceTests
             _experienceCostRules,
             auth.Object,
             new Mock<IDomainEventDispatcher>().Object,
-            CreateHumanityMock().Object);
+            CreateHumanityMock().Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
         var clan = new Clan { Id = 1, Name = "Ventrue" };
         var disc = new Discipline { Id = 2, Name = "Vigor", RequiresMentorBloodToLearn = true };
@@ -185,7 +188,8 @@ public class CharacterDisciplineServiceTests
             _experienceCostRules,
             auth.Object,
             new Mock<IDomainEventDispatcher>().Object,
-            CreateHumanityMock().Object);
+            CreateHumanityMock().Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
         var clan = new Clan { Id = 1, Name = "Ventrue" };
         var disc = new Discipline { Id = 1, Name = "Resilience" };
@@ -373,7 +377,8 @@ public class CharacterDisciplineServiceTests
                 _experienceCostRules,
                 auth.Object,
                 new Mock<IDomainEventDispatcher>().Object,
-                CreateHumanityMock().Object);
+                CreateHumanityMock().Object,
+                ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
             var result = await service.AddDisciplineAsync(
                 new DisciplineAcquisitionRequest(1, 2, 1, AcquisitionAcknowledgedByST: true),
@@ -500,7 +505,8 @@ public class CharacterDisciplineServiceTests
                 _experienceCostRules,
                 auth.Object,
                 dispatcher.Object,
-                CreateHumanityMock().Object);
+                CreateHumanityMock().Object,
+                ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
             var result = await service.AddDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 1), "u1");
 
@@ -548,7 +554,8 @@ public class CharacterDisciplineServiceTests
                 _experienceCostRules,
                 CreateAuthMock().Object,
                 dispatcher.Object,
-                CreateHumanityMock().Object);
+                CreateHumanityMock().Object,
+                ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
             var result = await service.AddDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 1), "u1");
 
@@ -600,7 +607,8 @@ public class CharacterDisciplineServiceTests
                 _experienceCostRules,
                 CreateAuthMock().Object,
                 dispatcher.Object,
-                CreateHumanityMock().Object);
+                CreateHumanityMock().Object,
+                ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
             Result<CharacterDiscipline> result =
                 await service.TryUpgradeDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 2), "u1");
@@ -656,7 +664,8 @@ public class CharacterDisciplineServiceTests
                 _experienceCostRules,
                 CreateAuthMock().Object,
                 dispatcher.Object,
-                CreateHumanityMock().Object);
+                CreateHumanityMock().Object,
+                ReferenceDataCacheTestDoubles.EmptyButInitialized());
 
             Result<CharacterDiscipline> result =
                 await service.TryUpgradeDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 2), "u1");

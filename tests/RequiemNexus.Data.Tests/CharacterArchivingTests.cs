@@ -19,6 +19,7 @@ public class CharacterArchivingTests
     {
         IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
         var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
+        IReferenceDataCache referenceCache = ReferenceDataCacheTestDoubles.EmptyButInitialized();
         var humanity = new HumanityService(
             ctx,
             Mock.Of<IAuthorizationHelper>(),
@@ -26,6 +27,7 @@ public class CharacterArchivingTests
             Mock.Of<IDiceService>(),
             Mock.Of<ISessionService>(),
             Mock.Of<IConditionService>(),
+            referenceCache,
             NullLogger<HumanityService>.Instance);
 
         return new CharacterManagementService(
@@ -36,7 +38,8 @@ public class CharacterArchivingTests
             auth,
             new Mock<ISessionService>().Object,
             new CharacterCreationService(),
-            humanity);
+            humanity,
+            referenceCache);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
