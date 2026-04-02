@@ -1,0 +1,298 @@
+[
+  {
+    "name": "Pangs of Proserpina",
+    "Effect": "The victim suffers feelings of intense hunger, provoking frenzy in Kindred.",
+    "Roll": "Manipulation + Occult + Crúac vs. Composure + Blood Potency",
+    "Prerequisites": "None",
+    "Target Successes": "6",
+    "Ranking": "1"
+  },
+  {
+    "name": "Rigor Mortis",
+    "Effect": "The victim suffers the loss of the reanimating power of Vitae, penalizing his next physical action by a -3 die penalty.",
+    "Roll": "Manipulation + Occult + Crúac (Resisted by Composure)",
+    "Prerequisites": "None",
+    "Target Successes": "5",
+    "Ranking": "1"
+  },
+  {
+    "name": "The Mantle of Amorous Fire",
+    "Effect": "The Acolyte dances into an ecstatic Condition, transmuting their form to become proud, fiery, and lusty, adding Crúac dots to Presence.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Must dance through the entirety of the casting and enact the Blush of Life.",
+    "Target Successes": "5",
+    "Ranking": "1"
+  },
+  {
+    "name": "The Pool of Forbidden Truths",
+    "Effect": "Divines truths beyond reality by spilling blood into a vessel, allowing the Acolyte to ask the Storyteller a single question per success.",
+    "Roll": "Wits + Investigation + Crúac",
+    "Prerequisites": "A vessel, basin, or cup to hold blood, and a vector for prophecy (tea, bones, etc.).",
+    "Target Successes": "5",
+    "Ranking": "1"
+  },
+  {
+    "name": "Sanguine Auger",
+    "Effect": "The vampire drinks a target's blood to receive cryptic visions and learn hidden truths about them during her next daysleep.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Penumbrae Bloodline",
+    "Target Successes": "6",
+    "Ranking": "1"
+  },
+  {
+    "name": "Cheval",
+    "Effect": "Allows the ritualist to see and hear what the subject does, no matter how far away she is, for the rest of the night.",
+    "Roll": "Manipulation + Occult + Crúac (Resisted by Composure)",
+    "Prerequisites": "Subject must be present at the casting and physically touched by the ritualist.",
+    "Target Successes": "5",
+    "Ranking": "2"
+  },
+  {
+    "name": "The Hydra's Vitae",
+    "Effect": "Transforms the ritualist's own blood into a poison that causes lethal damage to anyone who drinks it.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "None",
+    "Target Successes": "5",
+    "Ranking": "2"
+  },
+  {
+    "name": "Donning the Beast's Flesh",
+    "Effect": "Skins a beast to craft a mystical accessory that allows the wearer to take the rough shape of that animal.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "A skinned beast to craft a hood, cloak, mask, or other article of clothing.",
+    "Target Successes": "7",
+    "Ranking": "2"
+  },
+  {
+    "name": "Mantle of the Beast's Breath",
+    "Effect": "The Acolyte enters a trance, gaining the Raptured Condition and adding her Crúac as a bonus to any rolls to ride the wave of frenzy.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Must dance into a trance during the casting and enact Blush of Life.",
+    "Target Successes": "5",
+    "Ranking": "2"
+  },
+  {
+    "name": "Ma'at and Rauket",
+    "Effect": "Introduces chaos into an area, disrupting spiritual influence and imposing penalties on actions the area would normally aid.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Sethite Initiation Merit",
+    "Target Successes": "9",
+    "Ranking": "2"
+  },
+  {
+    "name": "Doom of Osiris",
+    "Effect": "Blesses a bladed weapon to deal aggravated damage to ephemeral beings and Strix for the rest of the night.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Sethite Initiation Merit",
+    "Target Successes": "7",
+    "Ranking": "2"
+  },
+  {
+    "name": "Deflection of Wooden Doom",
+    "Effect": "Wards the ritualist from having his heart impaled; all attempts to stake the ritualist fail until the next sunrise.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "None",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Touch of the Morrigan",
+    "Effect": "The ritualist pours the tearing force of his Beast into his hands, inflicting lethal wounds upon striking an opponent.",
+    "Roll": "Manipulation + Occult + Crúac (Requires a Dexterity + Brawl roll to touch)",
+    "Prerequisites": "None",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Shed the Virulent Bowels",
+    "Effect": "Causes the victim's gullet to split wide and eject his bowels, filling all his Health levels with lethal damage.",
+    "Roll": "Manipulation + Occult + Crúac vs. Stamina + Blood Potency",
+    "Prerequisites": "A lock of hair, nail clipping, or other waste from the victim's body.",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Curse of Aphrodite's Favor",
+    "Effect": "Creates a potion that inflicts the effects of a full Vinculum on the victim, directed at the subject of the ritual.",
+    "Roll": "Manipulation + Occult + Crúac vs. Composure + Blood Potency",
+    "Prerequisites": "None",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Curse of the Beloved Toy",
+    "Effect": "Causes the victim's limbs to turn to stone, dealing damage and potentially rendering mortals dead or Kindred torpid.",
+    "Roll": "Presence + Occult + Crúac (Resisted by victim's Stamina)",
+    "Prerequisites": "A victim, and a beloved possession of the victim's. Must kill the victim as part of the ritual.",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Gorgon's Gaze",
+    "Effect": "Infects the Acolyte's eyes; the next time a character sees her eyes, their limbs turn to stone causing aggravated wounds.",
+    "Roll": "Presence + Occult + Crúac - Stamina",
+    "Prerequisites": "None",
+    "Target Successes": "7",
+    "Ranking": "3"
+  },
+  {
+    "name": "Manananggal's Working",
+    "Effect": "Allows the Acolyte to cut off parts of her body and have them move and perform tasks independently of her.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Ritualist must sacrifice her own Vitae exclusively.",
+    "Target Successes": "8",
+    "Ranking": "3"
+  },
+  {
+    "name": "Wisdom of the Blood",
+    "Effect": "Taps into the collective unconscious via a torpid vampire to receive brief prophetic answers to questions.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Penumbrae Bloodline",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Ahmet's Pursuit",
+    "Effect": "Curses a victim to suffer the Lost Condition and always take the worst route, while the vampire always knows where they run.",
+    "Roll": "Manipulation + Occult + Crúac (Resisted by Composure)",
+    "Prerequisites": "Sethite Initiation Merit, a material focus (e.g., an effigy)",
+    "Target Successes": "7",
+    "Ranking": "3"
+  },
+  {
+    "name": "Feast of the Ra",
+    "Effect": "Prepares an offering of Essence in the form of a meal to appease a Hollow Mekhet's Ka and avoid harassment.",
+    "Roll": "Manipulation + Occult + Crúac (Resisted by Resistance)",
+    "Prerequisites": "Sethite Initiation Merit",
+    "Target Successes": "9",
+    "Ranking": "3"
+  },
+  {
+    "name": "Taurobolium",
+    "Effect": "A blood bathing ritual that implants a fragment of divine glory into the subject, granting Striking Looks and social advantages.",
+    "Roll": "Manipulation + Occult + Crúac vs. Stamina + Blood Potency (if unwilling)",
+    "Prerequisites": "Galloi Bloodline, bathing in Vitae and perfumes/oils sacred to Cybele.",
+    "Target Successes": "7",
+    "Ranking": "3"
+  },
+  {
+    "name": "Blood Price",
+    "Effect": "The ritualist claims blood consumed by the ritual's subject, stealing their Vitae whenever they feed.",
+    "Roll": "Manipulation + Occult + Crúac vs. Composure + Blood Potency",
+    "Prerequisites": "Subject must be a vampire or ghoul present for the casting.",
+    "Target Successes": "8",
+    "Ranking": "4"
+  },
+  {
+    "name": "Willful Vitae",
+    "Effect": "The ritualist makes herself immune to Vinculum and blood addiction for the remainder of the night.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "None",
+    "Target Successes": "7",
+    "Ranking": "4"
+  },
+  {
+    "name": "Mantle of the Glorious Dervish",
+    "Effect": "Grants the Acolyte a point of armor, increased attack damage, and immunity to being ambushed.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Must dance into a trance during casting and enact Blush of Life.",
+    "Target Successes": "5",
+    "Ranking": "4"
+  },
+  {
+    "name": "Bounty of the Storm",
+    "Effect": "Curses a victim with the force of devastating storms that leave them battered and surrounded by dead bystanders, but rewarded with strange wealth.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "A deeply personal object from the victim at the time of casting.",
+    "Target Successes": "10",
+    "Ranking": "4"
+  },
+  {
+    "name": "Denying Hades",
+    "Effect": "Pulls a recently dead mortal's spirit back into its corpse, reviving them fully conscious but still rotting.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "A mortal corpse dead no longer than one day per dot of the vampire's Blood Potency.",
+    "Target Successes": "8",
+    "Ranking": "4"
+  },
+  {
+    "name": "Clotho's Skein",
+    "Effect": "Allows the vampire to walk the slumbering mind and see threads connecting all Kindred within a 1-mile radius.",
+    "Roll": "Manipulation + Occult + Crúac vs. Resolve + Blood Potency",
+    "Prerequisites": "Penumbrae Bloodline",
+    "Target Successes": "9",
+    "Ranking": "4"
+  },
+  {
+    "name": "The Hand of Seth",
+    "Effect": "Compels a spirit or Strix to be expelled from its host body, returning to its Twilight form.",
+    "Roll": "Manipulation + Occult + Crúac vs. Resistance + Rank/Shadow Potency",
+    "Prerequisites": "Sethite Initiation Merit, a scrap of the vessel's DNA",
+    "Target Successes": "8",
+    "Ranking": "4"
+  },
+  {
+    "name": "Blood Blight",
+    "Effect": "Mystically destroys the victim's blood, causing lethal damage to mortals or destroying Vitae in Kindred.",
+    "Roll": "Manipulation + Occult + Crúac vs. Stamina + Blood Potency",
+    "Prerequisites": "None",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "Feeding the Crone",
+    "Effect": "Transforms the ritualist's fangs into a maw of flesh-tearing teeth that deals +2 aggravated damage but yields no Vitae.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "None",
+    "Target Successes": "10",
+    "Ranking": "5"
+  },
+  {
+    "name": "Mantle of the Predator Goddess",
+    "Effect": "The Acolyte becomes a perfect predator, adding Crúac dots to feeding rolls and the Herd Merit. Anyone fed upon gains the Raptured Condition.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Must dance into a trance during casting and enact Blush of Life.",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "Birthing the God",
+    "Effect": "A coven sacrifices body parts and Vitae to build and animate a terrifying, alien, patchwork abomination that acts as a minor god.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Body parts to build a full humanoid form. Participants must each have at least one dot of Crúac.",
+    "Target Successes": "15",
+    "Ranking": "5"
+  },
+  {
+    "name": "Mantle of the Crone",
+    "Effect": "The ritualist takes on the terrifying bearing of the Crone. Witnesses gain the Primeval Truths Condition, and her touch causes aggravated wounds.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Must dance into a trance during casting.",
+    "Target Successes": "10",
+    "Ranking": "5"
+  },
+  {
+    "name": "Gwydion's Curse",
+    "Effect": "Animates all trees and large plants within a radius, prompting them to attack anyone who comes within reach.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "None",
+    "Target Successes": "10",
+    "Ranking": "5"
+  },
+  {
+    "name": "Scapegoat",
+    "Effect": "Transfers the ritualist's banes and breaking points to a mortal victim for the duration.",
+    "Roll": "Manipulation + Occult + Crúac (Resisted by Resolve)",
+    "Prerequisites": "None",
+    "Target Successes": "12",
+    "Ranking": "5"
+  },
+  {
+    "name": "The Thrashing of Apep's Coils",
+    "Effect": "Calls on the power of storms to impose the Heavy Rains (and optionally Heavy Winds) Tilt over a mile radius.",
+    "Roll": "Manipulation + Occult + Crúac",
+    "Prerequisites": "Sethite Initiation Merit",
+    "Target Successes": "12",
+    "Ranking": "5"
+  }
+]

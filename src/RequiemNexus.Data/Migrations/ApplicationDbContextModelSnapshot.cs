@@ -2887,7 +2887,13 @@ namespace RequiemNexus.Data.Migrations
                     b.Property<string>("RequirementsJson")
                         .HasColumnType("text");
 
+                    b.Property<bool>("RequiresElder")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("SorceryType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TargetSuccesses")
                         .HasColumnType("integer");
 
                     b.Property<int>("XpCost")

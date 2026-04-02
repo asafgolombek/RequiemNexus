@@ -173,6 +173,13 @@ When authoring or modifying `.github/workflows/` files:
 - All artifact upload steps use `if: always()` so results are preserved even on failure.
 - Changes to `.github/workflows/`, `infra/`, `src/RequiemNexus.Data/Migrations/`, and `src/RequiemNexus.Application/Services/AuthorizationHelper.cs` require owner review per `.github/CODEOWNERS`.
 
+### Security scanning triage (CodeQL, Dependabot, Trivy)
+
+1. **CodeQL** — Repository **Security** tab → **Code scanning** alerts. For each open alert: classify **True positive** (fix or track), **False positive** (dismiss with reason), or **Won’t fix** (document risk acceptance). Prefer fixes in **Application** / **Domain** over suppressions; suppress only with a code comment or CodeQL configuration justified in the PR. Re-run analysis on the branch after fixes before merge.
+2. **Dependabot** — Review Dependabot pull requests and the **Dependency graph** for known vulnerabilities. Apply **patch** and **minor** updates per project policy; **major** bumps require explicit review (see `.github/CODEOWNERS` and this file). If a CVE has no fixed version yet, document mitigation (e.g. feature flags, input validation, network boundaries) in the tracking issue.
+3. **Container images (Trivy)** — Release and `container-scan` workflows run Trivy with `exit-code: 1` for HIGH/CRITICAL. Triage failures by updating base images or dependencies; do not lower severity without owner approval.
+4. **Local baseline** — Run `dotnet build` and `.\scripts\test-local.ps1` before declaring a security-related change complete. Performance smoke: `.\scripts\run-performance.ps1` requires a **running** app at `TARGET_URL` (see script header).
+
 ---
 
 ## SignalR Hub Rules (Phase 7)
@@ -219,7 +226,7 @@ The p95 server dispatch latency (hub method invocation → message delivered to 
 
 ## Git & Branch Conventions
 
-- **Branch naming:** `feature/{author}/{short-description}`
+- **Branch naming:** `feature/{author}/{short-description}` for features; `dev/{author}/{short-description}` for phase/dev branches
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) — `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
 - **One logical change per commit.** Do not batch unrelated changes.
 - **Never force-push to `main`.** All changes go through a PR.
@@ -322,12 +329,11 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phases 14–16b, 17, 18, and 19 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition). **Phase 19.5 — The Rite Perfected** is the **active phase**: blood sorcery rules accuracy (Crúac / Theban Sorcery / Kindred Necromancy). Plan: [`docs/plan-blood-sorcery-audit.md`](./docs/plan-blood-sorcery-audit.md). Open decisions (session persistence, cost timing, Necromancy catalog, etc.) must be resolved before P1-1 work begins — see audit §7.4 and companion [`docs/plan-blood-sorcery-audit-review.md`](./docs/plan-blood-sorcery-audit-review.md). **Phase 20 — The Global Embrace** follows after 19.5 (i18n, public API, Discord, production polish). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
+**Phases 14–16b, 17, 18, 19, and 19.5 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition, **blood sorcery rules completion** — Crúac / Theban / Necromancy: extended rites, ritual Conditions, informational Potency, canonical ritual JSON in `SeedSource`, sacrament UX, backlog verification). Record: [`docs/mission.md`](./docs/mission.md) Phase 19.5 + [`docs/rules-interpretations.md`](./docs/rules-interpretations.md) Phase 19.5. **Phase 20 — The Global Embrace** is the **active phase** (i18n, public API, Discord, production polish) — [`docs/mission.md`](./docs/mission.md). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 
-See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, and exit criteria.
-See [`docs/plan-blood-sorcery-audit.md`](./docs/plan-blood-sorcery-audit.md) for the Phase 19.5 execution checklist.
+See [`docs/mission.md`](./docs/mission.md) for the feature list, phase table, exit criteria, and Phase 19.5 delivery.
 See [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md) for the completed Phase 16b implementation record.
 See [`docs/phase_8_plan.md`](./docs/phase_8_plan.md) for the Phase 8 implementation plan. Phase 9 plan retired after completion.
 

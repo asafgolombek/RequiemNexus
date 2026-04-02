@@ -1,0 +1,154 @@
+[
+  {
+    "name": "Appraise the Dead",
+    "Effect": "Allows the vampire to study the living details of a corpse, gaining clinical information instantaneously such as the former name, the appearance in life, cause of death, foreign materials in the body, cause of wounds, and exact date and time of death.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Material Focus: The corpse to be studied.",
+    "Target Successes": "2",
+    "Ranking": "1"
+  },
+  {
+    "name": "Corpse Preservation",
+    "Effect": "Provides a corpse or animated undead with protection from rot and general wear for one month per point of Potency.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: Burning a small piece (such as the tip of a finger) of another corpse.",
+    "Target Successes": "5",
+    "Ranking": "1"
+  },
+  {
+    "name": "Spiritual Sight",
+    "Effect": "The vampire takes on the spiritual senses of a ghost, and can perceive entities within Twilight for the rest of the night.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: A handful of grave dirt.",
+    "Target Successes": "4",
+    "Ranking": "1"
+  },
+  {
+    "name": "Corrosive Touch",
+    "Effect": "Channels deathly energy into an object, degrading its substance and weakening its Durability or armor rating by the ritual's Potency.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: A mildly corrosive substance.",
+    "Target Successes": "4",
+    "Ranking": "2"
+  },
+  {
+    "name": "Eyes of the Deceased",
+    "Effect": "By touching a cadaver, the necromancer can experience the last moments of the subject's life with all five senses.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: Incense or another burnt offering.",
+    "Target Successes": "2",
+    "Ranking": "2"
+  },
+  {
+    "name": "Soul Jar",
+    "Effect": "Creates a small container used to trap ghosts and other ephemeral beings when opened in their presence.",
+    "Roll": "Resolve + Occult + Kindred Necromancy vs. Resistance + Rank",
+    "Prerequisites": "1 Vitae. Material Focus: A jar or other sealable container of Size 1-2.",
+    "Target Successes": "5",
+    "Ranking": "2"
+  },
+  {
+    "name": "Corpse Repair",
+    "Effect": "Heals or repairs damage in undead subjects. Restores Structure/Durability to corpses, or heals bashing/lethal damage in Kindred and animated zombies.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: A number of additional Vitae equal to half the wounds healed (round up).",
+    "Target Successes": "4",
+    "Ranking": "3"
+  },
+  {
+    "name": "Flesh-Born Servitor",
+    "Effect": "Imbues an animal's corpse with deathly energy to animate a small servitor capable of performing basic tasks at its master's behest.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Material Focus: The corpse of a small animal (Size 1 to 3).",
+    "Target Successes": "7",
+    "Ranking": "3"
+  },
+  {
+    "name": "Open Avernian Gateway",
+    "Effect": "Forces open an existing Avernian Gateway to the Underworld without the proper key for a short duration.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Material Focus: The Avernian Gate to be opened. Sacrifice: A chalice of mortal blood.",
+    "Target Successes": "5",
+    "Ranking": "3"
+  },
+  {
+    "name": "Create Fetter",
+    "Effect": "Binds a ghost or another similar entity within a mile into a Fetter, a magical item that allows the user to tap into the power of that being.",
+    "Roll": "Resolve + Occult + Kindred Necromancy vs. Resistance + Rank (if unwilling)",
+    "Prerequisites": "1 Vitae. Sacrifice: An additional point of Vitae for each dot of the Fetter's rating, and an iron chain. Material Focus: An object created specifically to hold the entity (requiring 10 successes on an extended Dexterity + Crafts roll).",
+    "Target Successes": "6 + (Fetter's rating * 3)",
+    "Ranking": "3"
+  },
+  {
+    "name": "Death of Concept",
+    "Effect": "A powerful necromantic curse targeting a victim via a sympathetic link that causes them to be unable to make any logical leaps, such as realizing they should disarm an aggressor.",
+    "Roll": "Resolve + Occult + Kindred Necromancy vs. Resolve + Blood Potency",
+    "Prerequisites": "1 Vitae. Sacrifice: A sympathetic link to the victim, such as a bit of DNA, an important possession, or a current line of sight to him.",
+    "Target Successes": "12",
+    "Ranking": "3"
+  },
+  {
+    "name": "Destroy Avernian Gateway",
+    "Effect": "Seals and utterly destroys an existing gateway to the Underworld.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Material Focus: The Avernian Gate to be destroyed. Sacrifice: An additional point of Vitae.",
+    "Target Successes": "5",
+    "Ranking": "4"
+  },
+  {
+    "name": "Drain Understanding",
+    "Effect": "Steals knowledge and experience from a victim at the cost of the vampire's Humanity, permanently transferring a Skill or Specialty dot from the victim to the necromancer.",
+    "Roll": "Resolve + Occult + Kindred Necromancy vs. Resolve + Blood Potency",
+    "Prerequisites": "1 Vitae. Sacrifice: A dot of Humanity.",
+    "Target Successes": "8",
+    "Ranking": "4"
+  },
+  {
+    "name": "Quicken Corpse",
+    "Effect": "Imbues a humanoid corpse with necromantic power, animating it and creating a mindless but obedient zombie follower.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Material Focus: An intact humanoid corpse.",
+    "Target Successes": "8",
+    "Ranking": "4"
+  },
+  {
+    "name": "Return to the Dust",
+    "Effect": "Places the soul of a deceased vampire back into his remains. The subject's face reforms in the dust and must truthfully answer questions posed by the necromancer.",
+    "Roll": "Resolve + Occult + Kindred Necromancy vs. Resolve + Blood Potency (if unwilling)",
+    "Prerequisites": "1 Vitae. Material Focus: The remains of a vampire who has met Final Death.",
+    "Target Successes": "5",
+    "Ranking": "4"
+  },
+  {
+    "name": "Create Avernian Gate",
+    "Effect": "Rips a brand new opening into the Underworld, creating a permanent or temporary Avernian Gateway.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: Three additional points of Vitae, and at least a drop of mortal blood. Material Focus: An example of the Key, if applicable (optional).",
+    "Target Successes": "11",
+    "Ranking": "5"
+  },
+  {
+    "name": "Cheat Final Death",
+    "Effect": "Allows the vampire to 'cheat' Final Death; for an hour, the vampire's final Health box cannot be filled with damage, pushing it to the other end of the Health track.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: One point of Willpower, and a breaking point at the caster's current Humanity to enact the ritual's protection.",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "Infuse Undead",
+    "Effect": "Infuses an already animated corpse with a degree of consciousness, providing it with basic memory, the ability to communicate, and optionally bestows a measure of the vampire's own Disciplines or Vitae.",
+    "Roll": "Resolve + Occult + Kindred Necromancy",
+    "Prerequisites": "1 Vitae. Sacrifice: Two additional Vitae, which must be spilled on the ground as part of the casting.",
+    "Target Successes": "9",
+    "Ranking": "5"
+  },
+  {
+    "name": "Voodoo Doll",
+    "Effect": "Creates a representative Vodoun doll connected to a target. Driving nails into the doll inflicts terrible curses on the victim (like blindness, muteness, attribute penalties, or torpor).",
+    "Roll": "Resolve + Occult + Kindred Necromancy vs. Stamina + Blood Potency",
+    "Prerequisites": "1 Vitae. Material Focus: A representative doll created with a sympathetic tie to the victim (requiring 10 successes on an extended Dexterity + Crafts roll).",
+    "Target Successes": "15",
+    "Ranking": "4"
+  }
+]

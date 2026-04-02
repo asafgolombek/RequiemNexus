@@ -83,4 +83,25 @@ public enum ConditionType
     /// Appended after <see cref="ConditionType.Addicted"/> to preserve stored enum values for existing rows.
     /// </summary>
     Bound,
+
+    /// <summary>
+    /// Theban Sorcery — dramatic failure on a miracle. Resolve per Storyteller guidance (V:tR 2e ritual outcomes).
+    /// Appended after <see cref="ConditionType.Bound"/> for stable serialization.
+    /// </summary>
+    Humbled,
+
+    /// <summary>
+    /// Crúac — exceptional success during a rite. Resolve per Storyteller guidance (V:tR 2e ritual outcomes).
+    /// </summary>
+    Ecstatic,
+
+    /// <summary>
+    /// Theban Sorcery — exceptional success during a miracle. Resolve per Storyteller guidance (V:tR 2e ritual outcomes).
+    /// </summary>
+    Raptured,
+
+    /// <summary>
+    /// Extended ritual: continued after a failed roll (0 successes). Suffers −2 on the next dice pool; resolve when taken (CoD Stumbled).
+    /// </summary>
+    Stumbled,
 }

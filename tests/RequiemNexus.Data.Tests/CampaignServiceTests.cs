@@ -4,11 +4,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.Events;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Security;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Domain.Contracts;
 using Xunit;
 
 namespace RequiemNexus.Data.Tests;
@@ -39,6 +41,14 @@ public class CampaignServiceTests
     {
         IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
         var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
+        var humanity = new HumanityService(
+            ctx,
+            Mock.Of<IAuthorizationHelper>(),
+            Mock.Of<IDomainEventDispatcher>(),
+            Mock.Of<IDiceService>(),
+            Mock.Of<ISessionService>(),
+            Mock.Of<IConditionService>(),
+            NullLogger<HumanityService>.Instance);
         return new CharacterManagementService(
             ctx,
             factory,
@@ -46,7 +56,8 @@ public class CampaignServiceTests
             new BeatLedgerService(ctx),
             auth,
             new Mock<ISessionService>().Object,
-            new CharacterCreationService());
+            new CharacterCreationService(),
+            humanity);
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>

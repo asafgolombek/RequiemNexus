@@ -47,6 +47,24 @@ public class HumanityServiceTests
     }
 
     [Fact]
+    public async Task EnforceHumanityCapForPersistenceAsync_UsesDbWhenDisciplinesUnloaded_Clamps()
+    {
+        using var ctx = CreateEmptyContext();
+        ctx.Disciplines.Add(new Discipline { Id = 1, Name = "Crúac" });
+        ctx.Characters.Add(new Character { Id = 1, Humanity = 9 });
+        ctx.CharacterDisciplines.Add(new CharacterDiscipline { CharacterId = 1, DisciplineId = 1, Rating = 3 });
+        await ctx.SaveChangesAsync();
+
+        Character tracked = await ctx.Characters.FirstAsync(c => c.Id == 1);
+        tracked.Humanity = 9;
+
+        var service = CreateHumanityService(ctx, Mock.Of<IAuthorizationHelper>(), Mock.Of<IDomainEventDispatcher>());
+        await service.EnforceHumanityCapForPersistenceAsync(tracked);
+
+        Assert.Equal(7, tracked.Humanity);
+    }
+
+    [Fact]
     public async Task EvaluateStains_BelowThreshold_NoEvent()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

@@ -10,6 +10,7 @@ using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Events;
+using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 using Xunit;
 
@@ -550,6 +551,115 @@ public class CharacterDisciplineServiceTests
                 CreateHumanityMock().Object);
 
             var result = await service.AddDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 1), "u1");
+
+            Assert.True(result.IsSuccess);
+            dispatcher.Verify(d => d.Dispatch(It.IsAny<DegenerationCheckRequiredEvent>()), Times.Never);
+        }
+    }
+
+    [Fact]
+    public async Task TryUpgradeDiscipline_Cruac_AtHumanity5_DispatchesDegenEvent()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedApplicationUserAsync(ctx);
+            var circle = new CovenantDefinition { Id = 5, Name = "The Circle of the Crone" };
+            var disc = new Discipline { Id = 2, Name = "Crúac", IsCovenantDiscipline = true, CovenantId = 5 };
+            disc.Covenant = circle;
+            var clan = new Clan { Id = 1, Name = "Gangrel" };
+            ctx.CovenantDefinitions.Add(circle);
+            ctx.Clans.Add(clan);
+            ctx.Disciplines.Add(disc);
+            var character = new Character
+            {
+                Id = 1,
+                ApplicationUserId = "u1",
+                Name = "K",
+                ClanId = 1,
+                CovenantId = 5,
+                Humanity = 5,
+                ExperiencePoints = 50,
+                BloodPotency = 1,
+            };
+            character.Clan = clan;
+            character.Disciplines.Add(new CharacterDiscipline
+            {
+                CharacterId = 1,
+                DisciplineId = 2,
+                Rating = 1,
+                Discipline = disc,
+            });
+            ctx.Characters.Add(character);
+            await ctx.SaveChangesAsync();
+
+            var dispatcher = new Mock<IDomainEventDispatcher>();
+            var service = new CharacterDisciplineService(
+                ctx,
+                new Mock<IBeatLedgerService>().Object,
+                _experienceCostRules,
+                CreateAuthMock().Object,
+                dispatcher.Object,
+                CreateHumanityMock().Object);
+
+            Result<CharacterDiscipline> result =
+                await service.TryUpgradeDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 2), "u1");
+
+            Assert.True(result.IsSuccess);
+            dispatcher.Verify(
+                d => d.Dispatch(It.Is<DegenerationCheckRequiredEvent>(e =>
+                    e.CharacterId == 1 && e.Reason == DegenerationReason.CrúacPurchase)),
+                Times.Once);
+        }
+    }
+
+    [Fact]
+    public async Task TryUpgradeDiscipline_Cruac_BelowHumanity4_NoDegenEvent()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedApplicationUserAsync(ctx);
+            var circle = new CovenantDefinition { Id = 5, Name = "The Circle of the Crone" };
+            var disc = new Discipline { Id = 2, Name = "Crúac", IsCovenantDiscipline = true, CovenantId = 5 };
+            disc.Covenant = circle;
+            var clan = new Clan { Id = 1, Name = "Gangrel" };
+            ctx.CovenantDefinitions.Add(circle);
+            ctx.Clans.Add(clan);
+            ctx.Disciplines.Add(disc);
+            var character = new Character
+            {
+                Id = 1,
+                ApplicationUserId = "u1",
+                Name = "K",
+                ClanId = 1,
+                CovenantId = 5,
+                Humanity = 3,
+                ExperiencePoints = 50,
+                BloodPotency = 1,
+            };
+            character.Clan = clan;
+            character.Disciplines.Add(new CharacterDiscipline
+            {
+                CharacterId = 1,
+                DisciplineId = 2,
+                Rating = 1,
+                Discipline = disc,
+            });
+            ctx.Characters.Add(character);
+            await ctx.SaveChangesAsync();
+
+            var dispatcher = new Mock<IDomainEventDispatcher>();
+            var service = new CharacterDisciplineService(
+                ctx,
+                new Mock<IBeatLedgerService>().Object,
+                _experienceCostRules,
+                CreateAuthMock().Object,
+                dispatcher.Object,
+                CreateHumanityMock().Object);
+
+            Result<CharacterDiscipline> result =
+                await service.TryUpgradeDisciplineAsync(new DisciplineAcquisitionRequest(1, 2, 2), "u1");
 
             Assert.True(result.IsSuccess);
             dispatcher.Verify(d => d.Dispatch(It.IsAny<DegenerationCheckRequiredEvent>()), Times.Never);

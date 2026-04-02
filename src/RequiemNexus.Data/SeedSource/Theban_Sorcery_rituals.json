@@ -1,0 +1,210 @@
+[
+  {
+    "name": "Blood Scourge",
+    "Effect": "Transforms a portion of the ritualist's blood into a stinging whip weapon (2L) that lasts until the end of the scene or sunrise.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: The ritualist's own blood at least one Vitae.",
+    "Target Successes": "6",
+    "Ranking": "1"
+  },
+  {
+    "name": "Apple of Eden",
+    "Effect": "Enchants an apple (or another pome) that grants a mortal temporary dots in Intelligence and Wits upon consumption.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: An apple, a drop of Vitae.",
+    "Target Successes": "5",
+    "Ranking": "1"
+  },
+  {
+    "name": "Marian Apparition",
+    "Effect": "An apparition of Mary or another womanly saint appears, inspiring fierce spiritual guilt in present vampires and treating their Humanity as lower for detachment.",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Humanity.",
+    "Prerequisites": "Sacrament: A piece of pure white cloth, stained with a single drop of menstrual blood.",
+    "Target Successes": "5",
+    "Ranking": "1"
+  },
+  {
+    "name": "Vitae Reliquary",
+    "Effect": "Infuses an object with up to the ritual's Potency in Vitae, which can be retrieved by any vampire, Strix, or ghoul who touches the object.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: any object up to size 3.",
+    "Target Successes": "5",
+    "Ranking": "2"
+  },
+  {
+    "name": "Blandishment of Sin",
+    "Effect": "The next time any bashing damage is inflicted on the victim, it is upgraded to lethal (or aggravated for the 4-dot version).",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Resolve + Blood Potency.",
+    "Prerequisites": "Sacrament: a scrap of paper with the victim's name written on it.",
+    "Target Successes": "5 (8 for the 4-dot version)",
+    "Ranking": "2 (or 4 for the aggravated variant)"
+  },
+  {
+    "name": "Revelatory Shroud",
+    "Effect": "Drapes a cloth shroud over an area or object that sullies, fades, and burns to reveal the face of the last person to touch the object or walk through the area.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A cloth shroud.",
+    "Target Successes": "5",
+    "Ranking": "2"
+  },
+  {
+    "name": "Curse of Babel",
+    "Effect": "Renders the victim unable to speak or write until the next sunrise.",
+    "Roll": "Intelligence + Academics + Theban Sorcery (Resisted by Resolve).",
+    "Prerequisites": "Sacrament: an animal or human tongue.",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Liar's Plague",
+    "Effect": "Curses his victim, who must be present for the ritual, to not tell any falsehoods; if the victim lies, beetles swarm from his mouth.",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Resolve + Blood Potency.",
+    "Prerequisites": "Sacrament: an insect carapace.",
+    "Target Successes": "5",
+    "Ranking": "3"
+  },
+  {
+    "name": "Malediction of Despair",
+    "Effect": "Curses the victim so the next time he engages in a specific action, he suffers a -5 dice penalty.",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Resolve + Blood Potency.",
+    "Prerequisites": "Sacrament: a lock of the victim's hair.",
+    "Target Successes": "13",
+    "Ranking": "3"
+  },
+  {
+    "name": "Gift of Lazarus",
+    "Effect": "Raises a servant by animating a human corpse that retains all skills the person had when alive.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: a communion wafer placed under a corpse's tongue.",
+    "Target Successes": "8",
+    "Ranking": "3"
+  },
+  {
+    "name": "Apparition of the Host",
+    "Effect": "Releases an apparition of avenging angels that chases a victim the breaker can see, inflicting the Frightened Condition.",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Resolve + Blood Potency.",
+    "Prerequisites": "Sacrament: A holly switch.",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Bloody Icon",
+    "Effect": "Offers emergency blood sustenance to a besieged Sanctified in exchange for the vampire recognizing what she is and abandoning her fetters to her past life.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: The caster's own Humanity, a statue of a saint.",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "The Walls of Jericho",
+    "Effect": "Demolishes inanimate physical barriers (walls, vehicles, armor) between the caster and a designated subject via the blast of a horn.",
+    "Roll": "Presence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A horn.",
+    "Target Successes": "6",
+    "Ranking": "3"
+  },
+  {
+    "name": "Stigmata",
+    "Effect": "Curses his victim with the wounds of Christ, causing them to suffer lethal damage from blood loss or lose Vitae each turn.",
+    "Roll": "Intelligence + Academics + Theban Sorcery (Resisted by Stamina).",
+    "Prerequisites": "Sacrament: a crucifix.",
+    "Target Successes": "5",
+    "Ranking": "4"
+  },
+  {
+    "name": "Aaron's Rod",
+    "Effect": "Enchants a rod or staff so it can be activated later to become a venomous serpent that does the activator's bidding.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A rod or staff.",
+    "Target Successes": "8",
+    "Ranking": "4"
+  },
+  {
+    "name": "Blessing the Legion",
+    "Effect": "Blesses a group of crusaders with Vitae-stained armor, allowing the wearers to draw upon the Vitae to instantly heal wounds during battle.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A full suit of armor, modern or archaic.",
+    "Target Successes": "6",
+    "Ranking": "4"
+  },
+  {
+    "name": "Miracle of the Dead Sun",
+    "Effect": "Sacrifices a dot of Humanity to blot out the sun with dark clouds, allowing all vampires in the domain to act as if it were night without penalties.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A piece of pure silver jewelry.",
+    "Target Successes": "6",
+    "Ranking": "4"
+  },
+  {
+    "name": "Transubstantiation",
+    "Effect": "Transforms one substance to another, such as water into wine, lead into gold, a human into stone, or a wolf into a cat.",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Stamina + Blood Potency.",
+    "Prerequisites": "Sacrament: a drop of liquid gold.",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "Pledge to the Worthless One",
+    "Effect": "A heretical rite swearing a subject to the devil Belial, granting them a demon familiar in animal flesh in exchange for their soul.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A person content with his life.",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "Great Prophecy",
+    "Effect": "Enacts a sweeping, unavoidable prophecy that predicts a great event for a group, clan, or covenant.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A body part of a saint.",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "The Guiding Star",
+    "Effect": "Enchants a star and gold coins; holders of the coin intuitively know the direction to a highly protected safe haven.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A full, hand-crafted star chart, gold coins.",
+    "Target Successes": "8",
+    "Ranking": "5"
+  },
+  {
+    "name": "Apocalypse",
+    "Effect": "Peels back the Masquerade in a wide area, causing vampires to appear their true corpse-like age and causing illusionary Disciplines like Obfuscate to fail.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A text, at least three hundred years old.",
+    "Target Successes": "Special (10 base, additional successes increase radius)",
+    "Ranking": "5"
+  },
+  {
+    "name": "The Judgment Fast",
+    "Effect": "Curses a domain for a month, making it so any Kindred who ingests Vitae above their Humanity rating painfully vomits it back up.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Sacrament: A table of rotten food.",
+    "Target Successes": "15",
+    "Ranking": "5"
+  },
+  {
+    "name": "Curse of Isolation",
+    "Effect": "Severs the bonds between the subject and a vampire, cursing her fellow Kindred to solitude and sorrow, transferring the Touchstone to the ritualist.",
+    "Roll": "Intelligence + Academics + Theban Sorcery vs. Resolve + Blood Potency (of the Kindred whose Touchstone is the ritual's subject).",
+    "Prerequisites": "Blood Potency 6+ or 300+ years in the Covenant. Sacrament: any bladed weapon.",
+    "Target Successes": "15",
+    "Ranking": "Elder"
+  },
+  {
+    "name": "Orison of Voices",
+    "Effect": "Attunes her ears to the voices of those who would call out to her; for three nights, whenever any voice speaks her name, she hears it and its context.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Blood Potency 6+ or 300+ years in the Covenant. Sacrament: rosary beads.",
+    "Target Successes": "8",
+    "Ranking": "Elder"
+  },
+  {
+    "name": "Sins of the Ancestors",
+    "Effect": "Allows the ritualist to ask questions about the target's close blood relatives, descendants, or lineage by plumbing consecrated blood for secrets.",
+    "Roll": "Intelligence + Academics + Theban Sorcery.",
+    "Prerequisites": "Blood Potency 6+ or 300+ years in the Covenant. Sacrament: Not detailed in source text.",
+    "Target Successes": "Not detailed in source text",
+    "Ranking": "Elder"
+  }
+]

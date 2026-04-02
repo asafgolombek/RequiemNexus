@@ -1,0 +1,210 @@
+@using System.Globalization
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Forms
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Domain.Models
+@using RequiemNexus.Domain.Services
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="Close">
+        <div class="modal-panel apply-bloodline-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="rite-prep-title">
+            <div class="modal-header">
+                <h3 id="rite-prep-title">Cast: @RiteName</h3>
+                <button type="button" class="close-btn" @onclick="Close" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="apply-bloodline-hint">
+                    Optional modifiers before costs are applied. Blood Sympathy bonus applies only when the rite’s power targets a specific Kindred and chronicle lineage links exist between you.
+                </p>
+                @if (RequiresNarrativeAcknowledgment)
+                {
+                    <div class="rite-narrative-acks" style="margin-top: 1rem; padding: 0.75rem 1rem; background: rgba(80, 60, 20, 0.2); border: 1px solid rgba(255, 220, 150, 0.25); border-radius: 6px;">
+                        <p style="margin: 0 0 0.5rem 0;"><strong>Narrative sacrifices</strong></p>
+                        <p style="margin: 0 0 0.75rem 0; font-size: 0.92em;">
+                            Check each item you have satisfied at the table. Vitae, Willpower, and stain costs are deducted when you continue; these boxes are for sacraments, foci, and similar story requirements.
+                        </p>
+                        @if (ShowThebanSacramentCrescendoNote)
+                        {
+                            <p style="margin: 0 0 0.75rem 0; font-size: 0.88em; color: rgba(255, 235, 200, 0.95);">
+                                For Theban miracles, the physical sacrament crumbles away when the miracle reaches its crescendo (success or final failure), not when you open the dice roller or on the first roll — V:tR 2e.
+                            </p>
+                        }
+                        @if (PhysicalSacramentRequired)
+                        {
+                            <label class="option-label" style="display: block; margin-bottom: 0.5rem;">
+                                <input type="checkbox" @bind="_ackPhysicalSacrament" />
+                                @if (!string.IsNullOrWhiteSpace(PhysicalSacramentHint))
+                                {
+                                    <span>I have the sacrament at the table: <em>@PhysicalSacramentHint</em></span>
+                                }
+                                else
+                                {
+                                    <span>I acknowledge the required physical sacrament is ready at the table.</span>
+                                }
+                            </label>
+                        }
+                        @if (HeartRequired)
+                        {
+                            <label class="option-label" style="display: block; margin-bottom: 0.5rem;">
+                                <input type="checkbox" @bind="_ackHeart" />
+                                <span>I acknowledge the heart (or equivalent) sacrifice required by this rite.</span>
+                            </label>
+                        }
+                        @if (MaterialOfferingRequired)
+                        {
+                            <label class="option-label" style="display: block; margin-bottom: 0.5rem;">
+                                <input type="checkbox" @bind="_ackMaterialOffering" />
+                                <span>I acknowledge the material offering required by this rite.</span>
+                            </label>
+                        }
+                        @if (MaterialFocusRequired)
+                        {
+                            <label class="option-label" style="display: block; margin-bottom: 0.5rem;">
+                                <input type="checkbox" @bind="_ackMaterialFocus" />
+                                <span>I acknowledge the material focus required by this rite.</span>
+                            </label>
+                        }
+                    </div>
+                }
+                @if (Tradition == SorceryType.Cruac)
+                {
+                    <div class="form-group" style="margin-top:1rem;">
+                        <label for="extra-vitae">Extra Vitae for bonus dice (Crúac only, 0–5)</label>
+                        <InputNumber id="extra-vitae" class="form-control" @bind-Value="_extraVitae" />
+                    </div>
+                }
+                <div class="form-group" style="margin-top:1rem;">
+                    <label for="sympathy-target">Blood Sympathy target (optional)</label>
+                    <InputSelect id="sympathy-target" class="form-control" @bind-Value="_targetKey">
+                        <option value="">— None —</option>
+                        @foreach (CampaignKindredTargetDto k in KinTargets)
+                        {
+                            <option value="@k.Id.ToString(CultureInfo.InvariantCulture)">@k.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                @if (KinTargets.Count == 0)
+                {
+                    <p class="apply-bloodline-empty" style="margin-top:0.75rem;">No other vampires in this chronicle on your roster — add allies to the campaign or set ST-managed lineage to enable sympathy targeting.</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-rn-ghost" @onclick="Close">Cancel</button>
+                <button type="button" class="btn-rn-primary" @onclick="Confirm" disabled="@(!CanContinue)">Continue</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public string RiteName { get; set; } = string.Empty;
+
+    [Parameter]
+    public SorceryType Tradition { get; set; }
+
+    /// <summary>Parsed <c>RequirementsJson</c> for the rite being cast; drives narrative acknowledgment checkboxes.</summary>
+    [Parameter]
+    public IReadOnlyList<RiteRequirement> Requirements { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<CampaignKindredTargetDto> KinTargets { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<RiteActivationPrepResult> OnContinue { get; set; }
+
+    private int _extraVitae;
+    private string _targetKey = string.Empty;
+    private bool _wasOpen;
+    private bool _ackPhysicalSacrament;
+    private bool _ackHeart;
+    private bool _ackMaterialOffering;
+    private bool _ackMaterialFocus;
+
+    private bool RequiresNarrativeAcknowledgment =>
+        RiteRequirementValidator.RequiresExternalAcknowledgment(Requirements);
+
+    private bool PhysicalSacramentRequired =>
+        Requirements.Any(r => r.Type == SacrificeType.PhysicalSacrament);
+
+    private bool HeartRequired =>
+        Requirements.Any(r => r.Type == SacrificeType.Heart);
+
+    private bool MaterialOfferingRequired =>
+        Requirements.Any(r => r.Type == SacrificeType.MaterialOffering);
+
+    private bool MaterialFocusRequired =>
+        Requirements.Any(r => r.Type == SacrificeType.MaterialFocus);
+
+    private bool ShowThebanSacramentCrescendoNote =>
+        Tradition == SorceryType.Theban && PhysicalSacramentRequired;
+
+    private string? PhysicalSacramentHint
+    {
+        get
+        {
+            IEnumerable<string> hints = Requirements
+                .Where(r => r.Type == SacrificeType.PhysicalSacrament)
+                .Select(r => r.DisplayHint)
+                .Where(h => !string.IsNullOrWhiteSpace(h))!;
+            return string.Join("; ", hints.Distinct(StringComparer.Ordinal));
+        }
+    }
+
+    private bool NarrativeAcksSatisfied =>
+        (!PhysicalSacramentRequired || _ackPhysicalSacrament)
+        && (!HeartRequired || _ackHeart)
+        && (!MaterialOfferingRequired || _ackMaterialOffering)
+        && (!MaterialFocusRequired || _ackMaterialFocus);
+
+    private bool CanContinue =>
+        !RequiresNarrativeAcknowledgment || NarrativeAcksSatisfied;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && !_wasOpen)
+        {
+            _extraVitae = 0;
+            _targetKey = string.Empty;
+            _ackPhysicalSacrament = false;
+            _ackHeart = false;
+            _ackMaterialOffering = false;
+            _ackMaterialFocus = false;
+        }
+
+        _wasOpen = IsOpen;
+    }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task Confirm()
+    {
+        if (!CanContinue)
+        {
+            return;
+        }
+
+        int ev = Tradition == SorceryType.Cruac ? Math.Clamp(_extraVitae, 0, 5) : 0;
+        int? targetId = string.IsNullOrWhiteSpace(_targetKey) ? null : int.Parse(_targetKey, CultureInfo.InvariantCulture);
+        await OnContinue.InvokeAsync(new RiteActivationPrepResult(
+            ev,
+            targetId,
+            _ackPhysicalSacrament,
+            _ackHeart,
+            _ackMaterialOffering,
+            _ackMaterialFocus));
+        await Close();
+    }
+}

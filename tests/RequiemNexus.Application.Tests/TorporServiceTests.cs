@@ -249,4 +249,34 @@ public class TorporServiceTests
             Assert.Null(reloaded.LastStarvationNotifiedAt);
         }
     }
+
+    [Fact]
+    public async Task CheckStarvationIntervalAsync_NecromancyRaisesEffectiveBp_SuppressesEarlyMilestone()
+    {
+        (ApplicationDbContext ctx, IAsyncDisposable teardown) = await CreateSqliteContextAsync();
+        await using (teardown)
+        {
+            await SeedAsync(ctx);
+            var necro = new Discipline { Id = 50, Name = "Necromancy" };
+            ctx.Disciplines.Add(necro);
+            Character c = await ctx.Characters.FirstAsync(x => x.Id == 1);
+            c.BloodPotency = 1;
+            c.TorporSince = DateTime.UtcNow.AddDays(-2);
+            c.LastStarvationNotifiedAt = null;
+            ctx.CharacterDisciplines.Add(new CharacterDiscipline
+            {
+                CharacterId = 1,
+                DisciplineId = 50,
+                Rating = 2,
+                Discipline = necro,
+            });
+            await ctx.SaveChangesAsync();
+
+            TorporService sut = CreateSut(ctx, CreateStAuthMock().Object);
+            await sut.CheckStarvationIntervalAsync(1);
+
+            Character reloaded = await ctx.Characters.AsNoTracking().FirstAsync(x => x.Id == 1);
+            Assert.Null(reloaded.LastStarvationNotifiedAt);
+        }
+    }
 }

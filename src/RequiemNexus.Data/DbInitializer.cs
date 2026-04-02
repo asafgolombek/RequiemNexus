@@ -399,56 +399,97 @@ public static class DbInitializer
         var lancea = covenants.FirstOrDefault(c => c.Name == "The Lancea et Sanctum");
         var cruacDisc = disciplines.FirstOrDefault(d => d.Name == "Crúac");
         var thebanDisc = disciplines.FirstOrDefault(d => d.Name == "Theban Sorcery");
+        var necromancyDisc = disciplines.FirstOrDefault(d => d.Name == "Necromancy");
 
         if (crone == null || lancea == null || cruacDisc == null || thebanDisc == null)
         {
             return;
         }
 
-        var entries = SorceryRiteSeedData.LoadFromDocs(logger);
+        await EnsureDisciplineExistsAsync(context, "Necromancy", "Kindred death sorcery — corpses, shades, and the other side.");
+        necromancyDisc ??= await context.Disciplines.AsNoTracking().FirstOrDefaultAsync(d => d.Name == "Necromancy");
+
+        IReadOnlyList<SorceryRiteCatalogEntry> catalog = SorceryRiteSeedData.LoadCatalogEntries(logger);
         var rites = new List<SorceryRiteDefinition>();
 
-        foreach (var (name, rating, prerequisites, effect, sorceryType) in entries)
+        foreach (SorceryRiteCatalogEntry entry in catalog)
         {
-            int requiredCovenantId = sorceryType == Domain.Enums.SorceryType.Cruac ? crone.Id : lancea.Id;
-            int disciplineId = sorceryType == Domain.Enums.SorceryType.Cruac ? cruacDisc.Id : thebanDisc.Id;
-            string? poolJson = BuildSorceryPoolJson(disciplineId);
-
-            (string costDesc, string reqJson) = BuildSorceryCostForType(sorceryType, rating);
-            rites.Add(new SorceryRiteDefinition
+            switch (entry.SorceryType)
             {
-                Name = name,
-                Description = effect,
-                Level = rating,
-                SorceryType = sorceryType,
-                XpCost = rating,
-                PoolDefinitionJson = poolJson,
-                ActivationCostDescription = costDesc,
-                RequiredCovenantId = requiredCovenantId,
-                RequirementsJson = reqJson,
-                Prerequisites = prerequisites,
-                Effect = effect,
-            });
+                case Domain.Enums.SorceryType.Cruac:
+                    rites.Add(BuildSorceryRiteFromCatalogEntry(entry, crone.Id, requiredClanId: null, cruacDisc.Id));
+                    break;
+                case Domain.Enums.SorceryType.Theban:
+                    rites.Add(BuildSorceryRiteFromCatalogEntry(entry, lancea.Id, requiredClanId: null, thebanDisc.Id));
+                    break;
+                case Domain.Enums.SorceryType.Necromancy when necromancyDisc != null:
+                    rites.Add(BuildSorceryRiteFromCatalogEntry(entry, requiredCovenantId: null, requiredClanId: null, necromancyDisc.Id));
+                    break;
+            }
         }
 
         await context.SorceryRiteDefinitions.AddRangeAsync(rites);
         await context.SaveChangesAsync();
     }
 
-    private static (string CostDesc, string ReqJson) BuildSorceryCostForType(Domain.Enums.SorceryType type, int level)
-        => type switch
+    private static (string CostDesc, string ReqJson) BuildSorceryCostForType(
+        Domain.Enums.SorceryType type,
+        int level,
+        string? prerequisites = null)
+    {
+        string prereq = prerequisites ?? string.Empty;
+        return type switch
         {
             Domain.Enums.SorceryType.Cruac => (
                 $"{level} Vitae",
                 $$"""[{"type":"InternalVitae","value":{{level}},"isConsumed":true}]"""),
             Domain.Enums.SorceryType.Theban => (
                 "1 Willpower + Sacrament",
-                """[{"type":"Willpower","value":1,"isConsumed":true},{"type":"PhysicalSacrament","value":1,"isConsumed":true}]"""),
+                BuildThebanRequirementsJson(prereq)),
             Domain.Enums.SorceryType.Necromancy => (
                 "1 Vitae + focus",
                 """[{"type":"MaterialFocus","value":1,"isConsumed":false},{"type":"InternalVitae","value":1,"isConsumed":true}]"""),
-            _ => ("1 Vitae", _defaultRiteRequirementsJson),
+            _ => (
+                "1 Vitae",
+                _defaultRiteRequirementsJson),
         };
+    }
+
+    /// <summary>
+    /// Builds Theban <c>RequirementsJson</c> with Willpower + PhysicalSacrament, copying sacrament narrative into <c>displayHint</c> when present.
+    /// </summary>
+    private static string BuildThebanRequirementsJson(string? prerequisites)
+    {
+        string hint = ExtractThebanSacramentDisplayHint(prerequisites);
+        object sacramentEntry = string.IsNullOrWhiteSpace(hint)
+            ? new { type = "PhysicalSacrament", value = 1, isConsumed = true }
+            : new { type = "PhysicalSacrament", value = 1, isConsumed = true, displayHint = hint };
+        object[] rows =
+        [
+            new { type = "Willpower", value = 1, isConsumed = true },
+            sacramentEntry,
+        ];
+        return JsonSerializer.Serialize(
+            rows,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+    }
+
+    private static string ExtractThebanSacramentDisplayHint(string? prerequisites)
+    {
+        if (string.IsNullOrWhiteSpace(prerequisites))
+        {
+            return string.Empty;
+        }
+
+        const string prefix = "Sacrament:";
+        int idx = prerequisites.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0)
+        {
+            return prerequisites.Trim();
+        }
+
+        return prerequisites[(idx + prefix.Length)..].Trim();
+    }
 
     private static string? BuildSorceryPoolJson(int disciplineId)
     {
@@ -462,19 +503,11 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Ensures Phase 9.5/9.6 disciplines, covenant flags, default requirements JSON, and sample Necromancy/Ordo rites exist.
+    /// Ensures Phase 9.5/9.6 disciplines, covenant flags, default requirements JSON, and sorcery catalog upserts.
     /// </summary>
     private static async Task EnsureBloodSorceryPhaseExtensionsAsync(ApplicationDbContext context, ILogger logger)
     {
-        await EnsureDisciplineExistsAsync(context, "Necromancy", "Death sorcery associated with the Mekhet — corpses, shades, and the other side.");
-        await EnsureDisciplineExistsAsync(context, "Ordo Sorcery", "Covenant rituals of the Ordo Dracul; used for unified dice pools in Requiem Nexus.");
-
-        CovenantDefinition? ordoCovenant = await context.CovenantDefinitions.FirstOrDefaultAsync(c => c.Name == "The Ordo Dracul");
-        if (ordoCovenant != null && !ordoCovenant.SupportsOrdoRituals)
-        {
-            ordoCovenant.SupportsOrdoRituals = true;
-            await context.SaveChangesAsync();
-        }
+        await EnsureDisciplineExistsAsync(context, "Necromancy", "Kindred death sorcery — corpses, shades, and the other side.");
 
         List<SorceryRiteDefinition> missingReq = await context.SorceryRiteDefinitions
             .Where(r => r.RequirementsJson == null || r.RequirementsJson == string.Empty)
@@ -489,55 +522,33 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        Clan? mekhet = await context.Clans.AsNoTracking().FirstOrDefaultAsync(c => c.Name == "Mekhet");
-        Discipline? necromancy = await context.Disciplines.AsNoTracking().FirstOrDefaultAsync(d => d.Name == "Necromancy");
-        Discipline? ordoSorcery = await context.Disciplines.AsNoTracking().FirstOrDefaultAsync(d => d.Name == "Ordo Sorcery");
-        CovenantDefinition? ordo = await context.CovenantDefinitions.AsNoTracking().FirstOrDefaultAsync(c => c.Name == "The Ordo Dracul");
-
-        if (mekhet != null && necromancy != null
-            && !await context.SorceryRiteDefinitions.AnyAsync(r => r.Name == "Corrupting the Corpse"))
-        {
-            string? poolN = BuildSorceryPoolJson(necromancy.Id);
-            context.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
-            {
-                Name = "Corrupting the Corpse",
-                Description = "Warp a corpse so it resists identification and sanctified rest.",
-                Level = 1,
-                SorceryType = Domain.Enums.SorceryType.Necromancy,
-                XpCost = 1,
-                PoolDefinitionJson = poolN,
-                ActivationCostDescription = "1 Vitae + focus",
-                RequiredCovenantId = null,
-                RequiredClanId = mekhet.Id,
-                RequirementsJson = """[{"type":"MaterialFocus","value":1,"isConsumed":false},{"type":"InternalVitae","value":1,"isConsumed":true}]""",
-                Prerequisites = "Corpse present; narrative focus required (acknowledge in app).",
-                Effect = "Prepares the remains for further necromantic workings.",
-            });
-        }
-
-        if (ordo != null && ordoSorcery != null
-            && !await context.SorceryRiteDefinitions.AnyAsync(r => r.Name == "Dragon's Own Fire"))
-        {
-            string? poolO = BuildSorceryPoolJson(ordoSorcery.Id);
-            context.SorceryRiteDefinitions.Add(new SorceryRiteDefinition
-            {
-                Name = "Dragon's Own Fire",
-                Description = "Kindle supernatural flame from the character's Vitae.",
-                Level = 2,
-                SorceryType = Domain.Enums.SorceryType.OrdoDraculRitual,
-                XpCost = 2,
-                PoolDefinitionJson = poolO,
-                ActivationCostDescription = "2 Vitae",
-                RequiredCovenantId = ordo.Id,
-                RequirementsJson = """[{"type":"InternalVitae","value":2,"isConsumed":true}]""",
-                Prerequisites = "Member of the Ordo Dracul.",
-                Effect = "Produces draconic flame; combat and duration resolved at the table.",
-            });
-        }
-
         await context.SaveChangesAsync();
         await EnsureMissingSorceryRiteCatalogEntriesAsync(context, logger);
         await EnsureSorceryRiteCostsCorrectAsync(context);
+        await ClearNecromancyRequiredClanGateAsync(context);
+        await EnsureSorceryRiteCatalogAlignmentFromSeedAsync(context, logger);
+    }
+
+    /// <summary>
+    /// Kindred Necromancy is not clan-restricted in V:tR 2e; clears legacy Mekhet-only gates from seed rows.
+    /// </summary>
+    private static async Task ClearNecromancyRequiredClanGateAsync(ApplicationDbContext context)
+    {
+        List<SorceryRiteDefinition> gated = await context.SorceryRiteDefinitions
+            .Where(r => r.SorceryType == Domain.Enums.SorceryType.Necromancy && r.RequiredClanId != null)
+            .ToListAsync();
+
+        if (gated.Count == 0)
+        {
+            return;
+        }
+
+        foreach (SorceryRiteDefinition r in gated)
+        {
+            r.RequiredClanId = null;
+        }
+
+        await context.SaveChangesAsync();
     }
 
     /// <summary>
@@ -560,7 +571,7 @@ public static class DbInitializer
             .ToListAsync();
         foreach (SorceryRiteDefinition r in thebanRites)
         {
-            r.RequirementsJson = """[{"type":"Willpower","value":1,"isConsumed":true},{"type":"PhysicalSacrament","value":1,"isConsumed":true}]""";
+            r.RequirementsJson = BuildThebanRequirementsJson(r.Prerequisites);
             r.ActivationCostDescription = "1 Willpower + Sacrament";
         }
 
@@ -593,7 +604,6 @@ public static class DbInitializer
         CovenantDefinition? lancea = covenants.FirstOrDefault(c => c.Name == "The Lancea et Sanctum");
         Discipline? cruacDisc = disciplines.FirstOrDefault(d => d.Name == "Crúac");
         Discipline? thebanDisc = disciplines.FirstOrDefault(d => d.Name == "Theban Sorcery");
-        Clan? mekhet = await context.Clans.AsNoTracking().FirstOrDefaultAsync(c => c.Name == "Mekhet");
         Discipline? necromancy = disciplines.FirstOrDefault(d => d.Name == "Necromancy");
 
         if (crone == null || lancea == null || cruacDisc == null || thebanDisc == null)
@@ -622,15 +632,13 @@ public static class DbInitializer
                     toAdd.Add(BuildSorceryRiteFromCatalogEntry(entry, lancea.Id, requiredClanId: null, thebanDisc.Id));
                     break;
                 case Domain.Enums.SorceryType.Necromancy:
-                    if (mekhet == null || necromancy == null)
+                    if (necromancy == null)
                     {
                         continue;
                     }
 
-                    toAdd.Add(BuildSorceryRiteFromCatalogEntry(entry, requiredCovenantId: null, mekhet.Id, necromancy.Id));
+                    toAdd.Add(BuildSorceryRiteFromCatalogEntry(entry, requiredCovenantId: null, requiredClanId: null, necromancy.Id));
                     break;
-                default:
-                    continue;
             }
 
             existing.Add(entry.Name);
@@ -650,7 +658,7 @@ public static class DbInitializer
         int disciplineId)
     {
         string? poolJson = BuildSorceryPoolJson(disciplineId);
-        (string costDesc, string reqJson) = BuildSorceryCostForType(entry.SorceryType, entry.Rating);
+        (string costDesc, string reqJson) = BuildSorceryCostForType(entry.SorceryType, entry.Rating, entry.Prerequisites);
         return new SorceryRiteDefinition
         {
             Name = entry.Name,
@@ -658,6 +666,7 @@ public static class DbInitializer
             Level = entry.Rating,
             SorceryType = entry.SorceryType,
             XpCost = entry.Rating,
+            TargetSuccesses = entry.TargetSuccesses,
             PoolDefinitionJson = poolJson,
             ActivationCostDescription = costDesc,
             RequiredCovenantId = requiredCovenantId,
@@ -665,7 +674,63 @@ public static class DbInitializer
             RequirementsJson = reqJson,
             Prerequisites = entry.Prerequisites,
             Effect = entry.Effect,
+            RequiresElder = entry.RequiresElder,
         };
+    }
+
+    /// <summary>
+    /// Aligns level, XP cost, target successes, and elder flag with the canonical seed catalog (name + tradition match).
+    /// </summary>
+    private static async Task EnsureSorceryRiteCatalogAlignmentFromSeedAsync(ApplicationDbContext context, ILogger logger)
+    {
+        IReadOnlyList<SorceryRiteCatalogEntry> catalog = SorceryRiteSeedData.LoadCatalogEntries(logger);
+        var byKey = catalog.ToDictionary(
+            e => (e.Name, e.SorceryType),
+            e => e,
+            comparer: new SorceryCatalogKeyComparer());
+
+        List<SorceryRiteDefinition> rows = await context.SorceryRiteDefinitions.ToListAsync();
+        int changed = 0;
+        foreach (SorceryRiteDefinition row in rows)
+        {
+            if (!byKey.TryGetValue((row.Name, row.SorceryType), out SorceryRiteCatalogEntry? entry))
+            {
+                if (row.TargetSuccesses < 1)
+                {
+                    row.TargetSuccesses = SorceryRiteSeedData.DefaultTargetSuccessesForRating(row.Level);
+                    changed++;
+                }
+
+                continue;
+            }
+
+            if (row.TargetSuccesses != entry.TargetSuccesses)
+            {
+                row.TargetSuccesses = entry.TargetSuccesses;
+                changed++;
+            }
+
+            if (row.Level != entry.Rating || row.XpCost != entry.Rating)
+            {
+                row.Level = entry.Rating;
+                row.XpCost = entry.Rating;
+                changed++;
+            }
+
+            if (row.RequiresElder != entry.RequiresElder)
+            {
+                row.RequiresElder = entry.RequiresElder;
+                changed++;
+            }
+        }
+
+        if (changed > 0)
+        {
+            await context.SaveChangesAsync();
+            logger.LogInformation(
+                "Updated {Changed} sorcery rite field(s) from canonical seed catalog.",
+                changed);
+        }
     }
 
     private static async Task EnsureDisciplineExistsAsync(ApplicationDbContext context, string name, string description)

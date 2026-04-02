@@ -8,16 +8,10 @@ namespace RequiemNexus.Application.Contracts;
 public interface ISorceryActivationService
 {
     /// <summary>
-    /// Resolves the activation pool for a learned rite and returns the dice count.
-    /// Does not deduct Vitae or Willpower.
-    /// </summary>
-    Task<int> ResolveRiteActivationPoolAsync(int characterId, int characterRiteId, string userId);
-
-    /// <summary>
     /// Validates acknowledgments, applies internal activation costs (Vitae, Willpower, stains),
-    /// then returns the dice pool size. Costs are not refunded if the roll fails.
+    /// then returns the dice pool and extended-action metadata. Costs are not refunded if the roll fails.
     /// </summary>
-    Task<int> BeginRiteActivationAsync(
+    Task<BeginRiteActivationResult> BeginRiteActivationAsync(
         int characterId,
         int characterRiteId,
         string userId,

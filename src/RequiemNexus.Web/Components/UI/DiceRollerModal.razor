@@ -1,6 +1,7 @@
 @using RequiemNexus.Domain.Services
 @using RequiemNexus.Domain.Contracts
 @using RequiemNexus.Domain.Models
+@using RequiemNexus.Domain.Enums
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
 @using RequiemNexus.Application.Contracts
@@ -10,6 +11,7 @@
 @inject SessionClientService SessionClient
 @inject IPublicRollService PublicRollService
 @inject ITraitResolver TraitResolver
+@inject IRiteRollOutcomeService RiteRollOutcomeService
 @inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
 @implements IDisposable
@@ -29,11 +31,53 @@
             }
 
             <div class="modal-header">
-                <h3 id="dice-roller-title">Roll: @TraitName</h3>
+                <h3 id="dice-roller-title">@(IsRiteExtendedMode ? $"Rite: {TraitName}" : $"Roll: {TraitName}")</h3>
                 <button class="close-btn" @onclick="Close">&times;</button>
             </div>
             
             <div class="modal-body">
+                @if (IsRiteExtendedMode)
+                {
+                    <div class="rite-extended-summary" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(139, 0, 0, 0.15); border: 1px solid rgba(255, 200, 200, 0.25); border-radius: 6px;">
+                        <p style="margin: 0 0 0.35rem 0;"><strong>Extended ritual</strong> — V:tR 2e p. 152</p>
+                        <ul style="margin: 0; padding-left: 1.2rem;">
+                            <li>Successes accumulated: <strong>@_riteAccumulatedSuccesses</strong> / @RiteExtendedTargetSuccesses</li>
+                            <li>Rolls remaining: <strong>@RiteRollsRemaining</strong> (max @RiteExtendedMaxRolls unmodified pool)</li>
+                            <li>Interval per roll: <strong>@(RiteExtendedMinutesPerRoll ?? 30)</strong> min</li>
+                        </ul>
+                        @if (RiteExtendedMaxRolls is 0)
+                        {
+                            <p class="chance-die-hint" style="margin-top: 0.5rem;">No unmodified pool — this rite cannot be rolled as an extended action.</p>
+                        }
+                        @if (ShowRiteCompletedBanner)
+                        {
+                            <p style="margin: 0.5rem 0 0 0; color: var(--gold, #c9a227);"><strong>Rite completed</strong> — apply the effect at the table.</p>
+                            int basePotency = RitePotencyRules.ComputeBasePotency(_riteAccumulatedSuccesses, RiteExtendedTargetSuccesses!.Value);
+                            int ritualDots = RiteExtendedRitualDisciplineDots ?? 0;
+                            bool canAddDots = _riteHadExceptionalSuccess && ritualDots > 0;
+                            int totalPotency = basePotency + (canAddDots && _addRiteDisciplineDotsToPotency ? ritualDots : 0);
+                            <div class="rite-potency-panel" style="margin-top: 0.65rem; padding: 0.6rem 0.75rem; background: rgba(0, 40, 60, 0.35); border: 1px solid rgba(180, 220, 255, 0.2); border-radius: 6px;">
+                                <p style="margin: 0 0 0.35rem 0;"><strong>Potency (informational)</strong> — V:tR 2e p. 152</p>
+                                <p style="margin: 0; font-size: 0.92em;">Base potency after meeting target: <strong>@basePotency</strong>. Many rite effects reference Potency for damage, duration, or scale; this value is for the table — it is not auto-applied by the app.</p>
+                                @if (canAddDots)
+                                {
+                                    <label class="option-label" style="display: block; margin-top: 0.55rem;">
+                                        <input type="checkbox" @bind="_addRiteDisciplineDotsToPotency" />
+                                        Exceptional success during this ritual: add <strong>@ritualDots</strong> @RiteTraditionDotsLabel Discipline dots to Potency (optional).
+                                    </label>
+                                }
+                                @if (basePotency > 0)
+                                {
+                                    <p style="margin: 0.45rem 0 0 0;"><strong>Total Potency:</strong> @totalPotency</p>
+                                }
+                            </div>
+                        }
+                        else if (ShowRiteFailedNoRollsBanner)
+                        {
+                            <p style="margin: 0.5rem 0 0 0; color: #f88;"><strong>Ritual failed</strong> — no rolls remain; costs were already spent when you began.</p>
+                        }
+                    </div>
+                }
                 <div class="roller-form-group">
                     <label>@(FixedDicePool.HasValue ? "Pool (with modifiers)" : $"Base trait ({TraitName})")</label>
                     <input type="number" value="@(FixedDicePool ?? BaseDice)" readonly class="roller-input" style="background: rgba(0,0,0,0.5);" />
@@ -63,10 +107,13 @@
                     </div>
                 }
 
-                <div class="roller-form-group">
-                    <label>Modifiers (Bonus / Penalty)</label>
-                    <input type="number" @bind="_modifier" class="roller-input" />
-                </div>
+                @if (!IsRiteExtendedMode)
+                {
+                    <div class="roller-form-group">
+                        <label>Modifiers (Bonus / Penalty)</label>
+                        <input type="number" @bind="_modifier" class="roller-input" />
+                    </div>
+                }
                 
                 <div class="roller-form-group">
                     <label>Total Pool</label>
@@ -85,8 +132,18 @@
                     <label class="option-label"><input type="checkbox" @bind="_isRote" disabled="@IsChanceDiePool" /> Rote Action</label>
                 </div>
                 
+                @if (IsRiteExtendedMode && _riteFailureNeedsChoice)
+                {
+                    <div class="roller-form-group" style="border: 1px solid rgba(255,200,200,0.3); padding: 0.75rem; border-radius: 6px;">
+                        <p style="margin: 0 0 0.5rem 0;">This roll scored no successes. Continue to take the Stumbled Condition and keep casting, or abandon (costs stay spent).</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="button" class="btn-rn-primary" @onclick="ContinueAfterRiteFailureAsync">Continue ritual</button>
+                            <button type="button" class="btn-rn-ghost" @onclick="AbandonRite">Abandon (costs already spent)</button>
+                        </div>
+                    </div>
+                }
                 <div class="roller-actions">
-                    <button class="btn-rn-primary roll-action-btn" @onclick="RollDice">Roll the Dice</button>
+                    <button class="btn-rn-primary roll-action-btn" @onclick="RollDice" disabled="@RiteRollButtonDisabled">Roll the Dice</button>
                     @if (_showTools)
                     {
                         <div class="debug-tools">
@@ -171,7 +228,24 @@
     /// <summary>When set, pool size is fixed (e.g. devotion) and associated trait UI is hidden.</summary>
     [Parameter] public int? FixedDicePool { get; set; }
 
+    /// <summary>Optional blood rite extended-action cap (unmodified pool). Requires <see cref="FixedDicePool"/> and <see cref="RiteExtendedTargetSuccesses"/>.</summary>
+    [Parameter] public int? RiteExtendedMaxRolls { get; set; }
+
+    /// <summary>Successes required to complete the rite (shown in the roller).</summary>
+    [Parameter] public int? RiteExtendedTargetSuccesses { get; set; }
+
+    /// <summary>Minutes per extended roll (30 or 15 per V:tR 2e).</summary>
+    [Parameter] public int? RiteExtendedMinutesPerRoll { get; set; }
+
+    /// <summary>Tradition for ritual outcome Conditions (Crúac / Theban / Necromancy). Set with extended rite parameters.</summary>
+    [Parameter] public SorceryType? RiteOutcomeTradition { get; set; }
+
+    /// <summary>Ritual Discipline dots (from begin activation) for optional Potency on exceptional success.</summary>
+    [Parameter] public int? RiteExtendedRitualDisciplineDots { get; set; }
+
     [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private const string RiteExtendedDescriptionMarker = "extended rite";
 
     private string _associatedTraitName { get; set; } = string.Empty;
     private int _modifier { get; set; } = 0;
@@ -191,6 +265,23 @@
     private bool _copying = false;
     private string? _shareSlug;
 
+    private int _riteRollsUsed;
+    private int _riteAccumulatedSuccesses;
+    private bool _riteFailureNeedsChoice;
+    private bool _riteRollInFlight;
+    private bool _riteHadExceptionalSuccess;
+    private bool _addRiteDisciplineDotsToPotency;
+    private bool _rollerWasVisible;
+
+    private string RiteTraditionDotsLabel =>
+        RiteOutcomeTradition switch
+        {
+            SorceryType.Cruac => "Crúac",
+            SorceryType.Theban => "Theban Sorcery",
+            SorceryType.Necromancy => "Necromancy",
+            _ => "ritual",
+        };
+
     private readonly string[] _attributes = RequiemNexus.Domain.Services.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
     private readonly string[] _skills = RequiemNexus.Domain.Services.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();
 
@@ -203,6 +294,17 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+        if (IsVisible && !_rollerWasVisible && IsRiteExtendedMode)
+        {
+            _riteRollsUsed = 0;
+            _riteAccumulatedSuccesses = 0;
+            _riteFailureNeedsChoice = false;
+            _riteRollInFlight = false;
+            _riteHadExceptionalSuccess = false;
+            _addRiteDisciplineDotsToPotency = false;
+        }
+
+        _rollerWasVisible = IsVisible;
         await RefreshResolverTotalAsync();
     }
 
@@ -242,10 +344,44 @@
 
     private int? _resolverTotal;
 
+    private bool IsRiteExtendedMode =>
+        FixedDicePool.HasValue
+        && RiteExtendedMaxRolls.HasValue
+        && RiteExtendedTargetSuccesses.HasValue;
+
+    private int RiteRollsRemaining =>
+        !RiteExtendedMaxRolls.HasValue ? 0 : Math.Max(0, RiteExtendedMaxRolls.Value - _riteRollsUsed);
+
+    private bool ShowRiteCompletedBanner =>
+        IsRiteExtendedMode
+        && _riteAccumulatedSuccesses >= RiteExtendedTargetSuccesses!.Value;
+
+    private bool ShowRiteFailedNoRollsBanner =>
+        IsRiteExtendedMode
+        && _lastResultDto != null
+        && !_isRolling
+        && _riteRollsUsed >= RiteExtendedMaxRolls!.Value
+        && _riteAccumulatedSuccesses < RiteExtendedTargetSuccesses!.Value;
+
+    private bool RiteRollBlocked =>
+        IsRiteExtendedMode
+        && (
+            _riteFailureNeedsChoice
+            || _riteAccumulatedSuccesses >= RiteExtendedTargetSuccesses!.Value
+            || _riteRollsUsed >= RiteExtendedMaxRolls!.Value
+            || RiteExtendedMaxRolls!.Value <= 0);
+
+    private bool RiteRollButtonDisabled => _isRolling || RiteRollBlocked;
+
     private int TotalPool
     {
         get
         {
+            if (IsRiteExtendedMode)
+            {
+                return Math.Max(0, FixedDicePool ?? 0);
+            }
+
             int basePart = FixedDicePool ?? _resolverTotal ?? (BaseDice + AssociatedTraitDice);
             return Math.Max(0, basePart + _modifier);
         }
@@ -264,7 +400,44 @@
         _associatedTraitName = string.Empty;
         _modifier = 0;
         _resolverTotal = null;
+        _riteRollsUsed = 0;
+        _riteAccumulatedSuccesses = 0;
+        _riteFailureNeedsChoice = false;
+        _riteRollInFlight = false;
+        _riteHadExceptionalSuccess = false;
+        _addRiteDisciplineDotsToPotency = false;
         await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private async Task ContinueAfterRiteFailureAsync()
+    {
+        if (Character != null && RiteOutcomeTradition.HasValue)
+        {
+            string? userId = await TryGetCurrentUserIdAsync();
+            if (userId != null)
+            {
+                try
+                {
+                    await RiteRollOutcomeService.ApplyRiteRollOutcomeAsync(
+                        Character.Id,
+                        userId,
+                        RiteOutcomeTradition.Value,
+                        RiteRollOutcomeTrigger.ContinueAfterZeroSuccesses);
+                }
+                catch (Exception ex)
+                {
+                    ToastService.Show("Rite", ex.Message, ToastType.Error);
+                    return;
+                }
+            }
+        }
+
+        _riteFailureNeedsChoice = false;
+    }
+
+    private async Task AbandonRite()
+    {
+        await Close();
     }
 
     private string GetShareUrl() => $"{NavigationManager.BaseUri}rolls/{_shareSlug}";
@@ -317,18 +490,39 @@
 
     private async Task RollDice()
     {
+        if (RiteRollButtonDisabled)
+        {
+            return;
+        }
+
+        if (IsRiteExtendedMode && RiteExtendedMaxRolls.GetValueOrDefault() <= 0)
+        {
+            ToastService.Show("Rite", "This rite has no unmodified pool for extended rolls.", ToastType.Warning);
+            return;
+        }
+
         _isRolling = true;
         _showBurst = false;
         _shakeClass = string.Empty;
         _shareSlug = null;
 
-        var description = string.IsNullOrEmpty(_associatedTraitName)
-            ? TraitName
-            : $"{TraitName} + {_associatedTraitName}";
-
-        if (_modifier != 0)
+        string description;
+        if (IsRiteExtendedMode)
         {
-            description += $" ({(_modifier > 0 ? "+" : "")}{_modifier})";
+            int nextRoll = _riteRollsUsed + 1;
+            description = $"{TraitName} — {RiteExtendedDescriptionMarker} (roll {nextRoll} of {RiteExtendedMaxRolls!.Value})";
+            _riteRollInFlight = true;
+        }
+        else
+        {
+            description = string.IsNullOrEmpty(_associatedTraitName)
+                ? TraitName
+                : $"{TraitName} + {_associatedTraitName}";
+
+            if (_modifier != 0)
+            {
+                description += $" ({(_modifier > 0 ? "+" : "")}{_modifier})";
+            }
         }
 
         bool chanceDie = IsChanceDiePool;
@@ -337,51 +531,65 @@
         bool eightAgain = chanceDie ? false : _eightAgain;
         bool isRote = chanceDie ? false : _isRote;
 
-        if (SessionClient.IsConnected && Character?.CampaignId != null)
+        try
         {
-            // Server-Side Roll (The Masquerade Audit - Step 4)
-            await SessionClient.RollDiceAsync(
-                Character.CampaignId.Value,
-                Character.Id,
-                TotalPool,
-                description,
-                tenAgain,
-                nineAgain,
-                eightAgain,
-                isRote);
-                
-            // The result will come back via HandleDiceRollReceived
-        }
-        else
-        {
-            // Fallback: Local Client-Side Roll (Solo/Offline)
-            var result = DiceService.Roll(TotalPool, tenAgain, nineAgain, eightAgain, isRote, _seed);
-            
-            var userName = Character?.Name ?? "Player";
-            var rollDto = new DiceRollResultDto(
-                userName,
-                "offline",
-                Character?.Id,
-                description,
-                result.Successes,
-                result.IsExceptionalSuccess,
-                result.IsDramaticFailure,
-                result.DiceRolled,
-                DateTimeOffset.UtcNow,
-                result.IsChanceDie);
+            if (SessionClient.IsConnected && Character?.CampaignId != null)
+            {
+                await SessionClient.RollDiceAsync(
+                    Character.CampaignId.Value,
+                    Character.Id,
+                    TotalPool,
+                    description,
+                    tenAgain,
+                    nineAgain,
+                    eightAgain,
+                    isRote);
+            }
+            else
+            {
+                var result = DiceService.Roll(TotalPool, tenAgain, nineAgain, eightAgain, isRote, _seed);
 
-            await ProcessRollResult(rollDto);
+                var userName = Character?.Name ?? "Player";
+                var rollDto = new DiceRollResultDto(
+                    userName,
+                    "offline",
+                    Character?.Id,
+                    description,
+                    result.Successes,
+                    result.IsExceptionalSuccess,
+                    result.IsDramaticFailure,
+                    result.DiceRolled,
+                    DateTimeOffset.UtcNow,
+                    result.IsChanceDie);
+
+                await ProcessRollResult(rollDto);
+            }
+        }
+        catch (Exception)
+        {
+            _isRolling = false;
+            _riteRollInFlight = false;
+            throw;
         }
     }
 
     private void HandleDiceRollReceived(DiceRollResultDto roll)
     {
-        // Only react to our own roll to avoid modal popping for others (though only the roller has the modal open)
-        // If the modal is open, we assume we might be waiting for this result.
-        if (!IsVisible) return;
+        if (!IsVisible)
+        {
+            return;
+        }
 
-        // Verify it was us (the character ID should match if provided)
-        if (Character != null && roll.CharacterId.HasValue && roll.CharacterId != Character.Id) return;
+        if (Character != null && roll.CharacterId.HasValue && roll.CharacterId != Character.Id)
+        {
+            return;
+        }
+
+        if (IsRiteExtendedMode && _riteRollInFlight
+            && !roll.PoolDescription.Contains(RiteExtendedDescriptionMarker, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
 
         _ = InvokeAsync(() => ProcessRollResult(roll));
     }
@@ -406,7 +614,40 @@
         {
             _showBurst = true;
         }
-        
+
+        bool riteRollCounted = ApplyRiteExtendedRollAccounting(result);
+
+        if (riteRollCounted && Character != null && RiteOutcomeTradition.HasValue)
+        {
+            string? userId = await TryGetCurrentUserIdAsync();
+            if (userId != null)
+            {
+                try
+                {
+                    if (result.IsDramaticFailure)
+                    {
+                        await RiteRollOutcomeService.ApplyRiteRollOutcomeAsync(
+                            Character.Id,
+                            userId,
+                            RiteOutcomeTradition.Value,
+                            RiteRollOutcomeTrigger.DramaticFailure);
+                    }
+                    else if (result.IsExceptionalSuccess)
+                    {
+                        await RiteRollOutcomeService.ApplyRiteRollOutcomeAsync(
+                            Character.Id,
+                            userId,
+                            RiteOutcomeTradition.Value,
+                            RiteRollOutcomeTrigger.ExceptionalSuccess);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ToastService.Show("Rite", ex.Message, ToastType.Error);
+                }
+            }
+        }
+
         StateHasChanged();
         
         if (_showBurst)
@@ -415,6 +656,43 @@
             _showBurst = false;
             StateHasChanged();
         }
+    }
+
+    private async Task<string?> TryGetCurrentUserIdAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        return authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private bool ApplyRiteExtendedRollAccounting(DiceRollResultDto rollResult)
+    {
+        if (!IsRiteExtendedMode || !_riteRollInFlight)
+        {
+            return false;
+        }
+
+        if (!rollResult.PoolDescription.Contains(RiteExtendedDescriptionMarker, StringComparison.OrdinalIgnoreCase))
+        {
+            _riteRollInFlight = false;
+            return false;
+        }
+
+        int max = RiteExtendedMaxRolls!.Value;
+        int target = RiteExtendedTargetSuccesses!.Value;
+
+        _riteRollsUsed++;
+        _riteAccumulatedSuccesses += rollResult.Successes;
+        _riteRollInFlight = false;
+
+        if (rollResult.IsExceptionalSuccess)
+        {
+            _riteHadExceptionalSuccess = true;
+        }
+
+        _riteFailureNeedsChoice = rollResult.Successes == 0
+            && _riteRollsUsed < max
+            && _riteAccumulatedSuccesses < target;
+        return true;
     }
 
     public void Dispose()

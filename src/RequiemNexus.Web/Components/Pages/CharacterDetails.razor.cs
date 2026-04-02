@@ -71,6 +71,11 @@ public partial class CharacterDetails : IAsyncDisposable
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
     private int? _rollerFixedDicePool;
+    private int? _rollerRiteMaxRolls;
+    private int? _rollerRiteTargetSuccesses;
+    private int? _rollerRiteMinutesPerRoll;
+    private int? _rollerRiteRitualDisciplineDots;
+    private SorceryType? _rollerRiteSorceryType;
     private bool _isApplyBloodlineModalOpen = false;
     private bool _removingBloodline = false;
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
@@ -80,6 +85,10 @@ public partial class CharacterDetails : IAsyncDisposable
     private List<SorceryRiteSummaryDto> _eligibleRites = [];
     private bool _isChosenMysteryModalOpen = false;
     private bool _isLearnCoilModalOpen = false;
+    private bool _isRitePrepModalOpen;
+    private CharacterRite? _pendingRiteForPrep;
+    private IReadOnlyList<RiteRequirement> _pendingRiteRequirements = [];
+    private IReadOnlyList<CampaignKindredTargetDto> _riteKinTargets = [];
     private List<ScaleSummaryDto> _eligibleScales = [];
     private List<CoilSummaryDto> _eligibleCoils = [];
     private bool _requestingLeave = false;
@@ -107,13 +116,12 @@ public partial class CharacterDetails : IAsyncDisposable
         Converters = { new JsonStringEnumConverter() },
     };
 
-    /// <summary>True when the character may use the Blood Sorcery sheet section (Crúac/Theban covenant, Ordo rituals, or Necromancy dots).</summary>
+    /// <summary>True when the character may use the Blood Sorcery sheet section (Crúac/Theban covenant or Necromancy dots).</summary>
     private bool ShowBloodSorcerySection =>
         _character != null
         && _character.CovenantJoinStatus == null
         && (
             (_character.Covenant?.SupportsBloodSorcery == true)
-            || (_character.Covenant?.SupportsOrdoRituals == true)
             || _character.GetDisciplineRating("Necromancy") > 0);
 
     private bool IsOrdoDraculMember =>
@@ -607,6 +615,7 @@ public partial class CharacterDetails : IAsyncDisposable
             _rollerTraitName = power.Name;
             _rollerBaseDice = dice;
             _rollerFixedDicePool = null;
+            ClearRiteExtendedRollerContext();
             _isRollerOpen = true;
         }
         catch (Exception ex)
@@ -666,6 +675,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private void OpenRoller(string traitName)
     {
         _rollerFixedDicePool = null;
+        ClearRiteExtendedRollerContext();
         _rollerTraitName = traitName;
         _rollerBaseDice = GetTraitValue(traitName);
         _isRollerOpen = true;
@@ -829,6 +839,7 @@ public partial class CharacterDetails : IAsyncDisposable
         _rollerTraitName = $"Repair {ca.Asset?.Name} (Wits + Crafts)";
         _rollerBaseDice = _character.GetAttributeRating(AttributeId.Wits) + _character.GetSkillRating(SkillId.Crafts);
         _rollerFixedDicePool = null;
+        ClearRiteExtendedRollerContext();
         _isRollerOpen = true;
     }
 
@@ -854,6 +865,7 @@ public partial class CharacterDetails : IAsyncDisposable
         }
 
         _rollerFixedDicePool = null;
+        ClearRiteExtendedRollerContext();
         _rollerTraitName = cd.DevotionDefinition.Name;
         try
         {
@@ -1292,9 +1304,18 @@ public partial class CharacterDetails : IAsyncDisposable
             Domain.Enums.SorceryType.Cruac => "Crúac",
             Domain.Enums.SorceryType.Theban => "Theban",
             Domain.Enums.SorceryType.Necromancy => "Necromancy",
-            Domain.Enums.SorceryType.OrdoDraculRitual => "Ordo ritual",
             _ => t.ToString(),
         };
+
+    private void HandleRitePrepModalOpenChanged(bool open)
+    {
+        _isRitePrepModalOpen = open;
+        if (!open)
+        {
+            _pendingRiteForPrep = null;
+            _pendingRiteRequirements = [];
+        }
+    }
 
     private async Task OpenRiteRoller(CharacterRite cr)
     {
@@ -1305,39 +1326,101 @@ public partial class CharacterDetails : IAsyncDisposable
 
         try
         {
-            var def = cr.SorceryRiteDefinition;
+            _pendingRiteForPrep = cr;
             Result<IReadOnlyList<RiteRequirement>> parsed =
-                RiteRequirementValidator.ParseRequirements(def?.RequirementsJson);
-            IReadOnlyList<RiteRequirement> reqs = parsed.IsSuccess ? parsed.Value! : [];
-
-            var request = new BeginRiteActivationRequest();
-            if (RiteRequirementValidator.RequiresExternalAcknowledgment(reqs))
-            {
-                bool ok = await JS.InvokeAsync<bool>(
-                    "confirm",
-                    "This rite requires narrative sacrifices (focus, sacrament, offering, etc.) you must have completed at the table. Confirm to apply Vitae/Willpower/stain costs and roll.");
-                if (!ok)
-                {
-                    return;
-                }
-
-                request = new BeginRiteActivationRequest(
-                    AcknowledgePhysicalSacrament: true,
-                    AcknowledgeHeart: true,
-                    AcknowledgeMaterialOffering: true,
-                    AcknowledgeMaterialFocus: true);
-            }
-
-            int dice = await SorceryActivationService.BeginRiteActivationAsync(_character.Id, cr.Id, _currentUserId, request);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
-            _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
-            _rollerBaseDice = dice;
-            _isRollerOpen = true;
+                RiteRequirementValidator.ParseRequirements(cr.SorceryRiteDefinition?.RequirementsJson);
+            _pendingRiteRequirements = parsed.IsSuccess ? parsed.Value! : [];
+            _riteKinTargets = await CharacterService.GetCampaignKindredTargetsForRitesAsync(_character.Id, _currentUserId);
+            _isRitePrepModalOpen = true;
         }
         catch (Exception ex)
         {
             ToastService.Show("Rite activation", ex.Message, ToastType.Error);
         }
+    }
+
+    private async Task HandleRitePrepContinueAsync(RiteActivationPrepResult prep)
+    {
+        CharacterRite? cr = _pendingRiteForPrep;
+        if (cr == null || _character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await ExecuteRiteActivationRollAsync(cr, prep);
+        }
+        catch (Exception ex)
+        {
+            ToastService.Show("Rite activation", ex.Message, ToastType.Error);
+        }
+    }
+
+    private async Task ExecuteRiteActivationRollAsync(CharacterRite cr, RiteActivationPrepResult prep)
+    {
+        if (_character == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        var def = cr.SorceryRiteDefinition;
+
+        var request = new BeginRiteActivationRequest(
+            AcknowledgePhysicalSacrament: prep.AcknowledgePhysicalSacrament,
+            AcknowledgeHeart: prep.AcknowledgeHeart,
+            AcknowledgeMaterialOffering: prep.AcknowledgeMaterialOffering,
+            AcknowledgeMaterialFocus: prep.AcknowledgeMaterialFocus,
+            ExtraVitae: prep.ExtraVitae,
+            TargetCharacterId: prep.TargetCharacterId);
+
+        BeginRiteActivationResult activation = await SorceryActivationService.BeginRiteActivationAsync(
+            _character.Id,
+            cr.Id,
+            _currentUserId,
+            request);
+        _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        if (activation.NecromancyDegenerationCheckRaised && _character != null)
+        {
+            string chronicleNote = _character.CampaignId.HasValue
+                ? "Your Storyteller's Glimpse dashboard has been updated with a pending degeneration alert for this character."
+                : "Join a chronicle so your Storyteller can receive the pending degeneration alert on the Glimpse dashboard.";
+            ToastService.Show(
+                "Necromancy breaking point",
+                "At Humanity 7 or higher, using Kindred Necromancy calls for a degeneration check. " + chronicleNote,
+                ToastType.Info,
+                8000);
+        }
+
+        _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
+        _rollerBaseDice = activation.DicePool;
+        _rollerFixedDicePool = activation.DicePool;
+        _rollerRiteMaxRolls = activation.MaxExtendedRolls;
+        _rollerRiteTargetSuccesses = activation.TargetSuccesses;
+        _rollerRiteMinutesPerRoll = activation.MinutesPerRoll;
+        _rollerRiteRitualDisciplineDots = activation.RitualDisciplineDots;
+        _rollerRiteSorceryType = def?.SorceryType;
+        _isRollerOpen = true;
+    }
+
+    private void ClearRiteExtendedRollerContext()
+    {
+        _rollerRiteMaxRolls = null;
+        _rollerRiteTargetSuccesses = null;
+        _rollerRiteMinutesPerRoll = null;
+        _rollerRiteRitualDisciplineDots = null;
+        _rollerRiteSorceryType = null;
+    }
+
+    private Task OnDiceRollerVisibilityChangedAsync(bool visible)
+    {
+        _isRollerOpen = visible;
+        if (!visible)
+        {
+            ClearRiteExtendedRollerContext();
+        }
+
+        return Task.CompletedTask;
     }
 }
 

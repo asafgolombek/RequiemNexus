@@ -35,4 +35,17 @@ public static class TorporDurationTable
 
         return MinimumDaysById[1];
     }
+
+    /// <summary>
+    /// Blood Potency plus Kindred Necromancy dots for torpor interval lookup, capped at 10 (V:tR 2e + <c>magic_types_and_rules.txt</c>).
+    /// </summary>
+    /// <param name="bloodPotency">Character Blood Potency (1–10).</param>
+    /// <param name="necromancyDots">Dots in the Necromancy discipline.</param>
+    /// <returns>Effective BP in the 1–10 range for <see cref="GetMinimumDays"/>.</returns>
+    public static int GetEffectiveBloodPotencyForTorporDuration(int bloodPotency, int necromancyDots)
+    {
+        int bp = bloodPotency < 1 ? 1 : bloodPotency;
+        int combined = bp + Math.Max(0, necromancyDots);
+        return Math.Min(10, combined);
+    }
 }

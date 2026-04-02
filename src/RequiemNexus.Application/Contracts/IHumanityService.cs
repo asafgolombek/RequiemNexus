@@ -16,6 +16,14 @@ public interface IHumanityService
     int GetEffectiveMaxHumanity(Character character);
 
     /// <summary>
+    /// Clamps <paramref name="character"/>.Humanity to <see cref="GetEffectiveMaxHumanity"/> using Crúac dots from the database
+    /// when Discipline navigations are not loaded (e.g. sheet save). Idempotent when already at or below the cap.
+    /// </summary>
+    /// <param name="character">Tracked character whose Humanity may be reduced.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task EnforceHumanityCapForPersistenceAsync(Character character, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Evaluates whether the character's current stains cross the degeneration threshold
     /// for their Humanity dot. If so, raises a degeneration check domain event.
     /// </summary>

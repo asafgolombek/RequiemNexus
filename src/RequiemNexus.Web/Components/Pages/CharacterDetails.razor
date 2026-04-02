@@ -8,6 +8,7 @@
 @using RequiemNexus.Web.Components.Pages.CharacterSheet
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.DTOs
+@using RequiemNexus.Domain.Enums
 @using RequiemNexus.Domain.Models
 @using RequiemNexus.Domain.Services
 @using RequiemNexus.Application.RealTime
@@ -124,12 +125,13 @@ else
                             <h2>Advantages</h2>
                             <DotScale @bind-Value="_character.BloodPotency" Label="Blood Potency" Max="10"
                                 OnLabelClick="OpenReference" OnRollClick="OpenRoller" />
-                            <DotScale @bind-Value="_character.Humanity" Label="Humanity" Max="10" OnLabelClick="OpenReference"
-                                OnRollClick="OpenRoller" />
                             @{
                                 int crucDots = _character.GetDisciplineRating("Crúac");
                                 int effectiveMaxHumanity = HumanityService.GetEffectiveMaxHumanity(_character);
+                                int humanityDotScaleMax = crucDots > 0 ? effectiveMaxHumanity : 10;
                             }
+                            <DotScale @bind-Value="_character.Humanity" Label="Humanity" Max="@humanityDotScaleMax" OnLabelClick="OpenReference"
+                                OnRollClick="OpenRoller" />
                             @if (crucDots > 0)
                             {
                                 <div class="cruac-humanity-cap @( _character.Humanity >= effectiveMaxHumanity ? "cruac-humanity-cap--warn" : string.Empty)"
@@ -177,7 +179,7 @@ else
                             </ul>
                         </section>
                         <section class="cs-section cs-disciplines">
-                            <h2>Disciplines (clan triple, bloodline fourth, or out-of-clan)</h2>
+                            <h2>Disciplines</h2>
                             <p class="text-muted-rn" style="font-size: 0.85em; margin: -6px 0 10px 0;">XP cost uses in-clan (×4) vs out-of-clan (×5) per affinity below.</p>
                             <ul class="trait-list disciplines-list">
                                 @foreach (var disc in _character.Disciplines)
@@ -379,7 +381,7 @@ else
                         <CharacterSheetWornCard Character="_character" />
                         <CharacterSheetBackpackCard Character="_character" OnManagePack="GoToPackTab" />
 
-                        <!-- BLOOD SORCERY: Cr├║ac/Theban covenants, Ordo rituals, or characters with Necromancy -->
+                        <!-- BLOOD SORCERY: Crúac/Theban covenants or characters with Necromancy -->
                         @if (ShowBloodSorcerySection)
                         {
                             <section class="cs-section cs-blood-sorcery">
@@ -397,7 +399,7 @@ else
                                             {
                                                 <li class="trait-item">
                                                     <span>@cr.SorceryRiteDefinition.Name</span>
-                                                    <span class="tradition-label">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType))</span>
+                                                    <span class="tradition-label">Lv.@cr.SorceryRiteDefinition.Level (@TraditionLabel(cr.SorceryRiteDefinition.SorceryType)), @cr.SorceryRiteDefinition.TargetSuccesses successes</span>
                                                     @if (!string.IsNullOrWhiteSpace(cr.SorceryRiteDefinition.ActivationCostDescription))
                                                     {
                                                         <span class="activation-cost">@cr.SorceryRiteDefinition.ActivationCostDescription</span>
@@ -422,7 +424,7 @@ else
                                 }
                                 else
                                 {
-                                    <p class="unaligned-note">No rites yet. Purchase Cr├║ac, Theban Sorcery, Necromancy, or Ordo Sorcery dots via Advancement where appropriate, then request to learn rites.</p>
+                                    <p class="unaligned-note">No rites yet. Purchase Crúac, Theban Sorcery, or Necromancy dots via Advancement where appropriate, then request to learn rites.</p>
                                     <button class="btn-rn-primary text-small" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
                                 }
                             </section>
@@ -534,7 +536,24 @@ else
         ResolvedPool="_disciplineActivatePool"
         OnConfirmed="HandleDisciplineActivateConfirmedAsync" />
 
-    <DiceRollerModal @bind-IsVisible="_isRollerOpen" TraitName="@_rollerTraitName" BaseDice="@_rollerBaseDice" Character="_character" FixedDicePool="_rollerFixedDicePool" />
+    <RiteActivationPrepModal IsOpen="_isRitePrepModalOpen"
+                             IsOpenChanged="HandleRitePrepModalOpenChanged"
+                             RiteName="@(_pendingRiteForPrep?.SorceryRiteDefinition?.Name ?? "Rite")"
+                             Tradition="@(_pendingRiteForPrep?.SorceryRiteDefinition?.SorceryType ?? SorceryType.Cruac)"
+                             Requirements="_pendingRiteRequirements"
+                             KinTargets="_riteKinTargets"
+                             OnContinue="HandleRitePrepContinueAsync" />
+    <DiceRollerModal IsVisible="_isRollerOpen"
+                     IsVisibleChanged="OnDiceRollerVisibilityChangedAsync"
+                     TraitName="@_rollerTraitName"
+                     BaseDice="@_rollerBaseDice"
+                     Character="_character"
+                     FixedDicePool="_rollerFixedDicePool"
+                     RiteExtendedMaxRolls="_rollerRiteMaxRolls"
+                     RiteExtendedTargetSuccesses="_rollerRiteTargetSuccesses"
+                     RiteExtendedMinutesPerRoll="_rollerRiteMinutesPerRoll"
+                     RiteExtendedRitualDisciplineDots="_rollerRiteRitualDisciplineDots"
+                     RiteOutcomeTradition="_rollerRiteSorceryType" />
 
     @if (_isForgeModalOpen)
     {

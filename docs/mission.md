@@ -36,10 +36,10 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 17 | The Fog of Eternity — Humanity & Condition Wiring | ✅ Complete |
 | 18 | The Wider Web — Edge Systems & Content | ✅ Complete |
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ✅ Complete |
-| 19.5 | The Rite Perfected — Blood Sorcery Rules Completion | 🔄 Active |
-| 20 | The Global Embrace | ⬜ Planned |
+| 19.5 | The Rite Perfected — Blood Sorcery Rules Completion | ✅ Complete |
+| 20 | The Global Embrace | 🔄 Active |
 
-> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 18 — The Wider Web is complete ✅** — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), `Disciplines.json` pools, Vitae/Willpower activation choice — record: **Phase 18** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 19.5 — The Rite Perfected is active 🔄** — blood sorcery rules completion: extended action system, Potency, ritual Conditions, seed rating corrections, BOM fix, Theban sacrament enforcement — see `docs/plan-blood-sorcery-audit.md`. **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 18 — The Wider Web is complete ✅** — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), `Disciplines.json` pools, Vitae/Willpower activation choice — record: **Phase 18** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19.5 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 19.5 — The Rite Perfected is complete ✅** — blood sorcery rules completion: extended action system, Potency (informational), ritual Conditions, seed rating corrections, BOM fix, Theban sacrament enforcement — record: **Phase 19.5** section below and **Phase 19.5** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -57,7 +57,7 @@ Phase 19  (Disciplines — model + seed) ✅
 
 Phase 18 (Edge Systems) ✅ ← fully independent; content passes any time
 
-Phase 19.5 (Blood Sorcery Rules Completion) 🔄
+Phase 19.5 (Blood Sorcery Rules Completion) ✅
     ├── prereq: Phase 9/9.5/9.6 (sorcery engine) ✅
     ├── prereq: Phase 17 (condition system) ✅
     └── prereq: Phase 19 (Crúac Humanity cap + Necromancy gate model) ✅
@@ -66,7 +66,7 @@ Phase 19.5 (Blood Sorcery Rules Completion) 🔄
 **Recommended parallel tracks:**
 - Track A: ~~14 → 15 → Phase 17~~ ✅ — Phase 17 section below
 - Track B: ~~Phase 19~~ ✅ → ~~Phase 16b~~ ✅ (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
-- Track C: ~~Phase 18~~ ✅ — **Phase 19.5** 🔄 (blood sorcery rules completion — see [`plan-blood-sorcery-audit.md`](./plan-blood-sorcery-audit.md)) → Phase 20 when scheduled
+- Track C: ~~Phase 18~~ ✅ — ~~**Phase 19.5**~~ ✅ (blood sorcery rules completion — Phase 19.5 section below) → **Phase 20** when scheduled
 
 ---
 
@@ -379,10 +379,10 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 ### Scope
 
 - [x] **Necromancy** — `Necromancy` discipline; `SorceryType.Necromancy`; Mekhet clan gate via `RequiredClanId`; sample rite `Corrupting the Corpse` in `DbInitializer.EnsureBloodSorceryPhaseExtensionsAsync` (catalog can grow from seed/JSON).
-- [x] **Ordo Dracul Rituals** — `SorceryType.OrdoDraculRitual`, `CovenantDefinition.SupportsOrdoRituals`, `Ordo Sorcery` discipline track for pools; sample rite `Dragon's Own Fire` (further rites: same pipeline).
+- [x] ~~**Ordo Dracul Rituals**~~ — **Retired in Phase 19.5 (P6).** Ordo **Coils/Scales** remain (`coils_info.json`, `CoilOrdoEligibility`); separate **Ordo ritual spells** are not a `SorceryType` in-app (see `docs/magic_types_and_rules.txt` — Mysteries of the Dragon).
 - [ ] **Expanded ritual catalog** — Full rulebook/supplement list (e.g. Taste of the Dragon, Pasha's Vision, …) deferred to content passes; structure is in place.
 - [x] **Data model extension** — `SorceryType` values, nullable `RequiredCovenantId`, `RequiredClanId`, `RequirementsJson`, migration `Phase95Phase96BloodSorceryExtensions`.
-- [x] **UI** — Blood Sorcery section for Crúac/Theban, Ordo (`SupportsOrdoRituals`), or any character with Necromancy dots; rite requests from **Advancement** (`ApplyLearnRiteModal`); sheet uses activation only; modal labels all traditions.
+- [x] **UI** — Blood Sorcery section for Crúac/Theban or any character with Necromancy dots; rite requests from **Advancement** (`ApplyLearnRiteModal`); sheet uses activation only; modal labels traditions (Ordo ritual UI removed with P6).
 - [x] **Rules Interpretation Log** — Necromancy/Ordo pool and gating decisions in `docs/rules-interpretations.md`.
 - [ ] **Temporary ritual-granted Coils/Scales** — Deferred; no timed `PassiveModifier` from rites yet—Storyteller applies table-side or via existing tools.
 
@@ -414,7 +414,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 - [x] **Dice Nexus Modifier Injection** — `DiceRollerModal` / sheet paths use `ITraitResolver` with equipment modifiers (skill cap, weapon damage, strength under-requirement penalty).
 - [x] **Armor Mitigation Logic** — General and ballistic ratings plus Defense/Speed from equipped armor on the sheet; **automated damage-type conversion** deferred until an attack pipeline exists (documented in rules log).
 - [x] **The Armory UI (The Pack)** — Pack tab with equip/structure/ready slots and procurement entry points.
-- [x] **Seed Catalog Integration** — JSON seeds under [`src/RequiemNexus.Data/SeedSource/`](../src/RequiemNexus.Data/SeedSource/) for general items, weapons, armor, and services (copied with the Data assembly at build/publish). Any copies under `docs/` are optional mirrors for readability only; **SeedSource is authoritative** for runtime seeding.
+- [x] **Seed Catalog Integration** — JSON seeds under [`src/RequiemNexus.Data/SeedSource/`](../src/RequiemNexus.Data/SeedSource/) for general items, weapons, armor, services, and **blood sorcery ritual catalogs** (`cruac_rituales.json`, `Theban_Sorcery_rituals.json`, `kindred_necromancy_rituals.json`) (copied with the Data assembly at build/publish). Optional copies under `docs/` are human-readable mirrors only; **SeedSource is authoritative** for runtime seeding.
 
 ---
 
@@ -561,7 +561,7 @@ Phase 18 reuses:
 - **Passive Predatory Aura** extends `PredatoryAuraService` — no separate `PassiveAuraService`. `IPredatoryAuraService.ResolvePassiveContestAsync` uses `IsLashOut = false`, per-encounter dedup via `EncounterAuraContest`, and ST manual triggers without encounter id (no dedup). "Same scene" for automation = same **launched `CombatEncounter`**. Details: `rules-interpretations.md` (Phase 12 passive contest bullet + Phase 18 summary).
 - **Blood Sympathy** — `IBloodSympathyRollService` / `BloodSympathyRollService`: pool `Wits + Empathy` via `ITraitResolver` plus `BloodSympathyRules` rating; lineage BFS within chronicle; dice feed publication. No separate `BloodSympathyService` roll type.
 - **Social maneuver interception** — `ManeuverInterceptor` entity; `SocialManeuveringEngine.ApplyInterceptorReductionToSuccesses`; ST-entered opposition capped at interceptor's **Manipulation + Persuasion**.
-- **Content passes** — JSON under `src/RequiemNexus.Data/SeedSource/` (`rituals.json`, `rites.json`, `coils_info.json`, `necromancyRites.json`, `devotions.json`, `loresheetMerits.json`, `Disciplines.json`) plus `DbInitializer`; no schema migrations for catalog-only additions unless a new entity is required.
+- **Content passes** — JSON under `src/RequiemNexus.Data/SeedSource/` (`cruac_rituales.json`, `Theban_Sorcery_rituals.json`, `kindred_necromancy_rituals.json`, `coils_info.json`, `devotions.json`, `loresheetMerits.json`, `Disciplines.json`) plus `DbInitializer`; no schema migrations for catalog-only additions unless a new entity is required.
 
 ### Track A — Passive Predatory Aura
 
@@ -624,10 +624,10 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 | File | Approx. rows | Scope |
 |------|----------------|-------|
-| `rites.json` | 45+ | Crúac (core-indexed + extras) |
-| `rituals.json` | 29+ | Theban (incl. **Blandishment of Sin (Aggravated)**) |
+| `cruac_rituales.json` | 45+ | Crúac (core-indexed + extras); unified catalog schema |
+| `Theban_Sorcery_rituals.json` | 29+ | Theban (incl. **Blandishment of Sin (Aggravated)** as a separate upsert name) |
 | `coils_info.json` | 42+ | Ordo Dracul — core **25** Coils / 5 Mysteries + Ziva + Vigilant extras |
-| `necromancyRites.json` | 8 | Eight core-style Necromancy rites |
+| `kindred_necromancy_rituals.json` | 19+ | Kindred Necromancy (canonical list for the app; replaces `necromancyRites.json`) |
 | `devotions.json` | 63+ | Mixed `source` books; **29** cite **VTR 2e** |
 | `loresheetMerits.json` | 12 | Loresheet chronicle merits |
 
@@ -635,19 +635,19 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **Sign-off (D1–D8):**
 
-- **D1 Theban ✅** — V:tR 2e–indexed miracles present in `rituals.json`; **Blandishment of Sin** at 1 dot; **Blandishment of Sin (Aggravated)** at 4 dots (unique name for name-keyed upsert); file may include supplement-tagged extras.
-- **D2 Crúac ✅** — V:tR 2e–tagged rites (e.g. Pangs of Proserpina, Rigor Mortis, Cheval, Hydra's Vitae, Deflection of Wooden Doom, Touch of the Morrigan, Blood Blight, Blood Price, Feeding the Crone, Willful Vitae) present in `rites.json`; seed is a superset.
+- **D1 Theban ✅** — V:tR 2e–indexed miracles present in `Theban_Sorcery_rituals.json`; **Blandishment of Sin** at 1 dot; **Blandishment of Sin (Aggravated)** at 4 dots (unique name for name-keyed upsert / code split); file may include supplement-tagged extras.
+- **D2 Crúac ✅** — V:tR 2e–tagged rites (e.g. Pangs of Proserpina, Rigor Mortis, Cheval, Hydra's Vitae, Deflection of Wooden Doom, Touch of the Morrigan, Blood Blight, Blood Price, Feeding the Crone, Willful Vitae) present in `cruac_rituales.json`; seed is a superset.
 - **D3 Coils ✅** — Five Mysteries × 5 Coils = **25** core; **Quintessence** `mystery` field corrected; **Into the Fold** text fixed; Ziva/Vigilant blocks remain as extras.
-- **D4 Necromancy ✅** — Eight rites in `necromancyRites.json`.
+- **D4 Necromancy ✅** — Full list in `kindred_necromancy_rituals.json` (Phase 19.5 P5; replaces the former eight-rite `necromancyRites.json`).
 - **D5 Devotions ✅** — Core-tagged rows + extended catalog with traceable `source`.
 - **D6 Loresheets ✅** — Twelve entries in `loresheetMerits.json`.
 - **D7 `poolDefinitionJson` ✅** — All non-empty `roll` powers in `Disciplines.json`; `disciplineId: 0` normalized in `DbInitializer`; contested defender pools not in `TraitReference` (see `roll` text).
 - **D8 activation choice ✅** — `ActivationCost` + `DisciplineActivationResourceChoice` + modal + `ActivatePowerAsync`; see `rules-interpretations.md` (Phase 16b).
 
-- [x] D1 — Theban — `rituals.json`
-- [x] D2 — Crúac — `rites.json`
+- [x] D1 — Theban — `Theban_Sorcery_rituals.json`
+- [x] D2 — Crúac — `cruac_rituales.json`
 - [x] D3 — Coils — `coils_info.json`
-- [x] D4 — Necromancy — `necromancyRites.json`
+- [x] D4 — Necromancy — `kindred_necromancy_rituals.json`
 - [x] D5 — Devotions — `devotions.json`
 - [x] D6 — Loresheets — `loresheetMerits.json`
 - [x] D7 — `Disciplines.json` pools
@@ -763,57 +763,78 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 ---
 
-## 📅 Phase 19.5: The Rite Perfected — Blood Sorcery Rules Completion 🔄
+## 📅 Phase 19.5: The Rite Perfected — Blood Sorcery Rules Completion ✅
 
-**Status:** 🔄 **Active.** Plan and open decisions: [`docs/plan-blood-sorcery-audit.md`](./plan-blood-sorcery-audit.md). Review notes: [`docs/plan-blood-sorcery-audit-review.md`](./plan-blood-sorcery-audit-review.md).
+**Status:** ✅ **Complete (2026-04-02).** Delivery scope, decisions, and code pointers live in this section; rules interpretation in [`docs/rules-interpretations.md`](./rules-interpretations.md) (Phase 19.5).
 
-**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and `magic_types_and_rules.txt`. All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
+**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and `docs/magic_types_and_rules.txt`. All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
 
 ### Prerequisites
 
-- Phase 9/9.5/9.6 (Blood Sorcery engine, sacrifice mechanics, Necromancy/Ordo track) ✅
+- Phase 9/9.5/9.6 (Blood Sorcery engine, sacrifice mechanics, Necromancy; Ordo **Coils** retained, Ordo **rituals** removed in 19.5 P6) ✅
 - Phase 17 (Condition system — `IConditionRules`, `EvaluateStainsAsync`) ✅
 - Phase 19 (Crúac Humanity cap, Necromancy gate model, `IHumanityService`) ✅
 
 ### Scope
 
 **P0 — Bugs (break existing functionality)**
-- [ ] **P0-1 BOM fix + mojibake** — `rites.json` has UTF-8 BOM; several Effect strings contain mojibake (`Cr├║ac`). Fix in `SeedDataLoader.TryLoadJson` (centralized). Acceptance: 45 Crúac rows post-seed.
-- [ ] **P0-2 Theban sacrament enforcement** — Theban miracles store sacrament text in `Prerequisites` only, not in `RequirementsJson`. `ValidateAcknowledgments()` never fires. Fix: populate `RequirementsJson` with `{ "Type": "PhysicalSacrament", ... }` per miracle in seed importer. Acceptance: `BeginRiteActivationAsync` fails without sacrament acknowledgment.
+- [x] **P0-1 BOM fix + mojibake** — `SeedDataLoader.TryLoadJson` (BOM-tolerant UTF-8); seed `Effect` strings corrected.
+- [x] **P0-2 Theban sacrament enforcement** — `DbInitializer` / `RequirementsJson` includes `PhysicalSacrament`; cast fails without acknowledgment (tests).
 
 **P1 — Critical missing rules**
-- [ ] **P1-2 `TargetSuccesses` per rite** — Add `TargetSuccesses` field to seed JSON and `SorceryRiteDefinition` (EF migration). Display in casting UI.
-- [ ] **P1-1 Extended action system** — Rituals use extended actions (max rolls = unmodified pool, 30 min/roll). `RiteActivationSession` to track accumulated successes, rolls remaining, and abandonment. Decide session persistence before implementation (ephemeral / entity / SignalR — see open questions).
-- [ ] **P1-3 Roll outcome Conditions** — Dramatic failure → Tempted (Crúac) or Humbled (Theban); failure-continue → Stumbled; exceptional success → Ecstatic (Crúac) or Raptured (Theban). Necromancy: no tradition-specific Conditions (Storyteller ruling).
-- [ ] **P1-4 Potency mechanic** — `Potency = 1 + (successes − TargetSuccesses)`; exceptional success → optional UI opt-in to add Discipline dots. Informational output only in this phase.
+- [x] **P1-2 `TargetSuccesses` per rite** — Seed + EF + UI.
+- [x] **P1-1 Extended action system** — `BeginRiteActivationResult` + `DiceRollerModal`: max rolls = unmodified pool, time per roll, accumulated successes; **Blazor UI state**; each roll → **chronicle roll feed**; costs **once** on `BeginRiteActivationAsync` (see **Resolved decisions** below).
+- [x] **P1-3 Roll outcome Conditions** — `IRiteRollOutcomeService`: dramatic failure → Tempted (Crúac) or Humbled (Theban); failure-continue → Stumbled; exceptional → Ecstatic / Raptured. Necromancy: no PDF tradition-specific Conditions (none applied).
+- [x] **P1-4 Potency mechanic** — Informational `RitePotencyRules` + completion UI; optional opt-in to add ritual Discipline dots after exceptional success. Effect interpreter deferred.
 
 **P2 — Important missing rules**
-- [ ] **P2-5 Necromancy clan gate** — Remove any Mekhet `RequiredClanId` from seed; review `IsTraditionAllowedForCharacter`. Acceptance: non-Mekhet character can see Necromancy rites.
-- [ ] **P2-3 Crúac Humanity cap enforcement** — Verify `HumanityService.GetEffectiveMaxHumanity` enforces `10 − CrúacDots`; verify `DegenerationCheckRequiredEvent(CrúacPurchase)` fires at Humanity 4+ on learning. (Architecture exists in Phase 19 — confirm wiring.)
-- [ ] **P2-4 Necromancy torpor penalty** — `TorporService`: effective Blood Potency = `min(BP + NecromancyDots, 10)` for torpor duration.
-- [ ] **P2-1 Crúac extra Vitae bonus** — Optional `ExtraVitae` on `BeginRiteActivationRequest`; flat pool bonus; casting dialog UI.
-- [ ] **P2-2 Blood Sympathy modifier for ritual pools** — `+1/+2/+3` bonus (doubled for Crúac) when `TargetCharacterId` is set and sympathy applies. Environmental rites excluded.
+- [x] **P2-5 Necromancy clan gate** — Seed + `IsTraditionAllowedForCharacter` + initializer cleanup.
+- [x] **P2-3 Crúac Humanity cap enforcement** — `IHumanityService` / `CharacterDisciplineService` wiring.
+- [x] **P2-4 Necromancy torpor penalty** — `TorporDurationTable` + `TorporService`.
+- [x] **P2-1 Crúac extra Vitae bonus** — `BeginRiteActivationRequest.ExtraVitae`, service + `RiteActivationPrepModal`.
+- [x] **P2-2 Blood Sympathy modifier for ritual pools** — `TargetCharacterId`, lineage graph + `BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy`; Crúac doubled.
 
-**P3 — Seed data rating corrections**
-- [ ] **P3-1 Crúac ratings** — Correct ~20 inflated/deflated ratings in `rites.json` per PDF table in `plan-blood-sorcery-audit.md` § P3-1. Add missing *Donning the Beast's Flesh* at Rating 2.
-- [ ] **P3-2 Theban ratings** — Correct 5 inflated ratings in `rituals.json` per PDF (Vitae Reliquary→1, Curse of Babel→2, Liar's Plague→2, Malediction of Despair→3, Stigmata→4).
-- [ ] **P3-3 Necromancy catalog decision** — Choose Option A (keep custom rites), B (replace with 19 canonical supplement rites), or C (ship both with `Source` field). Rename docs typo: `kindred_necromancyu_rituals.json` → `kindred_necromancy_rituals.json`.
-- [ ] **P3-4/5 Docs JSON** — Add `TargetSuccesses` and correct ratings to `docs/cruac_rituales.json` and `docs/Theban_Sorcery_rituals.json`.
+**P3 — Seed data rating corrections (historical filenames)**
+- [x] **P3-1 Crúac ratings** — Pre–P5 seed aligned with audit (incl. *Donning the Beast's Flesh*, apostrophe fix); **authoritative** file is now `SeedSource/cruac_rituales.json`.
+- [x] **P3-2 Theban ratings** — Pre–P5 seed aligned with audit; **authoritative** file is now `SeedSource/Theban_Sorcery_rituals.json`.
+- [x] **P3-3 Necromancy catalog** — **Superseded by P5** — shipped set = `SeedSource/kindred_necromancy_rituals.json` only (`necromancyRites.json` retired).
+- [x] **P3-4/5 Docs JSON** — **N/A:** no ritual catalog mirrors under `docs/`; **authoritative** `Target Successes` / `Ranking` live only in `SeedSource/cruac_rituales.json`, `Theban_Sorcery_rituals.json`, `kindred_necromancy_rituals.json`.
+
+**P5 / P6 — Catalog + Ordo ritual removal**
+- [x] **P5** — Three canonical ritual JSON files under `SeedSource/`; unified importer; `Ranking` + **Elder** (`RequiresElder`, `SorceryElderRules.MinimumBloodPotency`); old `rites.json` / `rituals.json` / `necromancyRites.json` removed.
+- [x] **P6** — `OrdoDraculRitual` removed; Ordo ritual rows and UI stripped; migration removes legacy type-3 rows.
 
 **P4 — Backlog (verify, no new code)**
-- [ ] Theban Humanity floor at `RequestLearnRiteAsync` (currently cast-time only)
-- [ ] Necromancy degeneration event end-to-end UI verification
-- [ ] `ResolveRiteActivationPoolAsync` fate (dead API — remove, gate-mirror, or document)
+- [x] Theban Humanity floor at learn + eligible + approve (`SorceryService`; verify in tests as needed)
+- [x] Necromancy degeneration on ritual use — `SorceryServiceTests` + `DegenerationCheckRequiredChronicleBroadcastTests`; player toast; `DegenerationCheckRequiredEventHandler` → Glimpse
+- [x] `ResolveRiteActivationPoolAsync` removed (dead API; preview must use gated path)
 
-### Open decisions (must resolve before P1-1)
+### Resolved decisions (archived)
 
-| Decision | Where |
-|----------|-------|
-| Ritual session persistence (ephemeral / entity / SignalR) | P1-1 |
-| Vitae/WP cost timing (up-front once vs. per roll vs. on completion) | P1-1 |
-| Potency scope boundary (informational only vs. effect interpreter) | P1-4 |
-| Theban sacrament UX (label text; consumed at crescendo not first roll) | P0-2 |
-| Necromancy catalog (Option A / B / C) | P3-3 |
+**P1-1 (2026-04-02):** Extended-action **persistence** = Blazor/circuit UI state + each roll → chronicle Redis roll history. **Cost timing** = Vitae/WP/stains/Necromancy degeneration **only** on `BeginRiteActivationAsync`.
+
+| Topic | Resolution |
+|-------|------------|
+| Potency scope | Informational at completion; effect interpreter = future work (P1-4) |
+| Theban sacrament UX | `RiteActivationPrepModal` + `DisplayHint`; crescendo consumption note (P0-2) |
+| Necromancy outcome Conditions | PDF has none for Necromancy; app applies none; supplements = ST ruling (P1-3) |
+| Necromancy catalog | **P5** — `kindred_necromancy_rituals.json` only |
+| Elder-ranked rites | `Ranking: Elder` → `RequiresElder`; BP gate = `SorceryElderRules` (`rules-interpretations.md`) |
+
+### Implementation touchpoints (code navigation)
+
+| Area | Where to look |
+|------|----------------|
+| Seed load + BOM | `SeedDataLoader.TryLoadJson`; ritual catalogs in `src/RequiemNexus.Data/SeedSource/` (`cruac_rituales.json`, `Theban_Sorcery_rituals.json`, `kindred_necromancy_rituals.json`) |
+| Seed import | `SorceryRiteSeedData`, `DbInitializer` (Theban `RequirementsJson` / `PhysicalSacrament`) |
+| Activation | `SorceryActivationService.BeginRiteActivationAsync`, `BeginRiteActivationResult`, `BeginRiteActivationRequest` |
+| Cast prep UI | `RiteActivationPrepModal` (sacrament `DisplayHint`, typed acks, Crúac extra Vitae) |
+| Extended rite + dice | `DiceRollerModal` (successes, roll cap, continue/abandon, chronicle feed) |
+| Outcomes + Potency | `IRiteRollOutcomeService`, `RiteRollOutcomeRules`, `RitePotencyRules` |
+| Sympathy + target | `TargetCharacterId`, `BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy` |
+| Humanity / Theban floor | `SorceryService` (eligible / request / approve), `SorceryActivationService` (cast) |
+| Necromancy degeneration | `DegenerationCheckRequiredEvent`; `DegenerationCheckRequiredChronicleBroadcastTests`; `BeginRiteActivationResult.NecromancyDegenerationCheckRaised` + player toast on character sheet |
+| Removed API | `ResolveRiteActivationPoolAsync` — do not restore without the same gates as `BeginRiteActivationAsync` |
 
 ### Non-Goals (Phase 19.5)
 
@@ -826,7 +847,9 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 ## 📅 Phase 20: The Global Embrace
 
-**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, 19.5.
+**Status:** 🔄 **Active** — next roadmap focus after Phase 19.5 closure.
+
+**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, and 19.5.
 
 - [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
 - [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools; **external client auth** (typically JWT or OAuth2 access tokens) is introduced here. The first-party Blazor app remains cookie-based Identity.

@@ -243,7 +243,7 @@ else
                         }
                         else
                         {
-                            <p class="text-muted-rn" style="font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, Necromancy, or Ordo rituals you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
+                            <p class="text-muted-rn" style="font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, or Necromancy rites you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
                             <button class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Request rite</button>
                         }
                     </section>
@@ -315,7 +315,6 @@ else
         && _character.CovenantJoinStatus == null
         && (
             (_character.Covenant?.SupportsBloodSorcery == true)
-            || (_character.Covenant?.SupportsOrdoRituals == true)
             || _character.GetDisciplineRating("Necromancy") > 0);
 
     private bool SelectedMeritRequiresSpec => 
@@ -637,7 +636,7 @@ else
             _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _userId);
             if (_eligibleRites.Count == 0)
             {
-                SetAdvancementError("No eligible rites. Raise Crúac, Theban Sorcery, Necromancy, or Ordo Sorcery to the required level, meet covenant/clan gates, or you may already have a pending request.");
+                SetAdvancementError("No eligible rites. Raise Crúac, Theban Sorcery, or Necromancy to the required level, meet covenant/clan gates, or you may already have a pending request.");
                 return;
             }
 

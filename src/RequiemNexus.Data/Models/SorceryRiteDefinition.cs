@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 
@@ -22,6 +23,11 @@ public class SorceryRiteDefinition
 
     /// <summary>Rite level (1–5). Character must have matching Discipline dots to learn.</summary>
     public int Level { get; set; }
+
+    /// <summary>
+    /// Successes required to complete the ritual as an extended action (V:tR 2e p. 152). Seed from PDF; surfaced in the casting UI.
+    /// </summary>
+    public int TargetSuccesses { get; set; }
 
     /// <summary>Crúac (Circle of the Crone) or Theban Sorcery (Lancea et Sanctum).</summary>
     public SorceryType SorceryType { get; set; }
@@ -60,4 +66,9 @@ public class SorceryRiteDefinition
 
     /// <summary>Effect text from source material.</summary>
     public string? Effect { get; set; }
+
+    /// <summary>
+    /// When true, only vampires meeting <see cref="SorceryElderRules.MinimumBloodPotency"/> may learn or cast this rite (catalog Ranking: Elder).
+    /// </summary>
+    public bool RequiresElder { get; set; }
 }

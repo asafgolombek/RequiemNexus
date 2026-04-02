@@ -8,6 +8,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
+using RequiemNexus.Domain;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Events;
 using RequiemNexus.Domain.Models;
@@ -47,51 +48,7 @@ public class SorceryActivationService(
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<int> ResolveRiteActivationPoolAsync(int characterId, int characterRiteId, string userId)
-    {
-        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "activate rite");
-
-        Character? character = await _dbContext.Characters
-            .Include(c => c.Disciplines)
-            .Include(c => c.Attributes)
-            .Include(c => c.Skills)
-            .Include(c => c.Rites)
-            .FirstOrDefaultAsync(c => c.Id == characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        CharacterRite? cr = character.Rites.FirstOrDefault(r => r.Id == characterRiteId && r.Status == RiteLearnStatus.Approved);
-        if (cr == null)
-        {
-            cr = await _dbContext.CharacterRites
-                .Include(r => r.SorceryRiteDefinition)
-                .FirstOrDefaultAsync(r => r.Id == characterRiteId && r.CharacterId == characterId && r.Status == RiteLearnStatus.Approved);
-        }
-
-        if (cr?.SorceryRiteDefinition == null || string.IsNullOrEmpty(cr.SorceryRiteDefinition.PoolDefinitionJson))
-        {
-            return 0;
-        }
-
-        try
-        {
-            PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(cr.SorceryRiteDefinition.PoolDefinitionJson, _jsonOptions);
-            return pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Failed to resolve activation pool for rite {RiteId} ({RiteName}) on character {CharacterId}. PoolJson: {PoolJson}",
-                cr.SorceryRiteDefinitionId,
-                cr.SorceryRiteDefinition.Name,
-                characterId,
-                cr.SorceryRiteDefinition.PoolDefinitionJson);
-            return 0;
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<int> BeginRiteActivationAsync(
+    public async Task<BeginRiteActivationResult> BeginRiteActivationAsync(
         int characterId,
         int characterRiteId,
         string userId,
@@ -100,7 +57,7 @@ public class SorceryActivationService(
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "begin rite activation");
 
         Character? character = await _dbContext.Characters
-            .Include(c => c.Disciplines)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
             .Include(c => c.Rites)
@@ -128,6 +85,19 @@ public class SorceryActivationService(
                 $"Theban Sorcery requires Humanity {def.Level} or higher to cast this miracle (character has Humanity {character.Humanity}).");
         }
 
+        int traditionDots = GetTraditionDisciplineDots(character, def.SorceryType);
+        if (traditionDots < def.Level)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient {def.SorceryType} dots to cast this rite (need {def.Level}, have {traditionDots}).");
+        }
+
+        if (def.RequiresElder && character.BloodPotency < SorceryElderRules.MinimumBloodPotency)
+        {
+            throw new InvalidOperationException(
+                $"This rite requires Blood Potency {SorceryElderRules.MinimumBloodPotency} or higher (elder-ranked miracle). Character has Blood Potency {character.BloodPotency}.");
+        }
+
         Result<IReadOnlyList<RiteRequirement>> parsed = RiteRequirementValidator.ParseRequirements(def.RequirementsJson);
         if (!parsed.IsSuccess)
         {
@@ -148,6 +118,15 @@ public class SorceryActivationService(
             throw new InvalidOperationException(ackResult.Error);
         }
 
+        if (request.ExtraVitae != 0 && def.SorceryType != SorceryType.Cruac)
+        {
+            throw new InvalidOperationException("Extra Vitae may only be spent on Crúac rituals.");
+        }
+
+        int extraVitae = def.SorceryType == SorceryType.Cruac ? Math.Clamp(request.ExtraVitae, 0, 5) : 0;
+
+        (int vitaeCost, int wpCost, int stainGain) = RiteRequirementValidator.AggregateInternalCosts(requirements);
+
         var resources = new RiteActivationResourceSnapshot(
             character.CurrentVitae,
             character.CurrentWillpower,
@@ -159,19 +138,24 @@ public class SorceryActivationService(
             throw new InvalidOperationException(resOk.Error);
         }
 
-        (int vitaeCost, int wpCost, int stainGain) = RiteRequirementValidator.AggregateInternalCosts(requirements);
+        int totalVitaeSpend = vitaeCost + extraVitae;
+        if (character.CurrentVitae < totalVitaeSpend)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient Vitae. This rite requires {totalVitaeSpend} Vitae (including optional bonus Vitae).");
+        }
 
-        if (vitaeCost > 0 || wpCost > 0 || stainGain > 0)
+        if (totalVitaeSpend > 0 || wpCost > 0 || stainGain > 0)
         {
             await using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction tx =
                 await _dbContext.Database.BeginTransactionAsync();
 
-            if (vitaeCost > 0)
+            if (totalVitaeSpend > 0)
             {
                 Result<int> vitaeResult = await _vitaeService.SpendVitaeAsync(
                     characterId,
                     userId,
-                    vitaeCost,
+                    totalVitaeSpend,
                     $"Rite activation: {def.Name}");
 
                 if (!vitaeResult.IsSuccess)
@@ -206,48 +190,160 @@ public class SorceryActivationService(
             }
         }
 
-        if (def.SorceryType == SorceryType.Necromancy && character.Humanity >= 7)
+        bool necromancyDegenerationCheckRaised =
+            def.SorceryType == SorceryType.Necromancy && character.Humanity >= 7;
+        if (necromancyDegenerationCheckRaised)
         {
             _domainEventDispatcher.Dispatch(
                 new DegenerationCheckRequiredEvent(characterId, DegenerationReason.NecromancyActivation));
         }
 
         _logger.LogInformation(
-            "Rite activation costs applied: Character {CharacterId}, CharacterRite {CharacterRiteId}, Rite {RiteName}, Vitae {VitaeCost}, Willpower {WillpowerCost}, Stains {StainGain}, Requirements {RequirementSummary}",
+            "Rite activation costs applied: Character {CharacterId}, CharacterRite {CharacterRiteId}, Rite {RiteName}, Vitae {VitaeCost} (extra {ExtraVitae}), Willpower {WillpowerCost}, Stains {StainGain}, Requirements {RequirementSummary}",
             characterId,
             characterRiteId,
             def.Name,
-            vitaeCost,
+            totalVitaeSpend,
+            extraVitae,
             wpCost,
             stainGain,
             string.Join(';', requirements.Select(r => $"{r.Type}:{r.Value}")));
 
         character = await _dbContext.Characters
-            .Include(c => c.Disciplines)
+            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
             .FirstAsync(c => c.Id == characterId);
 
-        int poolSize = 0;
-        if (!string.IsNullOrEmpty(def.PoolDefinitionJson))
+        int unmodifiedPoolSize = ResolveRiteTraitPool(character, def);
+
+        int dicePool = unmodifiedPoolSize + extraVitae;
+
+        int sympathyDice = await TryResolveRitualBloodSympathyBonusAsync(
+            characterId,
+            character,
+            def.SorceryType,
+            request.TargetCharacterId);
+
+        dicePool += sympathyDice;
+
+        if (sympathyDice > 0)
         {
-            try
-            {
-                PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(def.PoolDefinitionJson, _jsonOptions);
-                poolSize = pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Failed to resolve pool after activation for rite {RiteId} on character {CharacterId}",
-                    def.Id,
-                    characterId);
-                poolSize = 0;
-            }
+            _logger.LogInformation(
+                "Ritual Blood Sympathy bonus: Character {CharacterId}, Rite {RiteName}, BonusDice {BonusDice}",
+                characterId,
+                def.Name,
+                sympathyDice);
         }
 
+        int minutesPerRoll = traditionDots > def.Level ? 15 : 30;
+        int maxExtendedRolls = Math.Max(0, unmodifiedPoolSize);
+
         await _sessionService.BroadcastCharacterUpdateAsync(characterId);
-        return poolSize;
+        return new BeginRiteActivationResult(
+            dicePool,
+            maxExtendedRolls,
+            def.TargetSuccesses,
+            minutesPerRoll,
+            traditionDots,
+            necromancyDegenerationCheckRaised);
     }
+
+    /// <summary>
+    /// Resolves the ritual dice pool from the rite pool definition only (no extra Vitae or Blood Sympathy).
+    /// This matches the unmodified dice pool cap on extended rolls (V:tR 2e p. 152).
+    /// </summary>
+    private int ResolveRiteTraitPool(Character character, SorceryRiteDefinition def)
+    {
+        if (string.IsNullOrEmpty(def.PoolDefinitionJson))
+        {
+            return 0;
+        }
+
+        try
+        {
+            PoolDefinition? pool = JsonSerializer.Deserialize<PoolDefinition>(def.PoolDefinitionJson, _jsonOptions);
+            return pool != null ? _traitResolver.ResolvePool(character, pool) : 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to resolve pool after activation for rite {RiteId} on character {CharacterId}",
+                def.Id,
+                character.Id);
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Applies V:tR 2e p. 153 Blood Sympathy dice to ritual pools when a valid in-chronicle Kindred target is named.
+    /// </summary>
+    private async Task<int> TryResolveRitualBloodSympathyBonusAsync(
+        int ritualistCharacterId,
+        Character ritualist,
+        SorceryType tradition,
+        int? targetCharacterId)
+    {
+        if (targetCharacterId is not int tid || tid == ritualistCharacterId)
+        {
+            return 0;
+        }
+
+        if (tradition is not (SorceryType.Cruac or SorceryType.Theban or SorceryType.Necromancy))
+        {
+            return 0;
+        }
+
+        if (!ritualist.CampaignId.HasValue)
+        {
+            throw new InvalidOperationException(
+                "Blood Sympathy ritual targeting requires the ritualist to belong to a chronicle.");
+        }
+
+        Character? target = await _dbContext.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == tid);
+        if (target == null)
+        {
+            throw new InvalidOperationException($"Ritual target character {tid} was not found.");
+        }
+
+        if (target.CampaignId != ritualist.CampaignId)
+        {
+            throw new InvalidOperationException("Ritual target must belong to the same chronicle as the ritualist.");
+        }
+
+        if (target.CreatureType != CreatureType.Vampire)
+        {
+            throw new InvalidOperationException("Blood Sympathy ritual bonuses apply only when the target is a vampire.");
+        }
+
+        IReadOnlyDictionary<int, int?> sireMap =
+            await KindredLineageSireMapBuilder.BuildForCampaignAsync(_dbContext, ritualist.CampaignId.Value);
+
+        int? degree = KindredLineageDegree.TryGetShortestDegree(ritualistCharacterId, tid, sireMap);
+        if (degree is null or < 1)
+        {
+            return 0;
+        }
+
+        int r1 = BloodSympathyRules.ComputeRating(ritualist.BloodPotency);
+        int r2 = BloodSympathyRules.ComputeRating(target.BloodPotency);
+        int maxRange = BloodSympathyRules.EffectiveRange(r1, r2);
+        if (degree.Value > maxRange)
+        {
+            return 0;
+        }
+
+        int baseBonus = BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy(degree.Value);
+        return tradition == SorceryType.Cruac ? baseBonus * 2 : baseBonus;
+    }
+
+    private int GetTraditionDisciplineDots(Character character, SorceryType type) =>
+        type switch
+        {
+            SorceryType.Cruac => character.GetDisciplineRating("Crúac"),
+            SorceryType.Theban => character.GetDisciplineRating("Theban Sorcery"),
+            SorceryType.Necromancy => character.GetDisciplineRating("Necromancy"),
+            _ => 0,
+        };
 }

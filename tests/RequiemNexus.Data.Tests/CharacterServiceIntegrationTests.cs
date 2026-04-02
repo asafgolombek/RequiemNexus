@@ -1,10 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using RequiemNexus.Application.Contracts;
+using RequiemNexus.Application.Events;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Services;
 using RequiemNexus.Web.Helpers;
 using RequiemNexus.Web.Services;
@@ -22,6 +25,14 @@ public class CharacterServiceIntegrationTests
     {
         IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
         var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
+        var humanity = new HumanityService(
+            ctx,
+            Mock.Of<IAuthorizationHelper>(),
+            Mock.Of<IDomainEventDispatcher>(),
+            Mock.Of<IDiceService>(),
+            Mock.Of<ISessionService>(),
+            Mock.Of<IConditionService>(),
+            NullLogger<HumanityService>.Instance);
 
         return new CharacterManagementService(
             ctx,
@@ -30,7 +41,8 @@ public class CharacterServiceIntegrationTests
             new BeatLedgerService(ctx),
             auth,
             new Mock<ISessionService>().Object,
-            new CharacterCreationService());
+            new CharacterCreationService(),
+            humanity);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
@@ -289,5 +301,35 @@ public class CharacterServiceIntegrationTests
         InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmbraceCharacterAsync(character));
 
         Assert.Contains("Necromancy", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SaveAsync_ClampsHumanityToCruacCap()
+    {
+        string dbName = nameof(SaveAsync_ClampsHumanityToCruacCap);
+        using var ctx = CreateContext(dbName);
+        var service = CreateCharacterService(ctx, dbName);
+
+        var cruac = new Discipline { Name = "Crúac" };
+        ctx.Disciplines.Add(cruac);
+        Character character = BuildNewCharacter();
+        character.Humanity = 9;
+        ctx.Characters.Add(character);
+        await ctx.SaveChangesAsync();
+
+        ctx.CharacterDisciplines.Add(new CharacterDiscipline
+        {
+            CharacterId = character.Id,
+            DisciplineId = cruac.Id,
+            Rating = 3,
+        });
+        await ctx.SaveChangesAsync();
+
+        Character tracked = await ctx.Characters.FirstAsync(c => c.Id == character.Id);
+        tracked.Humanity = 9;
+        await service.SaveAsync(tracked);
+
+        Character reloaded = await ctx.Characters.AsNoTracking().FirstAsync(c => c.Id == character.Id);
+        Assert.Equal(7, reloaded.Humanity);
     }
 }

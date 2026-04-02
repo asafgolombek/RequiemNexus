@@ -49,6 +49,14 @@ public class ConditionRules : IConditionRules
             "The Vinculum has you craving your regnant's blood above all else (Blood Bond Stage 1). Resolves when the bond fades below this stage.",
         ConditionType.Bound =>
             "You are fully bound by the Vinculum (Blood Bond Stage 3) and cannot voluntarily act against your regnant. Resolves when the bond fully fades — you gain a Beat.",
+        ConditionType.Humbled =>
+            "Your miracle turned against you (Theban Sorcery dramatic failure). Resolve when the Storyteller agrees you have atoned or endured the humbling.",
+        ConditionType.Ecstatic =>
+            "The Crúac surges through you after an exceptional ritual success. Resolve when the Storyteller agrees the rush has faded.",
+        ConditionType.Raptured =>
+            "Grace floods you after an exceptional Theban miracle. Resolve when the Storyteller agrees the rapture has passed.",
+        ConditionType.Stumbled =>
+            "You pressed the rite after a failed roll. Your next dice pool suffers −2; resolve when you take that penalty on a roll.",
         _ => type.ToString(),
     };
 
@@ -93,6 +101,7 @@ public class ConditionRules : IConditionRules
         ConditionType.Guilty => [new ConditionPenaltyModifier(ConditionPoolTarget.ResolveComposure, -1)],
         ConditionType.Despondent => [new ConditionPenaltyModifier(ConditionPoolTarget.MentalPools, -2)],
         ConditionType.Provoked => [new ConditionPenaltyModifier(ConditionPoolTarget.Composure, -1)],
+        ConditionType.Stumbled => [new ConditionPenaltyModifier(ConditionPoolTarget.AllPools, -2)],
         _ => [],
     };
 

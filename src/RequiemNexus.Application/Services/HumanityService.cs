@@ -39,6 +39,22 @@ public sealed class HumanityService(
     }
 
     /// <inheritdoc />
+    public async Task EnforceHumanityCapForPersistenceAsync(Character character, CancellationToken cancellationToken = default)
+    {
+        int cruacRating = await (
+            from cd in _dbContext.CharacterDisciplines.AsNoTracking()
+            join d in _dbContext.Disciplines.AsNoTracking() on cd.DisciplineId equals d.Id
+            where cd.CharacterId == character.Id && d.Name == "Crúac"
+            select cd.Rating).FirstOrDefaultAsync(cancellationToken);
+
+        int maxHumanity = 10 - cruacRating;
+        if (character.Humanity > maxHumanity)
+        {
+            character.Humanity = maxHumanity;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task EvaluateStainsAsync(int characterId, string userId)
     {
         await _authorizationHelper.RequireCharacterAccessAsync(characterId, userId, "evaluate Humanity stains");

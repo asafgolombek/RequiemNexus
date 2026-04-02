@@ -11,9 +11,6 @@ public enum SorceryType
     /// <summary>Theban Sorcery — sacraments of the Lancea et Sanctum.</summary>
     Theban,
 
-    /// <summary>Necromancy — Mekhet-associated death sorcery (Phase 9.6).</summary>
+    /// <summary>Necromancy — Kindred death sorcery (Phase 9.6).</summary>
     Necromancy,
-
-    /// <summary>Ordo Dracul covenant rituals (Phase 9.6).</summary>
-    OrdoDraculRitual,
 }
