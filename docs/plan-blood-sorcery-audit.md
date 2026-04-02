@@ -12,7 +12,7 @@
 | Audit block | Status | Notes |
 |-------------|--------|--------|
 | **P0-1** BOM + encoding | Done | `SeedDataLoader.TryLoadJson` uses UTF-8 with BOM detection; Crúac catalog (`cruac_rituales.json`) uses proper `Crúac` escapes. |
-| **P0-2** Theban sacrament | Done | `DbInitializer` builds `PhysicalSacrament` in `RequirementsJson`; tests cover cast without acknowledgment. |
+| **P0-2** Theban sacrament | Done | `DbInitializer` builds `PhysicalSacrament` in `RequirementsJson`; tests cover cast without acknowledgment. **UX:** `RiteActivationPrepModal` shows per-miracle `DisplayHint` on the sacrament checkbox, Theban crescendo timing copy, and typed ack flags on `RiteActivationPrepResult` / `BeginRiteActivationRequest` (replaces generic `confirm()`). |
 | **P1-2** `TargetSuccesses` | Done | Column + seed JSON + UI (sheet + learn modal); catalog sync in `DbInitializer`. |
 | **P1-1** Extended actions | Done | `BeginRiteActivationResult` (dice pool, `MaxExtendedRolls` = unmodified pool, `TargetSuccesses`, `MinutesPerRoll`); `DiceRollerModal` tracks successes / rolls / continue–abandon; each roll → session hub like other dice; costs remain once on begin. Stumbled application = P1-3. |
 | **P1-3** Outcome Conditions | Done | `RiteRollOutcomeRules` + `IRiteRollOutcomeService` → `ConditionService`; `DiceRollerModal` on counted extended rolls (dramatic / exceptional) and on Continue (Stumbled). New `ConditionType`: Humbled, Ecstatic, Raptured, Stumbled. Necromancy: no Condition on dramatic/exceptional per audit. |
@@ -27,7 +27,7 @@
 | **P5** Canonical catalogs in Data | Done | Three unified-schema files under `src/RequiemNexus.Data/SeedSource/`; `SorceryRiteSeedData` + `RequiresElder`; old SeedSource trio removed. |
 | **P6** Ordo Dracul rituals | Done | `OrdoDraculRitual` removed from `SorceryType`; ritual rows and UI paths stripped; Coils / `CoilOrdoEligibility` unchanged. |
 | **P3-4 / P3-5** Docs JSON tables | Done | Reference tables updated when files lived under `docs/`; **authoritative** `Target Successes` / `Ranking` now live in the three SeedSource catalogs (optional human mirrors under `docs/` only). |
-| **P4** Backlog | Partial | Necromancy `DegenerationCheckRequiredEvent` covered by `SorceryServiceTests` (dispatch when Humanity ≥ 7); ST Glimpse path unchanged (`DegenerationCheckRequiredEventHandler`). Dead `ResolveRiteActivationPoolAsync` removed. Theban Humanity floor enforced at learn + eligible + approve. |
+| **P4** Backlog | Partial | Necromancy: `SorceryServiceTests` (dispatch + `NecromancyDegenerationCheckRaised` on result); **`DegenerationCheckRequiredChronicleBroadcastTests`** verifies handler → `BroadcastChronicleUpdateAsync` with `DegenerationCheckAlertDto` when `CampaignId` set, and no broadcast when solo. Player sheet: info toast after Necromancy activation at Humanity 7+ (`BeginRiteActivationResult.NecromancyDegenerationCheckRaised`). ST Glimpse: `DegenerationCheckRequiredEventHandler` + `StorytellerGlimpse` hub patch (unchanged). Dead `ResolveRiteActivationPoolAsync` removed. Theban Humanity floor enforced at learn + eligible + approve. |
 
 ---
 
@@ -62,7 +62,7 @@ The core learning/approval pipeline and basic activation costs are implemented c
 
 **Fix:** Add a `RequirementsJson` population pass to the seed importer for Theban miracles. Each catalog entry must emit at least one `{ "Type": "PhysicalSacrament", "Value": 1, "DisplayHint": "<sacrament text>" }` requirement. The sacrament hint text comes from the existing `Prerequisites` field (already in the format "Sacrament: …"). If a row lacks `Sacrament:` in `Prerequisites`, use overlay or code — **do not** rewrite the canonical JSON for that.
 
-**Open question — UX:** Should the acknowledgment UI show a single "I have the sacrament" checkbox (current generic pattern), or display the per-miracle sacrament text as the label? Confirm also whether the sacrament is consumed at the **first roll** or only when the ritual reaches its crescendo (per PDF: "the sacrament crumbles to dust when the ritual reaches a crescendo" — implies on success or terminal failure, not on first roll). Acknowledge this in the UI copy.
+**Resolved — UX (2026-04-02):** Cast prep modal shows **per-miracle** sacrament text from `DisplayHint` in the checkbox label when present; other narrative types (heart, offering, focus) get their own required checkboxes. **Theban** casts with a physical sacrament also show a short note that the sacrament is consumed at the **crescendo** (success or final failure), not on the first roll. Continue stays disabled until all required narrative boxes are checked.
 
 **Acceptance test:** Extend `SorceryServiceTests` — a call to `BeginRiteActivationAsync` for a Theban miracle without acknowledging the sacrament must return a validation failure.
 
@@ -383,7 +383,7 @@ These appear in the narrative source-of-truth doc and are correctly implemented 
 | Topic | Status | Note |
 |-------|--------|------|
 | **Theban Humanity floor for casting** | `SorceryActivationService` + `SorceryService` | Enforced at cast, eligible list, `RequestLearnRiteAsync`, and `ApproveRiteLearnAsync`. |
-| **Necromancy breaking point on ritual use** | Dispatches `DegenerationCheckRequiredEvent` (Humanity ≥ 7) per explore | Verify event reaches the degeneration/remorse UI panel end-to-end; add integration test if not covered. |
+| **Necromancy breaking point on ritual use** | Dispatches `DegenerationCheckRequiredEvent` (Humanity ≥ 7); handler → chronicle SignalR patch for Glimpse | **Verified in tests:** `DegenerationCheckRequiredChronicleBroadcastTests` + player toast + `NecromancyDegenerationCheckRaised` on begin result. |
 | **Crúac spilled Vitae becomes inert** | Narrative-only for now | Blood spilled during a rite is unsuitable for feeding. Stays narrative unless Vitae economy tracking is added. No code change needed yet. |
 | **Necromancy alternate dice pools** | Not implemented | Some bloodlines use Presence + Persuasion or Composure + Occult instead of Resolve + Occult + Necromancy. Future: data-driven pool override per rite × bloodline combination. |
 | **Defense while casting** | Not enforced | Ritualists may not use Defense during casting. Only relevant if rituals run concurrently with the combat pipeline (Phase 14). Document as Storyteller ruling until combat/ritual overlap is in scope. |

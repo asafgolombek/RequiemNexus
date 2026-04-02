@@ -748,6 +748,7 @@ public class SorceryServiceTests
 
             Assert.Equal(3, r.DicePool);
             Assert.Equal(1, r.RitualDisciplineDots);
+            Assert.True(r.NecromancyDegenerationCheckRaised);
             dispatcher.Verify(
                 d => d.Dispatch(It.Is<DegenerationCheckRequiredEvent>(e =>
                     e.CharacterId == 1 && e.Reason == DegenerationReason.NecromancyActivation)),
@@ -812,6 +813,7 @@ public class SorceryServiceTests
 
             Assert.Equal(2, r.DicePool);
             Assert.Equal(1, r.RitualDisciplineDots);
+            Assert.False(r.NecromancyDegenerationCheckRaised);
             dispatcher.Verify(d => d.Dispatch(It.IsAny<DegenerationCheckRequiredEvent>()), Times.Never);
         }
     }

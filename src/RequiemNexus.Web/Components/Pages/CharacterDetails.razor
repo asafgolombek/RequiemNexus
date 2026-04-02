@@ -540,6 +540,7 @@ else
                              IsOpenChanged="HandleRitePrepModalOpenChanged"
                              RiteName="@(_pendingRiteForPrep?.SorceryRiteDefinition?.Name ?? "Rite")"
                              Tradition="@(_pendingRiteForPrep?.SorceryRiteDefinition?.SorceryType ?? SorceryType.Cruac)"
+                             Requirements="_pendingRiteRequirements"
                              KinTargets="_riteKinTargets"
                              OnContinue="HandleRitePrepContinueAsync" />
     <DiceRollerModal IsVisible="_isRollerOpen"

@@ -32,7 +32,7 @@ All items are marked **✅ Applied** (merged into the audit) or **⏳ Open** (st
 
 - ✅ **Blood sympathy target (P2-2):** Scope note added to P2-2: bonus applies only when `TargetCharacterId` is set; environmental/territory rites excluded.
 
-- ✅ **Theban sacrament UX (P0-2):** Open question added to P0-2: per-miracle sacrament text in acknowledgment label; sacrament consumed at crescendo not first roll (per PDF).
+- ✅ **Theban sacrament UX (P0-2):** Delivered in cast prep modal — per-miracle `DisplayHint` on sacrament checkbox; Theban crescendo timing note; ack flags on prep result (see audit P0-2).
 
 ---
 
@@ -95,7 +95,7 @@ The audit now contains most earlier review content (P0/P1/P2 clarifications, P4 
 ### 7.1 P4 vs code (spot check)
 
 - **Theban Humanity floor:** Enforced at **cast** time in `SorceryActivationService.BeginRiteActivationAsync` and at **learn** time in `SorceryService` (`GetEligibleRitesAsync`, `RequestLearnRiteAsync`, `ApproveRiteLearnAsync`) using the same `Humanity >= miracle.Level` rule.
-- **Necromancy breaking point on use:** `BeginRiteActivationAsync` dispatches `DegenerationCheckRequiredEvent` with `DegenerationReason.NecromancyActivation` when Humanity ≥ 7. P4’s “verify end-to-end to UI” remains the right follow-up (event wiring + test).
+- **Necromancy breaking point on use:** `BeginRiteActivationAsync` dispatches `DegenerationCheckRequiredEvent` when Humanity ≥ 7; **`DegenerationCheckRequiredChronicleBroadcastTests`** asserts `DegenerationCheckRequiredEventHandler` calls `BroadcastChronicleUpdateAsync` for in-chronicle characters; player sees an info toast and `BeginRiteActivationResult.NecromancyDegenerationCheckRaised`; Glimpse still consumes hub `ChronicleUpdateDto`.
 - **`ResolveRiteActivationPoolAsync`:** **Removed** (was unused from Web; bypassed gates). Any future preview must go through `BeginRiteActivationAsync` or a deliberately gated successor.
 
 ### 7.2 Suggestions merged into audit (2026-04-01)
@@ -112,7 +112,7 @@ These were promoted from review into [plan-blood-sorcery-audit.md](./plan-blood-
 
 ### 7.3 Companion doc maintenance
 
-Sections **2–4** largely **mirror** the audit after the merge. To avoid dual edits going forward, treat [plan-blood-sorcery-audit.md](./plan-blood-sorcery-audit.md) as the **source of truth** for execution; keep this file for **§7-style deltas**, code verification, and remaining **⏳** items (Theban UX, Necromancy outcomes, Potency scope, etc.).
+Sections **2–4** largely **mirror** the audit after the merge. To avoid dual edits going forward, treat [plan-blood-sorcery-audit.md](./plan-blood-sorcery-audit.md) as the **source of truth** for execution; keep this file for **§7-style deltas**, code verification, and remaining **⏳** items (e.g. Necromancy outcome table as Storyteller-only unless a supplement is adopted).
 
 ### 7.4 Remaining open decisions
 
@@ -123,7 +123,7 @@ All ⏳ items currently in the audit that require a product/chronicle/architectu
 | ✅ **Necromancy catalog** | P5 / P3-3 | **Canonical** `SeedSource/kindred_necromancy_rituals.json` only; P3-3 Option A **retired** |
 | ✅ **Ritual session persistence** | P1-1 | **Decided 2026-04-02:** Blazor/circuit UI state for extended progress; each roll → chronicle roll feed (Redis) like other dice; **no** `CharacterRiteSession` DB entity |
 | ✅ **Cost timing for extended rituals** | P1-1 | **Decided 2026-04-02:** **Once** on `BeginRiteActivationAsync` only; no per-roll or on-completion billing; no separate open-session API for costs |
-| ⏳ **Theban sacrament UX** | P0-2 | Per-miracle sacrament text as checkbox label vs generic "I have the sacrament"; UI copy timing (consumed at crescendo, not first roll) |
+| ✅ **Theban sacrament UX** | P0-2 | **Delivered:** `RiteActivationPrepModal` — `DisplayHint` in sacrament label; crescendo note for Theban + `PhysicalSacrament`; prep result carries ack flags (no generic `confirm()`) |
 | ⏳ **Necromancy outcome table** | P1-3 | No tradition-specific Conditions in PDF — confirm supplement adds none, or treat as Storyteller-only ruling |
 | ✅ **Potency scope boundary** | P1-4 | **Delivered:** informational display at completion + optional exceptional Discipline dots in UI; mechanical effect consumption remains future work |
 | ✅ **`ResolveRiteActivationPoolAsync` fate** | P4 Backlog | **Removed** from `ISorceryActivationService` / `SorceryActivationService` (2026-04-02) |

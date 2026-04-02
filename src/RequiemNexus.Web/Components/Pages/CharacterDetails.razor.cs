@@ -87,6 +87,7 @@ public partial class CharacterDetails : IAsyncDisposable
     private bool _isLearnCoilModalOpen = false;
     private bool _isRitePrepModalOpen;
     private CharacterRite? _pendingRiteForPrep;
+    private IReadOnlyList<RiteRequirement> _pendingRiteRequirements = [];
     private IReadOnlyList<CampaignKindredTargetDto> _riteKinTargets = [];
     private List<ScaleSummaryDto> _eligibleScales = [];
     private List<CoilSummaryDto> _eligibleCoils = [];
@@ -1312,6 +1313,7 @@ public partial class CharacterDetails : IAsyncDisposable
         if (!open)
         {
             _pendingRiteForPrep = null;
+            _pendingRiteRequirements = [];
         }
     }
 
@@ -1325,6 +1327,9 @@ public partial class CharacterDetails : IAsyncDisposable
         try
         {
             _pendingRiteForPrep = cr;
+            Result<IReadOnlyList<RiteRequirement>> parsed =
+                RiteRequirementValidator.ParseRequirements(cr.SorceryRiteDefinition?.RequirementsJson);
+            _pendingRiteRequirements = parsed.IsSuccess ? parsed.Value! : [];
             _riteKinTargets = await CharacterService.GetCampaignKindredTargetsForRitesAsync(_character.Id, _currentUserId);
             _isRitePrepModalOpen = true;
         }
@@ -1360,31 +1365,14 @@ public partial class CharacterDetails : IAsyncDisposable
         }
 
         var def = cr.SorceryRiteDefinition;
-        Result<IReadOnlyList<RiteRequirement>> parsed =
-            RiteRequirementValidator.ParseRequirements(def?.RequirementsJson);
-        IReadOnlyList<RiteRequirement> reqs = parsed.IsSuccess ? parsed.Value! : [];
 
         var request = new BeginRiteActivationRequest(
+            AcknowledgePhysicalSacrament: prep.AcknowledgePhysicalSacrament,
+            AcknowledgeHeart: prep.AcknowledgeHeart,
+            AcknowledgeMaterialOffering: prep.AcknowledgeMaterialOffering,
+            AcknowledgeMaterialFocus: prep.AcknowledgeMaterialFocus,
             ExtraVitae: prep.ExtraVitae,
             TargetCharacterId: prep.TargetCharacterId);
-        if (RiteRequirementValidator.RequiresExternalAcknowledgment(reqs))
-        {
-            bool ok = await JS.InvokeAsync<bool>(
-                "confirm",
-                "This rite requires narrative sacrifices (focus, sacrament, offering, etc.) you must have completed at the table. Confirm to apply Vitae/Willpower/stain costs and roll.");
-            if (!ok)
-            {
-                return;
-            }
-
-            request = new BeginRiteActivationRequest(
-                AcknowledgePhysicalSacrament: true,
-                AcknowledgeHeart: true,
-                AcknowledgeMaterialOffering: true,
-                AcknowledgeMaterialFocus: true,
-                ExtraVitae: prep.ExtraVitae,
-                TargetCharacterId: prep.TargetCharacterId);
-        }
 
         BeginRiteActivationResult activation = await SorceryActivationService.BeginRiteActivationAsync(
             _character.Id,
@@ -1392,6 +1380,18 @@ public partial class CharacterDetails : IAsyncDisposable
             _currentUserId,
             request);
         _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+        if (activation.NecromancyDegenerationCheckRaised && _character != null)
+        {
+            string chronicleNote = _character.CampaignId.HasValue
+                ? "Your Storyteller's Glimpse dashboard has been updated with a pending degeneration alert for this character."
+                : "Join a chronicle so your Storyteller can receive the pending degeneration alert on the Glimpse dashboard.";
+            ToastService.Show(
+                "Necromancy breaking point",
+                "At Humanity 7 or higher, using Kindred Necromancy calls for a degeneration check. " + chronicleNote,
+                ToastType.Info,
+                8000);
+        }
+
         _rollerTraitName = cr.SorceryRiteDefinition?.Name ?? "Rite";
         _rollerBaseDice = activation.DicePool;
         _rollerFixedDicePool = activation.DicePool;

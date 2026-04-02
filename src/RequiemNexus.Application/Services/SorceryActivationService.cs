@@ -190,7 +190,9 @@ public class SorceryActivationService(
             }
         }
 
-        if (def.SorceryType == SorceryType.Necromancy && character.Humanity >= 7)
+        bool necromancyDegenerationCheckRaised =
+            def.SorceryType == SorceryType.Necromancy && character.Humanity >= 7;
+        if (necromancyDegenerationCheckRaised)
         {
             _domainEventDispatcher.Dispatch(
                 new DegenerationCheckRequiredEvent(characterId, DegenerationReason.NecromancyActivation));
@@ -243,7 +245,8 @@ public class SorceryActivationService(
             maxExtendedRolls,
             def.TargetSuccesses,
             minutesPerRoll,
-            traditionDots);
+            traditionDots,
+            necromancyDegenerationCheckRaised);
     }
 
     /// <summary>
