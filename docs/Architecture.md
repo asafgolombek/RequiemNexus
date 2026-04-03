@@ -171,7 +171,7 @@ Security is an architectural concern, not a feature bolted on afterward.
 
 ### Authorization Boundaries
 
-- **Authentication** is handled by ASP.NET Core Identity in the Infrastructure Layer (cookie sessions for the Blazor app; JWT or other bearer schemes are out of scope until a separate public API is introduced).
+- **Authentication** is handled by ASP.NET Core Identity in the Infrastructure Layer (**cookie sessions** for the Blazor app). **JWT or other bearer schemes** are **not** on the near-term roadmap; they would apply only if a **separate public API** were introduced in a **future** phase.
 - **Authorization checks** live in the **Application Layer** — every use case verifies ownership before executing.
 - The Presentation Layer **never** makes authorization decisions; it only reflects the outcome.
 

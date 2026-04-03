@@ -2,7 +2,7 @@
 
 You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-## 🧭 Active Phase: Phase 20 — The Global Embrace (i18n, public API, Discord, production polish)
+## 🧭 Active Phase: Phase 20 — The Global Embrace (Discord, production polish, optional P3+ backlog; not near-term: i18n, public API)
 - **Content vs. Behavior:** Covenants, Blood Sorcery, and Coils/Scales are seed data interpreted by a stable engine.
 - **Pool Resolver:** Supports additive pools, contested rolls, penalty dice, and lower-of. Passive modifier engine integrated.
 - **Phase 14 delivered:** The Danse Macabre — combat pipeline (`AttackService`, `AttackResult`, `CharacterHealthService`, `WoundPenaltyResolver`, NPC combat, `NpcCombatService`); B/L/A overflow, armor mitigation, Vitae fast-heal, wound penalty in pools, full combat UI.

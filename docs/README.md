@@ -151,9 +151,9 @@ RequiemNexus/
 | 17 | **The Fog of Eternity** — Humanity & Conditions | ✅ Complete |
 | 18 | **The Wider Web** — Edge Systems & Content | ✅ Complete |
 | 19 | **The Blood Lineage** — Discipline Acquisition Rules | ✅ Complete |
-| 20 | **The Global Embrace** — i18n, public API (last planned phase) | 🔄 Active |
+| 20 | **The Global Embrace** — Discord, production polish, P3+ tech backlog (last planned phase) | 🔄 Active |
 
-**Next up:** **Phase 20 — The Global Embrace** is **active**: i18n, public API, Discord presence, and production rollout remain on the roadmap checklist. **Phase 20 technical polish (Waves 1–4)** — performance, decomposition, and UI consistency — is **delivered** (2026-04-03); see [`docs/mission.md`](./mission.md) Phase 20 and [`docs/plan-improvement.md`](./plan-improvement.md) (optional **P3** extractions still listed there). V:tR 2e playability work through **Phase 19.5** is complete.
+**Next up:** **Phase 20 — The Global Embrace** is **active**: **Discord Rich Presence**, **production rollout** (e.g. SignalR at scale), and optional **P3+** items in [`docs/plan-improvement.md`](./plan-improvement.md) remain open. **i18n** and a **public REST API** are **not** on the near-term roadmap (see [`docs/mission.md`](./mission.md) Phase 20). **Phase 20 technical polish (Waves 1–4)** — performance, decomposition, and UI consistency — is **delivered** (2026-04-03). V:tR 2e playability work through **Phase 19.5** is complete.
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 
