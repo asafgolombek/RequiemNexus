@@ -1,0 +1,81 @@
+@using Microsoft.AspNetCore.Components
+@using RequiemNexus.Data.Models
+
+<div class="tab-panel">
+    <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+        <h3 style="margin:0;">Chronicle NPCs</h3>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.75rem;">
+            <label style="font-size:0.85em;">
+                <input type="checkbox" checked="@ShowDeceased" @onchange="OnShowDeceasedChanged" /> Show deceased
+            </label>
+            <button type="button" class="btn-rn-primary" @onclick="OnOpenCreateModal">Create NPC</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(FeedbackMessage))
+    {
+        <p class="feedback-ok">@FeedbackMessage</p>
+    }
+
+    @if (!Npcs.Any())
+    {
+        <div class="empty-state-rn"><p>No NPCs defined yet.</p></div>
+    }
+    else
+    {
+        <div class="character-grid">
+            @foreach (ChronicleNpc npc in Npcs)
+            {
+                <div class="card-rn @(npc.IsAlive ? "" : "opacity-muted")">
+                    <h4><a href="/campaigns/@CampaignId/npcs/@npc.Id">@npc.Name</a>
+                        @if (!npc.IsAlive)
+                        {
+                            <span class="badge-rn" style="font-size:0.7em;">☠ Deceased</span>
+                        }
+                    </h4>
+                    @if (!string.IsNullOrEmpty(npc.Title))
+                    {
+                        <p class="text-muted">@npc.Title</p>
+                    }
+                    @if (npc.PrimaryFaction != null)
+                    {
+                        <p>Faction: <a href="/campaigns/@CampaignId/factions/@npc.PrimaryFactionId">@npc.PrimaryFaction.Name</a></p>
+                    }
+                    <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" disabled="@Busy" @onclick="() => OnDeleteNpc.InvokeAsync(npc.Id)">🗑 Delete</button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ChronicleNpc> Npcs { get; set; } = [];
+
+    [Parameter]
+    public bool ShowDeceased { get; set; }
+
+    [Parameter]
+    public string? FeedbackMessage { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenCreateModal { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDeleteNpc { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ShowDeceasedChanged { get; set; }
+
+    private async Task OnShowDeceasedChanged(ChangeEventArgs e)
+    {
+        bool v = e.Value is bool b && b;
+        await ShowDeceasedChanged.InvokeAsync(v);
+    }
+}

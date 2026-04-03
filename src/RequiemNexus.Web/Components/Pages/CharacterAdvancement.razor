@@ -11,13 +11,12 @@
 @using RequiemNexus.Domain.Models
 @using RequiemNexus.Data.Models.Enums
 @using RequiemNexus.Web.Helpers
+@using RequiemNexus.Web.Enums
+@using RequiemNexus.Domain.Enums
 @using Microsoft.JSInterop
 @inject ICharacterService CharacterService
 @inject ISorceryService SorceryService
 @inject IAdvancementService AdvancementService
-@inject IClanService ClanService
-@inject IMeritService MeritService
-@inject IDisciplineService DisciplineService
 @inject ICharacterMeritService CharacterMeritService
 @inject ICharacterDisciplineService CharacterDisciplineService
 @inject IDevotionService DevotionService
@@ -25,6 +24,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject ToastService ToastService
 
 <PageTitle>Advancement: @(_character?.Name ?? "Loading...") - Requiem Nexus</PageTitle>
 
@@ -51,214 +51,51 @@ else
             </div>
         </header>
 
-        @if (!string.IsNullOrEmpty(_errorMessage))
+        @if (!string.IsNullOrEmpty(_validationMessage))
         {
-            <div @ref="_errorAlertRef" class="alert alert-danger mb-3" role="alert" aria-live="polite">@_errorMessage</div>
+            <div @ref="_validationMessageRef" class="advancement-validation-message text-danger mb-3" role="status" aria-live="polite">@_validationMessage</div>
         }
 
         <CascadingValue Value="true" Name="IsEditable">
             <div class="cs-grid">
-                <!-- ATTRIBUTES -->
-                <section class="cs-section cs-attributes">
-                    <h2>Attributes (New Dot x 4 XP)</h2>
-                    <div class="grid-3-col">
-                        @foreach (var (label, category) in new[] {
-                            ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
-                            ("Physical", RequiemNexus.Data.Models.Enums.TraitCategory.Physical),
-                            ("Social", RequiemNexus.Data.Models.Enums.TraitCategory.Social)
-                        })
-                        {
-                            <div class="stat-col @label.ToLower()">
-                                <h3>@label</h3>
-                                @foreach (var attr in _character.Attributes.Where(a => a.Category == category))
-                                {
-                                    var id = Enum.Parse<AttributeId>(attr.Name);
-                                    <DotScale Value="attr.Rating" ValueChanged='(int val) => TryUpgrade(id, attr.Rating, val)' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
-                                }
-                            </div>
-                        }
-                    </div>
-                </section>
+                <AttributesAdvancementSection Character="_character"
+                                              OnAttributeRatingChange="OnAttributeRatingChangeAsync" />
+                <SkillsAdvancementSection Character="_character"
+                                          OnSkillRatingChange="OnSkillRatingChangeAsync" />
 
-                <!-- SKILLS -->
-                <section class="cs-section cs-skills">
-                    <h2>Skills (New Dot x 2 XP)</h2>
-                    <div class="grid-3-col">
-                        @foreach (var (label, category) in new[] {
-                            ("Mental", RequiemNexus.Data.Models.Enums.TraitCategory.Mental),
-                            ("Physical", RequiemNexus.Data.Models.Enums.TraitCategory.Physical),
-                            ("Social", RequiemNexus.Data.Models.Enums.TraitCategory.Social)
-                        })
-                        {
-                            <div class="stat-col @label.ToLower()">
-                                <h3>@label</h3>
-                                @foreach (var skill in _character.Skills.Where(s => s.Category == category))
-                                {
-                                    var id = Enum.Parse<SkillId>(skill.Name);
-                                    <DotScale Value="skill.Rating" ValueChanged='(int val) => TryUpgrade(id, skill.Rating, val)' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
-                                }
-                            </div>
-                        }
-                    </div>
-                </section>
-                
                 @if (_character.Disciplines.Any())
                 {
-                    <section class="cs-section cs-disciplines">
-                        <h2>Disciplines (clan triple, bloodline fourth, out-of-clan)</h2>
-                        <ul class="trait-list disciplines-list" style="max-width: 400px;">
-                            @foreach (var disc in _character.Disciplines)
-                            {
-                                <li class="trait-item discipline-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <span style="flex-grow: 1;">
-                                        @disc.Discipline?.Name
-                                        @if (disc.Discipline != null)
-                                        {
-                                            <span style="display: block; font-size: 0.8em; color: #a0a0a0;">@DisciplineUiLabels.FormatAffinityBadge(_character, disc.Discipline)</span>
-                                            var advTags = DisciplineUiLabels.FormatDefinitionTags(disc.Discipline);
-                                            if (!string.IsNullOrEmpty(advTags))
-                                            {
-                                                <span style="display: block; font-size: 0.75em; color: #888;">@advTags</span>
-                                            }
-                                        }
-                                    </span>
-                                    <DotScale Value="disc.Rating" ValueChanged='(int val) => TryUpgradeDiscipline(disc, val)' Max="5" ShowRollButton="false" />
-                                </li>
-                            }
-                        </ul>
-                    </section>
+                    <DisciplinesAdvancementListSection Character="_character"
+                                                       OnDisciplineRatingChange="OnDisciplineRatingChangeAsync" />
                 }
 
-                <!-- ADD NEW MERIT -->
-                <section class="cs-section cs-advantages">
-                    <h2>Add New Merit (Rating x 1 XP)</h2>
-                    <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <select @bind="_selectedMeritId" class="equipment-select" style="min-width: 200px;" aria-label="Merit to purchase">
-                            <option value="0">-- Select Merit --</option>
-                            @foreach (var m in _availableMerits)
-                            {
-                                var cat = string.IsNullOrEmpty(m.MeritCategory) ? string.Empty : $" [{m.MeritCategory}]";
-                                <option value="@m.Id">@m.Name (@m.ValidRatings)@cat</option>
-                            }
-                        </select>
+                <MeritsAdvancementSection AvailableMerits="_availableMerits"
+                                         SelectedMeritId="_selectedMeritId"
+                                         SelectedMeritIdChanged="OnMeritIdChangedAsync"
+                                         NewMeritSpecification="_newMeritSpecification"
+                                         NewMeritSpecificationChanged="OnMeritSpecificationChangedAsync"
+                                         NewMeritRating="_newMeritRating"
+                                         NewMeritRatingChanged="OnMeritRatingChangedAsync"
+                                         OnAddMerit="AddNewMerit" />
 
-                        @if (SelectedMeritRequiresSpec)
-                        {
-                            <input type="text" @bind="_newMeritSpecification" placeholder="Specification..." class="char-meta-input" style="width: 150px;" aria-label="Merit specification" />
-                        }
+                <NewDisciplineAdvancementSection Character="_character"
+                                                 AvailableDisciplines="_availableDisciplines"
+                                                 SelectedDisciplineId="_selectedDisciplineId"
+                                                 SelectedDisciplineIdChanged="OnDisciplineIdChangedAsync"
+                                                 NewDisciplineRating="_newDisciplineRating"
+                                                 NewDisciplineRatingChanged="OnNewDisciplineRatingChangedAsync"
+                                                 OnAddDiscipline="AddNewDiscipline" />
 
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <label for="new-merit-rating">Rating:</label>
-                            <input id="new-merit-rating" type="number" min="1" max="5" @bind="_newMeritRating" class="equipment-quantity" style="width: 60px;" />
-                        </div>
-
-                        <button class="btn-rn-primary" @onclick="AddNewMerit" disabled="@(_selectedMeritId == 0)">Add</button>
-                    </div>
-                    @if (_selectedMeritId != 0)
-                    {
-                        var selectedMerit = _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId);
-                        if (selectedMerit != null)
-                        {
-                            <div style="margin-top: 10px; font-size: 0.9em; color: #d0d0d0; background: #1a1a1a; padding: 10px; border-radius: 4px; border-left: 3px solid #550000;">
-                                <strong>@selectedMerit.Name</strong>
-                                <p style="margin: 5px 0; white-space: pre-wrap;">@selectedMerit.Description</p>
-                            </div>
-                        }
-                    }
-                </section>
-
-                <!-- ADD NEW DISCIPLINE -->
-                <section class="cs-section cs-disciplines">
-                    <h2>Add New Discipline</h2>
-                    <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <select @bind="_selectedDisciplineId" class="equipment-select" style="min-width: 200px;" aria-label="Discipline to add">
-                            <option value="0">-- Select Discipline --</option>
-                            @foreach (var d in _availableDisciplines.Where(ad => !_character.Disciplines.Any(cd => cd.DisciplineId == ad.Id)))
-                            {
-                                <option value="@d.Id">@DisciplineUiLabels.FormatAdvancementOption(_character, d)</option>
-                            }
-                        </select>
-
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <label for="new-discipline-rating">Starting Rating:</label>
-                            <input id="new-discipline-rating" type="number" min="1" max="5" @bind="_newDisciplineRating" class="equipment-quantity" style="width: 60px;" />
-                        </div>
-
-                        <button class="btn-rn-primary" @onclick="AddNewDiscipline" disabled="@(_selectedDisciplineId == 0)">Add</button>
-                    </div>
-                </section>
-
-                <!-- ADD NEW DEVOTION -->
-                <section class="cs-section cs-devotions">
-                    <h2>Purchase Devotions</h2>
-                    @if (_eligibleDevotions.Any())
-                    {
-                        <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <select @bind="_selectedDevotionId" class="equipment-select" style="min-width: 200px;" aria-label="Devotion to purchase">
-                                <option value="0">-- Select Devotion --</option>
-                                @foreach (var d in _eligibleDevotions)
-                                {
-                                    <option value="@d.Id">@d.Name (@d.XpCost XP)</option>
-                                }
-                            </select>
-                            <button class="btn-rn-primary" @onclick="AddNewDevotion" disabled="@(_selectedDevotionId == 0)">Purchase</button>
-                        </div>
-                        
-                        @if (_selectedDevotionId != 0)
-                        {
-                            var selected = _eligibleDevotions.First(d => d.Id == _selectedDevotionId);
-                            <div style="margin-top: 10px; font-size: 0.9em; color: #d0d0d0; background: #1a1a1a; padding: 10px; border-radius: 4px; border-left: 3px solid #550000;">
-                                <strong>@selected.Name</strong>
-                                <p style="margin: 5px 0;">@selected.Description</p>
-                                <div style="font-size: 0.85em; color: #a0a0a0;">
-                                    Prerequisites: 
-                                    @foreach (var p in selected.Prerequisites.OrderBy(p => p.OrGroupId).ThenBy(p => p.DisciplineId))
-                                    {
-                                        <span>@(p.Discipline?.Name ?? "Discipline") @p.MinimumLevel</span>
-                                        @if (p != selected.Prerequisites.Last()) { <span>, </span> }
-                                    }
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-muted-rn" style="font-size: 0.9em;">No new devotions eligible for purchase at this time.</p>
-                    }
-                </section>
+                <DevotionsAdvancementSection EligibleDevotions="_eligibleDevotions"
+                                            SelectedDevotionId="_selectedDevotionId"
+                                            SelectedDevotionIdChanged="OnDevotionIdChangedAsync"
+                                            OnPurchaseDevotion="AddNewDevotion" />
 
                 @if (ShowBloodSorcerySection)
                 {
-                    <section class="cs-section cs-blood-sorcery">
-                        <h2>Blood Sorcery Rites</h2>
-                        @{
-                            var pendingRiteAdv = _character.Rites?.FirstOrDefault(r => r.Status == RiteLearnStatus.Pending);
-                        }
-                        @if (pendingRiteAdv?.SorceryRiteDefinition != null)
-                        {
-                            <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingRiteAdv.SorceryRiteDefinition.Name</strong> — awaiting Storyteller approval.</p>
-                            <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
-                            @if (_character.CampaignId.HasValue)
-                            {
-                                <a href="/campaigns/@_character.CampaignId/glimpse" class="btn-rn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-muted-rn" style="font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, or Necromancy rites you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
-                            <button type="button" class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@IsOpeningModal(nameof(OpenLearnRiteModal))" aria-busy="@IsOpeningModal(nameof(OpenLearnRiteModal))">
-                                @if (IsOpeningModal(nameof(OpenLearnRiteModal)))
-                                {
-                                    <span class="btn-inline-spinner" aria-hidden="true"></span>
-                                    <span>Opening…</span>
-                                }
-                                else
-                                {
-                                    <span>Request rite</span>
-                                }
-                            </button>
-                        }
-                    </section>
+                    <BloodSorceryAdvancementSection Character="_character"
+                                                   IsOpeningLearnRiteModal="IsOpeningModal(nameof(OpenLearnRiteModal))"
+                                                   OnOpenLearnRiteModal="OpenLearnRiteModal" />
                 }
             </div>
         </CascadingValue>
@@ -295,10 +132,10 @@ else
 
     private Character? _character;
     private string? _userId;
-    private string? _errorMessage;
-    private ElementReference _errorAlertRef;
-    private int _errorAlertNonce;
-    private int _lastScrolledErrorNonce;
+    private string? _validationMessage;
+    private ElementReference _validationMessageRef;
+    private int _validationMessageNonce;
+    private int _lastScrolledValidationNonce;
 
     private List<Merit> _availableMerits = new();
     private int _selectedMeritId = 0;
@@ -331,9 +168,6 @@ else
             (_character.Covenant?.SupportsBloodSorcery == true)
             || _character.GetDisciplineRating("Necromancy") > 0);
 
-    private bool SelectedMeritRequiresSpec => 
-        _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId)?.RequiresSpecification ?? false;
-
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -352,27 +186,74 @@ else
         }
     }
 
-    /// <summary>Sets the visible advancement error and bumps the nonce so <see cref="OnAfterRenderAsync"/> can scroll the alert into view.</summary>
-    private void SetAdvancementError(string message)
+    private void SetValidationMessage(string message)
     {
-        _errorMessage = message;
-        _errorAlertNonce++;
+        _validationMessage = message;
+        _validationMessageNonce++;
     }
+
+    private void ShowAdvancementToastError(string message) =>
+        ToastService.Show("Advancement", message, ToastType.Error);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_errorAlertNonce > _lastScrolledErrorNonce && !string.IsNullOrEmpty(_errorMessage))
+        if (_validationMessageNonce > _lastScrolledValidationNonce && !string.IsNullOrEmpty(_validationMessage))
         {
-            _lastScrolledErrorNonce = _errorAlertNonce;
+            _lastScrolledValidationNonce = _validationMessageNonce;
             try
             {
-                await JSRuntime.InvokeVoidAsync("scrollElementIntoView", _errorAlertRef);
+                await JSRuntime.InvokeVoidAsync("scrollElementIntoView", _validationMessageRef);
             }
             catch (JSException)
             {
                 // Prerender or disconnected circuit — no DOM to scroll.
             }
         }
+    }
+
+    private Task OnAttributeRatingChangeAsync((AttributeId Id, int CurrentRating, int NewRating) arg) =>
+        TryUpgrade(arg.Id, arg.CurrentRating, arg.NewRating);
+
+    private Task OnSkillRatingChangeAsync((SkillId Id, int CurrentRating, int NewRating) arg) =>
+        TryUpgrade(arg.Id, arg.CurrentRating, arg.NewRating);
+
+    private Task OnDisciplineRatingChangeAsync((CharacterDiscipline Discipline, int NewRating) arg) =>
+        TryUpgradeDiscipline(arg.Discipline, arg.NewRating);
+
+    private async Task OnMeritIdChangedAsync(int id)
+    {
+        _selectedMeritId = id;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnMeritSpecificationChangedAsync(string? value)
+    {
+        _newMeritSpecification = value;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnMeritRatingChangedAsync(int value)
+    {
+        _newMeritRating = value;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDisciplineIdChangedAsync(int id)
+    {
+        _selectedDisciplineId = id;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnNewDisciplineRatingChangedAsync(int value)
+    {
+        _newDisciplineRating = value;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDevotionIdChangedAsync(int id)
+    {
+        _selectedDevotionId = id;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void GoBackToSheet()
@@ -383,8 +264,8 @@ else
     private async Task TryUpgrade(AttributeId id, int currentRating, int newRating)
     {
         if (_character == null) return;
-        
-        _errorMessage = null;
+
+        _validationMessage = null;
 
         if (newRating > currentRating)
         {
@@ -398,7 +279,7 @@ else
             }
             else
             {
-                SetAdvancementError("Not enough Experiences to upgrade that attribute.");
+                SetValidationMessage("Not enough Experiences to upgrade that attribute.");
             }
         }
     }
@@ -406,8 +287,8 @@ else
     private async Task TryUpgrade(SkillId id, int currentRating, int newRating)
     {
         if (_character == null) return;
-        
-        _errorMessage = null;
+
+        _validationMessage = null;
 
         if (newRating > currentRating)
         {
@@ -419,7 +300,7 @@ else
             }
             else
             {
-                SetAdvancementError("Not enough Experiences to upgrade that skill.");
+                SetValidationMessage("Not enough Experiences to upgrade that skill.");
             }
         }
     }
@@ -431,7 +312,7 @@ else
             return;
         }
 
-        _errorMessage = null;
+        _validationMessage = null;
 
         var request = new DisciplineAcquisitionRequest(_character.Id, cd.DisciplineId, newRating);
         Result<CharacterDiscipline> result = await CharacterDisciplineService.TryUpgradeDisciplineAsync(request, _userId);
@@ -453,7 +334,7 @@ else
             return;
         }
 
-        SetAdvancementError(result.Error ?? "Could not upgrade that Discipline.");
+        SetValidationMessage(result.Error ?? "Could not upgrade that Discipline.");
     }
 
     private async Task AddNewMerit()
@@ -463,25 +344,26 @@ else
             return;
         }
 
-        _errorMessage = null;
+        _validationMessage = null;
 
-        if (SelectedMeritRequiresSpec && string.IsNullOrWhiteSpace(_newMeritSpecification))
+        bool meritRequiresSpec = _availableMerits.FirstOrDefault(m => m.Id == _selectedMeritId)?.RequiresSpecification ?? false;
+        if (meritRequiresSpec && string.IsNullOrWhiteSpace(_newMeritSpecification))
         {
-            SetAdvancementError("This merit requires a specification.");
+            SetValidationMessage("This merit requires a specification.");
             return;
         }
 
         int xpCost = ExperienceCostRules.CalculateMeritCost(0, _newMeritRating);
         if (_character.ExperiencePoints < xpCost)
         {
-            SetAdvancementError($"Not enough Experiences to add that merit. Cost is {xpCost} XP.");
+            SetValidationMessage($"Not enough Experiences to add that merit. Cost is {xpCost} XP.");
             return;
         }
 
         try
         {
             Merit merit = _availableMerits.First(m => m.Id == _selectedMeritId);
-            string? specForPurchase = SelectedMeritRequiresSpec
+            string? specForPurchase = meritRequiresSpec
                 ? (_newMeritSpecification ?? string.Empty).Trim()
                 : null;
             CharacterMerit cm = await CharacterMeritService.AddMeritAsync(
@@ -506,7 +388,7 @@ else
         }
         catch (Exception ex)
         {
-            SetAdvancementError(ex.Message);
+            ShowAdvancementToastError(ex.Message);
         }
     }
 
@@ -517,7 +399,7 @@ else
             return;
         }
 
-        _errorMessage = null;
+        _validationMessage = null;
 
         var request = new DisciplineAcquisitionRequest(_character.Id, _selectedDisciplineId, _newDisciplineRating);
         Result<CharacterDiscipline> result = await CharacterDisciplineService.AddDisciplineAsync(request, _userId);
@@ -549,7 +431,7 @@ else
             return;
         }
 
-        SetAdvancementError(result.Error ?? "Could not add that Discipline.");
+        SetValidationMessage(result.Error ?? "Could not add that Discipline.");
     }
 
     private static bool DisciplineFailureAllowsStorytellerAck(string? error) =>
@@ -574,7 +456,7 @@ else
 
         if (!result.IsSuccess || result.Value == null)
         {
-            SetAdvancementError(result.Error ?? "Discipline purchase failed after Storyteller acknowledgment.");
+            ShowAdvancementToastError(result.Error ?? "Discipline purchase failed after Storyteller acknowledgment.");
             await InvokeAsync(StateHasChanged);
             return;
         }
@@ -612,7 +494,7 @@ else
     {
         if (_character == null || _selectedDevotionId == 0) return;
 
-        _errorMessage = null;
+        _validationMessage = null;
 
         try
         {
@@ -627,7 +509,7 @@ else
         }
         catch (Exception ex)
         {
-            SetAdvancementError(ex.Message);
+            ShowAdvancementToastError(ex.Message);
         }
     }
 
@@ -646,7 +528,7 @@ else
             return;
         }
 
-        _errorMessage = null;
+        _validationMessage = null;
         _pendingModal = nameof(OpenLearnRiteModal);
         await InvokeAsync(StateHasChanged);
         try
@@ -654,7 +536,7 @@ else
             _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _userId);
             if (_eligibleRites.Count == 0)
             {
-                SetAdvancementError("No eligible rites. Raise Crúac, Theban Sorcery, or Necromancy to the required level, meet covenant/clan gates, or you may already have a pending request.");
+                SetValidationMessage("No eligible rites. Raise Crúac, Theban Sorcery, or Necromancy to the required level, meet covenant/clan gates, or you may already have a pending request.");
                 return;
             }
 
@@ -662,7 +544,7 @@ else
         }
         catch (Exception ex)
         {
-            SetAdvancementError(ex.Message);
+            ShowAdvancementToastError(ex.Message);
         }
         finally
         {
@@ -677,7 +559,7 @@ else
             return;
         }
 
-        _errorMessage = null;
+        _validationMessage = null;
         try
         {
             await SorceryService.RequestLearnRiteAsync(_character.Id, sorceryRiteDefinitionId, _userId);
@@ -692,7 +574,7 @@ else
         }
         catch (Exception ex)
         {
-            SetAdvancementError(ex.Message);
+            ShowAdvancementToastError(ex.Message);
         }
     }
 }

@@ -1,5 +1,7 @@
 @page "/character/{Id:int}"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Logging
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.Models.Enums
 @using System.Security.Claims
@@ -16,10 +18,12 @@
 @using RequiemNexus.Web.Services
 @using RequiemNexus.Web.Helpers
 @using Microsoft.JSInterop
+@inject NavigationManager NavigationManager
+@inject ILogger<CharacterDetails> Logger
+@inject ITouchstoneService TouchstoneService
 @inject ICharacterService CharacterService
 @inject ICharacterAssetService CharacterAssetService
 @inject IAssetProcurementService AssetProcurementService
-@inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
 @inject ITraitResolver TraitResolver
 @inject IHumanityService HumanityService

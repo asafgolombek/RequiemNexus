@@ -1,0 +1,49 @@
+@using RequiemNexus.Data.Models
+
+<div class="tab-panel">
+    <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+        <h3 style="margin:0;">Power Structure</h3>
+        <button type="button" class="btn-rn-primary" @onclick="OnOpenCreateModal">Create faction</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(FeedbackMessage))
+    {
+        <p class="feedback-ok">@FeedbackMessage</p>
+    }
+
+    @if (!Factions.Any())
+    {
+        <div class="empty-state-rn"><p>No factions defined yet.</p></div>
+    }
+    else
+    {
+        <div class="character-grid">
+            @foreach (CityFaction faction in Factions)
+            {
+                <div class="card-rn">
+                    <h4><a href="/campaigns/@CampaignId/factions/@faction.Id">@faction.Name</a></h4>
+                    <p class="text-muted">@faction.FactionType — Influence @faction.InfluenceRating</p>
+                    @if (faction.LeaderNpc != null)
+                    {
+                        <p>Leader: <a href="/campaigns/@CampaignId/npcs/@faction.LeaderNpcId">@faction.LeaderNpc.Name</a></p>
+                    }
+                    <p class="text-muted" style="font-size:0.85em;">@faction.Members.Count member(s)</p>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CityFaction> Factions { get; set; } = [];
+
+    [Parameter]
+    public string? FeedbackMessage { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenCreateModal { get; set; }
+}

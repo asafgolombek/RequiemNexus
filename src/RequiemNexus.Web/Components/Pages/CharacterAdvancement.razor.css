@@ -1,3 +1,11 @@
+/* Inline validation (§4.2): expected XP/spec/discipline messages — not Bootstrap alert. */
+.advancement-validation-message {
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    background: rgba(85, 0, 0, 0.15);
+    border-left: 3px solid var(--danger, #a94442);
+}
+
 /* Matches CharacterDetails modal-open affordance (plan §4.3). */
 .btn-inline-spinner {
     display: inline-block;

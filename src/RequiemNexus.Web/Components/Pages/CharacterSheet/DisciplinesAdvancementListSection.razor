@@ -1,0 +1,35 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Helpers
+
+<section class="cs-section cs-disciplines">
+    <h2>Disciplines (clan triple, bloodline fourth, out-of-clan)</h2>
+    <ul class="trait-list disciplines-list" style="max-width: 400px;">
+        @foreach (var disc in Character.Disciplines)
+        {
+            <li class="trait-item discipline-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="flex-grow: 1;">
+                    @disc.Discipline?.Name
+                    @if (disc.Discipline != null)
+                    {
+                        <span style="display: block; font-size: 0.8em; color: #a0a0a0;">@DisciplineUiLabels.FormatAffinityBadge(Character, disc.Discipline)</span>
+                        var advTags = DisciplineUiLabels.FormatDefinitionTags(disc.Discipline);
+                        if (!string.IsNullOrEmpty(advTags))
+                        {
+                            <span style="display: block; font-size: 0.75em; color: #888;">@advTags</span>
+                        }
+                    }
+                </span>
+                <DotScale Value="disc.Rating" ValueChanged='(int val) => OnDisciplineRatingChange.InvokeAsync((disc, val))' Max="5" ShowRollButton="false" />
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<(CharacterDiscipline Discipline, int NewRating)> OnDisciplineRatingChange { get; set; }
+}

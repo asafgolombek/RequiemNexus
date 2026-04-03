@@ -1,0 +1,55 @@
+@using RequiemNexus.Data.Models
+
+<div class="tab-panel">
+    <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
+        <h3 style="margin:0;">Feeding Territories</h3>
+        <button type="button" class="btn-rn-primary" @onclick="OnOpenCreateModal">Create territory</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(FeedbackMessage))
+    {
+        <p class="feedback-ok">@FeedbackMessage</p>
+    }
+
+    @if (!Territories.Any())
+    {
+        <div class="empty-state-rn"><p>No territories defined yet.</p></div>
+    }
+    else
+    {
+        <div class="character-grid">
+            @foreach (FeedingTerritory territory in Territories)
+            {
+                <div class="card-rn">
+                    <h4>@territory.Name <span class="badge-rn">Rating @territory.Rating</span></h4>
+                    <p class="text-muted">@territory.Description</p>
+                    @if (territory.ControlledByFaction != null)
+                    {
+                        <p>Controlled by: <a href="/campaigns/@CampaignId/factions/@territory.ControlledByFactionId">@territory.ControlledByFaction.Name</a></p>
+                    }
+                    <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" disabled="@Busy" @onclick="() => OnDeleteTerritory.InvokeAsync(territory.Id)">🗑 Delete</button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FeedingTerritory> Territories { get; set; } = [];
+
+    [Parameter]
+    public string? FeedbackMessage { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenCreateModal { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDeleteTerritory { get; set; }
+}

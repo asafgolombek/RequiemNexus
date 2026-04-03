@@ -1,0 +1,44 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
+
+<section class="cs-section cs-blood-sorcery">
+    <h2>Blood Sorcery Rites</h2>
+    @{
+        var pendingRiteAdv = Character.Rites?.FirstOrDefault(r => r.Status == RiteLearnStatus.Pending);
+    }
+    @if (pendingRiteAdv?.SorceryRiteDefinition != null)
+    {
+        <p style="color: #a0a0a0; font-size: 0.9em;">Pending: <strong>@pendingRiteAdv.SorceryRiteDefinition.Name</strong> — awaiting Storyteller approval.</p>
+        <p style="font-size: 0.85em; color: var(--text-secondary); margin: 4px 0 0 0;">Your Storyteller will review this. You'll be notified when it's approved.</p>
+        @if (Character.CampaignId.HasValue)
+        {
+            <a href="/campaigns/@Character.CampaignId/glimpse" class="btn-rn-ghost" style="font-size: 0.85em; margin-top: 4px;">Storyteller Glimpse</a>
+        }
+    }
+    else
+    {
+        <p class="text-muted-rn" style="font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, or Necromancy rites you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
+        <button type="button" class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OnOpenLearnRiteModal" disabled="@IsOpeningLearnRiteModal" aria-busy="@IsOpeningLearnRiteModal">
+            @if (IsOpeningLearnRiteModal)
+            {
+                <span class="btn-inline-spinner" aria-hidden="true"></span>
+                <span>Opening…</span>
+            }
+            else
+            {
+                <span>Request rite</span>
+            }
+        </button>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter]
+    public bool IsOpeningLearnRiteModal { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenLearnRiteModal { get; set; }
+}

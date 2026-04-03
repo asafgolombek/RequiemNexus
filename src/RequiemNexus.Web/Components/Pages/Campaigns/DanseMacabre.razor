@@ -4,6 +4,7 @@
 @using RequiemNexus.Application.Contracts
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using RequiemNexus.Web.Components.Pages.Campaigns.DanseMacabreTabs
 @inject ICityFactionService FactionService
 @inject IChronicleNpcService NpcService
 @inject IFeedingTerritoryService TerritoryService
@@ -40,126 +41,32 @@
 
         @if (_activeTab == 0)
         {
-            <div class="tab-panel">
-                <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
-                    <h3 style="margin:0;">Feeding Territories</h3>
-                    <button type="button" class="btn-rn-primary" @onclick="() => _territoryModalOpen = true">Create territory</button>
-                </div>
-
-                @if (!string.IsNullOrEmpty(_feedbackMessage))
-                {
-                    <p class="feedback-ok">@_feedbackMessage</p>
-                }
-
-                @if (!_territories.Any())
-                {
-                    <div class="empty-state-rn"><p>No territories defined yet.</p></div>
-                }
-                else
-                {
-                    <div class="character-grid">
-                        @foreach (FeedingTerritory territory in _territories)
-                        {
-                            <div class="card-rn">
-                                <h4>@territory.Name <span class="badge-rn">Rating @territory.Rating</span></h4>
-                                <p class="text-muted">@territory.Description</p>
-                                @if (territory.ControlledByFaction != null)
-                                {
-                                    <p>Controlled by: <a href="/campaigns/@CampaignId/factions/@territory.ControlledByFactionId">@territory.ControlledByFaction.Name</a></p>
-                                }
-                                <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" disabled="@_busy" @onclick="() => DeleteTerritory(territory.Id)">🗑 Delete</button>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
+            <DanseTerritoriesTab CampaignId="CampaignId"
+                                 Territories="_territories"
+                                 FeedbackMessage="_feedbackMessage"
+                                 Busy="_busy"
+                                 OnOpenCreateModal="OpenTerritoryModal"
+                                 OnDeleteTerritory="DeleteTerritory" />
         }
 
         @if (_activeTab == 1)
         {
-            <div class="tab-panel">
-                <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
-                    <h3 style="margin:0;">Power Structure</h3>
-                    <button type="button" class="btn-rn-primary" @onclick="() => _factionModalOpen = true">Create faction</button>
-                </div>
-
-                @if (!string.IsNullOrEmpty(_feedbackMessage))
-                {
-                    <p class="feedback-ok">@_feedbackMessage</p>
-                }
-
-                @if (!_factions.Any())
-                {
-                    <div class="empty-state-rn"><p>No factions defined yet.</p></div>
-                }
-                else
-                {
-                    <div class="character-grid">
-                        @foreach (CityFaction faction in _factions)
-                        {
-                            <div class="card-rn">
-                                <h4><a href="/campaigns/@CampaignId/factions/@faction.Id">@faction.Name</a></h4>
-                                <p class="text-muted">@faction.FactionType — Influence @faction.InfluenceRating</p>
-                                @if (faction.LeaderNpc != null)
-                                {
-                                    <p>Leader: <a href="/campaigns/@CampaignId/npcs/@faction.LeaderNpcId">@faction.LeaderNpc.Name</a></p>
-                                }
-                                <p class="text-muted" style="font-size:0.85em;">@faction.Members.Count member(s)</p>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
+            <DansePowerStructureTab CampaignId="CampaignId"
+                                    Factions="_factions"
+                                    FeedbackMessage="_feedbackMessage"
+                                    OnOpenCreateModal="OpenFactionModal" />
         }
 
         @if (_activeTab == 2)
         {
-            <div class="tab-panel">
-                <div class="section-header" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;">
-                    <h3 style="margin:0;">Chronicle NPCs</h3>
-                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.75rem;">
-                        <label style="font-size:0.85em;">
-                            <input type="checkbox" @bind="_showDeceased" @bind:after="LoadNpcs" /> Show deceased
-                        </label>
-                        <button type="button" class="btn-rn-primary" @onclick="() => _npcModalOpen = true">Create NPC</button>
-                    </div>
-                </div>
-
-                @if (!string.IsNullOrEmpty(_feedbackMessage))
-                {
-                    <p class="feedback-ok">@_feedbackMessage</p>
-                }
-
-                @if (!_npcs.Any())
-                {
-                    <div class="empty-state-rn"><p>No NPCs defined yet.</p></div>
-                }
-                else
-                {
-                    <div class="character-grid">
-                        @foreach (ChronicleNpc npc in _npcs)
-                        {
-                            <div class="card-rn @(npc.IsAlive ? "" : "opacity-muted")">
-                                <h4><a href="/campaigns/@CampaignId/npcs/@npc.Id">@npc.Name</a>
-                                    @if (!npc.IsAlive)
-                                    {
-                                        <span class="badge-rn" style="font-size:0.7em;">☠ Deceased</span>
-                                    }
-                                </h4>
-                                @if (!string.IsNullOrEmpty(npc.Title))
-                                {
-                                    <p class="text-muted">@npc.Title</p>
-                                }
-                                @if (npc.PrimaryFaction != null)
-                                {
-                                    <p>Faction: <a href="/campaigns/@CampaignId/factions/@npc.PrimaryFactionId">@npc.PrimaryFaction.Name</a></p>
-                                }
-                                <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" disabled="@_busy" @onclick="() => DeleteNpc(npc.Id)">🗑 Delete</button>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
+            <DanseNpcsTab CampaignId="CampaignId"
+                          Npcs="_npcs"
+                          ShowDeceased="_showDeceased"
+                          FeedbackMessage="_feedbackMessage"
+                          Busy="_busy"
+                          OnOpenCreateModal="OpenNpcModal"
+                          OnDeleteNpc="DeleteNpc"
+                          ShowDeceasedChanged="OnShowDeceasedChangedAsync" />
         }
 
         <CreateFeedingTerritoryModal @bind-IsOpen="_territoryModalOpen"
@@ -247,6 +154,19 @@
     }
 
     private string TabClass(int tab) => _activeTab == tab ? "btn-rn-primary" : "btn-rn-ghost";
+
+    private void OpenTerritoryModal() => _territoryModalOpen = true;
+
+    private void OpenFactionModal() => _factionModalOpen = true;
+
+    private void OpenNpcModal() => _npcModalOpen = true;
+
+    private async Task OnShowDeceasedChangedAsync(bool value)
+    {
+        _showDeceased = value;
+        await LoadNpcs();
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task OnTerritoryCreatedAsync()
     {
