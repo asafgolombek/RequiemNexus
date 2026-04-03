@@ -5,6 +5,7 @@
 > **Status:** P1–P2 items targeting Phase 20 polish; P3–P4 items are post-Phase 20 tech-debt. See `docs/mission.md` Phase 20 section.
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
 > **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
+> **Wave 3 (started 2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8) — read paths (`GetCharactersByUserIdAsync`, `GetArchivedCharactersAsync`, `GetCharacterWithAccessCheckAsync`, campaign kindred targets after auth) live in `CharacterQueryService`; **`CharacterQueryableExtensions`** centralizes EF include graphs (detail edit vs access snapshot); `CharacterManagementService` delegates reads and keeps tracked `GetCharacterByIdAsync` / `ReloadCharacterAsync` + mutations. `ICharacterService` unchanged for consumers. Next: §3.2 reload reduction, `IModifierProvider`, `IRiteActivationStrategy`.
 > **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
 
 ---
@@ -465,7 +466,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 5. **`IReferenceDataCache`** (3.3) — **done (2026-04-03)** — singleton cache, startup warmup, Application services migrated; integration guard: `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables`
 
 ### Wave 3 — Service layer (depends on Wave 2 cache)
-6. **`CharacterQueryService` extraction** (1.2 / CharacterManagementService) — unblocks patch event work
+6. **`CharacterQueryService` extraction** (1.2 / CharacterManagementService) — unblocks patch event work — **done (2026-04-03)** (`ICharacterQueryService`, `CharacterQueryService`, `CharacterQueryableExtensions`, facade delegation on `CharacterManagementService`)
 7. **Reduce `GetCharacterByIdAsync` reload** (3.2) — depends on step 6
 8. **`IModifierProvider`** (2.2) — depends on stable service boundaries from step 6
 9. **`IRiteActivationStrategy`** (2.2) — self-contained, can run in parallel with step 8

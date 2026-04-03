@@ -30,16 +30,17 @@ public class CharacterArchivingTests
             referenceCache,
             NullLogger<HumanityService>.Instance);
 
+        var characterQuery = new CharacterQueryService(ctx, factory);
         return new CharacterManagementService(
             ctx,
-            factory,
             new CharacterCreationRules(),
             new BeatLedgerService(ctx),
             auth,
             new Mock<ISessionService>().Object,
             new CharacterCreationService(),
             humanity,
-            referenceCache);
+            referenceCache,
+            characterQuery);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)

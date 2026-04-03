@@ -51,16 +51,17 @@ public class CampaignServiceTests
             Mock.Of<IConditionService>(),
             referenceCache,
             NullLogger<HumanityService>.Instance);
+        var characterQuery = new CharacterQueryService(ctx, factory);
         return new CharacterManagementService(
             ctx,
-            factory,
             new RequiemNexus.Domain.Services.CharacterCreationRules(),
             new BeatLedgerService(ctx),
             auth,
             new Mock<ISessionService>().Object,
             new CharacterCreationService(),
             humanity,
-            referenceCache);
+            referenceCache,
+            characterQuery);
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>
