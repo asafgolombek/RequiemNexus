@@ -8,6 +8,7 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Web.Enums
 @inject IEncounterService EncounterService
 @inject IEncounterQueryService EncounterQueryService
 @inject IEncounterParticipantService EncounterParticipantService
@@ -19,6 +20,7 @@
 @inject ISessionService SessionService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject ToastService ToastService
 
 <PageTitle>Encounters - Requiem Nexus</PageTitle>
 
@@ -137,10 +139,6 @@
                                 <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@_busy" @onclick="() => SaveEncounterRename(enc.Id)">Save</button>
                                 <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="CancelEncounterRename">Cancel</button>
                             </div>
-                            @if (!string.IsNullOrEmpty(_renameEncounterError))
-                            {
-                                <p class="text-danger" style="font-size:0.85em;margin:0 0 0.5rem 0;">@_renameEncounterError</p>
-                            }
                         }
                         else
                         {
@@ -207,10 +205,6 @@
                                     <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmSmartLaunch">@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative &amp; join")</button>
                                     <button type="button" class="btn-rn-ghost" @onclick="CancelSmartLaunch">Cancel</button>
                                 </div>
-                                @if (!string.IsNullOrEmpty(_smartLaunchConfirmError))
-                                {
-                                    <p class="text-danger" style="margin-top:0.5rem;margin-bottom:0;">@_smartLaunchConfirmError</p>
-                                }
                             </div>
                         }
                         <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
@@ -256,10 +250,6 @@
                                     <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmSmartLaunch">@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative &amp; join")</button>
                                     <button type="button" class="btn-rn-ghost" @onclick="CancelSmartLaunch">Cancel</button>
                                 </div>
-                                @if (!string.IsNullOrEmpty(_smartLaunchConfirmError))
-                                {
-                                    <p class="text-danger" style="margin-top:0.5rem;margin-bottom:0;">@_smartLaunchConfirmError</p>
-                                }
                             </div>
                         }
                         <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">

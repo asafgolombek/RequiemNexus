@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Components.Web;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Web.Enums;
+using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Components.Pages.Campaigns;
 
@@ -25,7 +27,6 @@ public partial class EncounterManager
     private readonly Dictionary<int, bool> _smartLaunchSelection = [];
     private int? _smartLaunchEncounterId;
     private bool _smartLaunchIsPrepStart;
-    private string _smartLaunchConfirmError = string.Empty;
     private string _prepFeedback = string.Empty;
 
     private bool _loading = true;
@@ -65,7 +66,6 @@ public partial class EncounterManager
     private string _improvError = string.Empty;
     private int? _renamingEncounterId;
     private string _renameEncounterBuffer = string.Empty;
-    private string _renameEncounterError = string.Empty;
 
     private List<CombatEncounter> DraftEncounters => _encounters.Where(e => e.IsDraft).ToList();
 
@@ -172,7 +172,7 @@ public partial class EncounterManager
         }
         catch (Exception ex)
         {
-            _createError = ex.Message;
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
             return false;
         }
         finally
@@ -237,7 +237,7 @@ public partial class EncounterManager
             }
             catch (Exception ex)
             {
-                _createError = ex.Message;
+                ToastService.Show("Encounter", ex.Message, ToastType.Error);
                 return;
             }
             finally
@@ -389,14 +389,12 @@ public partial class EncounterManager
     {
         _renamingEncounterId = enc.Id;
         _renameEncounterBuffer = enc.Name;
-        _renameEncounterError = string.Empty;
     }
 
     private void CancelEncounterRename()
     {
         _renamingEncounterId = null;
         _renameEncounterBuffer = string.Empty;
-        _renameEncounterError = string.Empty;
     }
 
     private async Task SaveEncounterRename(int encounterId)
@@ -407,7 +405,6 @@ public partial class EncounterManager
         }
 
         _busy = true;
-        _renameEncounterError = string.Empty;
         try
         {
             await EncounterPrepService.UpdateDraftEncounterNameAsync(encounterId, _renameEncounterBuffer, _currentUserId);
@@ -416,7 +413,7 @@ public partial class EncounterManager
         }
         catch (Exception ex)
         {
-            _renameEncounterError = ex.Message;
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
         }
         finally
         {
@@ -508,7 +505,7 @@ public partial class EncounterManager
         }
         catch (Exception ex)
         {
-            _chronicleAddError = ex.Message;
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
         }
         finally
         {
@@ -613,7 +610,7 @@ public partial class EncounterManager
         }
         catch (Exception ex)
         {
-            _improvError = ex.Message;
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
         }
         finally
         {
@@ -644,7 +641,6 @@ public partial class EncounterManager
     {
         _smartLaunchEncounterId = encounterId;
         _smartLaunchIsPrepStart = prepStart;
-        _smartLaunchConfirmError = string.Empty;
         _createError = string.Empty;
         foreach (Character ch in _campaignCharacters)
         {
@@ -656,7 +652,6 @@ public partial class EncounterManager
     {
         _smartLaunchEncounterId = null;
         _smartLaunchIsPrepStart = false;
-        _smartLaunchConfirmError = string.Empty;
     }
 
     private async Task ConfirmSmartLaunch()
@@ -675,7 +670,6 @@ public partial class EncounterManager
             .ToList();
 
         _busy = true;
-        _smartLaunchConfirmError = string.Empty;
         _createError = string.Empty;
         try
         {
@@ -697,7 +691,7 @@ public partial class EncounterManager
         catch (Exception ex)
         {
             await LoadEncounters();
-            _smartLaunchConfirmError = ex.Message;
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
         }
         finally
         {

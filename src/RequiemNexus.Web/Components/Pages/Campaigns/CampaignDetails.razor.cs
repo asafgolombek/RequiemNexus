@@ -33,7 +33,6 @@ public partial class CampaignDetails : IDisposable
     private bool _showConfirmLeave = false;
     private int _confirmRemoveCharacterId = 0;
     private bool _busy = false;
-    private string? _errorMessage;
     private List<CampaignLore> _loreEntries = [];
     private List<SessionPrepNote> _sessionPrepNotes = [];
     private string _newLoreTitle = string.Empty;
@@ -47,7 +46,6 @@ public partial class CampaignDetails : IDisposable
     private bool _campaignLoadComplete;
     private string? _sessionHubMessage;
     private bool _inviteBusy;
-    private string? _inviteError;
     private string? _lastGeneratedJoinUrl;
     private string? _cookieHeader;
     private PersistingComponentStateSubscription _persistingSubscription;
@@ -382,7 +380,6 @@ public partial class CampaignDetails : IDisposable
         _showConfirmDelete = false;
         _showConfirmLeave = false;
         _confirmRemoveCharacterId = 0;
-        _errorMessage = null;
     }
 
     private void AskRemoveCharacter(int characterId)
@@ -398,7 +395,6 @@ public partial class CampaignDetails : IDisposable
         }
 
         _busy = true;
-        _errorMessage = null;
         try
         {
             await CampaignService.RemoveCharacterFromCampaignAsync(_campaign.Id, characterId, _currentUserId);
@@ -407,7 +403,7 @@ public partial class CampaignDetails : IDisposable
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            ToastService.Show("Campaign", ex.Message, ToastType.Error);
         }
         finally
         {
@@ -423,7 +419,6 @@ public partial class CampaignDetails : IDisposable
         }
 
         _busy = true;
-        _errorMessage = null;
         try
         {
             await CampaignService.LeaveCampaignAsync(_campaign.Id, _currentUserId);
@@ -432,7 +427,7 @@ public partial class CampaignDetails : IDisposable
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            ToastService.Show("Campaign", ex.Message, ToastType.Error);
         }
         finally
         {
@@ -448,7 +443,6 @@ public partial class CampaignDetails : IDisposable
         }
 
         _busy = true;
-        _errorMessage = null;
         try
         {
             await CampaignService.DeleteCampaignAsync(_campaign.Id, _currentUserId);
@@ -456,7 +450,7 @@ public partial class CampaignDetails : IDisposable
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            ToastService.Show("Campaign", ex.Message, ToastType.Error);
             _busy = false;
         }
     }
@@ -479,7 +473,6 @@ public partial class CampaignDetails : IDisposable
         }
 
         _inviteBusy = true;
-        _inviteError = null;
         try
         {
             string token = await CampaignService.RegenerateJoinInviteAsync(_campaign.Id, _currentUserId);
@@ -489,7 +482,7 @@ public partial class CampaignDetails : IDisposable
         }
         catch (Exception ex)
         {
-            _inviteError = ex.Message;
+            ToastService.Show("Invite link", ex.Message, ToastType.Error);
         }
         finally
         {
@@ -505,7 +498,6 @@ public partial class CampaignDetails : IDisposable
         }
 
         _inviteBusy = true;
-        _inviteError = null;
         try
         {
             await CampaignService.ClearJoinInviteAsync(_campaign.Id, _currentUserId);
@@ -514,7 +506,7 @@ public partial class CampaignDetails : IDisposable
         }
         catch (Exception ex)
         {
-            _inviteError = ex.Message;
+            ToastService.Show("Invite link", ex.Message, ToastType.Error);
         }
         finally
         {

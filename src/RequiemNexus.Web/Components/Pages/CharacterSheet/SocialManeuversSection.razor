@@ -20,7 +20,7 @@
     <h2>Social Maneuvering</h2>
     @if (_loading)
     {
-        <p style="color:var(--text-secondary);font-size:0.9em;"><em>Loading maneuvers…</em></p>
+        <SkeletonLoader Variant="panel" Count="4" />
     }
     else if (!_maneuvers.Any())
     {

@@ -6,7 +6,7 @@
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
 > **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
 > **Wave 3 (2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8); **§3.2 (partial)** — Beats/XP reload skip + `CharacterUpdateDto` progression fields + hub echo suppression. **`IModifierProvider`** (§2.2 / backlog #9) — `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`; `ModifierService` aggregates by `Order`; shared `PassiveModifierJsonSerializerOptions`; tests: `ModifierProviderTests` + updated `ModifierServiceTests`. **`IRiteActivationStrategy`** (§2.2 / backlog #10) — `CruacActivationStrategy`, `ThebanActivationStrategy`, `NecromancyActivationStrategy`; `SorceryActivationService` resolves by tradition; initial character load uses `Include(Rites).ThenInclude(SorceryRiteDefinition)` (removes fallback `CharacterRites` query).
-> **Wave 4 (2026-04-03, partial):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** in `SkeletonLoader.razor.css`; campaign hub pages `InitiativeTracker`, `EncounterManager`, `CampaignDetails`, `StorytellerGlimpse`, `DanseMacabre` use `<SkeletonLoader>` instead of `<p><em>Loading…</em></p>`. Next: remaining ad-hoc loaders (character sheet embeds, NPC detail, §4.2 errors).
+> **Wave 4 (2026-04-03, partial):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** / **`panel`** (compact embeds) in `SkeletonLoader.razor.css`; campaign hub pages + **character sheet sections** (Blood Bonds, Lineage, Ghouls, Predatory Aura, Social Maneuvers), **Glimpse** panels (`BloodBondsPanel`, `GhoulsTab`, `PredatoryAuraHistoryPanel`), **NPC/Faction detail**, **CampaignCharacterView** / **Advancement**, **join** page, modals (`EditLineage`, `GhoulDisciplineAccessEditor`, `PlayerWeaponDamageRollModal`), **Account/Manage** pages, and **`LoadingContainer`** use `<SkeletonLoader>` instead of italic loading paragraphs. §4.2 **(partial, 2026-04-03):** `CampaignDetails` / `CampaignJoin` / invite modal — service failures → **`ToastService.Show(..., ToastType.Error)`**; removed danger-zone `feedback-error` blocks and join `alert-rn` for caught exceptions; **`PlayerInviteModal`** no longer takes `InviteError`. **`EncounterManager`** — exception paths → toast; dropped **`_renameEncounterError`** / **`_smartLaunchConfirmError`**; **`_createError`** / **`_chronicleAddError`** / **`_improvError`** retain **inline validation only**. Next: §4.2 stragglers on other pages, §4.3 modal trigger spinners (`CharacterDetails`).
 > **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
 
 ---
@@ -393,7 +393,7 @@ All index additions require an **EF Core migration** — do not add raw SQL. Add
 - `<SkeletonLoader Variant="card" Count="3" />` — Campaigns index ✓
 - `<SkeletonLoader Variant="encounter-list" />` — Encounter manager ✓ (2026-04-03)
 - `<SkeletonLoader Variant="tracker" />` — Initiative tracker ✓ (2026-04-03)
-- Custom loading markup — Blood Bonds Panel, Ghouls Tab, character sheet embeds, NPC detail, account pages, etc. ✗ (partial sweep)
+- Custom loading markup — Blood Bonds Panel, Ghouls Tab, character sheet embeds, NPC detail, account pages ✓ (2026-04-03 sweep); spot-check with `rg` for new pages ✗
 
 **Fix:** Mandate `<SkeletonLoader>` or `<LoadingContainer>` for all loading states. Delete ad-hoc loading markup. Add skeleton variants for remaining page types (**tracker** ✓, **encounter-list** ✓, NPC detail — pending).
 
@@ -410,7 +410,9 @@ All index additions require an **EF Core migration** — do not add raw SQL. Add
 - **`ToastService`** for global/unexpected errors (service failures, auth errors, unhandled exceptions)
 - **Inline text** (small `<span class="text-danger">`) for form validation errors that must sit field-adjacent for accessibility and screen-reader compliance
 
-**Fix:** Remove all raw Bootstrap alert divs. Replace unexpected-error string fields with `ToastService.ShowError(...)`. Retain (or introduce) a single `string? _validationError` per modal/form for inline validation only — do not proliferate to 7 fields.
+**Fix:** Remove all raw Bootstrap alert divs. Replace unexpected-error string fields with `ToastService.Show(..., ToastType.Error)` (or a thin `ShowError` helper if added). Retain (or introduce) a single `string? _validationError` per modal/form for inline validation only — do not proliferate to 7 fields.
+
+**Delivered (2026-04-03, partial):** `CampaignDetails` (leave/delete/remove/invite failures → toast); `CampaignJoin` (join API exceptions → toast); `PlayerInviteModal` (invite errors via toast from parent); `EncounterManager` (rename/smart-launch/service catches → toast; create/chronicle/improv keep inline messages only for validation).
 
 ### 4.3 Add Intermediate Loading on Modal Triggers (P2)
 
@@ -464,7 +466,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 9. **`IRiteActivationStrategy`** (2.2) — **done (2026-04-03)** — three tradition strategies + `SorceryActivationService` composition; `ThenInclude` on character rites for single-query load
 
 ### Wave 4 — UI/UX and large component splits (depends on Wave 3)
-10. **Standardize loading + error surfaces** (4.1, 4.2) — foundation for component extraction — **§4.1 partial (2026-04-03):** main campaign encounter/glimpse/danse pages → `SkeletonLoader` + `tracker` / `encounter-list` variants
+10. **Standardize loading + error surfaces** (4.1, 4.2) — foundation for component extraction — **§4.1 partial (2026-04-03)** as above; **§4.2 partial (2026-04-03):** `CampaignDetails`, `CampaignJoin`, `PlayerInviteModal`, `EncounterManager` hybrid policy applied for listed flows
 11. **`CharacterDetails.razor.cs` decomposition** (1.1) — largest change; do last when service API is stable
 12. **Modal loading feedback** (4.3)
 13. **Remaining large component extractions** (1.1 `InitiativeTracker` / `EncounterManager`, 1.3 `DiceRollerModal` / `CharacterAdvancement` / **`CampaignDetails`** / **`DanseMacabre`** / **`EncounterManager` markup** / **`GlimpseSocialManeuvers`** / **`StorytellerGlimpse`** (overview + CSS split) / **`InitiativeTracker` .razor + partials alongside §1.1 SignalR–drag work**, 4.4 vitals)

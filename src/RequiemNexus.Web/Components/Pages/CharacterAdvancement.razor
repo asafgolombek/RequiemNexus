@@ -30,7 +30,9 @@
 
 @if (_character == null)
 {
-    <p><em>Loading immortal legacy...</em></p>
+    <div class="character-sheet fade-in">
+        <SkeletonLoader Variant="sheet" Count="4" />
+    </div>
 }
 else
 {

@@ -18,7 +18,9 @@
 
 @if (_character == null && !_loaded)
 {
-    <p><em>Loading character...</em></p>
+    <div class="character-sheet fade-in">
+        <SkeletonLoader Variant="sheet" Count="4" />
+    </div>
 }
 else if (_character == null)
 {

@@ -103,3 +103,19 @@
     height: 3.35rem;
     width: 100%;
 }
+
+/* Character sheet sections, modal bodies, glimpse card bodies */
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.panel .skeleton-block {
+    height: 0.75rem;
+}
+
+.panel .skeleton-block:last-child {
+    width: 72%;
+}

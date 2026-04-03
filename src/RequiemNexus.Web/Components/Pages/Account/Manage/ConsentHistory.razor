@@ -15,7 +15,7 @@
 
     @if (consentLogs is null)
     {
-        <p class="font-body text-hint"><em>Loading the archives...</em></p>
+        <SkeletonLoader Variant="rows" Count="5" />
     }
     else if (consentLogs.Count == 0)
     {

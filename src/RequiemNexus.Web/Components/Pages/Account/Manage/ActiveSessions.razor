@@ -22,7 +22,7 @@
 
 @if (_sessions == null)
 {
-    <p><em>Loading...</em></p>
+    <SkeletonLoader Variant="rows" Count="5" />
 }
 else if (_sessions.Count == 0)
 {

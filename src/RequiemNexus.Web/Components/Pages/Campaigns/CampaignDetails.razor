@@ -21,6 +21,7 @@
 @inject ISessionService SessionService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject PersistentComponentState ApplicationState
+@inject ToastService ToastService
 @implements IDisposable
 
 <PageTitle>Campaign Details - Requiem Nexus</PageTitle>
@@ -104,7 +105,6 @@
                 </div>
                 <PlayerInviteModal IsOpen="_inviteModalOpen"
                                    InviteActive="@(!string.IsNullOrEmpty(_campaign.InviteTokenHash))"
-                                   InviteError="@_inviteError"
                                    LastGeneratedJoinUrl="@_lastGeneratedJoinUrl"
                                    Busy="_inviteBusy"
                                    OnClose="CloseInviteModal"
@@ -340,10 +340,6 @@
                         <p>Leave this campaign? Your character will return to your unassigned pool.</p>
                         <button class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmLeaveCampaign">Yes, Leave</button>
                         <button class="btn-rn-ghost" @onclick="CancelConfirm">Cancel</button>
-                        @if (!string.IsNullOrEmpty(_errorMessage))
-                        {
-                            <p class="feedback-error">@_errorMessage</p>
-                        }
                     </div>
                 }
                 else
@@ -360,10 +356,6 @@
                         <p>⚠️ Delete campaign <strong>@_campaign.Name</strong>? This cannot be undone. All enrolled characters will be returned to their players.</p>
                         <button class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmDeleteCampaign">Yes, Delete</button>
                         <button class="btn-rn-ghost" @onclick="CancelConfirm">Cancel</button>
-                        @if (!string.IsNullOrEmpty(_errorMessage))
-                        {
-                            <p class="feedback-error">@_errorMessage</p>
-                        }
                     </div>
                 }
                 else
