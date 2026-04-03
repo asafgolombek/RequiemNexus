@@ -24,6 +24,13 @@ public class SorceryServiceTests
 {
     private const string _defaultRequirementsJson = """[{"type":"InternalVitae","value":1,"isConsumed":true}]""";
 
+    private static readonly IRiteActivationStrategy[] _riteStrategies =
+    [
+        new CruacActivationStrategy(),
+        new ThebanActivationStrategy(),
+        new NecromancyActivationStrategy(),
+    ];
+
     private static Mock<IAuthorizationHelper> CreatePermissiveAuthMock()
     {
         var authHelper = new Mock<IAuthorizationHelper>();
@@ -72,6 +79,7 @@ public class SorceryServiceTests
             willpowerService,
             humanity.Object,
             domainEventDispatcher ?? new Mock<IDomainEventDispatcher>().Object,
+            _riteStrategies,
             logger);
     }
 

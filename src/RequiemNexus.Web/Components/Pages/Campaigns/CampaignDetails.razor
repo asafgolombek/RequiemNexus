@@ -28,7 +28,7 @@
 <div class="page-container fade-in">
     @if (!_campaignLoadComplete)
     {
-        <p><em>Loading campaign...</em></p>
+        <SkeletonLoader Variant="card" Count="3" />
     }
     else if (string.IsNullOrEmpty(_currentUserId))
     {

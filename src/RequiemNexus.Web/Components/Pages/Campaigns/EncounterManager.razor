@@ -25,7 +25,7 @@
 <div class="page-container fade-in">
     @if (_loading)
     {
-        <p><em>Loading encounters...</em></p>
+        <SkeletonLoader Variant="encounter-list" Count="7" />
     }
     else if (_accessDenied)
     {

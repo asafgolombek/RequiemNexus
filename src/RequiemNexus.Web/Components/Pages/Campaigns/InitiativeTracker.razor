@@ -34,7 +34,7 @@
 <div class="page-container fade-in">
     @if (_loading)
     {
-        <p><em>Loading encounter...</em></p>
+        <SkeletonLoader Variant="tracker" Count="2" />
     }
     else if (_accessDenied)
     {

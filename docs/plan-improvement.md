@@ -5,7 +5,8 @@
 > **Status:** P1–P2 items targeting Phase 20 polish; P3–P4 items are post-Phase 20 tech-debt. See `docs/mission.md` Phase 20 section.
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
 > **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
-> **Wave 3 (2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8); **§3.2 (partial)** — Beats/XP reload skip + `CharacterUpdateDto` progression fields + hub echo suppression. **`IModifierProvider`** (§2.2 / backlog #9) — `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`; `ModifierService` aggregates by `Order`; shared `PassiveModifierJsonSerializerOptions`; tests: `ModifierProviderTests` + updated `ModifierServiceTests`. Next: **`IRiteActivationStrategy`**, further §3.2 reloads.
+> **Wave 3 (2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8); **§3.2 (partial)** — Beats/XP reload skip + `CharacterUpdateDto` progression fields + hub echo suppression. **`IModifierProvider`** (§2.2 / backlog #9) — `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`; `ModifierService` aggregates by `Order`; shared `PassiveModifierJsonSerializerOptions`; tests: `ModifierProviderTests` + updated `ModifierServiceTests`. **`IRiteActivationStrategy`** (§2.2 / backlog #10) — `CruacActivationStrategy`, `ThebanActivationStrategy`, `NecromancyActivationStrategy`; `SorceryActivationService` resolves by tradition; initial character load uses `Include(Rites).ThenInclude(SorceryRiteDefinition)` (removes fallback `CharacterRites` query).
+> **Wave 4 (2026-04-03, partial):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** in `SkeletonLoader.razor.css`; campaign hub pages `InitiativeTracker`, `EncounterManager`, `CampaignDetails`, `StorytellerGlimpse`, `DanseMacabre` use `<SkeletonLoader>` instead of `<p><em>Loading…</em></p>`. Next: remaining ad-hoc loaders (character sheet embeds, NPC detail, §4.2 errors).
 > **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
 
 ---
@@ -214,14 +215,11 @@ private readonly Dictionary<PoolTraitType, Func<Character, int>> _resolvers = ne
 ```
 **Constraint:** This applies only to traits that are synchronous `Character → int` lookups. If any trait resolution requires services, campaign context, or conditions — confirm before locking the design. Those cases remain as explicit branches or a separate `IContextualTraitResolver`.
 
-#### `SorceryActivationService.cs` — ~349 lines (P2)
+#### `SorceryActivationService.cs` — ~349 lines (P2) — **delivered 2026-04-03**
 
 **Problem:** Three sorcery traditions (Crúac, Theban, Necromancy) are handled via per-tradition `if` branches inside shared methods. The `BeginRiteActivationAsync` method does a fallback second query when the rite is not in the navigation collection.
 
-**Fix:** Introduce `IRiteActivationStrategy` with one implementation per tradition:
-- `CruacActivationStrategy`, `ThebanActivationStrategy`, `NecromancyActivationStrategy`
-
-`SorceryActivationService` selects the strategy by tradition and delegates. The fallback double-query is fixed by ensuring `GetCharacterForRiteActivationAsync` always includes rites (see Section 3).
+**Fix (as implemented):** `IRiteActivationStrategy` with `CruacActivationStrategy`, `ThebanActivationStrategy`, `NecromancyActivationStrategy`; `SorceryActivationService` builds a dictionary by `Tradition` from injected strategies. Initial load includes `ThenInclude` on rite definitions so the extra `CharacterRites` query is removed.
 
 ### 2.3 Interface Segregation Principle
 
@@ -393,11 +391,13 @@ All index additions require an **EF Core migration** — do not add raw SQL. Add
 **Problem:** At least five different loading patterns exist across pages:
 - `<SkeletonLoader Variant="sheet" />` — Character details ✓
 - `<SkeletonLoader Variant="card" Count="3" />` — Campaigns index ✓
-- `<p><em>Loading encounters...</em></p>` — Encounter manager ✗
-- `<p><em>Loading...</em></p>` — Initiative tracker ✗
-- Custom loading markup — Danse Macabre, Blood Bonds Panel, Ghouls Tab, Storyteller Glimpse (campaign vitals), Campaign Details ✗
+- `<SkeletonLoader Variant="encounter-list" />` — Encounter manager ✓ (2026-04-03)
+- `<SkeletonLoader Variant="tracker" />` — Initiative tracker ✓ (2026-04-03)
+- Custom loading markup — Blood Bonds Panel, Ghouls Tab, character sheet embeds, NPC detail, account pages, etc. ✗ (partial sweep)
 
-**Fix:** Mandate `<SkeletonLoader>` or `<LoadingContainer>` for all loading states. Delete ad-hoc loading markup. Add skeleton variants for remaining page types (tracker, encounter list, NPC detail).
+**Fix:** Mandate `<SkeletonLoader>` or `<LoadingContainer>` for all loading states. Delete ad-hoc loading markup. Add skeleton variants for remaining page types (**tracker** ✓, **encounter-list** ✓, NPC detail — pending).
+
+**Delivered (2026-04-03):** `CampaignDetails` (`card`), `StorytellerGlimpse` (`sheet`), `DanseMacabre` (`rows`); new CSS variants in `SkeletonLoader.razor.css`.
 
 ### 4.2 Standardize Error Display — Hybrid Policy (P2)
 
@@ -461,10 +461,10 @@ The backlog items are not independent. The order below reduces rework and risk.
 6. **`CharacterQueryService` extraction** (1.2 / CharacterManagementService) — unblocks patch event work — **done (2026-04-03)** (`ICharacterQueryService`, `CharacterQueryService`, `CharacterQueryableExtensions`, facade delegation on `CharacterManagementService`)
 7. **Reduce `GetCharacterByIdAsync` reload** (3.2) — depends on step 6 — **partial (2026-04-03):** Beats/XP on sheet + hub echo suppression; DTO progression fields for real-time payloads
 8. **`IModifierProvider`** (2.2) — depends on stable service boundaries from step 6 — **done (2026-04-03)** — four providers + thin `ModifierService`; DI registers each `IModifierProvider` + aggregator
-9. **`IRiteActivationStrategy`** (2.2) — self-contained, can run in parallel with step 8
+9. **`IRiteActivationStrategy`** (2.2) — **done (2026-04-03)** — three tradition strategies + `SorceryActivationService` composition; `ThenInclude` on character rites for single-query load
 
 ### Wave 4 — UI/UX and large component splits (depends on Wave 3)
-10. **Standardize loading + error surfaces** (4.1, 4.2) — foundation for component extraction
+10. **Standardize loading + error surfaces** (4.1, 4.2) — foundation for component extraction — **§4.1 partial (2026-04-03):** main campaign encounter/glimpse/danse pages → `SkeletonLoader` + `tracker` / `encounter-list` variants
 11. **`CharacterDetails.razor.cs` decomposition** (1.1) — largest change; do last when service API is stable
 12. **Modal loading feedback** (4.3)
 13. **Remaining large component extractions** (1.1 `InitiativeTracker` / `EncounterManager`, 1.3 `DiceRollerModal` / `CharacterAdvancement` / **`CampaignDetails`** / **`DanseMacabre`** / **`EncounterManager` markup** / **`GlimpseSocialManeuvers`** / **`StorytellerGlimpse`** (overview + CSS split) / **`InitiativeTracker` .razor + partials alongside §1.1 SignalR–drag work**, 4.4 vitals)
@@ -496,10 +496,10 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 7 | P2 | SOLID | Split `CharacterExportService` into JSON and PDF export services |
 | 8 | P2 | SOLID | Extract `CharacterQueryService` from `CharacterManagementService` |
 | 9 | P2 | SOLID | Introduce `IModifierProvider` per source type in `ModifierService` — **done (2026-04-03)** — Condition / Coil / WoundTrack / Equipment providers + aggregator |
-| 10 | P2 | SOLID | Introduce `IRiteActivationStrategy` per tradition in `SorceryActivationService` |
+| 10 | P2 | SOLID | Introduce `IRiteActivationStrategy` per tradition in `SorceryActivationService` — **done (2026-04-03)** |
 | 11 | P2 | Performance | Push coil eligibility filter into EF query in `CoilService` |
 | 12 | P2 | Performance | Reduce 3 round-trips in `CampaignService.GetCampaignByIdAsync` (Masquerade-safe DTO) |
-| 13 | P2 | UI/UX | Standardize all loading states to `<SkeletonLoader>` / `<LoadingContainer>` |
+| 13 | P2 | UI/UX | Standardize all loading states to `<SkeletonLoader>` / `<LoadingContainer>` — **partial (2026-04-03)** — see §4.1 |
 | 14 | P2 | UI/UX | Standardize error surfaces — `ToastService` for global errors, inline text for form validation |
 | 15 | P2 | UI/UX | Add intermediate loading feedback on modal trigger buttons |
 | 16 | P2 | Logging | Audit and replace all `Console.WriteLine` in production code with `ILogger`; implement or remove `OpenReference` stub |
@@ -537,6 +537,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 | `GlimpseSocialManeuvers`, `GlimpsePendingRequests` | Partial decomposition of `StorytellerGlimpse` — further overview/CSS splits in §1.3 |
 | `SessionService.cs` | Consistent load/verify/proceed pattern per method |
 | `IModifierProvider` + `ModifierService` | Open/closed modifier aggregation — add a provider + DI registration instead of editing the orchestrator |
+| `IRiteActivationStrategy` + `SorceryActivationService` | Open/closed blood sorcery activation — add a strategy + DI registration per tradition |
 | `SkeletonLoader.razor`, `LoadingContainer.razor` | Loading state components — use everywhere |
 
 ### Anti-Patterns (what to avoid)
