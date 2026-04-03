@@ -128,7 +128,7 @@
     private readonly Dictionary<int, string> _spendBenefitByClueId = [];
     private readonly SemaphoreSlim _loadManeuversLock = new(1, 1);
     private System.Timers.Timer? _countdownTimer;
-    private bool _subscribed;
+    private IDisposable? _socialManeuverSubscription;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -145,10 +145,9 @@
     /// <inheritdoc />
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender && !_subscribed)
+        if (firstRender && _socialManeuverSubscription == null)
         {
-            SessionClient.SocialManeuverUpdated += OnSocialManeuverUpdated;
-            _subscribed = true;
+            _socialManeuverSubscription = SessionClient.SubscribeSocialManeuverUpdated(OnSocialManeuverUpdated);
             _countdownTimer = new System.Timers.Timer(1000);
             _countdownTimer.Elapsed += (_, _) => _ = InvokeAsync(() =>
             {
@@ -411,10 +410,7 @@
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_subscribed)
-        {
-            SessionClient.SocialManeuverUpdated -= OnSocialManeuverUpdated;
-        }
+        _socialManeuverSubscription?.Dispose();
 
         _countdownTimer?.Stop();
         _countdownTimer?.Dispose();

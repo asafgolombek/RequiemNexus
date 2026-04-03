@@ -23,10 +23,12 @@
     private readonly List<ToastItem> _items = [];
     private int _nextId;
 
+    private IDisposable? _conditionSubscription;
+
     /// <inheritdoc />
     protected override void OnInitialized()
     {
-        SessionClient.ConditionNotificationReceived += OnConditionNotification;
+        _conditionSubscription = SessionClient.SubscribeConditionNotificationReceived(OnConditionNotification);
     }
 
     private void OnConditionNotification(ConditionNotificationDto dto)
@@ -55,7 +57,7 @@
     /// <inheritdoc />
     public void Dispose()
     {
-        SessionClient.ConditionNotificationReceived -= OnConditionNotification;
+        _conditionSubscription?.Dispose();
     }
 
     private sealed record ToastItem(int Id, string Name, bool IsTilt, bool IsRemoval, string CssClass);

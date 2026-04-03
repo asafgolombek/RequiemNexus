@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain.Enums;
@@ -12,6 +13,17 @@ namespace RequiemNexus.Application.Services;
 /// </summary>
 public class TraitResolver(IModifierService modifierService) : ITraitResolver
 {
+    private static readonly FrozenDictionary<TraitType, Func<Character, TraitReference, int>> _traitRatingResolvers =
+        new Dictionary<TraitType, Func<Character, TraitReference, int>>
+        {
+            [TraitType.Attribute] = static (c, t) =>
+                t.AttributeId.HasValue ? c.GetAttributeRating(t.AttributeId.Value) : 0,
+            [TraitType.Skill] = static (c, t) =>
+                t.SkillId.HasValue ? c.GetSkillRating(t.SkillId.Value) : 0,
+            [TraitType.Discipline] = static (c, t) =>
+                t.DisciplineId.HasValue ? c.GetDisciplineRating(t.DisciplineId.Value) : 0,
+        }.ToFrozenDictionary();
+
     /// <inheritdoc />
     public int ResolvePool(Character character, PoolDefinition pool)
     {
@@ -288,22 +300,8 @@ public class TraitResolver(IModifierService modifierService) : ITraitResolver
         return null;
     }
 
-    private static int ResolveTrait(Character character, TraitReference trait)
-    {
-        return trait.Type switch
-        {
-            TraitType.Attribute => trait.AttributeId.HasValue
-                ? character.GetAttributeRating(trait.AttributeId!.Value)
-                : 0,
-            TraitType.Skill => trait.SkillId.HasValue
-                ? character.GetSkillRating(trait.SkillId!.Value)
-                : 0,
-            TraitType.Discipline => trait.DisciplineId.HasValue
-                ? character.GetDisciplineRating(trait.DisciplineId!.Value)
-                : 0,
-            _ => 0,
-        };
-    }
+    private static int ResolveTrait(Character character, TraitReference trait) =>
+        _traitRatingResolvers.GetValueOrDefault(trait.Type)?.Invoke(character, trait) ?? 0;
 
     /// <summary>
     /// VtR-style untrained skills: Mental skills at 0 dots apply −3 dice; Physical and Social at 0 apply −1 each (distinct skills in pool).

@@ -54,10 +54,12 @@ public class PredatoryAuraService(
 
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        Character? attacker = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == attackerCharacterId);
-        Character? defender = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == defenderCharacterId);
+        List<Character> lashPair = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == attackerCharacterId || c.Id == defenderCharacterId)
+            .ToListAsync();
+
+        Character? attacker = lashPair.FirstOrDefault(c => c.Id == attackerCharacterId);
+        Character? defender = lashPair.FirstOrDefault(c => c.Id == defenderCharacterId);
 
         if (attacker == null)
         {
@@ -145,10 +147,12 @@ public class PredatoryAuraService(
             }
         }
 
-        Character? charA = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == vampireAId);
-        Character? charB = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == vampireBId);
+        List<Character> passivePair = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == vampireAId || c.Id == vampireBId)
+            .ToListAsync();
+
+        Character? charA = passivePair.FirstOrDefault(c => c.Id == vampireAId);
+        Character? charB = passivePair.FirstOrDefault(c => c.Id == vampireBId);
 
         if (charA == null)
         {

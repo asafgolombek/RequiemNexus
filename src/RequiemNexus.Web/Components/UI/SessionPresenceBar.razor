@@ -42,9 +42,11 @@
 
     private HashSet<string> _previousUserIds = new();
 
+    private IDisposable? _presenceSubscription;
+
     protected override void OnInitialized()
     {
-        SessionService.PresenceUpdated += HandlePresenceUpdated;
+        _presenceSubscription = SessionService.SubscribePresenceUpdated(HandlePresenceUpdated);
     }
 
     private void HandlePresenceUpdated(IEnumerable<PlayerPresenceDto> players)
@@ -96,6 +98,6 @@
 
     public void Dispose()
     {
-        SessionService.PresenceUpdated -= HandlePresenceUpdated;
+        _presenceSubscription?.Dispose();
     }
 }

@@ -70,9 +70,11 @@
     private int _vitaePulseTick;
     private bool _humanityPulse;
 
+    private IDisposable? _characterSubscription;
+
     protected override void OnInitialized()
     {
-        SessionClient.CharacterUpdated += HandleCharacterUpdated;
+        _characterSubscription = SessionClient.SubscribeCharacterUpdated(HandleCharacterUpdated);
     }
 
     private async void HandleCharacterUpdated(CharacterUpdateDto patch)
@@ -166,6 +168,6 @@
 
     public void Dispose()
     {
-        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        _characterSubscription?.Dispose();
     }
 }

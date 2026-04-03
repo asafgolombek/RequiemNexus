@@ -51,6 +51,9 @@ public partial class CampaignDetails : IDisposable
     private PersistingComponentStateSubscription _persistingSubscription;
     private Timer? _heartbeatTimer;
 
+    private IDisposable? _sessionStartedSubscription;
+    private IDisposable? _sessionEndedSubscription;
+
     private readonly AddCharacterModel _addModel = new();
     private int? _perceptionOpenId;
     private bool _perceptionBusy;
@@ -123,8 +126,8 @@ public partial class CampaignDetails : IDisposable
 
         if (!string.IsNullOrEmpty(_currentUserId))
         {
-            SessionClient.SessionStarted += HandleSessionStarted;
-            SessionClient.SessionEnded += HandleSessionEnded;
+            _sessionStartedSubscription = SessionClient.SubscribeSessionStarted(HandleSessionStarted);
+            _sessionEndedSubscription = SessionClient.SubscribeSessionEnded(HandleSessionEnded);
 
             // Check if session is already active (uses cache if available)
             _sessionActive = await SessionClient.GetSessionActiveAsync(Id, SessionService);
@@ -291,7 +294,7 @@ public partial class CampaignDetails : IDisposable
         if (_campaign != null)
         {
             // Show only characters that are not yet in any campaign, for the add-character dropdown.
-            List<Character> allUserCharacters = await CharacterService.GetCharactersByUserIdAsync(_currentUserId);
+            List<Character> allUserCharacters = await CharacterReader.GetCharactersByUserIdAsync(_currentUserId);
             _availableCharacters = allUserCharacters.Where(c => c.CampaignId == null).ToList();
 
             _loreEntries = await CampaignService.GetLoreAsync(_campaign.Id);
@@ -573,8 +576,8 @@ public partial class CampaignDetails : IDisposable
     {
         StopHeartbeatTimer();
         _persistingSubscription.Dispose();
-        SessionClient.SessionStarted -= HandleSessionStarted;
-        SessionClient.SessionEnded -= HandleSessionEnded;
+        _sessionStartedSubscription?.Dispose();
+        _sessionEndedSubscription?.Dispose();
     }
 
     public class AddCharacterModel

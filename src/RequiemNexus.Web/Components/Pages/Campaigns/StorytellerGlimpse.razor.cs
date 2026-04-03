@@ -122,7 +122,7 @@ public partial class StorytellerGlimpse : IAsyncDisposable
 
     private bool _passiveAuraError;
 
-    private bool _sessionHubWired;
+    private IDisposable? _chronicleSubscription;
 
     private int PendingApprovalCount =>
         _pendingBloodlines.Count
@@ -203,11 +203,7 @@ public partial class StorytellerGlimpse : IAsyncDisposable
     /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
-        if (_sessionHubWired)
-        {
-            SessionClient.ChronicleUpdated -= HandleChroniclePatch;
-        }
-
+        _chronicleSubscription?.Dispose();
         return ValueTask.CompletedTask;
     }
 
@@ -376,13 +372,12 @@ public partial class StorytellerGlimpse : IAsyncDisposable
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender || _accessDenied || string.IsNullOrEmpty(_currentUserId) || _sessionHubWired)
+        if (!firstRender || _accessDenied || string.IsNullOrEmpty(_currentUserId) || _chronicleSubscription != null)
         {
             return;
         }
 
-        _sessionHubWired = true;
-        SessionClient.ChronicleUpdated += HandleChroniclePatch;
+        _chronicleSubscription = SessionClient.SubscribeChronicleUpdated(HandleChroniclePatch);
         string? cookie = HttpContextAccessor.HttpContext?.Request.Headers.Cookie.ToString();
         _ = await SessionClient.GetSessionActiveAsync(Id, SessionService);
         SessionHubConnectResult hubResult = await SessionClient.StartAsync(Id, null, _currentUserId, cookie);

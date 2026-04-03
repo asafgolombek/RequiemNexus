@@ -43,7 +43,7 @@ public partial class PlayerWeaponDamageRollModal : ComponentBase
     public string UserId { get; set; } = string.Empty;
 
     [Inject]
-    private ICharacterService CharacterService { get; set; } = default!;
+    private ICharacterReader CharacterReader { get; set; } = default!;
 
     [Inject]
     private SessionClientService SessionClient { get; set; } = default!;
@@ -63,7 +63,7 @@ public partial class PlayerWeaponDamageRollModal : ComponentBase
             return;
         }
 
-        (Character Character, bool _)? loaded = await CharacterService.GetCharacterWithAccessCheckAsync(CharacterId, UserId);
+        (Character Character, bool _)? loaded = await CharacterReader.GetCharacterWithAccessCheckAsync(CharacterId, UserId);
         _character = loaded?.Character;
         if (_character == null)
         {

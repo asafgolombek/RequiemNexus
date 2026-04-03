@@ -6,16 +6,23 @@ namespace RequiemNexus.Web.Components.Pages.Campaigns;
 
 public partial class InitiativeTracker
 {
+    private IDisposable? _initiativeSubscription;
+    private IDisposable? _characterUpdateSubscription;
+
     private void RegisterSessionSignalHandlers()
     {
-        SessionClient.InitiativeUpdated += HandleInitiativeUpdated;
-        SessionClient.CharacterUpdated += HandleCharacterUpdated;
+        _initiativeSubscription?.Dispose();
+        _characterUpdateSubscription?.Dispose();
+        _initiativeSubscription = SessionClient.SubscribeInitiativeUpdated(HandleInitiativeUpdated);
+        _characterUpdateSubscription = SessionClient.SubscribeCharacterUpdated(HandleCharacterUpdated);
     }
 
     private void UnregisterSessionSignalHandlers()
     {
-        SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
-        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        _initiativeSubscription?.Dispose();
+        _initiativeSubscription = null;
+        _characterUpdateSubscription?.Dispose();
+        _characterUpdateSubscription = null;
     }
 
     private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)

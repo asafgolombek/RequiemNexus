@@ -118,6 +118,8 @@ internal static class InfrastructureServiceExtensions
         builder.Services.AddScoped<ISessionService, SessionService>();
         builder.Services.AddSingleton<ISessionPublisher, SessionPublisher>();
         builder.Services.AddScoped<RequiemNexus.Web.Services.SessionClientService>();
+        builder.Services.AddScoped<RequiemNexus.Web.Services.ISessionEventBus>(sp =>
+            sp.GetRequiredService<RequiemNexus.Web.Services.SessionClientService>());
 
         builder.Services.AddSingleton<IHubFilter>(new RequiemNexus.Web.Hubs.Filters.RateLimitingFilter(30));
 

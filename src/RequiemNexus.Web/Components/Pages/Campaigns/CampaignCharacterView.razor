@@ -9,7 +9,7 @@
 @using RequiemNexus.Web.Helpers
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ICharacterService CharacterService
+@inject ICharacterReader CharacterReader
 @inject ITraitResolver TraitResolver
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -327,7 +327,7 @@ else
 
         if (!string.IsNullOrEmpty(_currentUserId))
         {
-            (Character Character, bool IsOwner)? result = await CharacterService.GetCharacterWithAccessCheckAsync(CharacterId, _currentUserId);
+            (Character Character, bool IsOwner)? result = await CharacterReader.GetCharacterWithAccessCheckAsync(CharacterId, _currentUserId);
             _character = result?.Character;
         }
 

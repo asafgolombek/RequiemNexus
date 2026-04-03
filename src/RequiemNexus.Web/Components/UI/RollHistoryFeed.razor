@@ -40,10 +40,13 @@
     private List<DiceRollResultDto> _rolls = new();
     private ElementReference _feedElement;
 
+    private IDisposable? _diceSubscription;
+    private IDisposable? _historySubscription;
+
     protected override void OnInitialized()
     {
-        SessionService.DiceRollReceived += HandleDiceRoll;
-        SessionService.RollHistoryReceived += HandleHistory;
+        _diceSubscription = SessionService.SubscribeDiceRollReceived(HandleDiceRoll);
+        _historySubscription = SessionService.SubscribeRollHistoryReceived(HandleHistory);
     }
 
     private void HandleDiceRoll(DiceRollResultDto roll)
@@ -88,7 +91,7 @@
 
     public void Dispose()
     {
-        SessionService.DiceRollReceived -= HandleDiceRoll;
-        SessionService.RollHistoryReceived -= HandleHistory;
+        _diceSubscription?.Dispose();
+        _historySubscription?.Dispose();
     }
 }

@@ -87,6 +87,8 @@ public partial class DiceRollerModal : IDisposable
     private bool _addRiteDisciplineDotsToPotency;
     private bool _rollerWasVisible;
 
+    private IDisposable? _diceRollSubscription;
+
     private Task OnAddRiteDisciplineDotsToPotencyChanged(bool value)
     {
         _addRiteDisciplineDotsToPotency = value;
@@ -99,7 +101,7 @@ public partial class DiceRollerModal : IDisposable
     /// <inheritdoc />
     protected override void OnInitialized()
     {
-        SessionClient.DiceRollReceived += HandleDiceRollReceived;
+        _diceRollSubscription = SessionClient.SubscribeDiceRollReceived(HandleDiceRollReceived);
     }
 
     /// <inheritdoc />
@@ -520,6 +522,6 @@ public partial class DiceRollerModal : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        SessionClient.DiceRollReceived -= HandleDiceRollReceived;
+        _diceRollSubscription?.Dispose();
     }
 }

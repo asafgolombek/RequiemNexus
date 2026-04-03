@@ -12,12 +12,16 @@ namespace RequiemNexus.Web.Components.Pages;
 
 public partial class CharacterDetails
 {
+    private IDisposable? _sessionCharacterSubscription;
+    private IDisposable? _sessionBloodlineSubscription;
+    private IDisposable? _sessionChronicleSubscription;
+
     /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
-        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
-        SessionClient.BloodlineApproved -= HandleBloodlineApproved;
-        SessionClient.ChronicleUpdated -= HandleChroniclePatchForCharacter;
+        _sessionCharacterSubscription?.Dispose();
+        _sessionBloodlineSubscription?.Dispose();
+        _sessionChronicleSubscription?.Dispose();
 
         // Do not call SessionClient.StopAsync() here: Blazor may dispose this page after the campaign
         // page has already reconnected; a delayed stop would tear down presence. Hub teardown is via
@@ -52,9 +56,9 @@ public partial class CharacterDetails
                     ToastType.Warning);
             }
 
-            SessionClient.CharacterUpdated += HandleCharacterUpdated;
-            SessionClient.BloodlineApproved += HandleBloodlineApproved;
-            SessionClient.ChronicleUpdated += HandleChroniclePatchForCharacter;
+            _sessionCharacterSubscription = SessionClient.SubscribeCharacterUpdated(HandleCharacterUpdated);
+            _sessionBloodlineSubscription = SessionClient.SubscribeBloodlineApproved(HandleBloodlineApproved);
+            _sessionChronicleSubscription = SessionClient.SubscribeChronicleUpdated(HandleChroniclePatchForCharacter);
         }
 
         await TryShowRecentBloodlineApprovalToastAsync();
