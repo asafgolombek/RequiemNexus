@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Seeding;
@@ -22,7 +23,7 @@ if (builder.Environment.IsEnvironment("Testing"))
 }
 
 builder.AddInfrastructureServices();
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Environment);
 builder.AddIdentityAndAuthServices();
 builder.AddRequiemRateLimiting();
 
@@ -38,6 +39,11 @@ using (IServiceScope scope = app.Services.CreateScope())
     if (!app.Environment.IsEnvironment("Testing"))
     {
         await DbInitializer.InitializeAsync(context, roleManager, app.Logger, seeders, runMigrations);
+    }
+    else
+    {
+        // E2E / visual regression: schema must exist before hosted services run; fixture applies seed and loads ReferenceDataCache afterward.
+        await context.Database.MigrateAsync();
     }
 
     if (app.Environment.IsDevelopment())

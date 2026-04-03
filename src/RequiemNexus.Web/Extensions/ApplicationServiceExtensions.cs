@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using RequiemNexus.Application.Events;
 using RequiemNexus.Application.Events.Handlers;
 using RequiemNexus.Application.Services;
@@ -10,11 +11,19 @@ namespace RequiemNexus.Web.Extensions;
 /// </summary>
 internal static class ApplicationServiceExtensions
 {
-    internal static void AddApplicationServices(this IServiceCollection services)
+    /// <summary>
+    /// Registers application-layer services.
+    /// </summary>
+    /// <param name="services">The DI collection.</param>
+    /// <param name="environment">Host environment; <c>Testing</c> skips reference-cache warmup so E2E fixtures can migrate, seed, then load the cache.</param>
+    internal static void AddApplicationServices(this IServiceCollection services, IHostEnvironment environment)
     {
         services.AddSingleton<ReferenceDataCache>();
         services.AddSingleton<RequiemNexus.Application.Contracts.IReferenceDataCache>(sp => sp.GetRequiredService<ReferenceDataCache>());
-        services.AddHostedService<RequiemNexus.Web.BackgroundServices.ReferenceDataCacheWarmupHostedService>();
+        if (!environment.IsEnvironment("Testing"))
+        {
+            services.AddHostedService<RequiemNexus.Web.BackgroundServices.ReferenceDataCacheWarmupHostedService>();
+        }
 
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<RequiemNexus.Application.Contracts.IVitaeService, RequiemNexus.Application.Services.VitaeService>();

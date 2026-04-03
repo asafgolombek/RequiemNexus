@@ -812,6 +812,7 @@
           "Microsoft.Playwright": "[1.51.0, )",
           "Microsoft.Playwright.Xunit": "[1.51.0, )",
           "Moq": "[4.20.72, )",
+          "RequiemNexus.Application": "[1.0.0, )",
           "RequiemNexus.Data": "[1.0.0, )",
           "RequiemNexus.Web": "[1.0.0, )",
           "xunit": "[2.9.3, )"
