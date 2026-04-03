@@ -100,6 +100,54 @@ public partial class EncounterManager
 
     private void SetSmartCheck(int characterId, bool value) => _smartLaunchSelection[characterId] = value;
 
+    private Task OnSmartLaunchSelectionChangedAsync((int CharacterId, bool Selected) args)
+    {
+        SetSmartCheck(args.CharacterId, args.Selected);
+        return Task.CompletedTask;
+    }
+
+    private Task CancelSmartLaunchAsync()
+    {
+        CancelSmartLaunch();
+        return Task.CompletedTask;
+    }
+
+    private Task OnDraftPrepStartRenameAsync(CombatEncounter enc)
+    {
+        StartEncounterRename(enc);
+        return Task.CompletedTask;
+    }
+
+    private Task CancelEncounterRenameAsync()
+    {
+        CancelEncounterRename();
+        return Task.CompletedTask;
+    }
+
+    private Task AckSaveForLaterAsync()
+    {
+        AckSaveForLater();
+        return Task.CompletedTask;
+    }
+
+    private Task OpenSmartLaunchPrepAsync(int encounterId)
+    {
+        OpenSmartLaunch(encounterId, prepStart: true);
+        return Task.CompletedTask;
+    }
+
+    private Task OpenNpcPickerForDraftAsync(int encounterId) =>
+        OpenNpcPickerAsync(encounterId, isDraft: true, _sourcePicker);
+
+    private Task OpenNpcPickerForActiveAsync(int encounterId) =>
+        OpenNpcPickerAsync(encounterId, isDraft: false, _sourcePicker);
+
+    private Task OpenSmartLaunchForActiveAsync(int encounterId)
+    {
+        OpenSmartLaunch(encounterId, prepStart: false);
+        return Task.CompletedTask;
+    }
+
     private async Task LoadEncounters()
     {
         _loading = true;
@@ -367,12 +415,24 @@ public partial class EncounterManager
         _improvError = string.Empty;
     }
 
+    private Task CloseNpcPickerAsync()
+    {
+        CloseNpcPicker();
+        return Task.CompletedTask;
+    }
+
     private void OnNpcModalKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Escape")
         {
             CloseNpcPicker();
         }
+    }
+
+    private Task OnNpcModalKeyDownAsync(KeyboardEventArgs e)
+    {
+        OnNpcModalKeyDown(e);
+        return Task.CompletedTask;
     }
 
     private string GetNpcModalTitle() =>

@@ -1,0 +1,101 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        <label class="font-sm" for="create-enc-name">Encounter name</label>
+        <input id="create-enc-name"
+               class="form-control"
+               value="@Name"
+               placeholder="Encounter name…"
+               maxlength="200"
+               autocomplete="off"
+               @oninput="OnNameInputAsync" />
+        <label class="font-sm" for="create-enc-notes">Notes (ST only)</label>
+        <textarea id="create-enc-notes"
+                  class="form-control"
+                  rows="4"
+                  value="@Notes"
+                  placeholder="Scene goals, reminders, etc."
+                  maxlength="4000"
+                  @oninput="OnNotesInputAsync"></textarea>
+        <div>
+            <p class="font-sm" style="margin:0 0 0.35rem 0;color:var(--gothic-muted);">NPCs</p>
+            @if (FormDraftEncounter?.NpcTemplates is { } formNpcList && formNpcList.Count > 0)
+            {
+                <div class="character-grid" style="margin:0.5rem 0;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0.5rem;">
+                    @foreach (EncounterNpcTemplate row in formNpcList)
+                    {
+                        <EncounterNpcTemplateCard Template="row" Busy="Busy" OnRemove="OnRemoveTemplate" />
+                    }
+                </div>
+            }
+            else
+            {
+                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">No NPCs yet. Add from a stat block, Danse Macabre, or an improvised NPC.</p>
+            }
+            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-top:0.5rem;" disabled="@Busy" @onclick="AddNpcClickAsync">+ Add NPC</button>
+        </div>
+        @if (!string.IsNullOrEmpty(CreateError))
+        {
+            <p class="text-danger" style="margin:0;">@CreateError</p>
+        }
+        <div class="flex-row flex-wrap gap-sm" style="margin-top:0.25rem;">
+            <button type="button" class="btn-rn-primary" disabled="@Busy" @onclick="StartNowClickAsync">Start now</button>
+            <button type="button" class="btn-rn-ghost" disabled="@Busy" @onclick="SaveForLaterClickAsync">Save for later</button>
+            <button type="button" class="btn-rn-ghost" disabled="@Busy" @onclick="DiscardClickAsync">Discard</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Draft encounter backing the form (NPC template lines), if created.</summary>
+    [Parameter]
+    public CombatEncounter? FormDraftEncounter { get; set; }
+
+    [Parameter]
+    public string CreateError { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> NameChanged { get; set; }
+
+    [Parameter]
+    public string Notes { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> NotesChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnStartNow { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveForLater { get; set; }
+
+    [Parameter]
+    public EventCallback OnDiscard { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddNpc { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemoveTemplate { get; set; }
+
+    private Task OnNameInputAsync(ChangeEventArgs e) =>
+        NameChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+
+    private Task OnNotesInputAsync(ChangeEventArgs e) =>
+        NotesChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+
+    private Task StartNowClickAsync() => OnStartNow.InvokeAsync();
+
+    private Task SaveForLaterClickAsync() => OnSaveForLater.InvokeAsync();
+
+    private Task DiscardClickAsync() => OnDiscard.InvokeAsync();
+
+    private Task AddNpcClickAsync() => OnAddNpc.InvokeAsync();
+}

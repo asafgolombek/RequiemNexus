@@ -129,7 +129,7 @@ Merging the queries is purely a round-trip optimization. Authorization semantics
 ---
 
 ### S10. Appendix A — add counterexample
-**Applied:** Appendix A now has two tables: **Exemplary Patterns** (unchanged) and **Anti-Patterns (what to avoid)**, listing `CharacterDetails.razor.cs`, `DbInitializer.cs`, and `EncounterManager.razor.cs` as canonical examples of the patterns being eliminated.
+**Applied:** Appendix A has two tables: **Exemplary Patterns** (includes decomposition exemplars such as `CharacterCreation/` steps, `CharacterSheet/*AdvancementSection*`, `DanseMacabreTabs/*`, and **`EncounterParts/*`** for `EncounterManager`) and **Anti-Patterns (what to avoid)** (`CharacterDetails.razor.cs` pre-refactor, `DbInitializer.cs` pre-refactor). The **`EncounterManager.razor.cs`** row is framed as **historical (pre–2026-04-03)** — error-field sprawl mitigated by toast + fewer inline validation strings + **`EncounterParts/`** markup extraction; optional further consolidation remains (backlog **#20**).
 
 ---
 
