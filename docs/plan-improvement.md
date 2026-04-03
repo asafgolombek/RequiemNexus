@@ -1,10 +1,10 @@
 # RequiemNexus — Technical Improvement Plan
 
 > **Scope:** Performance, large-file decomposition (migrations excluded), UI/UX consistency, and SOLID principle enforcement.
-> **Date:** 2026-04-02 (line counts correct as of this date — they will drift)
+> **Date:** 2026-04-02 (line counts correct as of this date — they will drift). **Web decomposition inventory** (§1.1 / §1.3 campaign & combat UI) extended 2026-04-03.
 > **Status:** P1–P2 items targeting Phase 20 polish; P3–P4 items are post-Phase 20 tech-debt. See `docs/mission.md` Phase 20 section.
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
-> **Wave 2 (2026-04-02, partial):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` is a thin orchestrator (migrations + Identity roles + ordered seeders); `AddRequiemDataSeeders()` registers implementations; shared sorcery helpers in `SorceryRiteSeedingHelper`. Next: finish Wave 2 with `IReferenceDataCache` (§3.3) and optional full-seeder integration test per plan exit criteria.
+> **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
 > **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
 
 ---
@@ -22,7 +22,7 @@
 
 ## Section 1 — Large Files
 
-Files over ~300 lines are a maintenance red flag. The list below excludes the `Migrations/` folder. All line counts are as of 2026-04-02.
+Files over ~300 lines are a maintenance red flag. The list below excludes the `Migrations/` folder. Baseline line counts as of 2026-04-02; additional Web paths in §1.3 use counts as of 2026-04-03.
 
 ### 1.1 God Components in `Web/`
 
@@ -47,11 +47,15 @@ Each partial class injects only the services it actually needs. The `OpenReferen
 
 **Tests:** Existing component-level tests must pass unchanged. New partial boundaries require no new tests unless logic is extracted to services.
 
-#### `InitiativeTracker.razor.cs` — ~793 lines (P2)
+#### `InitiativeTracker.razor.cs` + `InitiativeTracker.razor` + `InitiativeTracker.razor.css` — ~793 + ~440 + scoped CSS (P2 architecture; P3 markup splits)
 
-**Problem:** Drag-and-drop state, tilt/target selection, NPC roll modal, melee attack modal, and SignalR broadcast subscriptions are all in one class. The `SemaphoreSlim _loadEncounterLock` is a symptom of concurrency being masked rather than architecturally prevented.
+**Problem:** Drag-and-drop state, tilt/target selection, NPC roll modal, melee attack modal, and SignalR broadcast subscriptions are all in one class. The `SemaphoreSlim _loadEncounterLock` is a symptom of concurrency being masked rather than architecturally prevented. The `.razor` file still owns a large initiative grid, add-participant flow, tilt UI, and combat modals alongside `InitiativeTracker.razor.css`.
 
-**Fix:** Extract `InitiativeTrackerSignalRHandler` partial class for all hub subscriptions. Move drag state into a dedicated `DragDropService` (scoped). Replace the semaphore with a `CancellationTokenSource` properly chained to `OnParametersSetAsync`.
+**Fix (code-behind / services — P2):** Extract `InitiativeTrackerSignalRHandler` partial class (or equivalent, e.g. `InitiativeTracker.SignalR.razor.cs`) for all hub subscriptions (`InitiativeUpdated`, `CharacterUpdated`). Move drag state into a dedicated `DragDropService` (scoped). Replace the semaphore with a `CancellationTokenSource` properly chained to `OnParametersSetAsync` / the encounter load pipeline.
+
+**Fix (markup / partials — P3, Wave 4):** Optional child components — e.g. `InitiativeOrderList.razor`, `InitiativeAddParticipantPanel.razor`, `InitiativeTiltPanel.razor`, `InitiativeCombatModals.razor` (or grouped modal wrapper). Optional partials — `InitiativeTracker.EncounterLoad.razor.cs`, `InitiativeTracker.CombatActions.razor.cs` — toward a ~300-line-per-file maintenance target. When extracting children, move related rules from `InitiativeTracker.razor.css` with the owning component (or keep shared class names on the page shell). Replace “Loading encounter…” with `<SkeletonLoader>` / `<LoadingContainer>` per §4.1.
+
+**See also:** §1.3 (`InitiativeTracker`) for a Razor-focused summary; backlog **#19**.
 
 #### `EncounterManager.razor.cs` — ~745 lines + `EncounterManager.razor` ~466 lines (P2)
 
@@ -124,7 +128,9 @@ Create one class per concern under `RequiemNexus.Data/Seeding/`:
 
 **Problem:** The extended-rite roll state machine, potency calculation, and exceptional-success checkbox logic are inline in `@code` inside a modal meant to be reusable.
 
-**Fix:** Extract `RiteExtendedRollPanel.razor` as a child component. The parent `DiceRollerModal` delegates to it when `IsRiteMode == true`.
+**Fix:** Extract `RiteExtendedRollPanel.razor` as a child component. The parent `DiceRollerModal` delegates to it when extended rite mode is active.
+
+**Additional options:** Move `@code` to `DiceRollerModal.razor.cs` (partial) to shrink the `.razor` file without behavior change (same pattern as `CampaignDetails`, `EncounterManager`). Optionally extract a second child for the **standard** pool / trait / again-options block so the parent stays a thin shell. Child components should use scoped `.razor.css` or shared class names coordinated with [DiceRollerModal.razor.css](src/RequiemNexus.Web/Components/UI/DiceRollerModal.razor.css) to avoid visual drift.
 
 #### `CharacterAdvancement.razor` — ~680 lines (P3)
 
@@ -135,6 +141,40 @@ Create one class per concern under `RequiemNexus.Data/Seeding/`:
 - `<MeritsAdvancementSection>`, `<DisciplinesAdvancementSection>`, `<DevotionsAdvancementSection>`
 
 Each section owns its own loading state, scoped error display, and service calls.
+
+#### `CampaignDetails.razor` + `CampaignDetails.razor.cs` — ~377 + ~592 lines (P3)
+
+**Problem:** ~970 lines combined; load state, ST vs player UI, session start/stop, invite modal, lore/prep tabs, roster, hidden perception rolls, and SignalR/session wiring in one page.
+
+**Fix:** **Child components** (UI-only; parent keeps orchestration): e.g. `CampaignSessionBanner.razor`, `CampaignRosterPanel.razor`, `CampaignLorePrepTabs.razor`, `CampaignInviteModal.razor`, `StorytellerPerceptionPanel.razor` — data + `EventCallback`s in, no new business rules in Web. **Partial classes:** `CampaignDetails.Session.razor.cs`, `CampaignDetails.Roster.razor.cs`, `CampaignDetails.LorePrep.razor.cs` (mirrors §1.1 `CharacterDetails.*` pattern). Replace `<p><em>Loading campaign...</em></p>` per §4.1.
+
+#### `DanseMacabre.razor` — ~308 lines (P3)
+
+**Problem:** Single file with three tab panels (territories, power structure, NPCs) and `@code` from ~line 180.
+
+**Fix:** Per-tab components under `Web/Components/Pages/Campaigns/DanseMacabre/` (or `Web/Components/Campaigns/DanseMacabre/`): e.g. `DanseTerritoriesTab.razor`, `DansePowerStructureTab.razor`, `DanseNpcsTab.razor`; page holds tab index and `CampaignId`. Optional `DanseMacabre.razor.cs` for all code-behind. Replace ad-hoc loading per §4.1.
+
+#### `EncounterManager.razor` + `EncounterManager.razor.cs` — ~466 + ~745 lines (P2 / P3)
+
+**Problem / fix:** Align with §1.1 — `EncounterFormPanel.razor`, `EncounterParticipantPanel.razor`; hybrid errors per §4.2.
+
+**Additional markup splits:** NPC picker modes (stat block, template, chronicle NPC, improv) as subcomponents to shrink the `.razor`. Optional partials: `EncounterManager.NpcPicker.razor.cs`, `EncounterManager.SmartLaunch.razor.cs` if any file remains over ~300 lines. Replace “Loading encounters…” per §4.1.
+
+#### `GlimpseSocialManeuvers.razor` — ~449 lines (P3)
+
+**Problem:** Threshold config, new-maneuver form, and per-maneuver list/actions in one file; `@code` ~200 lines. Embedded from `StorytellerGlimpse.razor`.
+
+**Fix:** `GlimpseSocialManeuverThresholdRow.razor`, `GlimpseSocialManeuverNewForm.razor`, `GlimpseSocialManeuverRow.razor` / `GlimpseSocialManeuverCard.razor`; optional `GlimpseSocialManeuvers.razor.cs`. **Constraint:** preserve parameter surface for `StorytellerGlimpse` (`Vitals`, `Npcs`, `Maneuvers`, campaign id, etc.) — do not change public parameters without updating the parent.
+
+#### `InitiativeTracker` — see §1.1 (P2 + P3)
+
+**Summary:** Combined ~1,233 lines (`.razor` + `.razor.cs`) plus `InitiativeTracker.razor.css`. Architectural work (SignalR partial, `DragDropService`, `CancellationTokenSource` vs. semaphore) lives in **§1.1**. Markup/CSS/loading refinements are **§1.3 / Wave 4**; single backlog item **#19** (no duplicate row).
+
+#### `StorytellerGlimpse.razor` + `.razor.cs` + `.razor.css` — ~420 + ~538 + ~473 lines (P3)
+
+**Problem:** ST dashboard with tab bar; overview tab remains large after partial extraction of `GlimpseSocialManeuvers` and `GlimpsePendingRequests` (social / approvals). Overview holds degeneration banners, passive predatory aura, coterie Beat drag-source, pinned NPCs, character vitals grid (drag-drop Beat/XP, lineage), and modals. Code-behind includes hub connect, `SessionClient.ChronicleUpdated`, awards, drag-drop, degeneration modal.
+
+**Fix:** **Child components:** e.g. `GlimpseOverviewPanel.razor`, or finer `GlimpseDegenerationBanners.razor`, `GlimpsePassiveAuraCard.razor`, `GlimpseCoterieBeatCard.razor`, `GlimpseCharacterVitalsCard.razor` (one PC card; parent maps `_vitals`). **Partials:** e.g. `StorytellerGlimpse.Session.razor.cs`, `StorytellerGlimpse.Overview.razor.cs`, `StorytellerGlimpse.Awards.razor.cs`. **CSS:** relocate selectors from [StorytellerGlimpse.razor.css](src/RequiemNexus.Web/Components/Pages/Campaigns/StorytellerGlimpse.razor.css) into matching `*.razor.css` for children; page keeps tab bar + layout; use `::deep` only where needed. Replace “Loading campaign vitals…” per §4.1.
 
 ---
 
@@ -362,7 +402,7 @@ All index additions require an **EF Core migration** — do not add raw SQL. Add
 - `<SkeletonLoader Variant="card" Count="3" />` — Campaigns index ✓
 - `<p><em>Loading encounters...</em></p>` — Encounter manager ✗
 - `<p><em>Loading...</em></p>` — Initiative tracker ✗
-- Custom loading markup — Danse Macabre, Blood Bonds Panel, Ghouls Tab ✗
+- Custom loading markup — Danse Macabre, Blood Bonds Panel, Ghouls Tab, Storyteller Glimpse (campaign vitals), Campaign Details ✗
 
 **Fix:** Mandate `<SkeletonLoader>` or `<LoadingContainer>` for all loading states. Delete ad-hoc loading markup. Add skeleton variants for remaining page types (tracker, encounter list, NPC detail).
 
@@ -422,7 +462,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 
 ### Wave 2 — Infrastructure (enables later items)
 4. **`ISeeder` decomposition** (1.2 / DbInitializer) — prerequisite for clean seed-pipeline tests — **done (2026-04-02)** (`ISeeder`, `AddRequiemDataSeeders`, per-concern seeders under `Data/Seeding/`)
-5. **`IReferenceDataCache`** (3.3) — many call sites change; audit all services that query definition tables before rolling out
+5. **`IReferenceDataCache`** (3.3) — **done (2026-04-03)** — singleton cache, startup warmup, Application services migrated; integration guard: `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables`
 
 ### Wave 3 — Service layer (depends on Wave 2 cache)
 6. **`CharacterQueryService` extraction** (1.2 / CharacterManagementService) — unblocks patch event work
@@ -434,7 +474,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 10. **Standardize loading + error surfaces** (4.1, 4.2) — foundation for component extraction
 11. **`CharacterDetails.razor.cs` decomposition** (1.1) — largest change; do last when service API is stable
 12. **Modal loading feedback** (4.3)
-13. **Remaining large component extractions** (1.1 tracker/encounter, 1.3 dice/advancement, 4.4 vitals)
+13. **Remaining large component extractions** (1.1 `InitiativeTracker` / `EncounterManager`, 1.3 `DiceRollerModal` / `CharacterAdvancement` / **`CampaignDetails`** / **`DanseMacabre`** / **`EncounterManager` markup** / **`GlimpseSocialManeuvers`** / **`StorytellerGlimpse`** (overview + CSS split) / **`InitiativeTracker` .razor + partials alongside §1.1 SignalR–drag work**, 4.4 vitals)
 
 ---
 
@@ -472,7 +512,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 16 | P2 | Logging | Audit and replace all `Console.WriteLine` in production code with `ILogger`; implement or remove `OpenReference` stub |
 | 17 | P3 | Large File | Extract `RiteExtendedRollPanel.razor` from `DiceRollerModal.razor` |
 | 18 | P3 | Large File | Extract section components from `CharacterAdvancement.razor` |
-| 19 | P3 | Large File | Decompose `InitiativeTracker.razor.cs` — separate SignalR partial |
+| 19 | P3 | Large File | Decompose `InitiativeTracker` — SignalR partial (or `InitiativeTracker.SignalR.razor.cs`), scoped `DragDropService`, `CancellationTokenSource` load pipeline (§1.1); optional `InitiativeTracker.razor` child components + `InitiativeTracker.razor.css` co-split (§1.3) |
 | 20 | P3 | Large File | Consolidate `EncounterManager.razor.cs` error fields; extract form child components |
 | 21 | P3 | SOLID | Add `ICharacterReader` / `ICharacterWriter` split to `ICharacterService` |
 | 22 | P3 | SOLID | Replace `TraitResolver` switch with `Dictionary<PoolTraitType, Func<Character, int>>` (sync-only paths) |
@@ -483,6 +523,12 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 27 | P3 | Database | Confirm and add `HasIndex` + migration for `BloodBond` thrall/regnant columns |
 | 28 | P4 | Database | Add explicit discriminator index on `Asset` TPH table |
 | 29 | P4 | Performance | Merge double character lookup in `PredatoryAuraService.ResolveLashOutAsync` |
+| 30 | P3 | Large File | Decompose `CampaignDetails` (`.razor` + `.razor.cs`, ~970 lines combined) into child components and/or feature partials — session/roster, lore/prep, invite, ST perception (§1.3) |
+| 31 | P3 | Large File | Decompose `DanseMacabre.razor` into per-tab components (territories / power structure / NPCs) and optional `DanseMacabre.razor.cs` for `@code` (§1.3) |
+| 32 | P3 | Large File | Decompose `GlimpseSocialManeuvers.razor` into threshold row, new-maneuver form, and per-maneuver card/row components; optional `.razor.cs`; preserve parameter surface for `StorytellerGlimpse` (§1.3) |
+| 33 | P3 | Large File | Decompose `StorytellerGlimpse` — overview tab into child components and/or partials; split `StorytellerGlimpse.razor.css` with extracted components; optional `StorytellerGlimpse.Session.razor.cs` for hub wiring (§1.3) |
+
+**Section 7 deduplication:** Do not add new rows for `DiceRollerModal` (**#17**), `EncounterManager` (**#20**), or a second `InitiativeTracker` row (**#19** covers `.razor` + CSS extensions).
 
 ---
 
@@ -495,6 +541,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 | `SessionHub.cs` | Thin hub — all logic delegated to injected services |
 | `StorytellerGlimpseService.GetCampaignVitalsAsync` | Projected DTO query — only needed columns fetched |
 | `CharacterCreation/` step components | Section decomposition pattern for large wizard pages |
+| `GlimpseSocialManeuvers`, `GlimpsePendingRequests` | Partial decomposition of `StorytellerGlimpse` — further overview/CSS splits in §1.3 |
 | `SessionService.cs` | Consistent load/verify/proceed pattern per method |
 | `SkeletonLoader.razor`, `LoadingContainer.razor` | Loading state components — use everywhere |
 

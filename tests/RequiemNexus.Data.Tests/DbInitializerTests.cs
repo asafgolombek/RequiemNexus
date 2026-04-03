@@ -151,6 +151,31 @@ public class DbInitializerTests
     }
 
     [Fact]
+    public async Task InitializeAsync_FullPipeline_PopulatesCoreCatalogTables()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_FullPipeline_PopulatesCoreCatalogTables));
+        using var scope = provider.CreateScope();
+        ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        await RunDbInitializeAsync(scope);
+
+        Assert.True(await context.Clans.CountAsync() > 0, "Expected seeded Clans.");
+        Assert.True(await context.Disciplines.CountAsync() > 0, "Expected seeded Disciplines.");
+        Assert.True(await context.DisciplinePowers.CountAsync() > 0, "Expected seeded DisciplinePowers.");
+        Assert.True(await context.Merits.CountAsync() > 0, "Expected seeded Merits.");
+        Assert.True(await context.HuntingPoolDefinitions.CountAsync() > 0, "Expected seeded HuntingPoolDefinitions.");
+        Assert.True(await context.Assets.CountAsync() > 0, "Expected seeded Assets (equipment catalog).");
+        Assert.True(await context.CovenantDefinitions.CountAsync() > 0, "Expected seeded CovenantDefinitions.");
+        Assert.True(await context.CovenantDefinitionMerits.CountAsync() > 0, "Expected seeded CovenantDefinitionMerits.");
+        Assert.True(await context.BloodlineDefinitions.CountAsync() > 0, "Expected seeded BloodlineDefinitions.");
+        Assert.True(await context.DevotionDefinitions.CountAsync() > 0, "Expected seeded DevotionDefinitions.");
+        Assert.True(await context.SorceryRiteDefinitions.CountAsync() > 0, "Expected seeded SorceryRiteDefinitions.");
+        Assert.True(await context.ScaleDefinitions.CountAsync() > 0, "Expected seeded ScaleDefinitions.");
+        Assert.True(await context.CoilDefinitions.CountAsync() > 0, "Expected seeded CoilDefinitions.");
+        Assert.True(await context.NpcStatBlocks.CountAsync(s => s.IsPrebuilt) > 0, "Expected prebuilt NpcStatBlocks.");
+    }
+
+    [Fact]
     public async Task InitializeAsync_SecondRun_DoesNotRemoveCharacterMerits()
     {
         var provider = CreateServiceProvider(nameof(InitializeAsync_SecondRun_DoesNotRemoveCharacterMerits));
