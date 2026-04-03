@@ -55,6 +55,7 @@ public class PredatoryAuraService(
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
         List<Character> lashPair = await db.Characters.AsNoTracking()
+            .Include(c => c.Campaign)
             .Where(c => c.Id == attackerCharacterId || c.Id == defenderCharacterId)
             .ToListAsync();
 
@@ -82,8 +83,16 @@ public class PredatoryAuraService(
                 "Both characters must belong to the specified chronicle.");
         }
 
-        bool isStoryteller = await db.Campaigns.AsNoTracking()
-            .AnyAsync(c => c.Id == chronicleId && c.StoryTellerId == userId);
+        string? storyTellerId = attacker.Campaign?.StoryTellerId ?? defender.Campaign?.StoryTellerId;
+        if (storyTellerId == null)
+        {
+            storyTellerId = await db.Campaigns.AsNoTracking()
+                .Where(c => c.Id == chronicleId)
+                .Select(c => c.StoryTellerId)
+                .FirstOrDefaultAsync();
+        }
+
+        bool isStoryteller = storyTellerId != null && string.Equals(storyTellerId, userId, StringComparison.Ordinal);
 
         if (!isStoryteller)
         {

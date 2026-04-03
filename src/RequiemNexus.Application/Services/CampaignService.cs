@@ -46,8 +46,9 @@ public class CampaignService(
 
         // Membership folded into the main query (same predicate as <see cref="IAuthorizationHelper.RequireCampaignMemberAsync"/>).
         // Unauthorized callers get null — no campaign row is materialized.
-        // Do not Include StoryTeller or Character.User in the main graph query. With AsSplitQuery(),
-        // missing AspNetUsers rows behave like inner joins and can drop the entire campaign row.
+        // Do not Include StoryTeller or Character.User on this graph: with AsSplitQuery(), SQLite/InMemory and some
+        // providers treat missing AspNetUsers principals like inner joins and drop the entire campaign row
+        // (see CampaignServiceTests — seeds campaigns without user rows).
         Campaign? campaign = await ctx.Campaigns
             .Include(c => c.Characters).ThenInclude(ch => ch.Clan)
             .AsSplitQuery()

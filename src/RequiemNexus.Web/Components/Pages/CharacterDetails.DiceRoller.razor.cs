@@ -1,10 +1,11 @@
-// Blazor partial: standard dice roller, repair/devotion rolls, and rules-reference stub for CharacterDetails.
+// Blazor partial: standard dice roller, repair/devotion rolls, and trait-reference toast for CharacterDetails.
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
+using RequiemNexus.Web.Enums;
 
 namespace RequiemNexus.Web.Components.Pages;
 
@@ -12,7 +13,11 @@ public partial class CharacterDetails
 {
     private void OpenReference(string traitName)
     {
-        Logger.LogDebug("Rules reference for trait {TraitName} is not implemented yet.", traitName);
+        Logger.LogDebug("Trait reference toast shown for {TraitName}.", traitName);
+        ToastService.Show(
+            "Trait reference",
+            $"“{traitName}” — use Vampire: The Requiem 2nd Edition for full trait rules. An in-sheet rules browser is not part of the Grimoire yet.",
+            ToastType.Info);
     }
 
     private void OpenRoller(string traitName)

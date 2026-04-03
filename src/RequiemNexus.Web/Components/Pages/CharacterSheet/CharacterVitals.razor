@@ -1,6 +1,7 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
+@using RequiemNexus.Web.Helpers
 @inject SessionClientService SessionClient
 @implements IDisposable
 
@@ -84,55 +85,12 @@
             return;
         }
 
-        bool healthDirty = false;
-        bool willDirty = false;
-        bool vitaeDirty = false;
-        bool humanityDirty = false;
+        bool healthDirty = patch.CurrentHealth.HasValue || patch.HealthDamage != null;
+        bool willDirty = patch.CurrentWillpower.HasValue;
+        bool vitaeDirty = patch.CurrentVitae.HasValue;
+        bool humanityDirty = patch.Humanity.HasValue;
 
-        if (patch.CurrentHealth.HasValue)
-        {
-            Character.CurrentHealth = patch.CurrentHealth.Value;
-            healthDirty = true;
-        }
-
-        if (patch.MaxHealth.HasValue)
-        {
-            Character.MaxHealth = patch.MaxHealth.Value;
-        }
-
-        if (patch.HealthDamage != null)
-        {
-            Character.HealthDamage = patch.HealthDamage;
-            healthDirty = true;
-        }
-
-        if (patch.CurrentWillpower.HasValue)
-        {
-            Character.CurrentWillpower = patch.CurrentWillpower.Value;
-            willDirty = true;
-        }
-
-        if (patch.MaxWillpower.HasValue)
-        {
-            Character.MaxWillpower = patch.MaxWillpower.Value;
-        }
-
-        if (patch.CurrentVitae.HasValue)
-        {
-            Character.CurrentVitae = patch.CurrentVitae.Value;
-            vitaeDirty = true;
-        }
-
-        if (patch.MaxVitae.HasValue)
-        {
-            Character.MaxVitae = patch.MaxVitae.Value;
-        }
-
-        if (patch.Humanity.HasValue)
-        {
-            Character.Humanity = patch.Humanity.Value;
-            humanityDirty = true;
-        }
+        CharacterUpdateDtoApplier.ApplyToCharacter(Character, patch);
 
         if (healthDirty)
         {
