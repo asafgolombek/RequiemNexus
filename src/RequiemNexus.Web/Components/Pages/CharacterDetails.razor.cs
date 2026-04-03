@@ -87,7 +87,9 @@ public partial class CharacterDetails : IAsyncDisposable
     private List<BloodlineSummaryDto> _eligibleBloodlines = [];
     private bool _isApplyCovenantModalOpen = false;
     private bool _isApplyLearnRiteModalOpen = false;
-    private bool _openingRiteModal = false;
+
+    /// <summary>Name of the modal-open handler currently awaiting data (e.g. <see cref="OpenLearnRiteModal"/>).</summary>
+    private string? _pendingModal;
     private List<SorceryRiteSummaryDto> _eligibleRites = [];
     private bool _isChosenMysteryModalOpen = false;
     private bool _isLearnCoilModalOpen = false;
@@ -1048,6 +1050,11 @@ public partial class CharacterDetails : IAsyncDisposable
         _isApplyBloodlineModalOpen = isOpen;
     }
 
+    /// <summary>Returns whether the given modal-open handler is currently loading prerequisite data.</summary>
+    /// <param name="openerName">Use <c>nameof(OpenLearnRiteModal)</c> (or sibling openers) from markup.</param>
+    private bool IsOpeningModal(string openerName) =>
+        string.Equals(_pendingModal, openerName, StringComparison.Ordinal);
+
     private async Task OpenApplyBloodlineModal()
     {
         if (_character == null || string.IsNullOrEmpty(_currentUserId))
@@ -1055,6 +1062,8 @@ public partial class CharacterDetails : IAsyncDisposable
             return;
         }
 
+        _pendingModal = nameof(OpenApplyBloodlineModal);
+        await InvokeAsync(StateHasChanged);
         try
         {
             _eligibleBloodlines = await BloodlineService.GetEligibleBloodlinesAsync(_character.Id, _currentUserId);
@@ -1069,6 +1078,10 @@ public partial class CharacterDetails : IAsyncDisposable
         catch (Exception ex)
         {
             ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _pendingModal = null;
         }
     }
 
@@ -1127,6 +1140,8 @@ public partial class CharacterDetails : IAsyncDisposable
             return;
         }
 
+        _pendingModal = nameof(OpenApplyCovenantModal);
+        await InvokeAsync(StateHasChanged);
         try
         {
             _eligibleCovenants = await CovenantService.GetEligibleCovenantsAsync(_character.Id, _currentUserId);
@@ -1141,6 +1156,10 @@ public partial class CharacterDetails : IAsyncDisposable
         catch (Exception ex)
         {
             ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _pendingModal = null;
         }
     }
 
@@ -1199,7 +1218,8 @@ public partial class CharacterDetails : IAsyncDisposable
             return;
         }
 
-        _openingRiteModal = true;
+        _pendingModal = nameof(OpenLearnRiteModal);
+        await InvokeAsync(StateHasChanged);
         try
         {
             _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _currentUserId);
@@ -1217,7 +1237,7 @@ public partial class CharacterDetails : IAsyncDisposable
         }
         finally
         {
-            _openingRiteModal = false;
+            _pendingModal = null;
         }
     }
 
@@ -1247,6 +1267,8 @@ public partial class CharacterDetails : IAsyncDisposable
             return;
         }
 
+        _pendingModal = nameof(OpenChosenMysteryModal);
+        await InvokeAsync(StateHasChanged);
         try
         {
             _eligibleScales = await CoilService.GetScalesAsync();
@@ -1261,6 +1283,10 @@ public partial class CharacterDetails : IAsyncDisposable
         catch (Exception ex)
         {
             ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _pendingModal = null;
         }
     }
 
@@ -1294,6 +1320,8 @@ public partial class CharacterDetails : IAsyncDisposable
             return;
         }
 
+        _pendingModal = nameof(OpenLearnCoilModal);
+        await InvokeAsync(StateHasChanged);
         try
         {
             _eligibleCoils = await CoilService.GetEligibleCoilsAsync(_character.Id, _currentUserId);
@@ -1308,6 +1336,10 @@ public partial class CharacterDetails : IAsyncDisposable
         catch (Exception ex)
         {
             ToastService.Show("Error", ex.Message, ToastType.Error);
+        }
+        finally
+        {
+            _pendingModal = null;
         }
     }
 

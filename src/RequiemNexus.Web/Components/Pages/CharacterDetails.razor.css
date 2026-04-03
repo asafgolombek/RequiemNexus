@@ -270,3 +270,22 @@
     opacity: 0.55;
     filter: grayscale(0.15);
 }
+
+/* Async modal-open affordance (§4.3 plan-improvement) */
+.btn-inline-spinner {
+    display: inline-block;
+    width: 0.85em;
+    height: 0.85em;
+    margin-right: 0.4em;
+    vertical-align: -0.12em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: char-details-btn-spin 0.7s linear infinite;
+}
+
+@keyframes char-details-btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

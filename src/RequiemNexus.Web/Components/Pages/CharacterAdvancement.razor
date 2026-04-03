@@ -246,7 +246,17 @@ else
                         else
                         {
                             <p class="text-muted-rn" style="font-size: 0.9em; margin-bottom: 8px;">Request to learn Crúac, Theban, or Necromancy rites you qualify for. Requires matching discipline dots, covenant or clan where applicable, sufficient Experiences, and Storyteller approval.</p>
-                            <button class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Request rite</button>
+                            <button type="button" class="btn-rn-primary" style="font-size: 0.9em;" @onclick="OpenLearnRiteModal" disabled="@IsOpeningModal(nameof(OpenLearnRiteModal))" aria-busy="@IsOpeningModal(nameof(OpenLearnRiteModal))">
+                                @if (IsOpeningModal(nameof(OpenLearnRiteModal)))
+                                {
+                                    <span class="btn-inline-spinner" aria-hidden="true"></span>
+                                    <span>Opening…</span>
+                                }
+                                else
+                                {
+                                    <span>Request rite</span>
+                                }
+                            </button>
                         }
                     </section>
                 }
@@ -303,7 +313,9 @@ else
     private int _selectedDevotionId = 0;
 
     private bool _isApplyLearnRiteModalOpen;
-    private bool _openingRiteModal;
+
+    /// <summary>When set, matches <c>nameof(OpenLearnRiteModal)</c> while eligible rites are loading.</summary>
+    private string? _pendingModal;
     private List<SorceryRiteSummaryDto> _eligibleRites = [];
 
     private bool _disciplineGateDialogOpen;
@@ -624,6 +636,9 @@ else
         _isApplyLearnRiteModalOpen = isOpen;
     }
 
+    private bool IsOpeningModal(string openerName) =>
+        string.Equals(_pendingModal, openerName, StringComparison.Ordinal);
+
     private async Task OpenLearnRiteModal()
     {
         if (_character == null || string.IsNullOrEmpty(_userId))
@@ -632,7 +647,8 @@ else
         }
 
         _errorMessage = null;
-        _openingRiteModal = true;
+        _pendingModal = nameof(OpenLearnRiteModal);
+        await InvokeAsync(StateHasChanged);
         try
         {
             _eligibleRites = await SorceryService.GetEligibleRitesAsync(_character.Id, _userId);
@@ -650,7 +666,7 @@ else
         }
         finally
         {
-            _openingRiteModal = false;
+            _pendingModal = null;
         }
     }
 
