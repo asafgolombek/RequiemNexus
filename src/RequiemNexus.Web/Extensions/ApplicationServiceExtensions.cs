@@ -86,6 +86,10 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterCreationService, RequiemNexus.Application.Services.CharacterCreationService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDevotionService, RequiemNexus.Application.Services.DevotionService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.ConditionModifierProvider>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.CoilModifierProvider>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.WoundTrackModifierProvider>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.EquipmentModifierProvider>();
         services.AddScoped<RequiemNexus.Application.Contracts.IModifierService, RequiemNexus.Application.Services.ModifierService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDerivedStatService, RequiemNexus.Application.Services.DerivedStatService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ITraitResolver, RequiemNexus.Application.Services.TraitResolver>();

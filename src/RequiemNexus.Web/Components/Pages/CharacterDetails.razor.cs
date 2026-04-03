@@ -50,6 +50,12 @@ public partial class CharacterDetails : IAsyncDisposable
     private string? _sheetLoadError;
     private string? _currentUserId;
     private string? _cookieHeader;
+
+    /// <summary>
+    /// After local Beats/XP adjustments, the server broadcasts to the chronicle group and this connection receives it.
+    /// The scoped character graph is already updated; skip one full reload to avoid duplicate heavy Include queries.
+    /// </summary>
+    private int _skipIncomingCharacterHubReloadCount;
     private PersistingComponentStateSubscription _persistingSubscription;
     private List<Asset> _availableAssets = [];
     private int _selectedAssetId = 0;
@@ -493,6 +499,14 @@ public partial class CharacterDetails : IAsyncDisposable
                 return;
             }
 
+            if (_skipIncomingCharacterHubReloadCount > 0)
+            {
+                _skipIncomingCharacterHubReloadCount--;
+                await ResolveDisciplinePowerPoolsAsync();
+                StateHasChanged();
+                return;
+            }
+
             _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
             await ResolveDisciplinePowerPoolsAsync();
             StateHasChanged();
@@ -702,7 +716,12 @@ public partial class CharacterDetails : IAsyncDisposable
         if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
             await CharacterService.AddBeatAsync(_character.Id, _currentUserId);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+            if (_character.CampaignId.HasValue)
+            {
+                _skipIncomingCharacterHubReloadCount++;
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -710,8 +729,14 @@ public partial class CharacterDetails : IAsyncDisposable
     {
         if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
+            int beatsBefore = _character.Beats;
             await CharacterService.RemoveBeatAsync(_character.Id, _currentUserId);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+            if (_character.CampaignId.HasValue && beatsBefore > 0)
+            {
+                _skipIncomingCharacterHubReloadCount++;
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -720,7 +745,12 @@ public partial class CharacterDetails : IAsyncDisposable
         if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
             await CharacterService.AddXPAsync(_character.Id, _currentUserId);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+            if (_character.CampaignId.HasValue)
+            {
+                _skipIncomingCharacterHubReloadCount++;
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -728,8 +758,14 @@ public partial class CharacterDetails : IAsyncDisposable
     {
         if (_character != null && !string.IsNullOrEmpty(_currentUserId))
         {
+            int xpBefore = _character.ExperiencePoints;
             await CharacterService.RemoveXPAsync(_character.Id, _currentUserId);
-            _character = await CharacterService.ReloadCharacterAsync(_character.Id, _currentUserId);
+            if (_character.CampaignId.HasValue && xpBefore > 0)
+            {
+                _skipIncomingCharacterHubReloadCount++;
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 

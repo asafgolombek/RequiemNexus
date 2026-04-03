@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -38,6 +39,19 @@ public class ModifierServiceTests
             CurrentVitae = 10,
         };
 
+    private static IModifierService CreateModifierService(ApplicationDbContext ctx)
+    {
+        var rules = new ConditionRules();
+        IModifierProvider[] providers =
+        [
+            new ConditionModifierProvider(ctx, rules, NullLogger<ConditionModifierProvider>.Instance),
+            new CoilModifierProvider(ctx, NullLogger<CoilModifierProvider>.Instance),
+            new WoundTrackModifierProvider(ctx),
+            new EquipmentModifierProvider(ctx, NullLogger<EquipmentModifierProvider>.Instance),
+        ];
+        return new ModifierService(providers);
+    }
+
     [Fact]
     public async Task GetModifiersForCharacterAsync_BrokenEquippedGear_EmitsNoEquipmentBonuses()
     {
@@ -70,7 +84,7 @@ public class ModifierServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
+        IModifierService service = CreateModifierService(ctx);
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
         Assert.DoesNotContain(
@@ -112,7 +126,7 @@ public class ModifierServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
+        IModifierService service = CreateModifierService(ctx);
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
         // Weapon is Weaponry (IsRangedWeapon=false, UsesBrawlForAttacks=false), Str 2 vs Req 4 → penalty -2 on Weaponry only.
@@ -135,7 +149,7 @@ public class ModifierServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
+        IModifierService service = CreateModifierService(ctx);
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
         PassiveModifier shaken = Assert.Single(
@@ -159,7 +173,7 @@ public class ModifierServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var service = new ModifierService(ctx, NullLogger<ModifierService>.Instance, new ConditionRules());
+        IModifierService service = CreateModifierService(ctx);
         IReadOnlyList<PassiveModifier> mods = await service.GetModifiersForCharacterAsync(1);
 
         Assert.DoesNotContain(mods, m => m.Source.SourceType == ModifierSourceType.Condition);

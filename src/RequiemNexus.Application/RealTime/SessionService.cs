@@ -201,7 +201,10 @@ public class SessionService(
                 Humanity: character.Humanity,
                 Armor: character.Armor,
                 ActiveConditions: combinedConditions,
-                HealthDamage: character.HealthDamage);
+                HealthDamage: character.HealthDamage,
+                Beats: character.Beats,
+                ExperiencePoints: character.ExperiencePoints,
+                TotalExperiencePoints: character.TotalExperiencePoints);
 
             await _publisher.Group(character.CampaignId.Value).ReceiveCharacterUpdate(update);
         }

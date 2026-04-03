@@ -5,7 +5,7 @@
 > **Status:** P1–P2 items targeting Phase 20 polish; P3–P4 items are post-Phase 20 tech-debt. See `docs/mission.md` Phase 20 section.
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
 > **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
-> **Wave 3 (started 2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8) — read paths (`GetCharactersByUserIdAsync`, `GetArchivedCharactersAsync`, `GetCharacterWithAccessCheckAsync`, campaign kindred targets after auth) live in `CharacterQueryService`; **`CharacterQueryableExtensions`** centralizes EF include graphs (detail edit vs access snapshot); `CharacterManagementService` delegates reads and keeps tracked `GetCharacterByIdAsync` / `ReloadCharacterAsync` + mutations. `ICharacterService` unchanged for consumers. Next: §3.2 reload reduction, `IModifierProvider`, `IRiteActivationStrategy`.
+> **Wave 3 (2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8); **§3.2 (partial)** — Beats/XP reload skip + `CharacterUpdateDto` progression fields + hub echo suppression. **`IModifierProvider`** (§2.2 / backlog #9) — `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`; `ModifierService` aggregates by `Order`; shared `PassiveModifierJsonSerializerOptions`; tests: `ModifierProviderTests` + updated `ModifierServiceTests`. Next: **`IRiteActivationStrategy`**, further §3.2 reloads.
 > **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
 
 ---
@@ -192,21 +192,13 @@ Each section owns its own loading state, scoped error display, and service calls
 
 ### 2.2 Open/Closed Principle
 
-#### `ModifierService.cs` — ~375 lines (P2)
+#### `ModifierService.cs` — ~375 lines (P2) — **delivered 2026-04-03**
 
 **Problem:** Aggregates modifiers from Conditions, Coils, Devotions, Covenant benefits, and equipment using `if` chains on `ModifierSourceType`. Adding a new source requires editing this class.
 
-**Fix:** Introduce:
-```csharp
-public interface IModifierProvider
-{
-    ModifierSourceType SourceType { get; }
-    Task<IReadOnlyList<ActiveModifier>> GetModifiersAsync(Character character);
-}
-```
-Register one implementation per source type. `ModifierService` becomes an aggregator that iterates `IEnumerable<IModifierProvider>`.
+**Fix (as implemented):** `IModifierProvider` with `Order`, `SourceType`, and `GetModifiersAsync(int characterId, CancellationToken)` returning `PassiveModifier` (current product shape; not `Character` entity). Providers: `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`. `ModifierService` aggregates ordered providers. *(Devotion / Covenant / Bloodline / Merit sources remain future providers if rules add DB-backed passive modifiers for them.)*
 
-**Tests:** Integration test per `IModifierProvider` implementation against a test character with known modifier setup.
+**Tests:** `ModifierProviderTests` (per provider) + existing `ModifierServiceTests` through the composed `ModifierService`.
 
 #### `TraitResolver.cs` — ~326 lines (P3)
 
@@ -467,8 +459,8 @@ The backlog items are not independent. The order below reduces rework and risk.
 
 ### Wave 3 — Service layer (depends on Wave 2 cache)
 6. **`CharacterQueryService` extraction** (1.2 / CharacterManagementService) — unblocks patch event work — **done (2026-04-03)** (`ICharacterQueryService`, `CharacterQueryService`, `CharacterQueryableExtensions`, facade delegation on `CharacterManagementService`)
-7. **Reduce `GetCharacterByIdAsync` reload** (3.2) — depends on step 6
-8. **`IModifierProvider`** (2.2) — depends on stable service boundaries from step 6
+7. **Reduce `GetCharacterByIdAsync` reload** (3.2) — depends on step 6 — **partial (2026-04-03):** Beats/XP on sheet + hub echo suppression; DTO progression fields for real-time payloads
+8. **`IModifierProvider`** (2.2) — depends on stable service boundaries from step 6 — **done (2026-04-03)** — four providers + thin `ModifierService`; DI registers each `IModifierProvider` + aggregator
 9. **`IRiteActivationStrategy`** (2.2) — self-contained, can run in parallel with step 8
 
 ### Wave 4 — UI/UX and large component splits (depends on Wave 3)
@@ -503,7 +495,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 6 | P2 | SOLID / Large File | Decompose `DbInitializer.cs` into `ISeeder` implementations (Data project) |
 | 7 | P2 | SOLID | Split `CharacterExportService` into JSON and PDF export services |
 | 8 | P2 | SOLID | Extract `CharacterQueryService` from `CharacterManagementService` |
-| 9 | P2 | SOLID | Introduce `IModifierProvider` per source type in `ModifierService` |
+| 9 | P2 | SOLID | Introduce `IModifierProvider` per source type in `ModifierService` — **done (2026-04-03)** — Condition / Coil / WoundTrack / Equipment providers + aggregator |
 | 10 | P2 | SOLID | Introduce `IRiteActivationStrategy` per tradition in `SorceryActivationService` |
 | 11 | P2 | Performance | Push coil eligibility filter into EF query in `CoilService` |
 | 12 | P2 | Performance | Reduce 3 round-trips in `CampaignService.GetCampaignByIdAsync` (Masquerade-safe DTO) |
@@ -544,6 +536,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 | `CharacterCreation/` step components | Section decomposition pattern for large wizard pages |
 | `GlimpseSocialManeuvers`, `GlimpsePendingRequests` | Partial decomposition of `StorytellerGlimpse` — further overview/CSS splits in §1.3 |
 | `SessionService.cs` | Consistent load/verify/proceed pattern per method |
+| `IModifierProvider` + `ModifierService` | Open/closed modifier aggregation — add a provider + DI registration instead of editing the orchestrator |
 | `SkeletonLoader.razor`, `LoadingContainer.razor` | Loading state components — use everywhere |
 
 ### Anti-Patterns (what to avoid)
