@@ -6,7 +6,7 @@
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
 > **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
 > **Wave 3 (2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8); **§3.2 (partial)** — Beats/XP reload skip + `CharacterUpdateDto` progression fields + hub echo suppression. **`IModifierProvider`** (§2.2 / backlog #9) — `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`; `ModifierService` aggregates by `Order`; shared `PassiveModifierJsonSerializerOptions`; tests: `ModifierProviderTests` + updated `ModifierServiceTests`. **`IRiteActivationStrategy`** (§2.2 / backlog #10) — `CruacActivationStrategy`, `ThebanActivationStrategy`, `NecromancyActivationStrategy`; `SorceryActivationService` resolves by tradition; initial character load uses `Include(Rites).ThenInclude(SorceryRiteDefinition)` (removes fallback `CharacterRites` query).
-> **Wave 4 (2026-04-03):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** / **`panel`** (compact embeds) in `SkeletonLoader.razor.css`; campaign hub pages + **character sheet sections** (Blood Bonds, Lineage, Ghouls, Predatory Aura, Social Maneuvers), **Glimpse** panels (`BloodBondsPanel`, `GhoulsTab`, `PredatoryAuraHistoryPanel`), **NPC/Faction detail**, **CampaignCharacterView** / **Advancement**, **join** page, modals (`EditLineage`, `GhoulDisciplineAccessEditor`, `PlayerWeaponDamageRollModal`), **Account/Manage** pages, and **`LoadingContainer`** use `<SkeletonLoader>` instead of italic loading paragraphs. §4.2 **(partial):** `CampaignDetails` / `CampaignJoin` / invite modal — service failures → **`ToastService.Show(..., ToastType.Error)`**; removed danger-zone `feedback-error` blocks and join `alert-rn` for caught exceptions; **`PlayerInviteModal`** no longer takes `InviteError`. **`EncounterManager`** — exception paths → toast; dropped **`_renameEncounterError`** / **`_smartLaunchConfirmError`**; **`_createError`** / **`_chronicleAddError`** / **`_improvError`** retain **inline validation only**. Remaining **`alert-rn`** on hub pages are **inline validation / empty-state** (e.g. missing campaign id, load failure message binding); auth pages keep field-adjacent alerts per §4.2. §4.3 **(2026-04-03):** `CharacterDetails` — unified **`_pendingModal`** + **`IsOpeningModal`**, `InvokeAsync(StateHasChanged)` before awaits, **`.btn-inline-spinner`** in **`CharacterDetails.razor.css`**; buttons: Apply Bloodline/Covenant, Learn Rite, Chosen Mystery, Purchase Coil. **`CharacterAdvancement`** — same for **Request rite** + **`CharacterAdvancement.razor.css`**. §1.1 **`CharacterDetails.razor.cs` decomposition (2026-04-03):** feature partials under `Components/Pages/` — **`CharacterDetails.State`**, **`.Session`**, **`.Export`**, **`.DiceRoller`**, **`.Rites`**, **`.Assets`**, **`.DisciplinePools`**, **`.Progression`**, **`.Modals.Faction`**, **`.Modals.Sorcery`**; injects consolidated in **`CharacterDetails.razor`** (removed unused **`IAdvancementService`**). **Post–Wave 4 (P3):** optional §4.2 polish on **`CharacterAdvancement`** / residual alerts; §1.3 large-Razor extractions (InitiativeTracker children, `DiceRollerModal`, etc.).
+> **Wave 4 (2026-04-03):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** / **`panel`** (compact embeds) in `SkeletonLoader.razor.css`; campaign hub pages + **character sheet sections** (Blood Bonds, Lineage, Ghouls, Predatory Aura, Social Maneuvers), **Glimpse** panels (`BloodBondsPanel`, `GhoulsTab`, `PredatoryAuraHistoryPanel`), **NPC/Faction detail**, **CampaignCharacterView** / **Advancement**, **join** page, modals (`EditLineage`, `GhoulDisciplineAccessEditor`, `PlayerWeaponDamageRollModal`), **Account/Manage** pages, and **`LoadingContainer`** use `<SkeletonLoader>` instead of italic loading paragraphs. §4.2 **(partial):** `CampaignDetails` / `CampaignJoin` / invite modal — service failures → **`ToastService.Show(..., ToastType.Error)`**; removed danger-zone `feedback-error` blocks and join `alert-rn` for caught exceptions; **`PlayerInviteModal`** no longer takes `InviteError`. **`EncounterManager`** — exception paths → toast; dropped **`_renameEncounterError`** / **`_smartLaunchConfirmError`**; **`_createError`** / **`_chronicleAddError`** / **`_improvError`** retain **inline validation only**. Remaining **`alert-rn`** on hub pages are **inline validation / empty-state** (e.g. missing campaign id, load failure message binding); auth pages keep field-adjacent alerts per §4.2. §4.3 **(2026-04-03):** `CharacterDetails` — unified **`_pendingModal`** + **`IsOpeningModal`**, `InvokeAsync(StateHasChanged)` before awaits, **`.btn-inline-spinner`** in **`CharacterDetails.razor.css`**; buttons: Apply Bloodline/Covenant, Learn Rite, Chosen Mystery, Purchase Coil. **`CharacterAdvancement`** — same for **Request rite** + **`CharacterAdvancement.razor.css`**. §1.1 **`CharacterDetails.razor.cs` decomposition (2026-04-03):** feature partials under `Components/Pages/` — **`CharacterDetails.State`**, **`.Session`**, **`.Export`**, **`.DiceRoller`**, **`.Rites`**, **`.Assets`**, **`.DisciplinePools`**, **`.Progression`**, **`.Modals.Faction`**, **`.Modals.Sorcery`**; injects consolidated in **`CharacterDetails.razor`** (removed unused **`IAdvancementService`**). **Post–Wave 4 (P3):** §4.2 on **`CharacterAdvancement`** — **done (2026-04-03)** (toast + inline validation; see §1.3 `CharacterAdvancement`). Remaining §1.3 large-Razor work: InitiativeTracker children, `DiceRollerModal`, `CampaignDetails`, `EncounterManager` markup, `GlimpseSocialManeuvers`, `StorytellerGlimpse`, §4.4 vitals, etc.
 > **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
 
 ---
@@ -28,7 +28,7 @@ Files over ~300 lines are a maintenance red flag. The list below excludes the `M
 
 ### 1.1 God Components in `Web/`
 
-#### `CharacterDetails.razor.cs` — ~1,430 lines (P1)
+#### `CharacterDetails.razor.cs` — ~1,430 lines (P1) — **decomposed (2026-04-03)**
 
 **Problem:** A single partial class that owns SignalR hub lifecycle, full character state reload, 20 modal open/close flags, dice-roller state, PDF/JSON export, covenant apply/leave, beat/XP mutation, asset procurement, tab navigation, and cookie SSR/interactive bridging. It injects 20 services.
 
@@ -36,16 +36,18 @@ Files over ~300 lines are a maintenance red flag. The list below excludes the `M
 
 | Responsibility | Extract To |
 |---|---|
-| Modal state + triggers for bloodline/covenant/coil/mystery/rite | `CharacterDetails.Modals.razor.cs` |
+| Shared field state | `CharacterDetails.State.razor.cs` |
+| Modal state + triggers (bloodline/covenant; sorcery/coil) | `CharacterDetails.Modals.Faction.razor.cs`, `CharacterDetails.Modals.Sorcery.razor.cs` |
 | Dice roller state + feed publication | `CharacterDetails.DiceRoller.razor.cs` |
 | Export (PDF + JSON) | `CharacterDetails.Export.razor.cs` |
 | Asset procurement + inventory | `CharacterDetails.Assets.razor.cs` |
 | SignalR hub + reload orchestration | `CharacterDetails.Session.razor.cs` |
-| Inline "Pack" tab markup | New `CharacterPackTab.razor` component |
+| Discipline power pool resolution | `CharacterDetails.DisciplinePools.razor.cs` |
+| Beats / XP | `CharacterDetails.Progression.razor.cs` |
+| Rite activation + extended roller context | `CharacterDetails.Rites.razor.cs` |
+| Inline "Pack" tab markup | New `CharacterPackTab.razor` component *(still optional — `CharacterDetailsPackTab` exists)* |
 
-Each partial class injects only the services it actually needs. The `OpenReference` stub that calls `Console.WriteLine` must be implemented or removed — see backlog item #16.
-
-**Exit criteria:** No single partial class exceeds 300 lines; each partial injects ≤ 5 services.
+**Delivered (2026-04-03):** Partials co-located with `CharacterDetails.razor`; **all `@inject` on the `.razor` file** (avoids duplicating the “≤5 injects per partial” constraint across many `*.razor.cs` files). **Exit criteria met:** each `CharacterDetails*.razor.cs` partial is **≤ ~300 lines**. The `OpenReference` stub remains **TODO** — see backlog **#16** (`ILogger` debug only today).
 
 **Tests:** Existing component-level tests must pass unchanged. New partial boundaries require no new tests unless logic is extracted to services.
 
@@ -416,7 +418,7 @@ All index additions require an **EF Core migration** — do not add raw SQL. Add
 
 **Fix:** Remove all raw Bootstrap alert divs. Replace unexpected-error string fields with `ToastService.Show(..., ToastType.Error)` (or a thin `ShowError` helper if added). Retain (or introduce) a single `string? _validationError` per modal/form for inline validation only — do not proliferate to 7 fields.
 
-**Delivered (2026-04-03, partial):** `CampaignDetails` (leave/delete/remove/invite failures → toast); `CampaignJoin` (join API exceptions → toast); `PlayerInviteModal` (invite errors via toast from parent); `EncounterManager` (rename/smart-launch/service catches → toast; create/chronicle/improv keep inline messages only for validation).
+**Delivered (2026-04-03, partial):** `CampaignDetails` (leave/delete/remove/invite failures → toast); `CampaignJoin` (join API exceptions → toast); `PlayerInviteModal` (invite errors via toast from parent); `EncounterManager` (rename/smart-launch/service catches → toast; create/chronicle/improv keep inline messages only for validation). **`CharacterAdvancement` (2026-04-03):** `ToastService` for exceptions and post–ST-ack discipline failure; **inline** `.advancement-validation-message` for XP/spec/eligibility/gate-style text (no top `alert-danger`).
 
 ### 4.3 Add Intermediate Loading on Modal Triggers (P2)
 
@@ -475,7 +477,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 10. **Standardize loading + error surfaces** (4.1, 4.2) — foundation for component extraction — **§4.1 (2026-04-03)** as above; **§4.2 partial:** `CampaignDetails`, `CampaignJoin`, `PlayerInviteModal`, `EncounterManager` hybrid policy; hub **`alert-rn`** retained where inline/validation (see Wave 4 note in header)
 11. **`CharacterDetails.razor.cs` decomposition** (1.1) — **done (2026-04-03)** — partials listed in header Wave 4 note; each `*.razor.cs` partial **≤ ~300 lines**; DI on **`CharacterDetails.razor`**
 12. **Modal loading feedback** (4.3) — **done (2026-04-03)** for `CharacterDetails` listed openers + `CharacterAdvancement` “Request rite”
-13. **Remaining large component extractions** (post–Wave 4 / P3): 1.1 `InitiativeTracker` / `EncounterManager`, 1.3 `DiceRollerModal` / `CharacterAdvancement` / **`CampaignDetails`** / **`DanseMacabre`** / **`EncounterManager` markup** / **`GlimpseSocialManeuvers`** / **`StorytellerGlimpse`** (overview + CSS split) / **`InitiativeTracker` .razor + partials alongside §1.1 SignalR–drag work**, 4.4 vitals
+13. **Remaining large component extractions** (post–Wave 4 / P3): 1.1 `InitiativeTracker` / `EncounterManager`; 1.3 **`DiceRollerModal`** / **`CampaignDetails`** / **`EncounterManager` markup** / **`GlimpseSocialManeuvers`** / **`StorytellerGlimpse`** (overview + CSS split) / **`InitiativeTracker` .razor + partials alongside §1.1 SignalR–drag work**; §4.4 vitals. *( **`CharacterAdvancement`** sections + §4.2 polish and **`DanseMacabre`** tab panels — **done 2026-04-03**; optional `DanseMacabre.razor.cs` still open.)*
 
 ---
 
@@ -495,7 +497,7 @@ The backlog items are not independent. The order below reduces rework and risk.
 
 | # | Priority | Area | Item |
 |---|---|---|---|
-| 1 | P1 | Large File / SOLID | Decompose `CharacterDetails.razor.cs` into feature-scoped partials |
+| 1 | P1 | Large File / SOLID | Decompose `CharacterDetails.razor.cs` into feature-scoped partials — **done (2026-04-03)** — see §1.1 `CharacterDetails` and Wave 4 header |
 | 2 | P1 | Performance | `DbInitializer` — eliminate N+1 saves in `SeedCoilsAsync` and `SeedDeferredAssetCapabilitiesAsync` |
 | 3 | P1 | Performance | `DbInitializer.UpdateDisciplineAcquisitionMetadataAsync` — pre-load disciplines into dictionary |
 | 4 | P1 | Performance | Add `IReferenceDataCache` singleton for static seed data |
@@ -508,11 +510,11 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 11 | P2 | Performance | Push coil eligibility filter into EF query in `CoilService` |
 | 12 | P2 | Performance | Reduce 3 round-trips in `CampaignService.GetCampaignByIdAsync` (Masquerade-safe DTO) |
 | 13 | P2 | UI/UX | Standardize all loading states to `<SkeletonLoader>` / `<LoadingContainer>` — **partial (2026-04-03)** — see §4.1 |
-| 14 | P2 | UI/UX | Standardize error surfaces — `ToastService` for global errors, inline text for form validation |
+| 14 | P2 | UI/UX | Standardize error surfaces — `ToastService` for global errors, inline text for form validation — **partial:** hub/campaign flows + **`CharacterAdvancement`** (2026-04-03); login/register and residual `alert-rn` on some pages unchanged where intentional (see §4.2) |
 | 15 | P2 | UI/UX | Add intermediate loading feedback on modal trigger buttons — **done (2026-04-03):** `CharacterDetails` + `CharacterAdvancement` (rite) `_pendingModal` + spinners |
 | 16 | P2 | Logging | Audit and replace all `Console.WriteLine` in production code with `ILogger`; implement or remove `OpenReference` stub |
 | 17 | P3 | Large File | Extract `RiteExtendedRollPanel.razor` from `DiceRollerModal.razor` |
-| 18 | P3 | Large File | Extract section components from `CharacterAdvancement.razor` — **done (2026-04-03)** — see §1.3 `CharacterAdvancement`; extract `RiteExtendedRollPanel` from `DiceRollerModal` still open |
+| 18 | P3 | Large File | Extract section components from `CharacterAdvancement.razor` — **done (2026-04-03)** — see §1.3 `CharacterAdvancement` |
 | 19 | P3 | Large File | Decompose `InitiativeTracker` — SignalR partial (or `InitiativeTracker.SignalR.razor.cs`), scoped `DragDropService`, `CancellationTokenSource` load pipeline (§1.1); optional `InitiativeTracker.razor` child components + `InitiativeTracker.razor.css` co-split (§1.3) |
 | 20 | P3 | Large File | Consolidate `EncounterManager.razor.cs` error fields; extract form child components |
 | 21 | P3 | SOLID | Add `ICharacterReader` / `ICharacterWriter` split to `ICharacterService` |
@@ -542,6 +544,8 @@ The backlog items are not independent. The order below reduces rework and risk.
 | `SessionHub.cs` | Thin hub — all logic delegated to injected services |
 | `StorytellerGlimpseService.GetCampaignVitalsAsync` | Projected DTO query — only needed columns fetched |
 | `CharacterCreation/` step components | Section decomposition pattern for large wizard pages |
+| `CharacterSheet/*AdvancementSection*.razor` | Advancement page sections (paired with `CharacterAdvancement.razor` orchestration) |
+| `DanseMacabreTabs/*` | Tab panel extraction without colliding folder/page Razor type names |
 | `GlimpseSocialManeuvers`, `GlimpsePendingRequests` | Partial decomposition of `StorytellerGlimpse` — further overview/CSS splits in §1.3 |
 | `SessionService.cs` | Consistent load/verify/proceed pattern per method |
 | `IModifierProvider` + `ModifierService` | Open/closed modifier aggregation — add a provider + DI registration instead of editing the orchestrator |

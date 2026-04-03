@@ -67,6 +67,7 @@ The system is structured into **explicit layers** with strict boundaries, upheld
 - No database access.
 - All inputs validated before passing inward past the Masquerade.
 - **Real-Time boundaries**: The SignalR Hub is owned by the Web layer. It pushes state updates to clients but holds **no authoritative game state** — it is a pure output channel.
+- **Composition (Phase 20 polish):** Large pages are decomposed into **section/tab child components** and/or **`partial class` code-behind files** (one type per `.cs` file — partials are additional files for the *same* component type). **Do not** name a subfolder identically to a sibling `.razor` route component in the same namespace (Razor compiler duplicate-type conflict); use a distinct folder name (e.g. `DanseMacabreTabs/` next to `DanseMacabre.razor`). **Hybrid errors:** unexpected/service failures → **`ToastService`**; expected validation or field-adjacent text → **inline** markup (see **`docs/plan-improvement.md`** §4.2).
 
 ### 2. Application Layer (`RequiemNexus.Application`)
 
@@ -134,6 +135,7 @@ This design ensures that Devotions (Phase 8), Blood Sorcery (Phase 9), and Equip
 Many advanced Kindred powers (Devotions, Coils, Covenant benefits) and **equipped catalog gear (Phase 11)** provide permanent or conditional stat deltas rather than active rolls, where applicable.
 
 - **Stateless Aggregation**: Modifiers are never "applied" to a base stat permanently. Instead, an `IModifierService` aggregates all active `PassiveModifier` records for a character at the moment a stat is requested.
+- **Open/closed composition (Phase 20):** `ModifierService` aggregates ordered **`IModifierProvider`** implementations (Conditions, Coils, wound track, equipment, etc.) instead of growing monolithic `if` chains — add a provider + DI registration to extend sources.
 - **Modifier Types**:
     - **Static**: Persistent bonus/penalty to a Trait or derived stat (e.g., +1 Speed).
     - **Conditional**: Modifiers that apply only under specific circumstances (e.g., +2 to resist frenzy).
@@ -153,7 +155,7 @@ Errors are not exceptions to the architecture — they **are** architecture.
 | **Domain** | Returns `Result<T>` — never throws for expected failures | "Insufficient XP to purchase dot" |
 | **Application** | Translates domain results into user-facing outcomes | Maps `Result.Failure` → appropriate HTTP status or UI message |
 | **Infrastructure** | Catches external failures, wraps in domain-friendly types | DB timeout → `PersistenceException` |
-| **Presentation** | Displays **Player-Safe Errors** to users, logs full diagnostics | "Something went wrong" + correlated Serilog entry |
+| **Presentation** | Displays **Player-Safe Errors** to users, logs full diagnostics | Toasts for unexpected failures; inline text for validation; plus correlated Serilog where applicable |
 
 ### Rules
 
@@ -451,7 +453,7 @@ This section records a **static** review (no live trace), aligned with Phase 3 o
 
 ### Character sheet (`CharacterDetails`)
 
-- **Presentation:** `CharacterDetails.razor` and `CharacterDetails.razor.cs` orchestrate many sections; large `StateHasChanged` fan-out increases render cost. Splitting into section components reduces re-render scope (see Phase 4 decomposition).
+- **Presentation:** `CharacterDetails.razor` orchestrates sheet sections; logic is split across **`CharacterDetails.*.razor.cs`** partials (Session, Export, Dice, Rites, Assets, Modals, etc., 2026-04-03) with **service injection on the `.razor` file**. Further re-render tuning remains possible via `ShouldRender` if profiling demands it. Section components (e.g. under `CharacterSheet/`) already bound render scope for tabs.
 - **Data:** Verify the character load path uses a **single** Application/EF round-trip or explicit includes — watch for per-section service calls from the page `OnInitializedAsync` that could be batched.
 - **Caching:** Per this document, character-derived stats use a short Redis TTL; ensure mutations invalidate or bypass stale reads where correctness requires fresh data.
 

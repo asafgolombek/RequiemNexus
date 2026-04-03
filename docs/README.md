@@ -97,6 +97,8 @@ Dependencies always point inward. Infrastructure is a plugin to the domain, neve
 
 → Read the full [Architecture Guide](./Architecture.md)
 
+→ Phase 20 technical improvement track (Waves 1–4 + optional P3): [plan-improvement.md](./plan-improvement.md)
+
 ---
 
 ## 📁 Project Structure
@@ -104,7 +106,7 @@ Dependencies always point inward. Infrastructure is a plugin to the domain, neve
 ```
 RequiemNexus/
 ├── .github/                  # CI workflows, PR & issue templates
-├── docs/                     # Architecture and Mission documents
+├── docs/                     # Architecture, mission, improvement plan, rules interpretations
 ├── scripts/                  # PowerShell automation (build, test, deploy)
 ├── src/
 │   ├── RequiemNexus.Application/ # Application — orchestrates domain logic
@@ -149,9 +151,9 @@ RequiemNexus/
 | 17 | **The Fog of Eternity** — Humanity & Conditions | ✅ Complete |
 | 18 | **The Wider Web** — Edge Systems & Content | ✅ Complete |
 | 19 | **The Blood Lineage** — Discipline Acquisition Rules | ✅ Complete |
-| 20 | **The Global Embrace** — i18n, public API (last planned phase) | ⬜ Planned |
+| 20 | **The Global Embrace** — i18n, public API (last planned phase) | 🔄 Active |
 
-**Next up:** **V:tR 2e playability** phases **14–19** (including **Phase 18 — The Wider Web**) are **complete**. **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. See [`docs/mission.md`](./mission.md) for the full phase table, **Phase 18** delivery detail, and dependency graph.
+**Next up:** **Phase 20 — The Global Embrace** is **active**: i18n, public API, Discord presence, and production rollout remain on the roadmap checklist. **Phase 20 technical polish (Waves 1–4)** — performance, decomposition, and UI consistency — is **delivered** (2026-04-03); see [`docs/mission.md`](./mission.md) Phase 20 and [`docs/plan-improvement.md`](./plan-improvement.md) (optional **P3** extractions still listed there). V:tR 2e playability work through **Phase 19.5** is complete.
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 
