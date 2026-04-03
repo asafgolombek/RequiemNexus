@@ -97,6 +97,8 @@ Every data-mutating operation must follow this exact sequence:
 
 Skipping step 3 is a **security defect**, not a shortcut.
 
+For **PR and endpoint reviews** (minimal APIs, Blazor, `SessionHub`, Application services), use the layered checklist in [`docs/masquerade-audit-checklist.md`](./docs/masquerade-audit-checklist.md).
+
 ---
 
 ## C# Style Rules

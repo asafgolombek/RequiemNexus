@@ -37,7 +37,7 @@ public static class TorporDurationTable
     }
 
     /// <summary>
-    /// Blood Potency plus Kindred Necromancy dots for torpor interval lookup, capped at 10 (V:tR 2e + <c>magic_types_and_rules.txt</c>).
+    /// Blood Potency plus Kindred Necromancy dots for torpor interval lookup, capped at 10 (V:tR 2e; see <c>docs/rules-interpretations.md</c> Phase 19.5, Kindred Necromancy tradition overview).
     /// </summary>
     /// <param name="bloodPotency">Character Blood Potency (1–10).</param>
     /// <param name="necromancyDots">Dots in the Necromancy discipline.</param>

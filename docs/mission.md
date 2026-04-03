@@ -379,7 +379,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 ### Scope
 
 - [x] **Necromancy** — `Necromancy` discipline; `SorceryType.Necromancy`; Mekhet clan gate via `RequiredClanId`; sample rite `Corrupting the Corpse` in `DbInitializer.EnsureBloodSorceryPhaseExtensionsAsync` (catalog can grow from seed/JSON).
-- [x] ~~**Ordo Dracul Rituals**~~ — **Retired in Phase 19.5 (P6).** Ordo **Coils/Scales** remain (`coils_info.json`, `CoilOrdoEligibility`); separate **Ordo ritual spells** are not a `SorceryType` in-app (see `docs/magic_types_and_rules.txt` — Mysteries of the Dragon).
+- [x] ~~**Ordo Dracul Rituals**~~ — **Retired in Phase 19.5 (P6).** Ordo **Coils/Scales** remain (`coils_info.json`, `CoilOrdoEligibility`); separate **Ordo ritual spells** are not a `SorceryType` in-app (see [`docs/rules-interpretations.md`](./rules-interpretations.md#tradition-overview-corebook-summary) — Mysteries of the Dragon).
 - [ ] **Expanded ritual catalog** — Full rulebook/supplement list (e.g. Taste of the Dragon, Pasha's Vision, …) deferred to content passes; structure is in place.
 - [x] **Data model extension** — `SorceryType` values, nullable `RequiredCovenantId`, `RequiredClanId`, `RequirementsJson`, migration `Phase95Phase96BloodSorceryExtensions`.
 - [x] **UI** — Blood Sorcery section for Crúac/Theban or any character with Necromancy dots; rite requests from **Advancement** (`ApplyLearnRiteModal`); sheet uses activation only; modal labels traditions (Ordo ritual UI removed with P6).
@@ -767,7 +767,7 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **Status:** ✅ **Complete (2026-04-02).** Delivery scope, decisions, and code pointers live in this section; rules interpretation in [`docs/rules-interpretations.md`](./rules-interpretations.md) (Phase 19.5).
 
-**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and `docs/magic_types_and_rules.txt`. All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
+**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and the [tradition overview](./rules-interpretations.md#tradition-overview-corebook-summary) in `docs/rules-interpretations.md` (Phase 19.5). All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
 
 ### Prerequisites
 
