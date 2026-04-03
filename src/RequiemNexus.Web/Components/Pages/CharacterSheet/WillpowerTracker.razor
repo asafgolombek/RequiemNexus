@@ -1,0 +1,64 @@
+@using RequiemNexus.Data.Models
+
+<div class="tracker-item">
+    <span class="tracker-label">Willpower</span>
+    <div class="tracker-boxes @(_pulse ? "animate-pulse" : "")">
+        @for (int i = 0; i < Character.CalculatedMaxWillpower; i++)
+        {
+            int captureIndex = i;
+            <div class="willpower-box @(i < Character.CurrentWillpower ? "filled" : "")"
+                 @onclick="() => ToggleWillpowerAsync(captureIndex)"></div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public EventCallback OnChanged { get; set; }
+
+    /// <summary>Increments when the parent applies a real-time willpower-related patch so this tracker can flash.</summary>
+    [Parameter]
+    public int PulseTick { get; set; }
+
+    private bool _pulse;
+    private int _lastPulseTick;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (PulseTick != _lastPulseTick && PulseTick > 0)
+        {
+            _lastPulseTick = PulseTick;
+            await RunPulseAsync();
+        }
+    }
+
+    private async Task RunPulseAsync()
+    {
+        _pulse = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(800);
+        _pulse = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleWillpowerAsync(int index)
+    {
+        if (index == Character.CurrentWillpower - 1)
+        {
+            Character.CurrentWillpower--;
+        }
+        else
+        {
+            Character.CurrentWillpower = index + 1;
+        }
+
+        if (OnChanged.HasDelegate)
+        {
+            await OnChanged.InvokeAsync();
+        }
+    }
+}

@@ -1,0 +1,148 @@
+@using RequiemNexus.Data.Models
+
+<div class="tracker-item">
+    <span class="tracker-label">Health</span>
+    <div class="tracker-boxes @(_pulse ? "animate-pulse" : "")">
+        @for (int i = 0; i < Character.CalculatedMaxHealth; i++)
+        {
+            int captureIndex = i;
+            <div class="health-box @GetHealthDamageClass(captureIndex)"
+                 @onclick="() => ToggleHealthAsync(captureIndex)"
+                 title="@GetHealthTooltip(captureIndex)">
+                @GetHealthDamageSymbol(captureIndex)
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public EventCallback OnChanged { get; set; }
+
+    /// <summary>Increments when the parent applies a real-time health-related patch so this tracker can flash.</summary>
+    [Parameter]
+    public int PulseTick { get; set; }
+
+    private bool _pulse;
+    private int _lastPulseTick;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (PulseTick != _lastPulseTick && PulseTick > 0)
+        {
+            _lastPulseTick = PulseTick;
+            await RunPulseAsync();
+        }
+    }
+
+    private async Task RunPulseAsync()
+    {
+        _pulse = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(800);
+        _pulse = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetHealthDamageClass(int index)
+    {
+        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
+        {
+            return "empty";
+        }
+
+        return Character.HealthDamage[index] switch
+        {
+            '/' => "bashing",
+            'X' => "lethal",
+            '*' => "aggravated",
+            _ => "empty",
+        };
+    }
+
+    private string GetHealthDamageSymbol(int index)
+    {
+        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
+        {
+            return string.Empty;
+        }
+
+        return Character.HealthDamage[index] switch
+        {
+            '/' => "/",
+            'X' => "✕",
+            '*' => "☩",
+            _ => string.Empty,
+        };
+    }
+
+    private string GetHealthTooltip(int index)
+    {
+        int max = Character.CalculatedMaxHealth;
+        string penalty = string.Empty;
+
+        if (index == max - 1)
+        {
+            penalty = " (Wound Penalty: −3)";
+        }
+        else if (index == max - 2)
+        {
+            penalty = " (Wound Penalty: −2)";
+        }
+        else if (index == max - 3)
+        {
+            penalty = " (Wound Penalty: −1)";
+        }
+
+        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
+        {
+            return $"Health Box {index + 1}{penalty}";
+        }
+
+        return Character.HealthDamage[index] switch
+        {
+            '/' => $"Bashing Damage{penalty}",
+            'X' => $"Lethal Damage{penalty}",
+            '*' => $"Aggravated Damage{penalty}",
+            _ => $"Health Box {index + 1}{penalty}",
+        };
+    }
+
+    private async Task ToggleHealthAsync(int index)
+    {
+        if (Character.HealthDamage == null)
+        {
+            Character.HealthDamage = string.Empty;
+        }
+
+        if (Character.HealthDamage.Length < Character.CalculatedMaxHealth)
+        {
+            Character.HealthDamage = Character.HealthDamage.PadRight(Character.CalculatedMaxHealth, ' ');
+        }
+
+        char currentDamage = Character.HealthDamage[index];
+        char newDamage = currentDamage switch
+        {
+            ' ' => '/',
+            '/' => 'X',
+            'X' => '*',
+            '*' => ' ',
+            _ => '/',
+        };
+
+        var chars = Character.HealthDamage.ToCharArray();
+        chars[index] = newDamage;
+        Character.HealthDamage = new string(chars);
+
+        Character.CurrentHealth = Character.HealthDamage.Count(c => c != ' ');
+
+        if (OnChanged.HasDelegate)
+        {
+            await OnChanged.InvokeAsync();
+        }
+    }
+}

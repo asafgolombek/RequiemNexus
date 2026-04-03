@@ -147,6 +147,15 @@ window.scrollElementIntoView = function (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
+/** Returns layout metrics for a Blazor ElementReference (vitae drop click math). */
+window.getBoundingClientRect = function (element) {
+    if (!element || typeof element.getBoundingClientRect !== 'function') {
+        return null;
+    }
+    const r = element.getBoundingClientRect();
+    return { top: r.top, left: r.left, width: r.width, height: r.height };
+};
+
 window.scrollToBottom = function (element) {
     if (!element) return;
     

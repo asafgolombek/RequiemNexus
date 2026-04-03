@@ -47,6 +47,9 @@ internal static class ApplicationServiceExtensions
         services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.Services.CharacterCreationRules>();
         services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.Services.ConditionRules>();
         services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportCharacterLoader, RequiemNexus.Application.Services.CharacterExportCharacterLoader>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterJsonExportService, RequiemNexus.Application.Services.CharacterJsonExportService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterPdfExportService, RequiemNexus.Application.Services.CharacterPdfExportService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IEncounterQueryService, RequiemNexus.Application.Services.EncounterQueryService>();

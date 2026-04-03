@@ -44,25 +44,18 @@ public class CampaignService(
     {
         await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
 
-        // Single membership gate (same predicate as <see cref="IAuthorizationHelper.RequireCampaignMemberAsync"/>).
-        // Unauthorized callers get null — no campaign payload is loaded.
-        bool isMember = await ctx.Campaigns.AsNoTracking()
-            .AnyAsync(c =>
-                c.Id == id
-                && (c.StoryTellerId == userId || c.Characters.Any(ch => ch.ApplicationUserId == userId)));
-
-        if (!isMember)
-        {
-            return null;
-        }
-
+        // Membership folded into the main query (same predicate as <see cref="IAuthorizationHelper.RequireCampaignMemberAsync"/>).
+        // Unauthorized callers get null — no campaign row is materialized.
         // Do not Include StoryTeller or Character.User in the main graph query. With AsSplitQuery(),
         // missing AspNetUsers rows behave like inner joins and can drop the entire campaign row.
         Campaign? campaign = await ctx.Campaigns
             .Include(c => c.Characters).ThenInclude(ch => ch.Clan)
             .AsSplitQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .Where(c =>
+                c.Id == id
+                && (c.StoryTellerId == userId || c.Characters.Any(ch => ch.ApplicationUserId == userId)))
+            .FirstOrDefaultAsync();
 
         if (campaign is null)
         {

@@ -23,7 +23,7 @@ public partial class CharacterDetails
         _isExporting = true;
         try
         {
-            var json = ExportService.ExportCharacterAsJson(_character);
+            var json = await ExportService.ExportCharacterAsJsonAsync(_character);
             var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
             await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.json", "application/json", base64);
             ToastService.Show("Export complete", "JSON downloaded.", ToastType.Success);
@@ -44,7 +44,7 @@ public partial class CharacterDetails
         _isExporting = true;
         try
         {
-            var pdfBytes = ExportService.ExportCharacterAsPdf(_character);
+            var pdfBytes = await ExportService.ExportCharacterAsPdfAsync(_character);
             var base64 = Convert.ToBase64String(pdfBytes);
             await JS.InvokeVoidAsync("downloadFileFromBase64", $"{_character.Name}.pdf", "application/pdf", base64);
             ToastService.Show("Export complete", "PDF downloaded.", ToastType.Success);
