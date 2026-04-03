@@ -1,0 +1,100 @@
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Domain.Services
+
+<div class="rite-extended-summary" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(139, 0, 0, 0.15); border: 1px solid rgba(255, 200, 200, 0.25); border-radius: 6px;">
+    <p style="margin: 0 0 0.35rem 0;"><strong>Extended ritual</strong> — V:tR 2e p. 152</p>
+    <ul style="margin: 0; padding-left: 1.2rem;">
+        <li>Successes accumulated: <strong>@AccumulatedSuccesses</strong> / @TargetSuccesses</li>
+        <li>Rolls remaining: <strong>@RollsRemaining</strong> (max @MaxRolls unmodified pool)</li>
+        <li>Interval per roll: <strong>@(MinutesPerRoll ?? 30)</strong> min</li>
+    </ul>
+    @if (MaxRolls is 0)
+    {
+        <p class="chance-die-hint" style="margin-top: 0.5rem;">No unmodified pool — this rite cannot be rolled as an extended action.</p>
+    }
+    @if (ShowCompletedBanner)
+    {
+        <p style="margin: 0.5rem 0 0 0; color: var(--gold, #c9a227);"><strong>Rite completed</strong> — apply the effect at the table.</p>
+        int basePotency = RitePotencyRules.ComputeBasePotency(AccumulatedSuccesses, TargetSuccesses);
+        int ritualDots = RitualDisciplineDots ?? 0;
+        bool canAddDots = HadExceptionalSuccess && ritualDots > 0;
+        int totalPotency = basePotency + (canAddDots && AddDisciplineDotsToPotency ? ritualDots : 0);
+        <div class="rite-potency-panel" style="margin-top: 0.65rem; padding: 0.6rem 0.75rem; background: rgba(0, 40, 60, 0.35); border: 1px solid rgba(180, 220, 255, 0.2); border-radius: 6px;">
+            <p style="margin: 0 0 0.35rem 0;"><strong>Potency (informational)</strong> — V:tR 2e p. 152</p>
+            <p style="margin: 0; font-size: 0.92em;">Base potency after meeting target: <strong>@basePotency</strong>. Many rite effects reference Potency for damage, duration, or scale; this value is for the table — it is not auto-applied by the app.</p>
+            @if (canAddDots)
+            {
+                <label class="option-label" style="display: block; margin-top: 0.55rem;">
+                    <input type="checkbox" checked="@AddDisciplineDotsToPotency" @onchange="OnAddDotsChangedAsync" />
+                    Exceptional success during this ritual: add <strong>@ritualDots</strong> @TraditionDotsLabel Discipline dots to Potency (optional).
+                </label>
+            }
+            @if (basePotency > 0)
+            {
+                <p style="margin: 0.45rem 0 0 0;"><strong>Total Potency:</strong> @totalPotency</p>
+            }
+        </div>
+    }
+    else if (ShowFailedNoRollsBanner)
+    {
+        <p style="margin: 0.5rem 0 0 0; color: #f88;"><strong>Ritual failed</strong> — no rolls remain; costs were already spent when you began.</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int AccumulatedSuccesses { get; set; }
+
+    [Parameter, EditorRequired]
+    public int TargetSuccesses { get; set; }
+
+    [Parameter, EditorRequired]
+    public int RollsRemaining { get; set; }
+
+    [Parameter, EditorRequired]
+    public int MaxRolls { get; set; }
+
+    [Parameter]
+    public int? MinutesPerRoll { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool ShowCompletedBanner { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool ShowFailedNoRollsBanner { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool HadExceptionalSuccess { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool AddDisciplineDotsToPotency { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<bool> AddDisciplineDotsToPotencyChanged { get; set; }
+
+    [Parameter]
+    public int? RitualDisciplineDots { get; set; }
+
+    [Parameter]
+    public SorceryType? OutcomeTradition { get; set; }
+
+    private string TraditionDotsLabel =>
+        OutcomeTradition switch
+        {
+            SorceryType.Cruac => "Crúac",
+            SorceryType.Theban => "Theban Sorcery",
+            SorceryType.Necromancy => "Necromancy",
+            _ => "ritual",
+        };
+
+    private Task OnAddDotsChangedAsync(ChangeEventArgs e)
+    {
+        bool v = e.Value switch
+        {
+            bool b => b,
+            string s => string.Equals(s, "on", StringComparison.OrdinalIgnoreCase) || s == "true",
+            _ => !AddDisciplineDotsToPotency,
+        };
+        return AddDisciplineDotsToPotencyChanged.InvokeAsync(v);
+    }
+}

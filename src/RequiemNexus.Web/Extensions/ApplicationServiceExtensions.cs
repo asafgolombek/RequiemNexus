@@ -108,6 +108,7 @@ internal static class ApplicationServiceExtensions
 
         services.AddSingleton<RequiemNexus.Web.Services.ToastService>();
         services.AddScoped<RequiemNexus.Web.Services.ScreenReaderAnnouncer>();
+        services.AddScoped<RequiemNexus.Web.Services.IInitiativeTrackerDragState, RequiemNexus.Web.Services.InitiativeTrackerDragState>();
         services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
     }
 }

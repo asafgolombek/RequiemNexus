@@ -1,0 +1,278 @@
+@using System.Globalization
+@using System.Linq
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
+@using RequiemNexus.Domain.Enums
+
+<li class="maneuver-item">
+    <div class="maneuver-header">
+        <strong>@M.InitiatorCharacter?.Name</strong>
+        <span class="text-muted-rn">→</span>
+        <strong>@M.TargetNpc?.Name</strong>
+        <span class="condition-badge text-xsmall">@M.Status</span>
+    </div>
+    <p class="maneuver-goal">@(M.GoalDescription.Length > 120 ? M.GoalDescription[..120] + "…" : M.GoalDescription)</p>
+    <div class="maneuver-meta">
+        <span><strong>Doors:</strong> @M.RemainingDoors / @M.InitialDoors</span>
+        <span><strong>Impression:</strong> @M.CurrentImpression</span>
+        <span><strong>Penalty dice:</strong> @M.CumulativePenaltyDice</span>
+        @if (M.LastRollAt.HasValue)
+        {
+            <span><strong>Last roll:</strong> @M.LastRollAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") UTC</span>
+        }
+    </div>
+
+    <div class="clues-section">
+        <strong>Clues</strong>
+        <span class="clues-progress">Progress @M.InvestigationProgressTowardNextClue / @GetClueThreshold()</span>
+        @if (M.Status == ManeuverStatus.Active)
+        {
+            <div class="clues-bank-row">
+                <input type="number" class="form-control input-mini" min="1" max="30"
+                       @bind="BankSuccesses[M.Id]" @bind:event="oninput" />
+                <button type="button" class="btn-rn-ghost btn-small" disabled="@Busy"
+                        @onclick="@(() => OnBankInvestigation.InvokeAsync(M.Id))">Bank Investigation</button>
+            </div>
+        }
+        <div class="manual-clue-form">
+            <label class="clue-source-label">
+                Manual clue (ST)
+                <input class="form-control mt-small input-xsmall-text"
+                       placeholder="Source / discovery…"
+                       @bind="ManualClueSource[M.Id]" @bind:event="oninput" />
+            </label>
+            <label class="text-small">
+                Leverage
+                <select class="form-control mt-small form-select-medium" style="min-width:100px;"
+                        @bind="ManualClueLeverage[M.Id]">
+                    <option value="@ClueLeverageKind.Soft">Soft</option>
+                    <option value="@ClueLeverageKind.Hard">Hard</option>
+                </select>
+            </label>
+            <button type="button" class="btn-rn-ghost btn-small" disabled="@Busy"
+                    @onclick="@(() => OnAddClue.InvokeAsync(M.Id))">Add clue</button>
+        </div>
+        @if (M.Clues.Any())
+        {
+            <ul class="clue-list">
+                @foreach (ManeuverClue clue in M.Clues.OrderByDescending(c => c.Id))
+                {
+                    <li class="clue-item">
+                        @if (clue.IsSpent)
+                        {
+                            <span class="text-muted-rn">Spent:</span>
+                            <span>@clue.SourceDescription — @clue.Benefit</span>
+                        }
+                        else
+                        {
+                            <div><strong>Unspent</strong> · @clue.SourceDescription <span class="text-muted-rn">(@clue.LeverageKind)</span></div>
+                            <div class="clue-spend-row">
+                                <input class="form-control flex-1 input-xsmall-text" style="min-width:120px;"
+                                       placeholder="Recorded benefit…"
+                                       @bind="SpendBenefit[clue.Id]" @bind:event="oninput" />
+                                <button type="button" class="btn-rn-primary btn-xsmall" disabled="@Busy"
+                                        @onclick="@(() => OnSpendClue.InvokeAsync(clue.Id))">Spend</button>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div class="interceptor-section mt-small">
+        <strong class="text-small">Interceptors</strong>
+        <p class="text-xsmall text-muted-rn">Opposition successes reduce the initiator's net successes on open-Door rolls (Manipulation + Persuasion pool cap).</p>
+        @if (M.Interceptors.Any())
+        {
+            <ul class="clue-list">
+                @foreach (ManeuverInterceptor intr in M.Interceptors.OrderBy(i => i.Id))
+                {
+                    <li class="clue-item">
+                        <span><strong>@(intr.InterceptorCharacter?.Name ?? "?")</strong> — recorded: @intr.Successes</span>
+                        @if (M.Status == ManeuverStatus.Active && intr.IsActive)
+                        {
+                            <div class="clue-spend-row mt-small">
+                                <input type="number" class="form-control input-mini" min="0" max="50"
+                                       @bind="InterceptorSuccessDraft[intr.Id]" @bind:event="oninput" />
+                                <button type="button" class="btn-rn-ghost btn-small" disabled="@Busy"
+                                        @onclick="@(() => OnRecordInterceptorOpposition.InvokeAsync(intr.Id))">Record opposition</button>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        @if (M.Status == ManeuverStatus.Active)
+        {
+            <div class="clues-bank-row mt-small">
+                <select class="form-control form-select-medium"
+                        value="@(AddInterceptorCharacterId.GetValueOrDefault(M.Id).ToString(CultureInfo.InvariantCulture))"
+                        @onchange="OnAddInterceptorPickChanged">
+                    <option value="0">— Chronicle character —</option>
+                    @foreach (CharacterVitalsDto v in Vitals.Where(v => v.CharacterId != M.InitiatorCharacterId))
+                    {
+                        <option value="@v.CharacterId.ToString(CultureInfo.InvariantCulture)">@v.Name</option>
+                    }
+                </select>
+                <button type="button" class="btn-rn-ghost btn-small" disabled="@Busy"
+                        @onclick="@(() => OnAddInterceptor.InvokeAsync(M.Id))">Add interceptor</button>
+            </div>
+        }
+    </div>
+
+    <div class="impression-config-row">
+        <label class="text-small">Impression
+            <select class="form-control impression-select"
+                    value="@((int)M.CurrentImpression)"
+                    @onchange="OnImpressionSelectAsync">
+                @foreach (ImpressionLevel il in Enum.GetValues<ImpressionLevel>())
+                {
+                    <option value="@((int)il)">@il</option>
+                }
+            </select>
+        </label>
+        <label class="text-small">Narrative doors
+            <input type="number" class="form-control doors-input"
+                   min="0" max="@M.InitialDoors"
+                   @bind="NarrativeDoorsDraft[M.Id]" @bind:event="oninput" />
+            <button type="button" class="btn-rn-ghost btn-small ml-small" disabled="@Busy"
+                    @onclick="@(() => OnApplyNarrativeDoors.InvokeAsync(M.Id))">Apply</button>
+        </label>
+    </div>
+
+    @if (M.Status == ManeuverStatus.Active)
+    {
+        <div class="maneuver-actions-row">
+            <span class="text-small"><strong>Open Door</strong></span>
+            <input type="number" class="form-control pool-input" min="0" max="50"
+                   @bind="OpenPool[M.Id]" @bind:event="oninput" />
+            <span class="btn-align-small text-muted-rn">pool</span>
+            <button type="button" class="btn-rn-primary btn-align-small" disabled="@Busy"
+                    @onclick="@(() => OnRollOpen.InvokeAsync(M.Id))">Roll open</button>
+
+            <span class="text-small ml-small"><strong>Force Doors</strong></span>
+            <input type="number" class="form-control pool-input" min="0" max="50"
+                   @bind="ForcePool[M.Id]" @bind:event="oninput" />
+            <label class="btn-small">
+                <input type="checkbox" checked="@ForceHard.GetValueOrDefault(M.Id)" @onchange="OnForceHardChanged" /> Hard leverage
+            </label>
+            @if (ForceHard.GetValueOrDefault(M.Id))
+            {
+                <label class="btn-small">BP severity
+                    <input type="number" class="form-control bp-severity-input" min="0" max="10"
+                           @bind="ForceBp[M.Id]" @bind:event="oninput" />
+                </label>
+            }
+            <button type="button" class="btn-rn-danger btn-align-small" disabled="@Busy"
+                    @onclick="@(() => OnRollForce.InvokeAsync(M.Id))">Roll force</button>
+        </div>
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired]
+    public SocialManeuver M { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CharacterVitalsDto> Vitals { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public int InitialClueThreshold { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool Busy { get; set; }
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> BankSuccesses { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, string> ManualClueSource { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, ClueLeverageKind> ManualClueLeverage { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, string> SpendBenefit { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> NarrativeDoorsDraft { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> OpenPool { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> ForcePool { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, bool> ForceHard { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> ForceBp { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> AddInterceptorCharacterId { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> InterceptorSuccessDraft { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnBankInvestigation { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnAddClue { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnSpendClue { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<(int ManeuverId, ImpressionLevel Level)> OnSetImpression { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnApplyNarrativeDoors { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnRollOpen { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnRollForce { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnAddInterceptor { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnRecordInterceptorOpposition { get; set; }
+
+    private int GetClueThreshold() => M.Campaign?.SocialManeuverInvestigationSuccessesPerClue ?? InitialClueThreshold;
+
+    private void OnAddInterceptorPickChanged(ChangeEventArgs e)
+    {
+        string? raw = e.Value?.ToString();
+        AddInterceptorCharacterId[M.Id] = int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+            ? id
+            : 0;
+    }
+
+    private Task OnImpressionSelectAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int val))
+        {
+            return OnSetImpression.InvokeAsync((M.Id, (ImpressionLevel)val));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnForceHardChanged(ChangeEventArgs e)
+    {
+        bool v = e.Value switch
+        {
+            bool b => b,
+            string s => string.Equals(s, "on", StringComparison.OrdinalIgnoreCase),
+            _ => !ForceHard.GetValueOrDefault(M.Id),
+        };
+        ForceHard[M.Id] = v;
+        return Task.CompletedTask;
+    }
+}

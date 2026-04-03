@@ -43,8 +43,6 @@ public partial class InitiativeTracker : IAsyncDisposable
     private bool _isSt;
     private bool _busy;
     private string? _currentUserId;
-    private InitiativeEntry? _draggedItem;
-
     private List<InitiativeEntry> SortedEntries =>
         _encounter?.InitiativeEntries.OrderBy(i => i.Order).ToList() ?? [];
 
@@ -105,7 +103,11 @@ public partial class InitiativeTracker : IAsyncDisposable
     private int _lastLoadedEncounterId = int.MinValue;
     private int _lastLoadedCampaignId = int.MinValue;
     private int? _hubConnectedCampaignId;
-    private readonly SemaphoreSlim _loadEncounterLock = new(1, 1);
+
+    private readonly CancellationTokenSource _disposeCts = new();
+    private CancellationTokenSource? _loadEncounterCts;
+    private int _loadGeneration;
+    private int _fullPageLoadTicket;
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,8 +127,7 @@ public partial class InitiativeTracker : IAsyncDisposable
             return;
         }
 
-        SessionClient.InitiativeUpdated += HandleInitiativeUpdated;
-        SessionClient.CharacterUpdated += HandleCharacterUpdated;
+        RegisterSessionSignalHandlers();
 
         await LoadEncounter(showFullPageSpinner: true);
     }
@@ -277,31 +278,33 @@ public partial class InitiativeTracker : IAsyncDisposable
         return Task.CompletedTask;
     }
 
-    private void HandleInitiativeUpdated(IEnumerable<InitiativeEntryDto> entries)
-    {
-        _ = InvokeAsync(() => LoadEncounter(showFullPageSpinner: false));
-    }
-
-    private void HandleCharacterUpdated(CharacterUpdateDto patch)
-    {
-        _ = InvokeAsync(async () =>
-        {
-            await AnnounceConditionDeltasAsync(patch);
-            await LoadEncounter(showFullPageSpinner: false);
-        });
-    }
-
     /// <param name="showFullPageSpinner">When false, refreshes data without replacing the UI with the loading message (used for SignalR and in-place actions).</param>
     private async Task LoadEncounter(bool showFullPageSpinner = false)
     {
-        await _loadEncounterLock.WaitAsync();
+        int myGeneration = Interlocked.Increment(ref _loadGeneration);
+        _loadEncounterCts?.Cancel();
+        _loadEncounterCts?.Dispose();
+        try
+        {
+            _loadEncounterCts = CancellationTokenSource.CreateLinkedTokenSource(_disposeCts.Token);
+        }
+        catch (ObjectDisposedException)
+        {
+            return;
+        }
+
+        CancellationToken ct = _loadEncounterCts.Token;
+
         if (showFullPageSpinner)
         {
             _loading = true;
+            Volatile.Write(ref _fullPageLoadTicket, myGeneration);
         }
 
         try
         {
+            ct.ThrowIfCancellationRequested();
+
             if (EncounterId != _lastLoadedEncounterId)
             {
                 _conditionNamesByCharacterId.Clear();
@@ -326,6 +329,8 @@ public partial class InitiativeTracker : IAsyncDisposable
                 return;
             }
 
+            ct.ThrowIfCancellationRequested();
+
             Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId, _currentUserId!);
             _isSt = campaign != null && CampaignService.IsStoryteller(campaign, _currentUserId!);
 
@@ -339,20 +344,34 @@ public partial class InitiativeTracker : IAsyncDisposable
                 _chronicleNpcs = [];
             }
 
+            ct.ThrowIfCancellationRequested();
+
             await LoadActiveTiltsAsync();
             await AnnounceInitiativeTurnIfChangedAsync();
+
+            if (myGeneration != Volatile.Read(ref _loadGeneration))
+            {
+                return;
+            }
+
             StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
         finally
         {
-            if (showFullPageSpinner)
+            if (showFullPageSpinner && Volatile.Read(ref _fullPageLoadTicket) == myGeneration)
             {
                 _loading = false;
             }
 
-            _lastLoadedEncounterId = EncounterId;
-            _lastLoadedCampaignId = CampaignId;
-            _loadEncounterLock.Release();
+            if (myGeneration == Volatile.Read(ref _loadGeneration))
+            {
+                _lastLoadedEncounterId = EncounterId;
+                _lastLoadedCampaignId = CampaignId;
+            }
         }
     }
 
@@ -729,24 +748,25 @@ public partial class InitiativeTracker : IAsyncDisposable
         }
     }
 
-    private void OnDragStart(InitiativeEntry item) => _draggedItem = item;
+    private void OnDragStart(InitiativeEntry item) => InitiativeTrackerDragState.SetDraggedItem(item);
 
     private async Task OnDrop(InitiativeEntry target)
     {
-        if (_draggedItem is null || _draggedItem == target || _encounter == null)
+        InitiativeEntry? dragged = InitiativeTrackerDragState.DraggedItem;
+        if (dragged is null || dragged == target || _encounter == null)
         {
             return;
         }
 
         List<InitiativeEntry> list = _encounter.InitiativeEntries.OrderBy(i => i.Order).ToList();
-        int oldIdx = list.IndexOf(_draggedItem);
+        int oldIdx = list.IndexOf(dragged);
         int newIdx = list.IndexOf(target);
 
         list.RemoveAt(oldIdx);
-        list.Insert(newIdx, _draggedItem);
+        list.Insert(newIdx, dragged);
 
         List<int> orderIds = list.Select(e => e.Id).ToList();
-        _draggedItem = null;
+        InitiativeTrackerDragState.ClearDrag();
 
         _busy = true;
         try
@@ -782,12 +802,14 @@ public partial class InitiativeTracker : IAsyncDisposable
     public ValueTask DisposeAsync()
     {
         _persistingSubscription.Dispose();
-        SessionClient.InitiativeUpdated -= HandleInitiativeUpdated;
-        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
+        UnregisterSessionSignalHandlers();
 
         // Same as CharacterDetails: avoid StopAsync on dispose so returning to the campaign cannot
         // schedule a delayed hub teardown after the campaign page has reconnected.
-        _loadEncounterLock.Dispose();
+        _disposeCts.Cancel();
+        _loadEncounterCts?.Cancel();
+        _loadEncounterCts?.Dispose();
+        _disposeCts.Dispose();
         return ValueTask.CompletedTask;
     }
 }

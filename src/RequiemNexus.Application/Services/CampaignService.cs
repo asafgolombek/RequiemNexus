@@ -42,22 +42,18 @@ public class CampaignService(
     /// <inheritdoc />
     public async Task<Campaign?> GetCampaignByIdAsync(int id, string userId)
     {
-        using ApplicationDbContext ctx = _dbContextFactory.CreateDbContext();
+        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
 
-        // Two-step membership: (StoryTeller OR enrolled character). A single Campaign query with
-        // `StoryTellerId == userId || Characters.Any(...)` has mis-translated on the in-memory provider in tests.
-        bool isStoryteller = await ctx.Campaigns.AsNoTracking()
-            .AnyAsync(c => c.Id == id && c.StoryTellerId == userId);
+        // Single membership gate (same predicate as <see cref="IAuthorizationHelper.RequireCampaignMemberAsync"/>).
+        // Unauthorized callers get null — no campaign payload is loaded.
+        bool isMember = await ctx.Campaigns.AsNoTracking()
+            .AnyAsync(c =>
+                c.Id == id
+                && (c.StoryTellerId == userId || c.Characters.Any(ch => ch.ApplicationUserId == userId)));
 
-        if (!isStoryteller)
+        if (!isMember)
         {
-            bool isPlayer = await ctx.Characters.AsNoTracking()
-                .AnyAsync(ch => ch.CampaignId == id && ch.ApplicationUserId == userId);
-
-            if (!isPlayer)
-            {
-                return null;
-            }
+            return null;
         }
 
         // Do not Include StoryTeller or Character.User in the main graph query. With AsSplitQuery(),

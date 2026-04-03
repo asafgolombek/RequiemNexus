@@ -38,45 +38,18 @@
             <div class="modal-body">
                 @if (IsRiteExtendedMode)
                 {
-                    <div class="rite-extended-summary" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(139, 0, 0, 0.15); border: 1px solid rgba(255, 200, 200, 0.25); border-radius: 6px;">
-                        <p style="margin: 0 0 0.35rem 0;"><strong>Extended ritual</strong> — V:tR 2e p. 152</p>
-                        <ul style="margin: 0; padding-left: 1.2rem;">
-                            <li>Successes accumulated: <strong>@_riteAccumulatedSuccesses</strong> / @RiteExtendedTargetSuccesses</li>
-                            <li>Rolls remaining: <strong>@RiteRollsRemaining</strong> (max @RiteExtendedMaxRolls unmodified pool)</li>
-                            <li>Interval per roll: <strong>@(RiteExtendedMinutesPerRoll ?? 30)</strong> min</li>
-                        </ul>
-                        @if (RiteExtendedMaxRolls is 0)
-                        {
-                            <p class="chance-die-hint" style="margin-top: 0.5rem;">No unmodified pool — this rite cannot be rolled as an extended action.</p>
-                        }
-                        @if (ShowRiteCompletedBanner)
-                        {
-                            <p style="margin: 0.5rem 0 0 0; color: var(--gold, #c9a227);"><strong>Rite completed</strong> — apply the effect at the table.</p>
-                            int basePotency = RitePotencyRules.ComputeBasePotency(_riteAccumulatedSuccesses, RiteExtendedTargetSuccesses!.Value);
-                            int ritualDots = RiteExtendedRitualDisciplineDots ?? 0;
-                            bool canAddDots = _riteHadExceptionalSuccess && ritualDots > 0;
-                            int totalPotency = basePotency + (canAddDots && _addRiteDisciplineDotsToPotency ? ritualDots : 0);
-                            <div class="rite-potency-panel" style="margin-top: 0.65rem; padding: 0.6rem 0.75rem; background: rgba(0, 40, 60, 0.35); border: 1px solid rgba(180, 220, 255, 0.2); border-radius: 6px;">
-                                <p style="margin: 0 0 0.35rem 0;"><strong>Potency (informational)</strong> — V:tR 2e p. 152</p>
-                                <p style="margin: 0; font-size: 0.92em;">Base potency after meeting target: <strong>@basePotency</strong>. Many rite effects reference Potency for damage, duration, or scale; this value is for the table — it is not auto-applied by the app.</p>
-                                @if (canAddDots)
-                                {
-                                    <label class="option-label" style="display: block; margin-top: 0.55rem;">
-                                        <input type="checkbox" @bind="_addRiteDisciplineDotsToPotency" />
-                                        Exceptional success during this ritual: add <strong>@ritualDots</strong> @RiteTraditionDotsLabel Discipline dots to Potency (optional).
-                                    </label>
-                                }
-                                @if (basePotency > 0)
-                                {
-                                    <p style="margin: 0.45rem 0 0 0;"><strong>Total Potency:</strong> @totalPotency</p>
-                                }
-                            </div>
-                        }
-                        else if (ShowRiteFailedNoRollsBanner)
-                        {
-                            <p style="margin: 0.5rem 0 0 0; color: #f88;"><strong>Ritual failed</strong> — no rolls remain; costs were already spent when you began.</p>
-                        }
-                    </div>
+                    <RiteExtendedRollPanel AccumulatedSuccesses="_riteAccumulatedSuccesses"
+                                           TargetSuccesses="RiteExtendedTargetSuccesses!.Value"
+                                           RollsRemaining="RiteRollsRemaining"
+                                           MaxRolls="RiteExtendedMaxRolls!.Value"
+                                           MinutesPerRoll="RiteExtendedMinutesPerRoll"
+                                           ShowCompletedBanner="ShowRiteCompletedBanner"
+                                           ShowFailedNoRollsBanner="ShowRiteFailedNoRollsBanner"
+                                           HadExceptionalSuccess="_riteHadExceptionalSuccess"
+                                           AddDisciplineDotsToPotency="_addRiteDisciplineDotsToPotency"
+                                           AddDisciplineDotsToPotencyChanged="OnAddRiteDisciplineDotsToPotencyChanged"
+                                           RitualDisciplineDots="RiteExtendedRitualDisciplineDots"
+                                           OutcomeTradition="RiteOutcomeTradition" />
                 }
                 <div class="roller-form-group">
                     <label>@(FixedDicePool.HasValue ? "Pool (with modifiers)" : $"Base trait ({TraitName})")</label>
@@ -273,14 +246,11 @@
     private bool _addRiteDisciplineDotsToPotency;
     private bool _rollerWasVisible;
 
-    private string RiteTraditionDotsLabel =>
-        RiteOutcomeTradition switch
-        {
-            SorceryType.Cruac => "Crúac",
-            SorceryType.Theban => "Theban Sorcery",
-            SorceryType.Necromancy => "Necromancy",
-            _ => "ritual",
-        };
+    private Task OnAddRiteDisciplineDotsToPotencyChanged(bool value)
+    {
+        _addRiteDisciplineDotsToPotency = value;
+        return Task.CompletedTask;
+    }
 
     private readonly string[] _attributes = RequiemNexus.Domain.Services.TraitMetadata.AllAttributes.Select(a => a.ToString()).ToArray();
     private readonly string[] _skills = RequiemNexus.Domain.Services.TraitMetadata.AllSkills.Select(s => s.ToString()).ToArray();

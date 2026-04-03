@@ -6,6 +6,7 @@
 @using System.Globalization
 @using System.Linq
 @using RequiemNexus.Web.Services
+@using RequiemNexus.Web.Components.Pages.Campaigns.GlimpseSocialManeuverParts
 @inject ISocialManeuveringService SocialService
 @inject ISocialManeuverRollService SocialRollService
 @inject ToastService ToastService
@@ -16,52 +17,21 @@
         Targets must be chronicle NPCs only. On <strong>Force Doors</strong>, failure marks the relationship <strong>Burnt</strong> — no further Social maneuvering against that NPC by this PC.
     </p>
 
-    <div class="social-config-row">
-        <label class="config-label">
-            Investigation successes per clue (chronicle)
-            <input type="number" class="form-control config-input-small" min="1" max="50"
-                   @bind="_thresholdDraft" />
-        </label>
-        <button type="button" class="btn-rn-ghost btn-align-small" disabled="@_busy"
-                @onclick="SaveThreshold">Save threshold</button>
-    </div>
+    <GlimpseSocialManeuverThresholdPanel @bind-ThresholdDraft="_thresholdDraft"
+                                         Busy="_busy"
+                                         OnSave="SaveThreshold" />
 
-    <div class="new-maneuver-form">
-        <strong class="text-small">New maneuver</strong>
-        <div class="form-row">
-            <label class="form-label">
-                Initiator (PC)
-                <select class="form-control form-select-medium" @bind="_newInitiatorId">
-                    <option value="0">— Select —</option>
-                    @foreach (var v in Vitals)
-                    {
-                        <option value="@v.CharacterId">@v.Name</option>
-                    }
-                </select>
-            </label>
-            <label class="form-label">
-                Target (NPC)
-                <select class="form-control form-select-medium" @bind="_newTargetNpcId">
-                    <option value="0">— Select —</option>
-                    @foreach (var n in Npcs)
-                    {
-                        <option value="@n.Id">@(_pinnedNpcIds.Contains(n.Id) ? "📌 " : "")@n.Name</option>
-                    }
-                </select>
-            </label>
-        </div>
-        <textarea class="form-control" rows="2" placeholder="Goal description…" @bind="_newGoal"></textarea>
-        <div class="checkbox-group">
-            <label><input type="checkbox" @bind="_newBreakingPoint" /> Goal would be a breaking point (+2 Doors)</label>
-            <label><input type="checkbox" @bind="_newAspiration" /> Prevents victim Aspiration (+1)</label>
-            <label><input type="checkbox" @bind="_newVirtueMask" /> Against Virtue / Mask (+1)</label>
-        </div>
-        <button class="btn-rn-primary btn-align-start"
-                disabled="@(_busy || _newInitiatorId == 0 || _newTargetNpcId == 0 || string.IsNullOrWhiteSpace(_newGoal))"
-                @onclick="CreateManeuver">
-            Create maneuver
-        </button>
-    </div>
+    <GlimpseSocialManeuverNewForm Vitals="Vitals"
+                                  Npcs="Npcs"
+                                  PinnedNpcIds="_pinnedNpcIds"
+                                  @bind-InitiatorId="_newInitiatorId"
+                                  @bind-TargetNpcId="_newTargetNpcId"
+                                  @bind-Goal="_newGoal"
+                                  @bind-BreakingPoint="_newBreakingPoint"
+                                  @bind-Aspiration="_newAspiration"
+                                  @bind-VirtueMask="_newVirtueMask"
+                                  Busy="_busy"
+                                  OnCreate="CreateManeuver" />
 
     @if (!Maneuvers.Any())
     {
@@ -70,174 +40,32 @@
     else
     {
         <ul class="maneuver-list">
-            @foreach (var m in Maneuvers)
+            @foreach (SocialManeuver m in Maneuvers)
             {
-                <li class="maneuver-item">
-                    <div class="maneuver-header">
-                        <strong>@m.InitiatorCharacter?.Name</strong>
-                        <span class="text-muted-rn">→</span>
-                        <strong>@m.TargetNpc?.Name</strong>
-                        <span class="condition-badge text-xsmall">@m.Status</span>
-                    </div>
-                    <p class="maneuver-goal">@(m.GoalDescription.Length > 120 ? m.GoalDescription[..120] + "…" : m.GoalDescription)</p>
-                    <div class="maneuver-meta">
-                        <span><strong>Doors:</strong> @m.RemainingDoors / @m.InitialDoors</span>
-                        <span><strong>Impression:</strong> @m.CurrentImpression</span>
-                        <span><strong>Penalty dice:</strong> @m.CumulativePenaltyDice</span>
-                        @if (m.LastRollAt.HasValue)
-                        {
-                            <span><strong>Last roll:</strong> @m.LastRollAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") UTC</span>
-                        }
-                    </div>
-                    
-                    @* Clues Section (Bank/Add/List) *@
-                    <div class="clues-section">
-                        <strong>Clues</strong>
-                        <span class="clues-progress">Progress @m.InvestigationProgressTowardNextClue / @GetClueThreshold(m)</span>
-                        @if (m.Status == ManeuverStatus.Active)
-                        {
-                            <div class="clues-bank-row">
-                                <input type="number" class="form-control input-mini" min="1" max="30"
-                                       @bind="_bankSuccesses[m.Id]" />
-                                <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
-                                        @onclick="() => BankInvestigation(m.Id)">Bank Investigation</button>
-                            </div>
-                        }
-                        <div class="manual-clue-form">
-                            <label class="clue-source-label">
-                                Manual clue (ST)
-                                <input class="form-control mt-small input-xsmall-text"
-                                       placeholder="Source / discovery…"
-                                       @bind="_manualClueSource[m.Id]" />
-                            </label>
-                            <label class="text-small">
-                                Leverage
-                                <select class="form-control mt-small form-select-medium" style="min-width:100px;"
-                                        @bind="_manualClueLeverage[m.Id]">
-                                    <option value="@ClueLeverageKind.Soft">Soft</option>
-                                    <option value="@ClueLeverageKind.Hard">Hard</option>
-                                </select>
-                            </label>
-                            <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
-                                    @onclick="() => AddClue(m.Id)">Add clue</button>
-                        </div>
-                        @if (m.Clues.Any())
-                        {
-                            <ul class="clue-list">
-                                @foreach (var clue in m.Clues.OrderByDescending(c => c.Id))
-                                {
-                                    <li class="clue-item">
-                                        @if (clue.IsSpent)
-                                        {
-                                            <span class="text-muted-rn">Spent:</span>
-                                            <span>@clue.SourceDescription — @clue.Benefit</span>
-                                        }
-                                        else
-                                        {
-                                            <div><strong>Unspent</strong> · @clue.SourceDescription <span class="text-muted-rn">(@clue.LeverageKind)</span></div>
-                                            <div class="clue-spend-row">
-                                                <input class="form-control flex-1 input-xsmall-text" style="min-width:120px;"
-                                                       placeholder="Recorded benefit…"
-                                                       @bind="_spendBenefit[clue.Id]" />
-                                                <button type="button" class="btn-rn-primary btn-xsmall" disabled="@_busy"
-                                                        @onclick="() => SpendClue(clue.Id)">Spend</button>
-                                            </div>
-                                        }
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-
-                    <div class="interceptor-section mt-small">
-                        <strong class="text-small">Interceptors</strong>
-                        <p class="text-xsmall text-muted-rn">Opposition successes reduce the initiator's net successes on open-Door rolls (Manipulation + Persuasion pool cap).</p>
-                        @if (m.Interceptors.Any())
-                        {
-                            <ul class="clue-list">
-                                @foreach (ManeuverInterceptor intr in m.Interceptors.OrderBy(i => i.Id))
-                                {
-                                    <li class="clue-item">
-                                        <span><strong>@(intr.InterceptorCharacter?.Name ?? "?")</strong> — recorded: @intr.Successes</span>
-                                        @if (m.Status == ManeuverStatus.Active && intr.IsActive)
-                                        {
-                                            <div class="clue-spend-row mt-small">
-                                                <input type="number" class="form-control input-mini" min="0" max="50"
-                                                       @bind="_interceptorSuccessDraft[intr.Id]" />
-                                                <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
-                                                        @onclick="() => RecordInterceptorOpposition(intr.Id)">Record opposition</button>
-                                            </div>
-                                        }
-                                    </li>
-                                }
-                            </ul>
-                        }
-                        @if (m.Status == ManeuverStatus.Active)
-                        {
-                            <div class="clues-bank-row mt-small">
-                                <select class="form-control form-select-medium"
-                                        value="@(_addInterceptorCharacterId.GetValueOrDefault(m.Id).ToString(CultureInfo.InvariantCulture))"
-                                        @onchange="e => OnAddInterceptorPickChanged(m.Id, e)">
-                                    <option value="0">— Chronicle character —</option>
-                                    @foreach (CharacterVitalsDto v in Vitals.Where(v => v.CharacterId != m.InitiatorCharacterId))
-                                    {
-                                        <option value="@v.CharacterId.ToString(CultureInfo.InvariantCulture)">@v.Name</option>
-                                    }
-                                </select>
-                                <button type="button" class="btn-rn-ghost btn-small" disabled="@_busy"
-                                        @onclick="() => AddInterceptorToManeuver(m.Id)">Add interceptor</button>
-                            </div>
-                        }
-                    </div>
-
-                    <div class="impression-config-row">
-                        <label class="text-small">Impression
-                            <select class="form-control impression-select"
-                                    value="@((int)m.CurrentImpression)"
-                                    @onchange="e => SetImpression(m.Id, e)">
-                                @foreach (ImpressionLevel il in Enum.GetValues<ImpressionLevel>())
-                                {
-                                    <option value="@((int)il)">@il</option>
-                                }
-                            </select>
-                        </label>
-                        <label class="text-small">Narrative doors
-                            <input type="number" class="form-control doors-input"
-                                   min="0" max="@m.InitialDoors"
-                                   @bind="_narrativeDoorsDraft[m.Id]" />
-                            <button type="button" class="btn-rn-ghost btn-small ml-small" disabled="@_busy"
-                                    @onclick="() => ApplyNarrativeDoors(m.Id)">Apply</button>
-                        </label>
-                    </div>
-
-                    @if (m.Status == ManeuverStatus.Active)
-                    {
-                        <div class="maneuver-actions-row">
-                            <span class="text-small"><strong>Open Door</strong></span>
-                            <input type="number" class="form-control pool-input" min="0" max="50"
-                                   @bind="_openPool[m.Id]" />
-                            <span class="btn-align-small text-muted-rn">pool</span>
-                            <button type="button" class="btn-rn-primary btn-align-small" disabled="@_busy"
-                                    @onclick="() => RollOpen(m.Id)">Roll open</button>
-                            
-                            <span class="text-small ml-small"><strong>Force Doors</strong></span>
-                            <input type="number" class="form-control pool-input" min="0" max="50"
-                                   @bind="_forcePool[m.Id]" />
-                            <label class="btn-small">
-                                <input type="checkbox" @bind="_forceHard[m.Id]" /> Hard leverage
-                            </label>
-                            @if (_forceHard.GetValueOrDefault(m.Id))
-                            {
-                                <label class="btn-small">BP severity
-                                    <input type="number" class="form-control bp-severity-input" min="0" max="10"
-                                           @bind="_forceBp[m.Id]" />
-                                </label>
-                            }
-                            <button type="button" class="btn-rn-danger btn-align-small" disabled="@_busy"
-                                    @onclick="() => RollForce(m.Id)">Roll force</button>
-                        </div>
-                    }
-                </li>
+                <GlimpseSocialManeuverCard M="m"
+                                            Vitals="Vitals"
+                                            InitialClueThreshold="InitialClueThreshold"
+                                            Busy="_busy"
+                                            BankSuccesses="_bankSuccesses"
+                                            ManualClueSource="_manualClueSource"
+                                            ManualClueLeverage="_manualClueLeverage"
+                                            SpendBenefit="_spendBenefit"
+                                            NarrativeDoorsDraft="_narrativeDoorsDraft"
+                                            OpenPool="_openPool"
+                                            ForcePool="_forcePool"
+                                            ForceHard="_forceHard"
+                                            ForceBp="_forceBp"
+                                            AddInterceptorCharacterId="_addInterceptorCharacterId"
+                                            InterceptorSuccessDraft="_interceptorSuccessDraft"
+                                            OnBankInvestigation="BankInvestigation"
+                                            OnAddClue="AddClue"
+                                            OnSpendClue="SpendClue"
+                                            OnSetImpression="SetImpressionAsync"
+                                            OnApplyNarrativeDoors="ApplyNarrativeDoors"
+                                            OnRollOpen="RollOpen"
+                                            OnRollForce="RollForce"
+                                            OnAddInterceptor="AddInterceptorToManeuver"
+                                            OnRecordInterceptorOpposition="RecordInterceptorOpposition" />
             }
         </ul>
     }
@@ -301,16 +129,6 @@
         }
     }
 
-    private void OnAddInterceptorPickChanged(int maneuverId, ChangeEventArgs e)
-    {
-        string? raw = e.Value?.ToString();
-        _addInterceptorCharacterId[maneuverId] = int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
-            ? id
-            : 0;
-    }
-
-    private int GetClueThreshold(SocialManeuver m) => m.Campaign?.SocialManeuverInvestigationSuccessesPerClue ?? InitialClueThreshold;
-
     private async Task SaveThreshold()
     {
         _busy = true;
@@ -358,13 +176,10 @@
         } finally { _busy = false; }
     }
 
-    private async Task SetImpression(int mId, ChangeEventArgs e)
+    private async Task SetImpressionAsync((int ManeuverId, ImpressionLevel Level) args)
     {
-        if (int.TryParse(e.Value?.ToString(), out int val))
-        {
-            await SocialService.SetImpressionAsync(mId, (ImpressionLevel)val, StorytellerId);
-            await OnChanged.InvokeAsync();
-        }
+        await SocialService.SetImpressionAsync(args.ManeuverId, args.Level, StorytellerId);
+        await OnChanged.InvokeAsync();
     }
 
     private async Task ApplyNarrativeDoors(int mId)
