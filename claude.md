@@ -14,7 +14,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 18 delivered ✅:** The Wider Web — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), discipline pool JSON + Vitae/Willpower choice UI. Record: **`docs/mission.md`** (Phase 18 section).
 - **Phase 19.5 — The Rite Perfected** is **complete** (2026-04-02): Crúac/Theban/Necromancy rules accuracy — extended rites, informational Potency, ritual Conditions, canonical SeedSource catalogs, BOM fix, Theban sacrament UX, Necromancy clan gate, P4 backlog verified. Record: **`docs/mission.md`** (Phase 19.5) and **`docs/rules-interpretations.md`** (Phase 19.5).
 - **Phase 20 — The Global Embrace** is the **active / last planned phase** on the V:tR 2e roadmap — see `docs/mission.md`.
-- **Phase 20 technical polish — Waves 1–4 delivered** (2026-04-03): [`docs/plan-improvement.md`](docs/plan-improvement.md) — seed `ISeeder` pipeline, `IReferenceDataCache`, `ICharacterQueryService`, `IModifierProvider` / `IRiteActivationStrategy`, `CharacterDetails` partials + hub loading/toast patterns, `CharacterAdvancement` section components, `DanseMacabreTabs/`, **`EncounterManager`** UI in **`EncounterParts/`** (forms, smart-launch, encounter cards, NPC picker). **P3** (optional): other large Razor files and optional `EncounterManager` code-behind splits — §5 step 13 and backlog **#20** in that doc. Review log: [`docs/plan-improvement-review.md`](docs/plan-improvement-review.md).
+- **Phase 20 technical polish — Waves 1–4 delivered** (2026-04-03): [`docs/plan-improvement.md#start-here-agents`](docs/plan-improvement.md#start-here-agents) — read **Start here (agents)** first (delivery record + optional P3). Shipped: `ISeeder` pipeline, `IReferenceDataCache`, `ICharacterQueryService`, `IModifierProvider` / `IRiteActivationStrategy`, `CharacterDetails` partials, loading/toast patterns, `CharacterAdvancement` sections, `DanseMacabreTabs/`, **`EncounterManager`** + **`EncounterParts/`** + NpcPicker/SmartLaunch partials (**#20** done). **P3** (optional): mainly **`InitiativeTracker`** markup splits (**#19**) — §5 step 13. Review log: [`docs/plan-improvement-review.md`](docs/plan-improvement-review.md).
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.
@@ -27,7 +27,7 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - `docs/mission.md` — Roadmap, dependency graph, and per-phase delivery (including **Phase 18: The Wider Web** — ✅ complete).
 - `docs/phase16b-the-discipline-engine.md` — Phase 16b delivery record (discipline activation).
 - `docs/plan.md` — Detailed Phase 7 SignalR implementation.
-- `docs/plan-improvement.md` — Phase 20+ technical improvement backlog (Waves 1–4).
+- `docs/plan-improvement.md` — Phase 20 technical polish **delivery record** (Waves 1–4 done); optional P3 backlog — start at **Start here (agents)**.
 
 ## ⚡ Workflow
 1. Read `agents.md` first.

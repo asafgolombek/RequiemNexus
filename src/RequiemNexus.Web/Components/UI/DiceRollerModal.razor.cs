@@ -122,10 +122,40 @@ public partial class DiceRollerModal : IDisposable
         await RefreshResolverTotalAsync();
     }
 
-    private async Task OnAssociatedTraitChanged(ChangeEventArgs e)
+    private async Task OnAssociatedTraitFromPanelAsync(string name)
     {
-        _associatedTraitName = e.Value?.ToString() ?? string.Empty;
+        _associatedTraitName = name;
         await RefreshResolverTotalAsync();
+    }
+
+    private Task OnModifierFromPanelAsync(int value)
+    {
+        _modifier = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnTenAgainFromPanelAsync(bool value)
+    {
+        _tenAgain = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnNineAgainFromPanelAsync(bool value)
+    {
+        _nineAgain = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnEightAgainFromPanelAsync(bool value)
+    {
+        _eightAgain = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnIsRoteFromPanelAsync(bool value)
+    {
+        _isRote = value;
+        return Task.CompletedTask;
     }
 
     private async Task RefreshResolverTotalAsync()

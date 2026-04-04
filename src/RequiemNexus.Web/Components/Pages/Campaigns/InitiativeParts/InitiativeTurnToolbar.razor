@@ -1,0 +1,45 @@
+@if (Show)
+{
+    <div style="margin-bottom:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+        <button type="button" class="btn-rn-primary"
+                disabled="@Busy"
+                @onclick="OnAdvanceTurn">
+            ▶ Advance Turn
+        </button>
+        <button type="button" class="btn-rn-ghost"
+                disabled="@Busy"
+                @onclick="OnHoldTurn">
+            ⏸ Hold action
+        </button>
+        <button type="button" class="btn-rn-ghost"
+                disabled="@Busy"
+                @onclick="OnResolveEncounter">
+            ✓ Resolve Encounter
+        </button>
+        @if (!string.IsNullOrEmpty(ActionFeedback))
+        {
+            <span style="font-size:0.85em;color:var(--gothic-muted);">@ActionFeedback</span>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Whether the ST combat toolbar should render.</summary>
+    [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string? ActionFeedback { get; set; }
+
+    [Parameter]
+    public EventCallback OnAdvanceTurn { get; set; }
+
+    [Parameter]
+    public EventCallback OnHoldTurn { get; set; }
+
+    [Parameter]
+    public EventCallback OnResolveEncounter { get; set; }
+}
