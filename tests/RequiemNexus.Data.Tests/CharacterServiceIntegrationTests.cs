@@ -37,16 +37,20 @@ public class CharacterServiceIntegrationTests
             NullLogger<HumanityService>.Instance);
 
         var characterQuery = new CharacterQueryService(ctx, factory);
+        var session = new Mock<ISessionService>().Object;
+        var creationRules = new CharacterCreationRules();
+        var beatLedger = new BeatLedgerService(ctx);
+        var progression = new CharacterProgressionService(ctx, creationRules, beatLedger, auth, session);
         return new CharacterManagementService(
             ctx,
-            new CharacterCreationRules(),
-            new BeatLedgerService(ctx),
+            creationRules,
             auth,
-            new Mock<ISessionService>().Object,
+            session,
             new CharacterCreationService(),
             humanity,
             referenceCache,
-            characterQuery);
+            characterQuery,
+            progression);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)

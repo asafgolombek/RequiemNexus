@@ -1,5 +1,7 @@
 # Review: Technical Improvement Plan (`plan-improvement.md`)
 
+**Agents:** This document is a **historical Q&A / resolution log** only. Waves 1–4 and §7 in [`plan-improvement.md`](./plan-improvement.md) are **complete**. Any **post–Wave** engineering work is listed in [`plan-improvement.md` — Optional backlog](./plan-improvement.md#optional-backlog) (O-1 … O-12), not here.
+
 > **Review date:** 2026-04-02  
 > **Re-review:** 2026-04-02 — compared current `plan-improvement.md` (504 lines) to this document; no open questions remain.  
 > **Third pass:** 2026-04-02 — synced wording with Wave terminology, Q5 vs HTTP callout, and fixed plan cross-reference **1.2 → 3.4** (was incorrectly 3.2).  

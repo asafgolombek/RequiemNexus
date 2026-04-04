@@ -5,7 +5,7 @@ namespace RequiemNexus.Application.Contracts;
 
 /// <summary>
 /// Read-only character queries (lists, access-checked snapshots, ritual targets).
-/// Mutations and tracked edit loads remain on <see cref="ICharacterWriter"/> / <see cref="ICharacterService"/>.
+/// Mutations and tracked edit loads remain on <see cref="ICharacterWriter"/>, <see cref="ICharacterProgressionService"/>, and <see cref="ICharacterService"/>.
 /// </summary>
 public interface ICharacterQueryService
 {

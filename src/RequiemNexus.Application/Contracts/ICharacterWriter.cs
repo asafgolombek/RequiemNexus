@@ -1,10 +1,9 @@
-using RequiemNexus.Application.DTOs;
 using RequiemNexus.Data.Models;
 
 namespace RequiemNexus.Application.Contracts;
 
 /// <summary>
-/// Character persistence and progression mutations.
+/// Character persistence mutations (excluding beat/XP — see <see cref="ICharacterProgressionService"/>).
 /// </summary>
 public interface ICharacterWriter
 {
@@ -13,18 +12,6 @@ public interface ICharacterWriter
     Task<Character> EmbraceCharacterAsync(Character newCharacter);
 
     Task SaveAsync(Character character);
-
-    /// <returns>Beats and XP totals after the mutation (for patching UI without a full reload).</returns>
-    Task<CharacterProgressionSnapshotDto> AddBeatAsync(int characterId, string userId);
-
-    /// <returns>Beats and XP totals after the mutation.</returns>
-    Task<CharacterProgressionSnapshotDto> RemoveBeatAsync(int characterId, string userId);
-
-    /// <returns>Beats and XP totals after the mutation.</returns>
-    Task<CharacterProgressionSnapshotDto> AddXPAsync(int characterId, string userId);
-
-    /// <returns>Beats and XP totals after the mutation.</returns>
-    Task<CharacterProgressionSnapshotDto> RemoveXPAsync(int characterId, string userId);
 
     /// <summary>Retires the character from campaign play. Owner or campaign ST may call this.</summary>
     Task RetireCharacterAsync(int characterId, string userId);

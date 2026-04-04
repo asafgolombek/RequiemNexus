@@ -2,11 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
-using RequiemNexus.Application.RealTime;
 using RequiemNexus.Application.Security;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
-using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Models;
 using RequiemNexus.Domain.Services;
 
@@ -21,12 +19,15 @@ public class CampaignService(
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ILogger<CampaignService> logger,
     IAuthorizationHelper authHelper,
-    ISessionService sessionService) : ICampaignService
+    ICampaignLoreService loreService,
+    ICampaignSessionPrepService sessionPrepService) : ICampaignService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly ILogger<CampaignService> _logger = logger;
     private readonly IAuthorizationHelper _authHelper = authHelper;
+    private readonly ICampaignLoreService _loreService = loreService;
+    private readonly ICampaignSessionPrepService _sessionPrepService = sessionPrepService;
 
     /// <inheritdoc />
     public async Task<List<Campaign>> GetCampaignsByUserIdAsync(string userId)
@@ -341,137 +342,35 @@ public class CampaignService(
     }
 
     /// <inheritdoc />
-    public async Task<List<CampaignLore>> GetLoreAsync(int campaignId)
-    {
-        return await _dbContext.CampaignLore
-            .Where(l => l.CampaignId == campaignId)
-            .OrderByDescending(l => l.UpdatedAt)
-            .AsNoTracking()
-            .ToListAsync();
-    }
+    public Task<List<CampaignLore>> GetLoreAsync(int campaignId) => _loreService.GetLoreAsync(campaignId);
 
     /// <inheritdoc />
-    public async Task<CampaignLore> CreateLoreAsync(int campaignId, string title, string body, string authorUserId)
-    {
-        CampaignLore lore = new()
-        {
-            CampaignId = campaignId,
-            AuthorUserId = authorUserId,
-            Title = title,
-            Body = body,
-        };
-
-        _dbContext.CampaignLore.Add(lore);
-        await _dbContext.SaveChangesAsync();
-
-        await sessionService.BroadcastChronicleUpdateAsync(new ChronicleUpdateDto(campaignId, BeatAwardedMessage: $"New Lore Entry: {title}"));
-
-        _logger.LogInformation(
-            "Lore entry '{Title}' created in campaign {CampaignId} by {UserId}",
-            lore.Title,
-            campaignId,
-            authorUserId);
-
-        return lore;
-    }
+    public Task<CampaignLore> CreateLoreAsync(int campaignId, string title, string body, string authorUserId) =>
+        _loreService.CreateLoreAsync(campaignId, title, body, authorUserId);
 
     /// <inheritdoc />
-    public async Task UpdateLoreAsync(int loreId, string title, string body, string authorUserId)
-    {
-        CampaignLore lore = await _dbContext.CampaignLore.FindAsync(loreId)
-            ?? throw new InvalidOperationException($"Lore {loreId} not found.");
-
-        if (lore.AuthorUserId != authorUserId)
-        {
-            throw new UnauthorizedAccessException("Only the lore author may update this entry.");
-        }
-
-        lore.Title = title;
-        lore.Body = body;
-        lore.UpdatedAt = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
-    }
+    public Task UpdateLoreAsync(int loreId, string title, string body, string authorUserId) =>
+        _loreService.UpdateLoreAsync(loreId, title, body, authorUserId);
 
     /// <inheritdoc />
-    public async Task DeleteLoreAsync(int loreId, string requestingUserId)
-    {
-        CampaignLore lore = await _dbContext.CampaignLore
-            .Include(l => l.Campaign)
-            .FirstOrDefaultAsync(l => l.Id == loreId)
-            ?? throw new InvalidOperationException($"Lore {loreId} not found.");
-
-        bool isAuthor = lore.AuthorUserId == requestingUserId;
-        bool isSt = lore.Campaign?.StoryTellerId == requestingUserId;
-
-        if (!isAuthor && !isSt)
-        {
-            throw new UnauthorizedAccessException("Only the author or Storyteller may delete this lore entry.");
-        }
-
-        _dbContext.CampaignLore.Remove(lore);
-        await _dbContext.SaveChangesAsync();
-    }
+    public Task DeleteLoreAsync(int loreId, string requestingUserId) =>
+        _loreService.DeleteLoreAsync(loreId, requestingUserId);
 
     /// <inheritdoc />
-    public async Task<List<SessionPrepNote>> GetSessionPrepNotesAsync(int campaignId, string stUserId)
-    {
-        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage session prep notes");
-        return await _dbContext.SessionPrepNotes
-            .Where(n => n.CampaignId == campaignId)
-            .OrderByDescending(n => n.UpdatedAt)
-            .AsNoTracking()
-            .ToListAsync();
-    }
+    public Task<List<SessionPrepNote>> GetSessionPrepNotesAsync(int campaignId, string stUserId) =>
+        _sessionPrepService.GetSessionPrepNotesAsync(campaignId, stUserId);
 
     /// <inheritdoc />
-    public async Task<SessionPrepNote> CreateSessionPrepNoteAsync(int campaignId, string title, string body, string stUserId)
-    {
-        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "manage session prep notes");
-
-        SessionPrepNote note = new()
-        {
-            CampaignId = campaignId,
-            Title = title,
-            Body = body,
-        };
-
-        _dbContext.SessionPrepNotes.Add(note);
-        await _dbContext.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Session prep note '{Title}' created in campaign {CampaignId} by ST {UserId}",
-            note.Title,
-            campaignId,
-            stUserId);
-
-        return note;
-    }
+    public Task<SessionPrepNote> CreateSessionPrepNoteAsync(int campaignId, string title, string body, string stUserId) =>
+        _sessionPrepService.CreateSessionPrepNoteAsync(campaignId, title, body, stUserId);
 
     /// <inheritdoc />
-    public async Task UpdateSessionPrepNoteAsync(int noteId, string title, string body, string stUserId)
-    {
-        SessionPrepNote note = await _dbContext.SessionPrepNotes.FindAsync(noteId)
-            ?? throw new InvalidOperationException($"Session prep note {noteId} not found.");
-
-        await _authHelper.RequireStorytellerAsync(note.CampaignId, stUserId, "manage session prep notes");
-
-        note.Title = title;
-        note.Body = body;
-        note.UpdatedAt = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync();
-    }
+    public Task UpdateSessionPrepNoteAsync(int noteId, string title, string body, string stUserId) =>
+        _sessionPrepService.UpdateSessionPrepNoteAsync(noteId, title, body, stUserId);
 
     /// <inheritdoc />
-    public async Task DeleteSessionPrepNoteAsync(int noteId, string stUserId)
-    {
-        SessionPrepNote note = await _dbContext.SessionPrepNotes.FindAsync(noteId)
-            ?? throw new InvalidOperationException($"Session prep note {noteId} not found.");
-
-        await _authHelper.RequireStorytellerAsync(note.CampaignId, stUserId, "manage session prep notes");
-
-        _dbContext.SessionPrepNotes.Remove(note);
-        await _dbContext.SaveChangesAsync();
-    }
+    public Task DeleteSessionPrepNoteAsync(int noteId, string stUserId) =>
+        _sessionPrepService.DeleteSessionPrepNoteAsync(noteId, stUserId);
 
     /// <inheritdoc />
     public async Task SetDiscordWebhookUrlAsync(int campaignId, string? discordWebhookUrl, string stUserId)

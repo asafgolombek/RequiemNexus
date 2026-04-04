@@ -33,8 +33,14 @@ public class CampaignServiceTests
         var logger = new Mock<ILogger<CampaignService>>().Object;
         var factory = new MatchingDbContextFactory(options);
         var authHelper = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
-
-        return new CampaignService(ctx, factory, logger, authHelper, new Mock<ISessionService>().Object);
+        var sessionMock = new Mock<ISessionService>().Object;
+        return new CampaignService(
+            ctx,
+            factory,
+            logger,
+            authHelper,
+            new CampaignLoreService(ctx, sessionMock, NullLogger<CampaignLoreService>.Instance),
+            new CampaignSessionPrepService(ctx, authHelper, NullLogger<CampaignSessionPrepService>.Instance));
     }
 
     private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx, string databaseName)
@@ -52,16 +58,20 @@ public class CampaignServiceTests
             referenceCache,
             NullLogger<HumanityService>.Instance);
         var characterQuery = new CharacterQueryService(ctx, factory);
+        var session = new Mock<ISessionService>().Object;
+        var creationRules = new RequiemNexus.Domain.Services.CharacterCreationRules();
+        var beatLedger = new BeatLedgerService(ctx);
+        var progression = new CharacterProgressionService(ctx, creationRules, beatLedger, auth, session);
         return new CharacterManagementService(
             ctx,
-            new RequiemNexus.Domain.Services.CharacterCreationRules(),
-            new BeatLedgerService(ctx),
+            creationRules,
             auth,
-            new Mock<ISessionService>().Object,
+            session,
             new CharacterCreationService(),
             humanity,
             referenceCache,
-            characterQuery);
+            characterQuery,
+            progression);
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>

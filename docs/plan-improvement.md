@@ -4,19 +4,19 @@
 
 <a id="start-here-agents"></a>
 
-1. **Waves 1–4 are delivered.** Sections 1–6 below are a **Grimoire / reference** (patterns, rationale, and history). They are **not** a fresh implementation checklist unless you are explicitly picking up an item listed as open in [Status summary](#status-summary) or [Section 8](#section-8--plan-closure-phase-20-vs-backlog).
-2. **Fast path:** Read [Status summary](#status-summary) (completed vs optional rows) and [Section 8](#section-8--plan-closure-phase-20-vs-backlog). Use [Consolidated backlog](#section-7--consolidated-priority-backlog) (§7) for numbered item truth; avoid re-deriving scope from long narrative sections.
-3. **Optional follow-up:** **`InitiativeTracker`** + **SignalR** partial rename **done** (2026-04-04). **#13 / #14:** skeleton-time **`PageTitle`** for key sheets **done**; **`.alert` / `.alert-rn`** Gothic base in **`app-chrome*.css`**; **full `alert-rn`** on auth + Account/Manage + **`CharacterDetails`** / **`Characters`** **done**; **PageTitle** em-dash + product suffix on remaining static titles + **Active Sessions** / **Confirm email** / **Resend confirmation** **done** (2026-04-05). Hub empty-state **`alert-rn`** remains intentional per §4.2.
+1. **Waves 1–4 and the §7 consolidated backlog are complete.** There is **no** committed Wave 5 in this document.
+2. **Post–Wave 4 work** lives only in **[Optional backlog](#optional-backlog)** (O-1 … O-n). Implement an O-row **only** when `docs/mission.md` or an explicit task scopes it — do not mine Sections 1–6 for implied scope.
+3. **Grimoire:** Sections 1–6 are **reference** (patterns, rationale, history). §7 is the **closed** delivery record. Historical review Q&A: [`docs/plan-improvement-review.md`](./plan-improvement-review.md).
 
 > **Scope:** Performance, large-file decomposition (migrations excluded), UI/UX consistency, and SOLID principle enforcement.
 > **Date:** 2026-04-02 (line counts correct as of this date — they will drift). **Web decomposition inventory** (§1.1 / §1.3 campaign & combat UI) extended 2026-04-03.
-> **Status:** **Waves 1–4 (Phase 20 technical polish) are complete** — see Section 8. P3–P4 rows in §7 are **optional** post-polish backlog. See `docs/mission.md` Phase 20 section. **Product note:** i18n and a public REST API are **not** on the near-term roadmap there.
+> **Status:** **Waves 1–4 (Phase 20 technical polish) are complete** — see [Section 8](#section-8--plan-closure-phase-20-vs-backlog). **Optional follow-ups** are listed in [Optional backlog](#optional-backlog), not in §7. See `docs/mission.md` Phase 20 section. **Product note:** i18n and a public REST API are **not** on the near-term roadmap there.
 > **Wave 1 (2026-04-02):** §3.1 `DbInitializer` N+1 / per-item saves addressed; §4.5 production `Console.WriteLine` removed in Web (`SessionClientService`, `CharacterDetails.OpenReference` → `ILogger`). §3.6: `HasIndex` for `Ghoul.RegnantCharacterId` / `RegnantNpcId` and `BloodBond.RegnantCharacterId` / `RegnantNpcId` added to fluent configuration — these indexes already appear in `ApplicationDbContextModelSnapshot` (no new migration).
 > **Wave 2 (2026-04-03):** `ISeeder` pipeline in `RequiemNexus.Data/Seeding/` — `DbInitializer` orchestrates migrations + Identity roles + ordered seeders; `AddRequiemDataSeeders()` registers implementations. **`IReferenceDataCache`** (§3.3): `ReferenceDataCache` + `ReferenceDataCacheWarmupHostedService` in Web; contract in `Application.Contracts`; catalog consumers (`ClanService`, `DisciplineService`, `MeritService`, `CoilService`, `SorceryService`, `CovenantService`, `BloodlineService`, `DevotionService`, `CharacterMeritService`, `CharacterDisciplineService`, `CharacterManagementService`, `HumanityService`, `GhoulManagementService`) use the cache for official rows. **Full-pipeline seed test:** `DbInitializerTests.InitializeAsync_FullPipeline_PopulatesCoreCatalogTables` asserts non-zero counts for core seeded tables after `InitializeAsync`.
 > **Wave 3 (2026-04-03):** **`ICharacterQueryService`** / **`CharacterQueryService`** (§1.2 / backlog #8); **§3.2 (partial)** — Beats/XP reload skip + `CharacterUpdateDto` progression fields + hub echo suppression. **`IModifierProvider`** (§2.2 / backlog #9) — `ConditionModifierProvider`, `CoilModifierProvider`, `WoundTrackModifierProvider`, `EquipmentModifierProvider`; `ModifierService` aggregates by `Order`; shared `PassiveModifierJsonSerializerOptions`; tests: `ModifierProviderTests` + updated `ModifierServiceTests`. **`IRiteActivationStrategy`** (§2.2 / backlog #10) — `CruacActivationStrategy`, `ThebanActivationStrategy`, `NecromancyActivationStrategy`; `SorceryActivationService` resolves by tradition; initial character load uses `Include(Rites).ThenInclude(SorceryRiteDefinition)` (removes fallback `CharacterRites` query).
-> **Wave 4 (2026-04-03):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** / **`panel`** (compact embeds) in `SkeletonLoader.razor.css`; campaign hub pages + **character sheet sections** (Blood Bonds, Lineage, Ghouls, Predatory Aura, Social Maneuvers), **Glimpse** panels (`BloodBondsPanel`, `GhoulsTab`, `PredatoryAuraHistoryPanel`), **NPC/Faction detail**, **CampaignCharacterView** / **Advancement**, **join** page, modals (`EditLineage`, `GhoulDisciplineAccessEditor`, `PlayerWeaponDamageRollModal`), **Account/Manage** pages, and **`LoadingContainer`** use `<SkeletonLoader>` instead of italic loading paragraphs. §4.2 **(partial):** `CampaignDetails` / `CampaignJoin` / invite modal — service failures → **`ToastService.Show(..., ToastType.Error)`**; removed danger-zone `feedback-error` blocks and join `alert-rn` for caught exceptions; **`PlayerInviteModal`** no longer takes `InviteError`. **`EncounterManager`** — exception paths → toast; dropped **`_renameEncounterError`** / **`_smartLaunchConfirmError`**; **`_createError`** / **`_chronicleAddError`** / **`_improvError`** retain **inline validation only**. Remaining **`alert-rn`** on hub pages are **inline validation / empty-state** (e.g. missing campaign id, load failure message binding); auth pages keep field-adjacent alerts per §4.2. §4.3 **(2026-04-03):** `CharacterDetails` — unified **`_pendingModal`** + **`IsOpeningModal`**, `InvokeAsync(StateHasChanged)` before awaits, **`.btn-inline-spinner`** in **`CharacterDetails.razor.css`**; buttons: Apply Bloodline/Covenant, Learn Rite, Chosen Mystery, Purchase Coil. **`CharacterAdvancement`** — same for **Request rite** + **`CharacterAdvancement.razor.css`**. §1.1 **`CharacterDetails.razor.cs` decomposition (2026-04-03):** feature partials under `Components/Pages/` — **`CharacterDetails.State`**, **`.Session`**, **`.Export`**, **`.DiceRoller`**, **`.Rites`**, **`.Assets`**, **`.DisciplinePools`**, **`.Progression`**, **`.Modals.Faction`**, **`.Modals.Sorcery`**; injects consolidated in **`CharacterDetails.razor`** (removed unused **`IAdvancementService`**). **Post–Wave 4 (P3):** §4.2 on **`CharacterAdvancement`** — **done (2026-04-03)** (toast + inline validation; see §1.3 `CharacterAdvancement`). **`EncounterManager` markup (2026-04-03):** child components under **`Campaigns/EncounterParts/`** — see §1.1 / §1.3. **Optional P3** after the 2026-04-04 sweep: mainly **`InitiativeTracker`** further splits (#19); `DiceRollerModal` / `CampaignDetails` / `GlimpseSocialManeuvers` / `StorytellerGlimpse` / vitals — see §7 and [Status summary](#status-summary) for delivered vs open.
-> **Review:** See `docs/plan-improvement-review.md` for open questions, answers, and rationale.
-> **Closure (2026-04-04):** **Waves 1–4** are the committed Phase 20 technical-polish scope for this document — **complete.** Remaining §7 rows are **optional P3–P4** backlog (no Wave 5 here). **Backlog implementation sweep (2026-04-04):** `CharacterProgressionSnapshotDto` + sheet patch after Beats/XP mutations (**#5**); `EncounterManager.NpcPicker` / `EncounterManager.SmartLaunch` partials (**#20**); `MeleeAttackResolveModal` + `Account/Manage` skeletons (**#13**). Most other §7 items were **already delivered** in-tree before this sweep — see revised §7 table.
+> **Wave 4 (2026-04-03):** §4.1 — `SkeletonLoader` variants **`tracker`** / **`encounter-list`** / **`panel`** (compact embeds) in `SkeletonLoader.razor.css`; campaign hub pages + **character sheet sections** (Blood Bonds, Lineage, Ghouls, Predatory Aura, Social Maneuvers), **Glimpse** panels (`BloodBondsPanel`, `GhoulsTab`, `PredatoryAuraHistoryPanel`), **NPC/Faction detail**, **CampaignCharacterView** / **Advancement**, **join** page, modals (`EditLineage`, `GhoulDisciplineAccessEditor`, `PlayerWeaponDamageRollModal`), **Account/Manage** pages, and **`LoadingContainer`** use `<SkeletonLoader>` instead of italic loading paragraphs. §4.2 **(partial):** `CampaignDetails` / `CampaignJoin` / invite modal — service failures → **`ToastService.Show(..., ToastType.Error)`**; removed danger-zone `feedback-error` blocks and join `alert-rn` for caught exceptions; **`PlayerInviteModal`** no longer takes `InviteError`. **`EncounterManager`** — exception paths → toast; dropped **`_renameEncounterError`** / **`_smartLaunchConfirmError`**; **`_createError`** / **`_chronicleAddError`** / **`_improvError`** retain **inline validation only**. Remaining **`alert-rn`** on hub pages are **inline validation / empty-state** (e.g. missing campaign id, load failure message binding); auth pages keep field-adjacent alerts per §4.2. §4.3 **(2026-04-03):** `CharacterDetails` — unified **`_pendingModal`** + **`IsOpeningModal`**, `InvokeAsync(StateHasChanged)` before awaits, **`.btn-inline-spinner`** in **`CharacterDetails.razor.css`**; buttons: Apply Bloodline/Covenant, Learn Rite, Chosen Mystery, Purchase Coil. **`CharacterAdvancement`** — same for **Request rite** + **`CharacterAdvancement.razor.css`**. §1.1 **`CharacterDetails.razor.cs` decomposition (2026-04-03):** feature partials under `Components/Pages/` — **`CharacterDetails.State`**, **`.Session`**, **`.Export`**, **`.DiceRoller`**, **`.Rites`**, **`.Assets`**, **`.DisciplinePools`**, **`.Progression`**, **`.Modals.Faction`**, **`.Modals.Sorcery`**; injects consolidated in **`CharacterDetails.razor`** (removed unused **`IAdvancementService`**). **Post–Wave 4 (P3):** §4.2 on **`CharacterAdvancement`** — **done (2026-04-03)** (toast + inline validation; see §1.3 `CharacterAdvancement`). **`EncounterManager` markup (2026-04-03):** child components under **`Campaigns/EncounterParts/`** — see §1.1 / §1.3. **2026-04-04–05 sweep:** **`InitiativeTracker`** (#19), **`DiceRollerModal`** (#17), **`PageTitle`** / **`alert-rn`** (#13/#14), vitals, **`CampaignDetails`**, **`GlimpseSocialManeuvers`**, **`StorytellerGlimpse`** — **delivered**; any further extractions are **O-rows** in [Optional backlog](#optional-backlog), not §7.
+> **Review:** See `docs/plan-improvement-review.md` for historical questions, answers, and rationale.
+> **Closure (2026-04-04):** **Waves 1–4** are the committed Phase 20 technical-polish scope for this document — **complete.** §7 is **closed**. **Backlog implementation sweep (2026-04-04):** `CharacterProgressionSnapshotDto` + sheet patch after Beats/XP mutations (**#5**); `EncounterManager.NpcPicker` / `EncounterManager.SmartLaunch` partials (**#20**); `MeleeAttackResolveModal` + `Account/Manage` skeletons (**#13**). Post–§7 work: [Optional backlog](#optional-backlog).
 
 ---
 
@@ -25,7 +25,7 @@
 | Level | Meaning |
 |---|---|
 | **P1 — Critical** | Correctness/performance risk or severe maintainability debt — fix before adding new features |
-| **P2 — High** | Architectural violation or notable UX inconsistency — *historically* the Phase 20 technical-polish sprint; waves are complete — P2-labeled **residuals** in §7 are optional unless mission reopens them |
+| **P2 — High** | Architectural violation or notable UX inconsistency — *historically* the Phase 20 technical-polish sprint; waves are complete — further P2-style work is **O-rows** in [Optional backlog](#optional-backlog) unless `mission.md` reopens scope |
 | **P3 — Medium** | Code hygiene, minor perf wins, UX polish — post-Phase 20 |
 | **P4 — Low** | Nice-to-have, very low risk |
 
@@ -68,24 +68,21 @@
 | 32 | `GlimpseSocialManeuvers` decomposed into `GlimpseSocialManeuverParts/` |
 | 33 | `StorytellerGlimpse` overview wrapper + CSS split (`StorytellerGlimpseOverview.razor.css`) |
 
-### 🔲 Open / Optional (P2–P3 backlog — no committed wave)
-
-| # | Priority | Item | Notes |
-|---|---|---|---|
-| 13 *(residual)* | P4 | Further `PageTitle` tweaks | **Done (2026-04-05):** em-dash normalization across static titles; missing product suffixes fixed |
-| 14 *(residual)* | P4 | — | **`alert-rn`** pass **complete** (2026-04-05); hub empty-state **`alert-rn`** intentional per §4.2 |
-
-### ➡️ Next Step
+### ➡️ Next step (post–§7)
 
 <a id="agent-next-step"></a>
 
-**Backlog #19 (`InitiativeTracker`)** — **complete** (2026-04-04): `InitiativeParts/*`, feature partials, `IInitiativeTrackerDragState`, and **`InitiativeTracker.SignalR.razor.cs`** (hub subscriptions + initiative/character update handlers).
+**Committed §7 / Wave work:** **exhausted** — do not add new §7 rows for items already covered by #17 / #19 / #20.
 
-**Optional polish:** **#13** / **#14** residuals above are **cleared** in-tree (2026-04-05). New UX work should follow **`PageTitle`:** `{Screen} — Requiem Nexus`** (em dash) and **`alert` + `alert-rn`** for page-level alerts outside hub empty-states.
+**Further technical polish:** use **[Optional backlog](#optional-backlog)** (O-1 … O-12). Each O-row needs explicit mission or task scope.
+
+**UX conventions (already delivered, still apply):** **`PageTitle`:** `{Screen} — Requiem Nexus`** (em dash); **`alert` + `alert-rn`** for page-level alerts outside hub empty-states (hub empty-state **`alert-rn`** remains intentional per §4.2).
 
 ---
 
 ## Section 1 — Large Files
+
+> **Execution scope:** Optional follow-up work is enumerated in [Optional backlog](#optional-backlog). Sections 1–6 are narrative reference (Grimoire); do not treat them as an implied task list.
 
 Files over ~300 lines are a maintenance red flag. The list below excludes the `Migrations/` folder. Baseline line counts as of 2026-04-02; additional Web paths in §1.3 use counts as of 2026-04-03.
 
@@ -580,21 +577,140 @@ The backlog items are not independent. The order below reduces rework and risk.
 
 ---
 
+## Optional backlog
+
+<a id="optional-backlog"></a>
+
+Work that was **never** part of the committed §7 table. Implement **one O-row at a time** when `docs/mission.md` or an explicit task authorizes it.
+
+**Already delivered (do not reopen as O-work):** `InitiativeTracker` (#19), `DiceRollerModal` (#17), `PageTitle` / `alert-rn` sweep (#13/#14 residuals, 2026-04-05).
+
+### Summary table
+
+| ID | Priority | Area | Item |
+|---|---|---|---|
+| O-1 | P3 | Web / UX | In-sheet rules browser for trait **OpenReference** (replaces interim info toast) |
+| O-2 | P3 | Application | **`ICharacterProgressionService`** — Beat/XP slice of **`CharacterManagementService`** — **delivered** (`CharacterProgressionService`, façade forwards on **`CharacterManagementService`**) |
+| O-3 | P3 | Application | **`CampaignService`** — lore + session prep collaborators — **delivered** (`ICampaignLoreService` / **`CampaignLoreService`**, **`ICampaignSessionPrepService` / `CampaignSessionPrepService`**, **`CampaignService`** façade) |
+| O-4 | P2–P3 | Application / SignalR | Broader character reload reduction — patch DTOs or **`ICharacterPatchEvent`** beyond Beats/XP snapshot |
+| O-5 | P3 | Web | **`StorytellerGlimpse`** — further child components if overview tab grows |
+| O-6 | P3 | Web | **`EncounterManager`** — participant-heavy extraction, optional **`EncounterManager.*`** partials, optional validation error consolidation |
+| O-7 | P4 | Web | **`CampaignDetails`** — further splits if line counts exceed maintenance comfort again |
+| O-8 | P4 | Domain / Application | New **`IModifierProvider`** implementations when rules add DB-backed passive modifiers (Devotion / Covenant / Bloodline / Merit) |
+| O-9 | P4 | Infrastructure | Bounded PDF/JSON export queue (**`Channel<T>`** or worker) under high concurrent load |
+| O-10 | P4 | Application | **`IReferenceDataCache.FlushAsync`** + callers when admin definition editing ships |
+| O-11 | P3 | Domain | **`IContextualTraitResolver`** (or explicit branches) if a **`PoolTraitType`** needs async / service / campaign context |
+| O-12 | P4 | Web | Align **`CharacterPackTab`** naming with shipped **`CharacterDetailsPackTab`** only if rename churn is justified |
+
+### O-1 — In-sheet rules browser (`OpenReference`)
+
+- **Goal:** Replace or supplement the interim **info toast** (book pointer) with searchable in-sheet rules content for the active trait.
+- **Primary files:** `CharacterDetails` (OpenReference flow); new modal/panel components under `Components/` as designed; rules content source (seed/static) per product.
+- **Dependencies:** Product decision on content scope and sourcing.
+- **Exit criteria:** Reader can open, read, and dismiss rules without leaving the sheet; focus management and **`aria-modal`** consistent with other modals.
+- **Tests:** Extend **Application** / **Web** tests if logic moves to services; **Domain** tests for any new parsing rules.
+
+### O-2 — `ICharacterProgressionService` — **delivered**
+
+- **Goal:** Narrow **`CharacterManagementService`** by extracting Beat/XP/embargo mutations and reload/snapshot coordination.
+- **Primary files:** `CharacterManagementService.cs`, new contract + implementation in **Application**, **Web** DI and call sites.
+- **Dependencies:** Stable **`CharacterProgressionSnapshotDto`** and hub echo behavior from §3.2 / #5.
+- **Exit criteria:** Smaller façade; no regression on progression flows; Masquerade unchanged on mutations.
+- **Tests:** **`RequiemNexus.Application.Tests`** (authorization, mutation contracts).
+
+### O-3 — `CampaignService` lore / session prep split — **delivered**
+
+- **Goal:** Separate campaign/session concerns from lore and session-prep note flows for readability and testing.
+- **Primary files:** `CampaignService.cs`; optional new services (names illustrative: lore vs prep).
+- **Dependencies:** None blocking.
+- **Exit criteria:** Smaller types; same external behavior or documented API migration; **AuthorizationHelper** on every mutation.
+- **Tests:** **`RequiemNexus.Data.Tests`** / **Application** tests for campaign APIs.
+
+### O-4 — Broader reload reduction / patch events
+
+- **Goal:** Extend the Beats/XP snapshot pattern to other high-churn mutations if profiling demands it; optional strict query budget (e.g. Beat-add).
+- **Primary files:** `CharacterManagementService`, **`CharacterDetails`** SignalR handlers, new DTOs/events as needed.
+- **Dependencies:** Mission buy-in; **`ICharacterQueryService`** load paths.
+- **Exit criteria:** Measured fewer round-trips or explicit cancellation of the row in this doc.
+- **Tests:** **Application** tests; performance notes if applicable.
+
+### O-5 — `StorytellerGlimpse` further extractions
+
+- **Goal:** Child components for remaining large overview regions (same pattern as **`StorytellerGlimpseOverview`**).
+- **Primary files:** `StorytellerGlimpse.razor` (+ `.cs` / `.css`), new children under **`Components/Pages/`**.
+- **Dependencies:** None.
+- **Exit criteria:** Measurable reduction in overview markup or code-behind; scoped CSS with **`::deep`** where needed.
+- **Tests:** Regression / manual ST flows unless logic extracted to services.
+
+### O-6 — `EncounterManager` depth split
+
+- **Goal:** Extract participant-heavy regions (**`EncounterParticipantPanel`**-style); add **`EncounterManager.*`** partials if **`.razor.cs`** exceeds the ~300-line maintenance target; optionally consolidate inline validation strings.
+- **Primary files:** `EncounterManager.razor`, `EncounterManager.razor.cs`, **`EncounterParts/`**.
+- **Dependencies:** §4.2 hybrid errors (toast vs inline).
+- **Exit criteria:** Clearer ownership between participant management and create/template/smart-launch flows.
+- **Tests:** Existing encounter coverage; manual ST scenarios.
+
+### O-7 — `CampaignDetails` further splits
+
+- **Goal:** Only if combined **`.razor` + partials** grow again — mirror **`CampaignDetailsParts/`** pattern.
+- **Primary files:** `CampaignDetails.*`, **`CampaignDetailsParts/`**.
+- **Dependencies:** None.
+- **Exit criteria:** PR documents line-count or SRP rationale.
+
+### O-8 — Additional `IModifierProvider`s
+
+- **Goal:** When product rules require passive modifiers from Devotion/Covenant/Bloodline/Merit state in the database, add **providers** instead of extending **`ModifierService`** with new **`if`** chains.
+- **Primary files:** `ModifierService.cs`, new provider types, DI registration.
+- **Dependencies:** Data model for those modifier sources.
+- **Exit criteria:** **`ModifierProviderTests`** + documented **`Order`** relative to existing providers.
+
+### O-9 — Bounded export queue
+
+- **Goal:** Replace unconstrained **`Task.Run`** for PDF/JSON export if concurrent load threatens the thread pool (§3.5 warning).
+- **Primary files:** `CharacterPdfExportService`, `CharacterJsonExportService`; optional **`IHostedService`** worker.
+- **Dependencies:** Ops requirements (depth, timeouts, user feedback).
+- **Exit criteria:** Load-test notes or staged rollout documentation.
+
+### O-10 — `IReferenceDataCache.FlushAsync`
+
+- **Goal:** Runtime refresh after admin edits to reference definitions (§3.3 / risk register).
+- **Primary files:** **`IReferenceDataCache`**, **`ReferenceDataCache`**, future admin mutation pipelines.
+- **Dependencies:** Admin definition-edit feature.
+- **Exit criteria:** Contract implemented; invalidation semantics documented.
+
+### O-11 — Contextual trait resolution
+
+- **Goal:** If any **`PoolTraitType`** cannot be a synchronous **`Character` → `int`** read, isolate in **`IContextualTraitResolver`** or explicit non-dictionary branches in **`TraitResolver`**.
+- **Primary files:** `TraitResolver.cs`, new types if needed.
+- **Dependencies:** Full inventory of traits vs. current **`FrozenDictionary`** coverage.
+- **Exit criteria:** Correct pool sizes for contested/contextual traits; **`RequiemNexus.Domain.Tests`** updated.
+
+### O-12 — `CharacterPackTab` naming
+
+- **Goal:** Optional alignment between early plan wording (**`CharacterPackTab`**) and shipped **`CharacterDetailsPackTab`** ([`CharacterDetailsPackTab.razor`](../src/RequiemNexus.Web/Components/Pages/CharacterSheet/CharacterDetailsPackTab.razor)).
+- **Primary files:** Component rename + all references.
+- **Dependencies:** Low value — defer unless churn is acceptable.
+- **Exit criteria:** **`dotnet build`** + grep clean.
+
+---
+
 ## Section 8 — Plan closure (Phase 20 vs. backlog)
 
-> **Quick reference:** See the [Status Summary](#status-summary) section for a scannable ✅ / 🔲 / ➡️ breakdown.
+> **Quick reference:** See the [Status Summary](#status-summary) for completed Wave items. Post–§7 work: [Optional backlog](#optional-backlog).
 
 | Scope | Status |
 |---|---|
 | **Waves 1–4** (Section 5) | **Delivered** — seed pipeline, reference cache, query/modifier/rite refactors, `CharacterDetails` partials, loading/error/modal polish, `DanseMacabre` tabs, `EncounterParts/`, `CharacterAdvancement` sections |
 | **Post-Wave sweep (2026-04-04)** | **Delivered** — `CharacterProgressionSnapshotDto` (#5), `EncounterManager.NpcPicker/SmartLaunch` partials (#20), `MeleeAttackResolveModal` + `Account/Manage` skeletons (#13), `CampaignDetailsParts/` (#30), `GlimpseSocialManeuverParts/` (#32), `StorytellerGlimpseOverview` (#33) |
-| **This document** | **Closed** as the Phase 20 technical-polish **delivery record**; edits here should be **status syncs** or **new backlog rows**, not reopened Wave scope without an explicit mission/plan decision |
-| **§7 rows open** | **#13** / **#14** optional residuals — **cleared** (2026-04-05). **#19** — **closed** |
-| **Next step** | Phase 20 polish backlog for this doc is **exhausted** unless `mission.md` reopens scope — see [Next step](#agent-next-step) |
+| **§7 consolidated backlog** | **Closed** — all rows delivered or N/A; do not reopen Wave scope without **`mission.md`** / owner decision |
+| **This document** | **Delivery record** for Waves 1–4 + §7; **optional** execution items live in [Optional backlog](#optional-backlog) until implemented or explicitly cancelled |
+| **Next step** | New technical work: pick from [Optional backlog](#optional-backlog) with explicit scope — see [Next step (post–§7)](#agent-next-step) |
 
 ---
 
 ## Appendix A — Reference: Patterns to Follow and Avoid
+
+Future extractions and polish: see [Optional backlog](#optional-backlog). This appendix is pattern reference only.
 
 ### Exemplary Patterns
 

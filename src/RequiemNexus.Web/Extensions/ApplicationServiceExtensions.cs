@@ -37,6 +37,12 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<IDomainEventHandler<DegenerationCheckRequiredEvent>, DegenerationCheckRequiredEventHandler>();
 
         services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
+        services.AddScoped<RequiemNexus.Application.Services.CampaignLoreService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICampaignLoreService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CampaignLoreService>());
+        services.AddScoped<RequiemNexus.Application.Services.CampaignSessionPrepService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICampaignSessionPrepService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CampaignSessionPrepService>());
         services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
 
         if (environment.IsEnvironment("Testing"))
@@ -52,6 +58,9 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.IConditionService, RequiemNexus.Application.Services.ConditionService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IStorytellerGlimpseService, RequiemNexus.Application.Services.StorytellerGlimpseService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterQueryService, RequiemNexus.Application.Services.CharacterQueryService>();
+        services.AddScoped<RequiemNexus.Application.Services.CharacterProgressionService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterProgressionService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CharacterProgressionService>());
         services.AddScoped<RequiemNexus.Application.Services.CharacterManagementService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterService>(sp =>
             sp.GetRequiredService<RequiemNexus.Application.Services.CharacterManagementService>());
