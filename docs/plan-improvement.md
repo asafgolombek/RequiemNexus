@@ -66,7 +66,7 @@
 | 30 | `CampaignDetails` decomposed into `CampaignDetailsParts/` + feature partials |
 | 31 | `DanseMacabre` tab panels (`DanseMacabreTabs/`) + `DanseMacabre.razor.cs` |
 | 32 | `GlimpseSocialManeuvers` decomposed into `GlimpseSocialManeuverParts/` |
-| 33 | `StorytellerGlimpse` overview wrapper + CSS split (`StorytellerGlimpseOverview.razor.css`) |
+| 33 | `StorytellerGlimpse` overview wrapper + CSS split (`StorytellerGlimpseOverview.razor.css`); code-behind feature partials (`StorytellerGlimpse.Awards` / `.Chrome` / `.SignalR` / `.PassiveAura` / `.Degeneration`, 2026-04-06) |
 
 ### ➡️ Next step (post–§7)
 
@@ -220,7 +220,7 @@ Create one class per concern under `RequiemNexus.Data/Seeding/`:
 
 #### `StorytellerGlimpse.razor` + `.razor.cs` + `.razor.css` — ~420 + ~538 + ~473 lines (P3) — **partial / delivered (#33)**
 
-**Delivered (2026-04-04):** `StorytellerGlimpseOverview` wrapper + scoped overview CSS + social/pending panel CSS splits — §7 **#33**. Overview tab may still be large; further child extractions (**optional P3**) follow the same pattern as Appendix A.
+**Delivered (2026-04-04):** `StorytellerGlimpseOverview` wrapper + scoped overview CSS + social/pending panel CSS splits — §7 **#33**. **Delivered (2026-04-06):** code-behind split into feature partials mirroring **`InitiativeTracker`**: `StorytellerGlimpse.Awards.razor.cs`, `StorytellerGlimpse.Chrome.razor.cs`, `StorytellerGlimpse.SignalR.razor.cs`, `StorytellerGlimpse.PassiveAura.razor.cs`, `StorytellerGlimpse.Degeneration.razor.cs`; main `StorytellerGlimpse.razor.cs` keeps fields, load pipeline, and dispose. Overview child components remain under **`StorytellerGlimpseOverviewParts/`** (O-5).
 
 ---
 
@@ -595,7 +595,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 | O-2 | P3 | Application | **`ICharacterProgressionService`** — Beat/XP slice of **`CharacterManagementService`** — **delivered** (`CharacterProgressionService`, façade forwards on **`CharacterManagementService`**) |
 | O-3 | P3 | Application | **`CampaignService`** — lore + session prep collaborators — **delivered** (`ICampaignLoreService` / **`CampaignLoreService`**, **`ICampaignSessionPrepService` / `CampaignSessionPrepService`**, **`CampaignService`** façade) |
 | O-4 | P2–P3 | Application / SignalR | Hub **`CharacterUpdateDto`** patch — **delivered** — **`CharacterDetails.Session`** applies **`CharacterUpdateDtoApplier`** instead of full **`ReloadCharacterAsync`** on **`ReceiveCharacterUpdate`** (bloodline/chronicle paths still reload) |
-| O-5 | P3 | Web | **`StorytellerGlimpse`** overview — **delivered (incremental)** — **`StorytellerGlimpseOverviewParts/`** (`StorytellerGlimpseDegenerationBanners`, **`StorytellerGlimpsePassivePredatoryAuraCard`**) + **`DegenerationRollFormat`** helper |
+| O-5 | P3 | Web | **`StorytellerGlimpse`** overview — **delivered (incremental)** — **`StorytellerGlimpseOverviewParts/`** + **`StorytellerGlimpse.*.razor.cs`** partials (Awards, Chrome, SignalR, PassiveAura, Degeneration) + **`DegenerationRollFormat`** helper |
 | O-6 | P3 | Web | **`EncounterManager`** — list/markup split — **delivered** (`EncounterDraftPrepListSection`, **`EncounterLaunchedAndPausedSection`**, **`EncounterPastEncountersSection`** in **`EncounterParts/`**); optional further **`EncounterManager.*`** partials / validation consolidation if line counts grow |
 | O-7 | P4 | Web | **`CampaignDetails`** — **N/A (2026-04-05)** — combined **`.razor` + partials** remain under maintenance threshold; reopen only if counts grow |
 | O-8 | P4 | Domain / Application | Future **`IModifierProvider`** s — **policy recorded** on **`ModifierService`** XML; new providers when rules + data exist (no empty provider types) |
@@ -644,7 +644,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Dependencies:** None.
 - **Exit criteria:** Measurable reduction in overview markup or code-behind; scoped CSS with **`::deep`** where needed.
 - **Tests:** Regression / manual ST flows unless logic extracted to services.
-- **Delivered components (incremental):** `StorytellerGlimpseOverviewParts/StorytellerGlimpseDegenerationBanners.razor`, `StorytellerGlimpsePassivePredatoryAuraCard.razor`, **`StorytellerGlimpseCoterieBeatAwardCard.razor`** (coterie Beat drag + award), **`StorytellerGlimpsePinnedNpcsSection`**, **`StorytellerGlimpseCharacterVitalsGrid`** (overview vitals cards + drag-drop Beat).
+- **Delivered components (incremental):** `StorytellerGlimpseOverviewParts/StorytellerGlimpseDegenerationBanners.razor`, `StorytellerGlimpsePassivePredatoryAuraCard.razor`, **`StorytellerGlimpseCoterieBeatAwardCard.razor`** (coterie Beat drag + award), **`StorytellerGlimpsePinnedNpcsSection`**, **`StorytellerGlimpseCharacterVitalsGrid`** (overview vitals cards + drag-drop Beat). **Code-behind (2026-04-06):** `StorytellerGlimpse.*.razor.cs` feature partials (Awards, Chrome, SignalR, PassiveAura, Degeneration) — see §1.3 `StorytellerGlimpse`.
 
 ### O-6 — `EncounterManager` depth split — **delivered** (list sections; optional deeper splits remain)
 
@@ -732,6 +732,7 @@ Future extractions and polish: see [Optional backlog](#optional-backlog). This a
 | `StorytellerGlimpseOverviewParts/*`, `DegenerationRollFormat` | Overview tab decomposition (O-5) |
 | `StorytellerGlimpseCoterieBeatAwardCard.razor` | Coterie Beat drag + “Award to All” card in overview (O-5 incremental) |
 | `StorytellerGlimpsePinnedNpcsSection.razor`, `StorytellerGlimpseCharacterVitalsGrid.razor` | Pinned NPC strip + PC vitals / awards grid on Glimpse overview (O-5 incremental) |
+| `StorytellerGlimpse.Awards` / `.Chrome` / `.SignalR` / `.PassiveAura` / `.Degeneration` `.razor.cs` | Glimpse page code-behind decomposition (O-5 / §1.3, 2026-04-06) |
 | `ExternalAuthAvailability` | Hide Google/Discord login UI when OAuth client id/secret are unset or placeholder (`not-configured`) — `Login.razor`, `LinkedAccounts.razor` |
 | `DotScale.razor.css` | Trait label button default/hover/focus: bone-white on dark panels for WCAG AA (E2E axe / advancement) |
 | `DiscordWebhookModal.razor` | Focus webhook URL field when modal opens (keyboard / SR) |
