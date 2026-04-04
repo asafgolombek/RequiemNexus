@@ -97,7 +97,7 @@ Dependencies always point inward. Infrastructure is a plugin to the domain, neve
 
 → Read the full [Architecture Guide](./Architecture.md)
 
-→ Phase 20 technical improvement track (Waves 1–4 + optional P3): [plan-improvement.md](./plan-improvement.md)
+→ Phase 20 delivery record (roadmap + technical polish): [mission.md](./mission.md) — **Phase 20: The Global Embrace**
 
 ---
 
@@ -106,7 +106,7 @@ Dependencies always point inward. Infrastructure is a plugin to the domain, neve
 ```
 RequiemNexus/
 ├── .github/                  # CI workflows, PR & issue templates
-├── docs/                     # Architecture, mission, improvement plan, rules interpretations
+├── docs/                     # Architecture, mission, rules interpretations, phase records
 ├── scripts/                  # PowerShell automation (build, test, deploy)
 ├── src/
 │   ├── RequiemNexus.Application/ # Application — orchestrates domain logic
@@ -151,9 +151,9 @@ RequiemNexus/
 | 17 | **The Fog of Eternity** — Humanity & Conditions | ✅ Complete |
 | 18 | **The Wider Web** — Edge Systems & Content | ✅ Complete |
 | 19 | **The Blood Lineage** — Discipline Acquisition Rules | ✅ Complete |
-| 20 | **The Global Embrace** — Discord, production polish, P3+ tech backlog (last planned phase) | 🔄 Active |
+| 20 | **The Global Embrace** — Discord, production polish, technical decomposition (last planned phase) | ✅ Complete |
 
-**Next up:** **Phase 20 — The Global Embrace** is **active**: **Discord Rich Presence**, **production rollout** (e.g. SignalR at scale), and optional **P3+** items in [`docs/plan-improvement.md`](./plan-improvement.md) remain open. **i18n** and a **public REST API** are **not** on the near-term roadmap (see [`docs/mission.md`](./mission.md) Phase 20). **Phase 20 technical polish (Waves 1–4)** — performance, decomposition, and UI consistency — is **delivered** (2026-04-03). V:tR 2e playability work through **Phase 19.5** is complete.
+**Next up:** **Phase 20 — The Global Embrace** is **complete** — Discord session webhooks, SignalR production tuning, and the Phase 20 technical polish tranche (see [`docs/mission.md`](./mission.md) Phase 20). **i18n** and a **public REST API** are **not** on the near-term roadmap. V:tR 2e playability work through **Phase 19.5** is complete. Further work is **discretionary** unless the mission roadmap is extended.
 
 → See the full roadmap with details in the [Mission Document](./mission.md)
 

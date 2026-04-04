@@ -271,7 +271,7 @@
     filter: grayscale(0.15);
 }
 
-/* Async modal-open affordance (§4.3 plan-improvement) */
+/* Async modal-open affordance (Phase 20 UI polish — see docs/mission.md Phase 20) */
 .btn-inline-spinner {
     display: inline-block;
     width: 0.85em;

@@ -27,7 +27,7 @@
     {
         <div class="campaign-header">
             <h2>🌹 Danse Macabre</h2>
-            <StorytellerChronicleNav CampaignId="CampaignId" />
+            <StorytellerChronicleNav CampaignId="@CampaignId" />
         </div>
 
         <div class="tabs" style="margin-bottom:1.5rem;">
@@ -38,44 +38,44 @@
 
         @if (_activeTab == 0)
         {
-            <DanseTerritoriesTab CampaignId="CampaignId"
-                                 Territories="_territories"
-                                 FeedbackMessage="_feedbackMessage"
-                                 Busy="_busy"
+            <DanseTerritoriesTab CampaignId="@CampaignId"
+                                 Territories="@_territories"
+                                 FeedbackMessage="@_feedbackMessage"
+                                 Busy="@_busy"
                                  OnOpenCreateModal="OpenTerritoryModal"
                                  OnDeleteTerritory="DeleteTerritory" />
         }
 
         @if (_activeTab == 1)
         {
-            <DansePowerStructureTab CampaignId="CampaignId"
-                                    Factions="_factions"
-                                    FeedbackMessage="_feedbackMessage"
+            <DansePowerStructureTab CampaignId="@CampaignId"
+                                    Factions="@_factions"
+                                    FeedbackMessage="@_feedbackMessage"
                                     OnOpenCreateModal="OpenFactionModal" />
         }
 
         @if (_activeTab == 2)
         {
-            <DanseNpcsTab CampaignId="CampaignId"
-                          Npcs="_npcs"
-                          ShowDeceased="_showDeceased"
-                          FeedbackMessage="_feedbackMessage"
-                          Busy="_busy"
+            <DanseNpcsTab CampaignId="@CampaignId"
+                          Npcs="@_npcs"
+                          ShowDeceased="@_showDeceased"
+                          FeedbackMessage="@_feedbackMessage"
+                          Busy="@_busy"
                           OnOpenCreateModal="OpenNpcModal"
                           OnDeleteNpc="DeleteNpc"
                           ShowDeceasedChanged="OnShowDeceasedChangedAsync" />
         }
 
         <CreateFeedingTerritoryModal @bind-IsOpen="_territoryModalOpen"
-                                     CampaignId="CampaignId"
+                                     CampaignId="@CampaignId"
                                      StorytellerUserId="@(_currentUserId ?? string.Empty)"
                                      OnCreated="OnTerritoryCreatedAsync" />
         <CreateCityFactionModal @bind-IsOpen="_factionModalOpen"
-                                CampaignId="CampaignId"
+                                CampaignId="@CampaignId"
                                 StorytellerUserId="@(_currentUserId ?? string.Empty)"
                                 OnCreated="OnFactionCreatedAsync" />
         <CreateChronicleNpcModal @bind-IsOpen="_npcModalOpen"
-                                 CampaignId="CampaignId"
+                                 CampaignId="@CampaignId"
                                  StorytellerUserId="@(_currentUserId ?? string.Empty)"
                                  OnCreated="OnNpcCreatedAsync" />
     }

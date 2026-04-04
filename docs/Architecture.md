@@ -67,7 +67,7 @@ The system is structured into **explicit layers** with strict boundaries, upheld
 - No database access.
 - All inputs validated before passing inward past the Masquerade.
 - **Real-Time boundaries**: The SignalR Hub is owned by the Web layer. It pushes state updates to clients but holds **no authoritative game state** — it is a pure output channel.
-- **Composition (Phase 20 polish):** Large pages are decomposed into **section/tab child components** and/or **`partial class` code-behind files** (one type per `.cs` file — partials are additional files for the *same* component type). **Do not** name a subfolder identically to a sibling `.razor` route component in the same namespace (Razor compiler duplicate-type conflict); use a distinct folder name (e.g. `DanseMacabreTabs/` next to `DanseMacabre.razor`). **Hybrid errors:** unexpected/service failures → **`ToastService`**; expected validation or field-adjacent text → **inline** markup (see **`docs/plan-improvement.md`** §4.2).
+- **Composition (Phase 20 polish):** Large pages are decomposed into **section/tab child components** and/or **`partial class` code-behind files** (one type per `.cs` file — partials are additional files for the *same* component type). **Do not** name a subfolder identically to a sibling `.razor` route component in the same namespace (Razor compiler duplicate-type conflict); use a distinct folder name (e.g. `DanseMacabreTabs/` next to `DanseMacabre.razor`). **Hybrid errors:** unexpected/service failures → **`ToastService`**; expected validation or field-adjacent text → **inline** markup (see **`docs/mission.md`** — Phase 20 delivery record — and existing hub/campaign pages for the pattern).
 
 ### 2. Application Layer (`RequiemNexus.Application`)
 
