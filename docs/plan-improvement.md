@@ -6,7 +6,7 @@
 
 1. **Waves 1–4 are delivered.** Sections 1–6 below are a **Grimoire / reference** (patterns, rationale, and history). They are **not** a fresh implementation checklist unless you are explicitly picking up an item listed as open in [Status summary](#status-summary) or [Section 8](#section-8--plan-closure-phase-20-vs-backlog).
 2. **Fast path:** Read [Status summary](#status-summary) (completed vs optional rows) and [Section 8](#section-8--plan-closure-phase-20-vs-backlog). Use [Consolidated backlog](#section-7--consolidated-priority-backlog) (§7) for numbered item truth; avoid re-deriving scope from long narrative sections.
-3. **Optional follow-up:** **`InitiativeTracker`** decomposition and **SignalR partial rename** are **done** (2026-04-04). **#13 / #14 sweep (2026-04-04):** contextual **`PageTitle`** while skeletons load (`CampaignCharacterView`, `FactionDetail`, `NpcDetail`, `CharacterDetails` punctuation); **`.alert-rn`** shares Gothic **`.alert`** base in `app-chrome.css` (hub parity); **Login** / **Register** alerts include **`alert-rn`**. Residual: other auth/manage pages and intentional hub **`alert-rn`** empty-states — see [Status summary](#status-summary).
+3. **Optional follow-up:** **`InitiativeTracker`** + **SignalR** partial rename **done** (2026-04-04). **#13 / #14:** skeleton-time **`PageTitle`** for key sheets **done**; **`.alert` / `.alert-rn`** Gothic base in **`app-chrome*.css`**; **full `alert-rn`** on auth + Account/Manage + **`CharacterDetails`** / **`Characters`** **done**; **PageTitle** em-dash + product suffix on remaining static titles + **Active Sessions** / **Confirm email** / **Resend confirmation** **done** (2026-04-05). Hub empty-state **`alert-rn`** remains intentional per §4.2.
 
 > **Scope:** Performance, large-file decomposition (migrations excluded), UI/UX consistency, and SOLID principle enforcement.
 > **Date:** 2026-04-02 (line counts correct as of this date — they will drift). **Web decomposition inventory** (§1.1 / §1.3 campaign & combat UI) extended 2026-04-03.
@@ -72,8 +72,8 @@
 
 | # | Priority | Item | Notes |
 |---|---|---|---|
-| 13 *(residual)* | P4 | Further `PageTitle` tweaks on low-traffic pages | Core sheets + faction/NPC/view-only **done** (2026-04-04) |
-| 14 *(residual)* | P3 | Other **Account/Manage** alerts vs. `alert-rn`; hub empty-state **`alert-rn`** | Intentional per §4.2; **Login/Register** aligned |
+| 13 *(residual)* | P4 | Further `PageTitle` tweaks | **Done (2026-04-05):** em-dash normalization across static titles; missing product suffixes fixed |
+| 14 *(residual)* | P4 | — | **`alert-rn`** pass **complete** (2026-04-05); hub empty-state **`alert-rn`** intentional per §4.2 |
 
 ### ➡️ Next Step
 
@@ -81,7 +81,7 @@
 
 **Backlog #19 (`InitiativeTracker`)** — **complete** (2026-04-04): `InitiativeParts/*`, feature partials, `IInitiativeTrackerDragState`, and **`InitiativeTracker.SignalR.razor.cs`** (hub subscriptions + initiative/character update handlers).
 
-**If you pick up optional polish next:** **#13** — remaining pages if any still use vague titles during load; **#14** — extend **`alert-rn`** on **Account/Manage** Razor files for full parity (optional); hub **`alert-rn`** empty-states stay on-page per §4.2.
+**Optional polish:** **#13** / **#14** residuals above are **cleared** in-tree (2026-04-05). New UX work should follow **`PageTitle`:** `{Screen} — Requiem Nexus`** (em dash) and **`alert` + `alert-rn`** for page-level alerts outside hub empty-states.
 
 ---
 
@@ -456,7 +456,7 @@ For **new** indexes in future work: use **EF Core migration** — add `HasIndex`
 
 **Current shape (verify in code when editing):**
 - **`CharacterDetails`** — `ToastService` for unexpected failures; field-adjacent / modal validation as designed.
-- **`CampaignDetails`** — **no** `_errorMessage` field; **`ToastService`** in partials (e.g. invite, roster actions). A single **`alert-rn alert-danger`** remains for **empty-state only** when the campaign is missing or the user is not a member (static copy — not a caught-exception banner). Same class of **intentional hub `alert-rn`** called out in **#14** residual.
+- **`CampaignDetails`** — **no** `_errorMessage` field; **`ToastService`** in partials (e.g. invite, roster actions). A single **`alert-rn alert-danger`** remains for **empty-state only** when the campaign is missing or the user is not a member (static copy — not a caught-exception banner). Same class of **intentional hub `alert-rn`** (not an error-surface defect).
 - **`EncounterManager`** — inline **`_createError`**, **`_chronicleAddError`**, **`_improvError`** (+ **`_prepFeedback`**); unexpected paths → **`ToastService`**.
 
 **Policy — hybrid approach:**
@@ -554,8 +554,8 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 10 | P2 | SOLID | Introduce `IRiteActivationStrategy` per tradition in `SorceryActivationService` — **done (2026-04-03)** |
 | 11 | P2 | Performance | Push coil eligibility filter into EF query in `CoilService` — **superseded:** eligibility uses `IReferenceDataCache.CoilDefinitions` + Ordo/prerequisite rules in memory (no per-request coil table scan) |
 | 12 | P2 | Performance | Reduce 3 round-trips in `CampaignService.GetCampaignByIdAsync` — **done:** membership folded into main query + user hydration query (see `CampaignService.GetCampaignByIdAsync` implementation) |
-| 13 | P2 | UI/UX | Standardize loading states to `<SkeletonLoader>` / `<LoadingContainer>` — **substantially done** — see §4.1; **`PageTitle`** contextual during skeletons: **`CampaignCharacterView`**, **`FactionDetail`**, **`NpcDetail`**, **`CharacterDetails`** punctuation (2026-04-04); further pages optional |
-| 14 | P2 | UI/UX | Standardize error surfaces — `ToastService` for global errors, inline text for form validation — **partial:** hub/campaign + **`CharacterAdvancement`**; **`.alert` / `.alert-rn`** Gothic base shared in **`app-chrome.css`**; **Login** / **Register** use **`alert-rn`** (2026-04-04); Account/Manage optional pass |
+| 13 | P2 | UI/UX | Standardize loading states to `<SkeletonLoader>` / `<LoadingContainer>` — **done** — see §4.1; **`PageTitle`:** skeleton-time titles + **em-dash** normalization on static titles (2026-04-04–05) |
+| 14 | P2 | UI/UX | Standardize error surfaces — **done:** `ToastService` + inline validation; **`.alert` + `.alert-rn`** in **`app-chrome*.css`**; **full `alert-rn`** on auth, Account/Manage, **`CharacterDetails`**, **`Characters`** (2026-04-05) |
 | 15 | P2 | UI/UX | Add intermediate loading feedback on modal trigger buttons — **done (2026-04-03):** `CharacterDetails` + `CharacterAdvancement` (rite) `_pendingModal` + spinners |
 | 16 | P2 | Logging | Audit and replace all `Console.WriteLine` in production code with `ILogger` — **done** for `src/` (remaining: `TestDbInitializer` only, acceptable per §4.5); `OpenReference` — **interim UX** via info toast (full rules panel optional backlog) |
 | 17 | P3 | Large File | `DiceRollerModal` decomposition — **done** — `RiteExtendedRollPanel.razor` + **`DiceRollerStandardPanel.razor`** + `DiceRollerModal.razor.cs`; scoped CSS split across `DiceRollerStandardPanel.razor.css`, `RiteExtendedRollPanel.razor.css`, `DiceRollerModal.razor.css` |
@@ -589,8 +589,8 @@ The backlog items are not independent. The order below reduces rework and risk.
 | **Waves 1–4** (Section 5) | **Delivered** — seed pipeline, reference cache, query/modifier/rite refactors, `CharacterDetails` partials, loading/error/modal polish, `DanseMacabre` tabs, `EncounterParts/`, `CharacterAdvancement` sections |
 | **Post-Wave sweep (2026-04-04)** | **Delivered** — `CharacterProgressionSnapshotDto` (#5), `EncounterManager.NpcPicker/SmartLaunch` partials (#20), `MeleeAttackResolveModal` + `Account/Manage` skeletons (#13), `CampaignDetailsParts/` (#30), `GlimpseSocialManeuverParts/` (#32), `StorytellerGlimpseOverview` (#33) |
 | **This document** | **Closed** as the Phase 20 technical-polish **delivery record**; edits here should be **status syncs** or **new backlog rows**, not reopened Wave scope without an explicit mission/plan decision |
-| **§7 rows open** | **#13** / **#14** — minor residuals (see table above). **#19** — **closed** |
-| **Next step** | Optional: **Account/Manage** `alert-rn` pass — see [Next step](#agent-next-step) |
+| **§7 rows open** | **#13** / **#14** optional residuals — **cleared** (2026-04-05). **#19** — **closed** |
+| **Next step** | Phase 20 polish backlog for this doc is **exhausted** unless `mission.md` reopens scope — see [Next step](#agent-next-step) |
 
 ---
 
