@@ -60,6 +60,11 @@
             {
                 <span class="badge-live" style="font-size:0.75rem;">Invite on</span>
             }
+            <button type="button" class="btn-rn-ghost" @onclick="OnOpenDiscordWebhookModal">Discord session updates</button>
+            @if (!string.IsNullOrEmpty(Campaign.DiscordWebhookUrl))
+            {
+                <span class="badge-live" style="font-size:0.75rem;">Discord on</span>
+            }
         </div>
         <PlayerInviteModal IsOpen="@InviteModalOpen"
                            InviteActive="@(!string.IsNullOrEmpty(Campaign.InviteTokenHash))"
@@ -69,6 +74,11 @@
                            OnRegenerate="OnRegenerateInvite"
                            OnClear="OnClearInvite"
                            OnCopy="OnCopyJoinUrl" />
+        <DiscordWebhookModal IsOpen="@DiscordWebhookModalOpen"
+                             InitialWebhookUrl="@Campaign.DiscordWebhookUrl"
+                             Busy="@DiscordWebhookBusy"
+                             OnClose="OnCloseDiscordWebhookModal"
+                             OnSave="OnSaveDiscordWebhook" />
     }
 </div>
 
@@ -123,4 +133,19 @@
 
     [Parameter]
     public EventCallback OnCopyJoinUrl { get; set; }
+
+    [Parameter]
+    public bool DiscordWebhookModalOpen { get; set; }
+
+    [Parameter]
+    public bool DiscordWebhookBusy { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenDiscordWebhookModal { get; set; }
+
+    [Parameter]
+    public EventCallback OnCloseDiscordWebhookModal { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> OnSaveDiscordWebhook { get; set; }
 }

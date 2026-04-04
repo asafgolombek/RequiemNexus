@@ -52,6 +52,8 @@
                                InviteModalOpen="_inviteModalOpen"
                                InviteBusy="_inviteBusy"
                                LastGeneratedJoinUrl="_lastGeneratedJoinUrl"
+                               DiscordWebhookModalOpen="_discordWebhookModalOpen"
+                               DiscordWebhookBusy="_discordWebhookBusy"
                                OnStartSession="StartSession"
                                OnEndSession="EndSession"
                                OnJoinSession="JoinSession"
@@ -60,7 +62,10 @@
                                OnCloseInviteModal="CloseInviteModal"
                                OnRegenerateInvite="RegenerateJoinInvite"
                                OnClearInvite="ClearJoinInvite"
-                               OnCopyJoinUrl="CopyJoinUrl" />
+                               OnCopyJoinUrl="CopyJoinUrl"
+                               OnOpenDiscordWebhookModal="OpenDiscordWebhookModal"
+                               OnCloseDiscordWebhookModal="CloseDiscordWebhookModal"
+                               OnSaveDiscordWebhook="SaveDiscordWebhookAsync" />
 
         <CampaignRosterTabBar ActiveTab="_rosterTab"
                               IsStoryteller="CampaignService.IsStoryteller(_campaign, _currentUserId ?? string.Empty)"

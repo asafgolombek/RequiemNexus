@@ -125,6 +125,9 @@ internal static class InfrastructureServiceExtensions
 
         ISignalRServerBuilder signalrBuilder = builder.Services.AddSignalR();
 
+        // Phase 20: initiative / hub payloads can exceed the default 32 KB cap; Redis backplane above supports multi-instance scale-out.
+        signalrBuilder.AddHubOptions<SessionHub>(o => o.MaximumReceiveMessageSize = 64 * 1024);
+
         if (!builder.Environment.IsEnvironment("Testing"))
         {
             signalrBuilder.AddStackExchangeRedis(redisConnectionString, options =>

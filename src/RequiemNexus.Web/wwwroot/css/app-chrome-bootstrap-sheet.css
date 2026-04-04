@@ -318,8 +318,9 @@
     margin-top: 0.5rem;
 }
 
-/* Player invite modal — comfortable width for URL field */
-.player-invite-modal.modal-panel {
+/* Player invite + Discord webhook modals — comfortable width for URL field */
+.player-invite-modal.modal-panel,
+.discord-webhook-modal.modal-panel {
     max-width: 36rem;
     width: calc(100% - 2rem);
 }

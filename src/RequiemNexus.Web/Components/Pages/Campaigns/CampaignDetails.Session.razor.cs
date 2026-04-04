@@ -150,6 +150,18 @@ public partial class CampaignDetails
         return Task.CompletedTask;
     }
 
+    private Task CloseDiscordWebhookModal()
+    {
+        _discordWebhookModalOpen = false;
+        return Task.CompletedTask;
+    }
+
+    private Task OpenDiscordWebhookModal()
+    {
+        _discordWebhookModalOpen = true;
+        return Task.CompletedTask;
+    }
+
     private async Task RegenerateJoinInvite()
     {
         if (_campaign == null || string.IsNullOrEmpty(_currentUserId))

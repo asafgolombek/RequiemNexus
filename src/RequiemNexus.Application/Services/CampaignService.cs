@@ -7,6 +7,8 @@ using RequiemNexus.Application.Security;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Domain.Models;
+using RequiemNexus.Domain.Services;
 
 namespace RequiemNexus.Application.Services;
 
@@ -469,6 +471,32 @@ public class CampaignService(
 
         _dbContext.SessionPrepNotes.Remove(note);
         await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task SetDiscordWebhookUrlAsync(int campaignId, string? discordWebhookUrl, string stUserId)
+    {
+        await _authHelper.RequireStorytellerAsync(campaignId, stUserId, "configure the Discord session webhook");
+
+        Result<string?> validation = DiscordIncomingWebhookValidator.Validate(discordWebhookUrl);
+        if (!validation.IsSuccess)
+        {
+            throw new InvalidOperationException(validation.Error);
+        }
+
+        Campaign? campaign = await _dbContext.Campaigns.FirstOrDefaultAsync(c => c.Id == campaignId);
+        if (campaign is null)
+        {
+            throw new InvalidOperationException($"Campaign {campaignId} not found.");
+        }
+
+        campaign.DiscordWebhookUrl = validation.Value;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Discord session webhook updated for campaign {CampaignId} by storyteller {UserId}",
+            campaignId,
+            stUserId);
     }
 
     /// <inheritdoc />

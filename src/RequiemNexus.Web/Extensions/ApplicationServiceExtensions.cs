@@ -38,6 +38,16 @@ internal static class ApplicationServiceExtensions
 
         services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
+
+        if (environment.IsEnvironment("Testing"))
+        {
+            services.AddScoped<RequiemNexus.Application.Contracts.ISessionDiscordNotifier, RequiemNexus.Application.RealTime.NullSessionDiscordNotifier>();
+        }
+        else
+        {
+            services.AddScoped<RequiemNexus.Application.Contracts.ISessionDiscordNotifier, RequiemNexus.Application.Services.DiscordWebhookSessionNotifier>();
+        }
+
         services.AddScoped<RequiemNexus.Application.Contracts.IBeatLedgerService, RequiemNexus.Application.Services.BeatLedgerService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IConditionService, RequiemNexus.Application.Services.ConditionService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IStorytellerGlimpseService, RequiemNexus.Application.Services.StorytellerGlimpseService>();

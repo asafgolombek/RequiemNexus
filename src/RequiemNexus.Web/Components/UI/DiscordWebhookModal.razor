@@ -1,0 +1,103 @@
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="CloseAsync">
+        <div class="modal-panel discord-webhook-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="discord-webhook-modal-title">
+            <div class="modal-header">
+                <h3 id="discord-webhook-modal-title">Discord session updates</h3>
+                <button type="button" class="close-btn" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-rn-muted" style="font-size: 0.9rem; margin-bottom: 0.75rem;">
+                    Optional: paste a Discord <strong>incoming webhook</strong> URL to post when the live session starts, ends, or players join or leave.
+                    Create a webhook in your server under Channel settings → Integrations → Webhooks. Only the Storyteller can change this.
+                </p>
+                <label class="form-label-rn" for="discord-webhook-modal-url">Webhook URL</label>
+                <input id="discord-webhook-modal-url"
+                       class="input-rn"
+                       type="url"
+                       autocomplete="off"
+                       placeholder="https://discord.com/api/webhooks/…"
+                       @bind="_draft"
+                       disabled="@Busy" />
+                <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn-rn-primary" disabled="@Busy" @onclick="SaveAsync">Save</button>
+                    <button type="button" class="btn-rn-ghost" disabled="@Busy" @onclick="ClearDraftAsync">Clear field</button>
+                </div>
+                @if (!string.IsNullOrEmpty(_feedback))
+                {
+                    <div class="alert-rn @( _isError ? "alert-danger" : "alert-success" )" style="margin-top: 0.75rem;" role="status">
+                        @_feedback
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-rn-ghost" @onclick="CloseAsync">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public string? InitialWebhookUrl { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> OnSave { get; set; }
+
+    private string _draft = string.Empty;
+    private string? _feedback;
+    private bool _isError;
+    private string? _lastInitialSynced;
+    private bool _wasOpen;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        if (_wasOpen && !IsOpen)
+        {
+            _feedback = null;
+        }
+
+        _wasOpen = IsOpen;
+
+        if (_lastInitialSynced != InitialWebhookUrl)
+        {
+            _lastInitialSynced = InitialWebhookUrl;
+            _draft = InitialWebhookUrl ?? string.Empty;
+        }
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+
+    private async Task ClearDraftAsync()
+    {
+        _draft = string.Empty;
+        _feedback = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SaveAsync()
+    {
+        _feedback = null;
+        _isError = false;
+        try
+        {
+            await OnSave.InvokeAsync(string.IsNullOrWhiteSpace(_draft) ? null : _draft.Trim());
+            _feedback = "Saved.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            _isError = true;
+            _feedback = ex.Message;
+        }
+    }
+}

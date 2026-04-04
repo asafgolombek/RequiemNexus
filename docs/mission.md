@@ -847,7 +847,7 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 ## 📅 Phase 20: The Global Embrace
 
-**Status:** 🔄 **Active** — next roadmap focus after Phase 19.5 closure.
+**Status:** ✅ **Roadmap complete (2026-04-04)** — Discord session webhooks + SignalR production tuning delivered below; further `plan-improvement.md` extractions are **discretionary**.
 
 **The Objective:** Final **production and ops polish**, **Discord** integration, and **remaining optional technical work** (P3+ large-component extractions and related items in `plan-improvement.md`). **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, and 19.5.
 
@@ -855,10 +855,12 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **Technical improvement track (Phase 20 polish):** Performance, large-file decomposition, UI consistency, and SOLID refactors are tracked in **[`docs/plan-improvement.md`](./plan-improvement.md)** (P1–P2 targeted for Phase 20; P3–P4 may extend beyond). Delivery uses **Wave 1–4** sequencing there (not the same numbering as roadmap phases). Review resolutions: [`docs/plan-improvement-review.md`](./plan-improvement-review.md).
 
-**Waves 1–4 — delivered (2026-04-03):** `ISeeder` pipeline + `DbInitializer` orchestration; logging/index alignment; **`IReferenceDataCache`** warmup; **`ICharacterQueryService`** + partial Beats/XP reload / hub echo behavior; **`IModifierProvider`** aggregation in **`ModifierService`**; **`IRiteActivationStrategy`** in **`SorceryActivationService`**; **`CharacterDetails`** split into feature **`CharacterDetails.*.razor.cs`** partials with injects on **`CharacterDetails.razor`**; standardized **`SkeletonLoader`** / **`LoadingContainer`** and hybrid **`ToastService`** + inline validation across listed hub pages; **`CharacterAdvancement`** section components under **`CharacterSheet/`** + toast/inline errors; **`DanseMacabre`** tab panels in **`DanseMacabreTabs/`** (avoids Razor type-name clash with the page); **`EncounterManager`** markup decomposed into **`EncounterParts/`** child components (create/template flows, smart-launch, draft/active/paused/past cards, NPC picker — page keeps orchestration). **Still open (P3+):** large Razor extractions (`DiceRollerModal`, `CampaignDetails`, `InitiativeTracker` markup, `StorytellerGlimpse`, etc.); optional further **`EncounterManager`** code-behind / participant splits (backlog **#20**) — see **`plan-improvement.md`** §5 step 13 and §1.3.
+**Waves 1–4 — delivered (2026-04-03):** `ISeeder` pipeline + `DbInitializer` orchestration; logging/index alignment; **`IReferenceDataCache`** warmup; **`ICharacterQueryService`** + partial Beats/XP reload / hub echo behavior; **`IModifierProvider`** aggregation in **`ModifierService`**; **`IRiteActivationStrategy`** in **`SorceryActivationService`**; **`CharacterDetails`** split into feature **`CharacterDetails.*.razor.cs`** partials with injects on **`CharacterDetails.razor`**; standardized **`SkeletonLoader`** / **`LoadingContainer`** and hybrid **`ToastService`** + inline validation across listed hub pages; **`CharacterAdvancement`** section components under **`CharacterSheet/`** + toast/inline errors; **`DanseMacabre`** tab panels in **`DanseMacabreTabs/`** (avoids Razor type-name clash with the page); **`EncounterManager`** markup decomposed into **`EncounterParts/`** child components (create/template flows, smart-launch, draft/active/paused/past cards, NPC picker — page keeps orchestration).
 
-- [ ] **Discord Rich Presence** — Enhanced webhooks for detailed session summaries and "Coterie Status" updates
-- [ ] **Production Rollout** — Final optimization of SignalR hubs for high-concurrency public traffic
+**Post–Wave 4 technical polish — delivered (2026-04–05):** **`InitiativeTracker`** (`InitiativeParts/`, feature partials, **`InitiativeTracker.SignalR.razor.cs`**); **`DiceRollerModal`** code-behind partials (**`Pool`**, **`RiteExtended`**, **`RollAndHub`**); **`app-chrome.css`** split into ordered **`app-chrome-*.css`** modules (facade imports); optional **`PageTitle`** / **`alert-rn`** consistency pass. The committed **`plan-improvement.md`** technical backlog for Waves 1–4 + listed optional rows is **complete** — see **`docs/plan-improvement.md`** [Status summary](./plan-improvement.md#status-summary). Further extractions are **discretionary** unless a new mission item reopens them.
+
+- [x] **Discord Rich Presence** — Per-campaign Discord **incoming webhook** (ST-only on `CampaignDetails`); `SessionService` posts non-blocking embeds on session start/end and player join/leave (`DiscordWebhookSessionNotifier`, `DiscordIncomingWebhookValidator`). OAuth login remains separate.
+- [x] **Production Rollout** — SignalR **Redis backplane** (existing) + hub `MaximumReceiveMessageSize` 64 KB for initiative-sized payloads; rate limiting on `/hubs/session` (existing).
 
 ---
 

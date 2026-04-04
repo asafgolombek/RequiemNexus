@@ -313,4 +313,62 @@ public class CampaignServiceTests
 
         Assert.Equal(campaign.Id, second.CampaignId);
     }
+
+    [Fact]
+    public async Task SetDiscordWebhookUrlAsync_StorytellerMaySetAndClear()
+    {
+        string dbName = nameof(SetDiscordWebhookUrlAsync_StorytellerMaySetAndClear);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Hook", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        const string url = "https://discord.com/api/webhooks/1/abcdefgh";
+        await service.SetDiscordWebhookUrlAsync(campaign.Id, url, "st");
+
+        Campaign? reloaded = await ctx.Campaigns.AsNoTracking().SingleAsync(c => c.Id == campaign.Id);
+        Assert.Equal(url, reloaded.DiscordWebhookUrl);
+
+        await service.SetDiscordWebhookUrlAsync(campaign.Id, null, "st");
+        reloaded = await ctx.Campaigns.AsNoTracking().SingleAsync(c => c.Id == campaign.Id);
+        Assert.Null(reloaded.DiscordWebhookUrl);
+    }
+
+    [Fact]
+    public async Task SetDiscordWebhookUrlAsync_RejectsNonStoryteller()
+    {
+        string dbName = nameof(SetDiscordWebhookUrlAsync_RejectsNonStoryteller);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "X", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.SetDiscordWebhookUrlAsync(
+                campaign.Id,
+                "https://discord.com/api/webhooks/1/tok",
+                "not-st"));
+    }
+
+    [Fact]
+    public async Task SetDiscordWebhookUrlAsync_RejectsInvalidUrl()
+    {
+        string dbName = nameof(SetDiscordWebhookUrlAsync_RejectsInvalidUrl);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "X", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SetDiscordWebhookUrlAsync(campaign.Id, "https://example.com/hook", "st"));
+    }
 }

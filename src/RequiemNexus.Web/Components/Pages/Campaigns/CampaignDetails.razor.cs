@@ -64,6 +64,27 @@ public partial class CampaignDetails : IDisposable
     private string _rosterTab = "players";
 
     private bool _inviteModalOpen;
+    private bool _discordWebhookModalOpen;
+    private bool _discordWebhookBusy;
+
+    private async Task SaveDiscordWebhookAsync(string? url)
+    {
+        if (_campaign == null || string.IsNullOrEmpty(_currentUserId))
+        {
+            return;
+        }
+
+        _discordWebhookBusy = true;
+        try
+        {
+            await CampaignService.SetDiscordWebhookUrlAsync(_campaign.Id, url, _currentUserId).ConfigureAwait(false);
+            _campaign = await CampaignService.GetCampaignByIdAsync(Id, _currentUserId).ConfigureAwait(false);
+        }
+        finally
+        {
+            _discordWebhookBusy = false;
+        }
+    }
 
     private async Task OnRosterTabChangedAsync(string tab)
     {
