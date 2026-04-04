@@ -50,34 +50,30 @@
     {
         <div class="initiative-page-grid">
         <div class="initiative-page-main">
-        <div class="campaign-header">
-            <div>
-                <h2>⚔️ @_encounter.Name</h2>
-                <span style="font-size:0.85em;color:var(--gothic-muted);">
-                    @if (_encounter.IsActive && !_encounter.IsDraft)
-                    {
-                        <text>Round @_encounter.CurrentRound · Active</text>
-                    }
-                    else if (_encounter.IsDraft)
-                    {
-                        <text>Draft — start from Encounter Manager to begin combat</text>
-                    }
-                    else if (_encounter.IsPaused)
-                    {
-                        <text>Paused — resume from Encounter Manager to continue combat</text>
-                    }
-                    else if (_encounter.ResolvedAt != null)
-                    {
-                        <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
-                    }
-                    else
-                    {
-                        <text>Inactive</text>
-                    }
-                </span>
-            </div>
-            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Encounters</a>
-        </div>
+        <InitiativeEncounterPageHeader CampaignId="CampaignId" EncounterName="@_encounter.Name">
+            <StatusLine>
+                @if (_encounter.IsActive && !_encounter.IsDraft)
+                {
+                    <text>Round @_encounter.CurrentRound · Active</text>
+                }
+                else if (_encounter.IsDraft)
+                {
+                    <text>Draft — start from Encounter Manager to begin combat</text>
+                }
+                else if (_encounter.IsPaused)
+                {
+                    <text>Paused — resume from Encounter Manager to continue combat</text>
+                }
+                else if (_encounter.ResolvedAt != null)
+                {
+                    <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
+                }
+                else
+                {
+                    <text>Inactive</text>
+                }
+            </StatusLine>
+        </InitiativeEncounterPageHeader>
 
         <InitiativeAddParticipantPanel Visible="@(_isSt && _encounter.ResolvedAt == null && !_encounter.IsPaused)"
                                        CampaignId="CampaignId"

@@ -599,7 +599,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 | O-8 | P4 | Domain / Application | Future **`IModifierProvider`** s — **policy recorded** on **`ModifierService`** XML; new providers when rules + data exist (no empty provider types) |
 | O-9 | P4 | Infrastructure | Export concurrency — **delivered** — **`CharacterExportConcurrency`** (`SemaphoreSlim` depth **2**) wraps PDF/JSON **`Task.Run`** (not a **`Channel<T>`** worker; upgrade path unchanged) |
 | O-10 | P4 | Application | **`IReferenceDataCache.FlushAsync`** — **delivered** — + **`LoadFromDatabaseAsync(..., forceReload)`**; admin pipelines call **`FlushAsync`** when definition editing ships |
-| O-11 | P3 | Domain | **`IContextualTraitResolver`** — **deferred** until a **`PoolTraitType`** is proven to need async/service/campaign context (inventory-first) |
+| O-11 | P3 | Application | **Inventory closed (2026-04-05):** trait sources documented on **`ITraitResolver`** / **`TraitResolver`** — no separate **`PoolTraitType`**; no contextual resolver until a trait needs campaign/session context beyond **`IModifierService`** |
 | O-12 | P4 | Web | **`CharacterDetailsPackTab`** — **canonical** shipped name; early plan **`CharacterPackTab`** wording retired without rename churn |
 
 ### O-1 — In-sheet rules browser (`OpenReference`) — **delivered (MVP)**
@@ -678,12 +678,11 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Dependencies:** Admin definition-edit feature.
 - **Exit criteria:** Contract implemented; invalidation semantics documented.
 
-### O-11 — Contextual trait resolution — **deferred**
+### O-11 — Contextual trait resolution — **inventory closed (2026-04-05)**
 
-- **Goal:** If any **`PoolTraitType`** cannot be a synchronous **`Character` → `int`** read, isolate in **`IContextualTraitResolver`** or explicit non-dictionary branches in **`TraitResolver`**.
-- **Primary files:** `TraitResolver.cs`, new types if needed.
-- **Dependencies:** Full inventory of traits vs. current **`FrozenDictionary`** coverage.
-- **Exit criteria:** Correct pool sizes for contested/contextual traits; **`RequiemNexus.Domain.Tests`** updated.
+- **Outcome:** Inventory is documented on **`ITraitResolver`** (remarks): base pools use **`TraitType`** Attribute / Skill / Discipline on **`Character`** only; **`ResolvePoolAsync`** adds **`IModifierService`** deltas. No pool trait today needs a separate campaign- or session-scoped resolver. **`IContextualTraitResolver`** remains a future hook if a trait cannot be expressed that way.
+- **Primary files:** `Application/Contracts/ITraitResolver.cs`, `Application/Services/TraitResolver.cs`.
+- **Exit criteria:** Inventory explicit in XML; no behavioral change required until a new trait appears.
 
 ### O-12 — `CharacterPackTab` naming — **resolved (canonical `CharacterDetailsPackTab`)**
 

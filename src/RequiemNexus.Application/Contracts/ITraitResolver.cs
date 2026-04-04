@@ -7,6 +7,15 @@ namespace RequiemNexus.Application.Contracts;
 /// Phase 9: supports additive pools, penalty dice, lower-of, and modifier injection.
 /// Untrained skills (0 dots) in the pool each apply −1 die before modifiers in <see cref="ResolvePool"/> (and thus in <see cref="ResolvePoolAsync"/>).
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>Trait resolution inventory (O-11, 2026-04-05):</b> Base pool dice come only from <see cref="RequiemNexus.Domain.Enums.TraitType"/>
+/// <c>Attribute</c>, <c>Skill</c>, and <c>Discipline</c> via synchronous reads on <see cref="RequiemNexus.Data.Models.Character"/>
+/// (see <see cref="RequiemNexus.Application.Services.TraitResolver"/>). Conditional dice use <see cref="IModifierService"/> in
+/// <see cref="ResolvePoolAsync"/>; no pool trait today requires a separate campaign- or session-scoped resolver. If a future trait needs
+/// external context beyond modifiers, introduce an explicit contract (for example <c>IContextualTraitResolver</c>) rather than overloading this interface.
+/// </para>
+/// </remarks>
 public interface ITraitResolver
 {
     /// <summary>

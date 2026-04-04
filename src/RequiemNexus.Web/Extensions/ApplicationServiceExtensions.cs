@@ -3,6 +3,7 @@ using RequiemNexus.Application.Events;
 using RequiemNexus.Application.Events.Handlers;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Domain.Events;
+using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Extensions;
 
@@ -18,6 +19,8 @@ internal static class ApplicationServiceExtensions
     /// <param name="environment">Host environment; <c>Testing</c> skips reference-cache warmup so E2E fixtures can migrate, seed, then load the cache.</param>
     internal static void AddApplicationServices(this IServiceCollection services, IHostEnvironment environment)
     {
+        services.AddSingleton<ExternalAuthAvailability>();
+
         services.AddSingleton<ReferenceDataCache>();
         services.AddSingleton<RequiemNexus.Application.Contracts.IReferenceDataCache>(sp => sp.GetRequiredService<ReferenceDataCache>());
         if (!environment.IsEnvironment("Testing"))

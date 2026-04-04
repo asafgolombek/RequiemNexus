@@ -11,6 +11,9 @@ namespace RequiemNexus.Application.Services;
 /// Resolves a <see cref="PoolDefinition"/> into a dice pool integer by hydrating each trait
 /// from the character's ratings. Phase 9: supports additive pools, penalty dice, lower-of, and modifiers.
 /// </summary>
+/// <remarks>
+/// Base trait contributions use only <see cref="TraitType"/> Attribute, Skill, and Discipline (see <see cref="ITraitResolver"/> remarks for O-11 inventory).
+/// </remarks>
 public class TraitResolver(IModifierService modifierService) : ITraitResolver
 {
     private static readonly FrozenDictionary<TraitType, Func<Character, TraitReference, int>> _traitRatingResolvers =

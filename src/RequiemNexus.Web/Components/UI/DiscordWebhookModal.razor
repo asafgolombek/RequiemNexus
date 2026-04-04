@@ -1,7 +1,9 @@
+@using Microsoft.AspNetCore.Components
+
 @if (IsOpen)
 {
     <div class="modal-backdrop" @onclick="CloseAsync">
-        <div class="modal-panel discord-webhook-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="discord-webhook-modal-title">
+        <div class="modal-panel discord-webhook-modal" @onclick:stopPropagation role="dialog" aria-modal="true" aria-labelledby="discord-webhook-modal-title" tabindex="-1">
             <div class="modal-header">
                 <h3 id="discord-webhook-modal-title">Discord session updates</h3>
                 <button type="button" class="close-btn" @onclick="CloseAsync" aria-label="Close">×</button>
@@ -13,6 +15,7 @@
                 </p>
                 <label class="form-label-rn" for="discord-webhook-modal-url">Webhook URL</label>
                 <input id="discord-webhook-modal-url"
+                       @ref="_urlInput"
                        class="input-rn"
                        type="url"
                        autocomplete="off"
@@ -53,11 +56,37 @@
     [Parameter]
     public EventCallback<string?> OnSave { get; set; }
 
+    private ElementReference _urlInput;
     private string _draft = string.Empty;
     private string? _feedback;
     private bool _isError;
     private string? _lastInitialSynced;
     private bool _wasOpen;
+    private bool _urlFieldHadOpenCycle;
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsOpen && !_urlFieldHadOpenCycle)
+        {
+            try
+            {
+                await _urlInput.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // Pre-rendering or hosts without a live DOM.
+            }
+
+            _urlFieldHadOpenCycle = true;
+        }
+        else if (!IsOpen)
+        {
+            _urlFieldHadOpenCycle = false;
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
 
     /// <inheritdoc />
     protected override void OnParametersSet()
