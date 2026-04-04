@@ -226,6 +226,14 @@ Create one class per concern under `RequiemNexus.Data/Seeding/`:
 
 **Delivered:** `NpcDetail.razor.cs` (page logic + `_attributeCategories` / `_skillCategories`); **`NpcDetailParts/`** — `NpcDetailPageHeader`, `NpcDetailAttributesCard`, `NpcDetailSkillsCard`, `NpcDetailStatBlockCard`, `NpcDetailDangerZone`; **`NpcDetailStatsHelper`** for JSON stat deserialization (StyleCop-safe ordering vs. inline `private static` parse).
 
+#### `FactionDetail.razor` — ~326 lines combined (P3) — **discretionary (2026-04-06)**
+
+**Delivered:** `FactionDetail.razor.cs`; **`FactionDetailParts/`** — `FactionDetailPageHeader`, `FactionDetailMembersCard`, `FactionDetailTerritoriesCard`, `FactionDetailRelationsCard` (table + add-relationship form with explicit `value`/`onchange` two-way), `FactionDetailDangerZone`. Edit faction card remains on the page (same pattern as `NpcDetail`).
+
+#### `SocialManeuversSection.razor` — ~380 lines (P3) — **discretionary (2026-04-06)**
+
+**Delivered:** `SocialManeuversSection.razor.cs` (inject, load, SignalR + timer, rolls, `IDisposable`); **`SocialManeuverSheetDisplayHelper`** (`FormatDuration`, `GetTimingMessage`, `GetClueThreshold`); **`SocialManeuversSectionParts/SocialManeuverCard.razor`** (clues + open/force door row; shared pool/benefit dictionaries from parent).
+
 ---
 
 ## Section 2 — SOLID Principles
@@ -738,6 +746,8 @@ Future extractions and polish: see [Optional backlog](#optional-backlog). This a
 | `StorytellerGlimpsePinnedNpcsSection.razor`, `StorytellerGlimpseCharacterVitalsGrid.razor` | Pinned NPC strip + PC vitals / awards grid on Glimpse overview (O-5 incremental) |
 | `StorytellerGlimpse.Awards` / `.Chrome` / `.SignalR` / `.PassiveAura` / `.Degeneration` `.razor.cs` | Glimpse page code-behind decomposition (O-5 / §1.3, 2026-04-06) |
 | `NpcDetailParts/*`, `NpcDetailStatsHelper` | ST NPC editor — header, attribute/skill cards, stat-block link, danger zone; stats JSON parse helper (§1.3 discretionary, 2026-04-06) |
+| `FactionDetailParts/*` | ST faction editor — header, members, territories, relations + add form, danger zone (§1.3 discretionary, 2026-04-06) |
+| `SocialManeuversSectionParts/SocialManeuverCard`, `SocialManeuverSheetDisplayHelper` | Character sheet social maneuver list; display helper for timing/clue threshold (§1.3 discretionary, 2026-04-06) |
 | `ExternalAuthAvailability` | Hide Google/Discord login UI when OAuth client id/secret are unset or placeholder (`not-configured`) — `Login.razor`, `LinkedAccounts.razor` |
 | `DotScale.razor.css` | Trait label button default/hover/focus: bone-white on dark panels for WCAG AA (E2E axe / advancement) |
 | `DiscordWebhookModal.razor` | Focus webhook URL field when modal opens (keyboard / SR) |

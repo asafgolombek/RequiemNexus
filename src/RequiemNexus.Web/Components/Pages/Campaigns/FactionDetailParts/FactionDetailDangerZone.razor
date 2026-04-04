@@ -1,0 +1,41 @@
+<div class="danger-zone" style="margin-top:2rem;">
+    @if (ShowConfirmDelete)
+    {
+        <div class="confirm-card card-rn">
+            <p>⚠️ Delete faction <strong>@FactionName</strong>? This cannot be undone.</p>
+            <button type="button" class="btn-rn-primary" disabled="@Busy" @onclick="OnConfirmDelete">Yes, Delete</button>
+            <button type="button" class="btn-rn-ghost" @onclick="OnCancelDelete">Cancel</button>
+        </div>
+    }
+    else
+    {
+        <button type="button" class="btn-rn-ghost" @onclick="OnRequestDelete">🗑 Delete Faction</button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string FactionName { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool ShowConfirmDelete { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ShowConfirmDeleteChanged { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirmDelete { get; set; }
+
+    private async Task OnRequestDelete()
+    {
+        await ShowConfirmDeleteChanged.InvokeAsync(true);
+    }
+
+    private async Task OnCancelDelete()
+    {
+        await ShowConfirmDeleteChanged.InvokeAsync(false);
+    }
+}

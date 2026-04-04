@@ -1,0 +1,174 @@
+@using System.Linq
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+
+<li class="trait-item" style="flex-direction:column;align-items:stretch;margin-bottom:1rem;">
+    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+        <strong>@Maneuver.TargetNpc?.Name</strong>
+        <span class="condition-badge" style="font-size:0.75em;">@Maneuver.Status</span>
+    </div>
+    <p style="font-size:0.85em;color:var(--text-secondary);margin:0.35rem 0;">@Maneuver.GoalDescription</p>
+    <div style="font-size:0.85em;margin-bottom:0.35rem;">
+        <strong>Doors:</strong> @Maneuver.RemainingDoors / @Maneuver.InitialDoors ·
+        <strong>Impression:</strong> @Maneuver.CurrentImpression ·
+        <strong>Penalty dice:</strong> @Maneuver.CumulativePenaltyDice
+    </div>
+    <p style="font-size:0.82em;color:var(--accent-warm);margin:0;">@TimingMessage</p>
+    <p style="font-size:0.78em;color:var(--text-secondary);margin:0.35rem 0 0;">
+        Investigation toward clue: @Maneuver.InvestigationProgressTowardNextClue / @ClueThreshold
+    </p>
+    @if (Maneuver.Clues.Any())
+    {
+        <ul style="list-style:none;padding:0;margin:0.4rem 0 0;font-size:0.8em;">
+            @foreach (ManeuverClue clue in Maneuver.Clues.OrderByDescending(c => c.Id))
+            {
+                <li style="padding:0.2rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+                    @if (clue.IsSpent)
+                    {
+                        <span style="color:var(--text-secondary);">Spent:</span>
+                        @clue.SourceDescription <span style="font-style:italic;">— @clue.Benefit</span>
+                    }
+                    else
+                    {
+                        <div><strong>Clue</strong> · @clue.SourceDescription <span style="color:var(--text-secondary);">(@clue.LeverageKind)</span></div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.25rem;">
+                            <input class="form-control" style="flex:1;min-width:100px;font-size:0.9em;"
+                                   placeholder="Recorded benefit…"
+                                   aria-label="Recorded benefit when spending this clue"
+                                   value="@SpendBenefits.GetValueOrDefault(clue.Id, string.Empty)"
+                                   @onchange="e => OnClueBenefitInput(clue.Id, e)" />
+                            <button type="button" class="btn-rn-primary" style="font-size:0.75em;" disabled="@Busy"
+                                    @onclick="() => OnSpendClue.InvokeAsync(clue.Id)">Spend</button>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    @if (Maneuver.Status == ManeuverStatus.Active)
+    {
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.08);">
+            <span style="font-size:0.8em;" id="@($"open-pool-label-{Maneuver.Id}")">Open Door pool</span>
+            <input type="number" class="form-control" style="width:52px;" min="0" max="50"
+                   aria-labelledby="@($"open-pool-label-{Maneuver.Id}")"
+                   value="@OpenDoorPools.GetValueOrDefault(Maneuver.Id, 5)"
+                   @onchange="e => OnOpenPoolInput(e)" />
+            <button type="button" class="btn-rn-primary" style="font-size:0.8em;" disabled="@Busy"
+                    @onclick="() => OnRollOpen.InvokeAsync(Maneuver.Id)">Roll open</button>
+            <span style="font-size:0.8em;margin-left:0.35rem;" id="@($"force-pool-label-{Maneuver.Id}")">Force pool</span>
+            <input type="number" class="form-control" style="width:52px;" min="0" max="50"
+                   aria-labelledby="@($"force-pool-label-{Maneuver.Id}")"
+                   value="@ForceDoorPools.GetValueOrDefault(Maneuver.Id, 5)"
+                   @onchange="e => OnForcePoolInput(e)" />
+            <label style="font-size:0.78em;">
+                <input type="checkbox" checked="@ForceHardLeverage.GetValueOrDefault(Maneuver.Id)" @onchange="OnForceHardInput" /> Hard leverage
+            </label>
+            @if (ForceHardLeverage.GetValueOrDefault(Maneuver.Id))
+            {
+                <label style="font-size:0.78em;">BP sev.
+                    <input type="number" class="form-control" style="display:inline-block;width:48px;" min="0" max="10"
+                           aria-label="Breaking point severity for hard leverage"
+                           value="@ForceBpSeverity.GetValueOrDefault(Maneuver.Id, 7)"
+                           @onchange="e => OnForceBpInput(e)" />
+                </label>
+            }
+            <button type="button" class="btn-rn-danger" style="font-size:0.8em;" disabled="@Busy"
+                    @onclick="() => OnRollForce.InvokeAsync(Maneuver.Id)">Roll force</button>
+        </div>
+    }
+</li>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public SocialManeuver Maneuver { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
+    public string TimingMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public int ClueThreshold { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Dictionary<int, int> OpenDoorPools { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
+    public Dictionary<int, int> ForceDoorPools { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
+    public Dictionary<int, bool> ForceHardLeverage { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
+    public Dictionary<int, int> ForceBpSeverity { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
+    public Dictionary<int, string> SpendBenefits { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnPoolsOrBenefitsChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSpendClue { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRollOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRollForce { get; set; }
+
+    private async Task OnClueBenefitInput(int clueId, ChangeEventArgs e)
+    {
+        SpendBenefits[clueId] = e.Value?.ToString() ?? string.Empty;
+        await OnPoolsOrBenefitsChanged.InvokeAsync();
+    }
+
+    private async Task OnOpenPoolInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            OpenDoorPools[Maneuver.Id] = v;
+        }
+
+        await OnPoolsOrBenefitsChanged.InvokeAsync();
+    }
+
+    private async Task OnForcePoolInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            ForceDoorPools[Maneuver.Id] = v;
+        }
+
+        await OnPoolsOrBenefitsChanged.InvokeAsync();
+    }
+
+    private async Task OnForceHardInput(ChangeEventArgs e)
+    {
+        ForceHardLeverage[Maneuver.Id] = e.Value switch
+        {
+            bool b => b,
+            string s when bool.TryParse(s, out bool p) => p,
+            _ => false,
+        };
+        await OnPoolsOrBenefitsChanged.InvokeAsync();
+    }
+
+    private async Task OnForceBpInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            ForceBpSeverity[Maneuver.Id] = v;
+        }
+
+        await OnPoolsOrBenefitsChanged.InvokeAsync();
+    }
+}

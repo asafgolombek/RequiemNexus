@@ -1,0 +1,23 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3>Controlled Territories</h3>
+    @if (!Faction.ControlledTerritories.Any())
+    {
+        <p class="text-muted">No territories controlled.</p>
+    }
+    else
+    {
+        <ul style="list-style:none;padding:0;">
+            @foreach (FeedingTerritory t in Faction.ControlledTerritories)
+            {
+                <li>@t.Name <span class="badge-rn">Rating @t.Rating</span></li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public CityFaction Faction { get; set; } = default!;
+}
