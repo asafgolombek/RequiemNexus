@@ -222,6 +222,10 @@ Create one class per concern under `RequiemNexus.Data/Seeding/`:
 
 **Delivered (2026-04-04):** `StorytellerGlimpseOverview` wrapper + scoped overview CSS + social/pending panel CSS splits — §7 **#33**. **Delivered (2026-04-06):** code-behind split into feature partials mirroring **`InitiativeTracker`**: `StorytellerGlimpse.Awards.razor.cs`, `StorytellerGlimpse.Chrome.razor.cs`, `StorytellerGlimpse.SignalR.razor.cs`, `StorytellerGlimpse.PassiveAura.razor.cs`, `StorytellerGlimpse.Degeneration.razor.cs`; main `StorytellerGlimpse.razor.cs` keeps fields, load pipeline, and dispose. Overview child components remain under **`StorytellerGlimpseOverviewParts/`** (O-5).
 
+#### `NpcDetail.razor` — ~388 lines markup (P3) — **discretionary (2026-04-06)**
+
+**Delivered:** `NpcDetail.razor.cs` (page logic + `_attributeCategories` / `_skillCategories`); **`NpcDetailParts/`** — `NpcDetailPageHeader`, `NpcDetailAttributesCard`, `NpcDetailSkillsCard`, `NpcDetailStatBlockCard`, `NpcDetailDangerZone`; **`NpcDetailStatsHelper`** for JSON stat deserialization (StyleCop-safe ordering vs. inline `private static` parse).
+
 ---
 
 ## Section 2 — SOLID Principles
@@ -733,6 +737,7 @@ Future extractions and polish: see [Optional backlog](#optional-backlog). This a
 | `StorytellerGlimpseCoterieBeatAwardCard.razor` | Coterie Beat drag + “Award to All” card in overview (O-5 incremental) |
 | `StorytellerGlimpsePinnedNpcsSection.razor`, `StorytellerGlimpseCharacterVitalsGrid.razor` | Pinned NPC strip + PC vitals / awards grid on Glimpse overview (O-5 incremental) |
 | `StorytellerGlimpse.Awards` / `.Chrome` / `.SignalR` / `.PassiveAura` / `.Degeneration` `.razor.cs` | Glimpse page code-behind decomposition (O-5 / §1.3, 2026-04-06) |
+| `NpcDetailParts/*`, `NpcDetailStatsHelper` | ST NPC editor — header, attribute/skill cards, stat-block link, danger zone; stats JSON parse helper (§1.3 discretionary, 2026-04-06) |
 | `ExternalAuthAvailability` | Hide Google/Discord login UI when OAuth client id/secret are unset or placeholder (`not-configured`) — `Login.razor`, `LinkedAccounts.razor` |
 | `DotScale.razor.css` | Trait label button default/hover/focus: bone-white on dark panels for WCAG AA (E2E axe / advancement) |
 | `DiscordWebhookModal.razor` | Focus webhook URL field when modal opens (keyboard / SR) |

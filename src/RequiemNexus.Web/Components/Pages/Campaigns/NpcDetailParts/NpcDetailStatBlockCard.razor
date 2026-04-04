@@ -1,0 +1,45 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3>Stat Block</h3>
+    @if (Npc.LinkedStatBlockId.HasValue)
+    {
+        <p class="text-muted">Stat block linked (Id=@Npc.LinkedStatBlockId). Full stat block display available once M7 (NPC Stat Blocks) is complete.</p>
+        <div class="form-group">
+            <label>Linked Stat Block Id</label>
+            <input class="form-control" type="number" value="@EditStatBlockId" @onchange="OnStatBlockInputAsync" />
+            <button type="button" class="btn-rn-ghost" disabled="@Busy" @onclick="OnSaveLink">Update Link</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">No stat block linked.</p>
+        <div class="form-group" style="display:flex;gap:1rem;align-items:center;">
+            <input class="form-control" type="number" placeholder="Stat Block Id" value="@EditStatBlockId" @onchange="OnStatBlockInputAsync" style="max-width:200px;" />
+            <button type="button" class="btn-rn-ghost" disabled="@(EditStatBlockId == null || Busy)" @onclick="OnSaveLink">Link Stat Block</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ChronicleNpc Npc { get; set; } = default!;
+
+    [Parameter]
+    public int? EditStatBlockId { get; set; }
+
+    [Parameter]
+    public EventCallback<int?> EditStatBlockIdChanged { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveLink { get; set; }
+
+    private async Task OnStatBlockInputAsync(ChangeEventArgs e)
+    {
+        int? next = int.TryParse(e.Value?.ToString(), out int n) ? n : null;
+        await EditStatBlockIdChanged.InvokeAsync(next);
+    }
+}
