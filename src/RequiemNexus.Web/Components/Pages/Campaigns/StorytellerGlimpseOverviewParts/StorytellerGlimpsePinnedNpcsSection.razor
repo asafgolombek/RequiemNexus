@@ -1,0 +1,49 @@
+@using RequiemNexus.Data.Models
+
+@if (PinnedNpcIds.Count > 0)
+{
+    <h3 class="section-header">Pinned NPCs</h3>
+    <div class="character-grid mb-lg">
+        @foreach (int npcId in PinnedNpcIds)
+        {
+            ChronicleNpc? npc = Npcs.FirstOrDefault(n => n.Id == npcId);
+            if (npc != null)
+            {
+                <div class="card-rn glimpse-card active">
+                    <div class="glimpse-card-header">
+                        <h4>📌 @npc.Name</h4>
+                        <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => OnTogglePin.InvokeAsync(npc.Id)">📍 Unpin</button>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(npc.Title))
+                    {
+                        <p class="text-small text-muted-rn mb-sm">@npc.Title</p>
+                    }
+
+                    <div class="glimpse-stats">
+                        <span>🎭 @npc.CreatureType</span>
+                        @if (npc.PrimaryFaction != null)
+                        {
+                            <span>⚔️ @npc.PrimaryFaction.Name</span>
+                        }
+                    </div>
+
+                    <p class="text-xsmall text-muted-rn">
+                        <em>NPC Vitals (Damage tracking deferred to Phase 11)</em>
+                    </p>
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyCollection<int> PinnedNpcIds { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<ChronicleNpc> Npcs { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<int> OnTogglePin { get; set; }
+}

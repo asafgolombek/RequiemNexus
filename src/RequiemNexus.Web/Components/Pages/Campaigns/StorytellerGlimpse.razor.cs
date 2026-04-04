@@ -27,7 +27,8 @@ namespace RequiemNexus.Web.Components.Pages.Campaigns;
 /// Decomposition:
 /// - <see cref="GlimpseSocialManeuvers"/> handles Phase 10 social state.
 /// - <see cref="GlimpsePendingRequests"/> handles approvals (Bloodlines, Covenants, etc).
-/// - Main page manages coterie vitals and awards.
+/// - Overview tab composes <c>StorytellerGlimpseOverviewParts</c> (pinned NPCs, character vitals grid, aura, coterie Beat, degeneration banners).
+/// - Main page manages state, services, and award/drag handlers.
 /// </summary>
 public partial class StorytellerGlimpse : IAsyncDisposable
 {
@@ -322,11 +323,6 @@ public partial class StorytellerGlimpse : IAsyncDisposable
         {
             _pinnedNpcIds.Add(id);
         }
-    }
-
-    private static int BarPct(int cur, int max)
-    {
-        return max <= 0 ? 0 : Math.Clamp(cur * 100 / max, 0, 100);
     }
 
     private void OpenLineageEditor(int characterId)

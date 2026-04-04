@@ -74,7 +74,7 @@
 
 **Committed §7 / Wave work:** **exhausted** — do not add new §7 rows for items already covered by #17 / #19 / #20.
 
-**Further technical polish:** the **[Optional backlog](#optional-backlog)** (O-1 … O-12) is **largely delivered or closed** as of 2026-04-05 — see the summary table. New work should be scoped in **`mission.md`** or a fresh task; do not treat historical O-rows as an open implied backlog unless reopened there.
+**Further technical polish:** the **[Optional backlog](#optional-backlog)** (O-1 … O-12) is **closed as a delivered / N/A / inventory set** as of 2026-04-05 — see the summary table. **Do not** treat the O-table as an implied “pick next row” queue. Further polish needs **explicit scope** in **`mission.md`**, a new task, or a newly named backlog row from the owner — not silent resurrection of O-IDs.
 
 **UX conventions (already delivered, still apply):** **`PageTitle`:** `{Screen} — Requiem Nexus`** (em dash); **`alert` + `alert-rn`** for page-level alerts outside hub empty-states (hub empty-state **`alert-rn`** remains intentional per §4.2).
 
@@ -118,6 +118,8 @@ Files over ~300 lines are a maintenance red flag. The list below excludes the `M
 **Delivered (#19):** `InitiativeTracker.SignalR.razor.cs` — hub subscription registration + `InitiativeUpdated` / `CharacterUpdated` handlers (file renamed from `*.Session.razor.cs` for discoverability, 2026-04-04). `InitiativeTracker.EncounterLoad.razor.cs` — `_loadEncounterCts` for cancelable encounter loads. `IInitiativeTrackerDragState` — scoped drag item for reorder. **Loading:** `<SkeletonLoader Variant="tracker" />` per §4.1.
 
 **Delivered (P3, 2026-04-04):** Child components under `Web/Components/Pages/Campaigns/InitiativeParts/` — add-participant card, turn toolbar, order list + per-row UI (tilts + ST combat actions + NPC roll panel host), blood-log sidebar; initiative row/list CSS in `InitiativeOrderList.razor.css`.
+
+**Discretionary (2026-04-05):** **`InitiativeEncounterPageHeader`** in `InitiativeParts/` — encounter title + status line via `RenderFragment` (`InitiativeTracker.razor` composes round/draft/paused/resolved text).
 
 **See also:** §1.3 (`InitiativeTracker`) for a Razor-focused summary; backlog **#19**.
 
@@ -589,7 +591,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 
 | ID | Priority | Area | Item |
 |---|---|---|---|
-| O-1 | P3 | Web / UX | In-sheet trait reference — **delivered (MVP)** — **`TraitRulesReferenceModal`** + **`OpenReference`** (book citation + dismiss; searchable seeded rule text remains product backlog) |
+| O-1 | P3 | Web / UX | In-sheet trait reference — **delivered (MVP)** — **`TraitRulesReferenceModal`** + **`OpenReference`**; **content policy:** no verbatim **V:tR 2e** book text in-app (see O-1 subsection); deeper UX = original summaries / play aids + optional name search only |
 | O-2 | P3 | Application | **`ICharacterProgressionService`** — Beat/XP slice of **`CharacterManagementService`** — **delivered** (`CharacterProgressionService`, façade forwards on **`CharacterManagementService`**) |
 | O-3 | P3 | Application | **`CampaignService`** — lore + session prep collaborators — **delivered** (`ICampaignLoreService` / **`CampaignLoreService`**, **`ICampaignSessionPrepService` / `CampaignSessionPrepService`**, **`CampaignService`** façade) |
 | O-4 | P2–P3 | Application / SignalR | Hub **`CharacterUpdateDto`** patch — **delivered** — **`CharacterDetails.Session`** applies **`CharacterUpdateDtoApplier`** instead of full **`ReloadCharacterAsync`** on **`ReceiveCharacterUpdate`** (bloodline/chronicle paths still reload) |
@@ -604,10 +606,11 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 
 ### O-1 — In-sheet rules browser (`OpenReference`) — **delivered (MVP)**
 
-- **Goal:** Replace or supplement the interim **info toast** (book pointer) with searchable in-sheet rules content for the active trait.
-- **Primary files:** `CharacterDetails` (OpenReference flow); new modal/panel components under `Components/` as designed; rules content source (seed/static) per product.
-- **Dependencies:** Product decision on content scope and sourcing.
-- **Exit criteria:** Reader can open, read, and dismiss rules without leaving the sheet; focus management and **`aria-modal`** consistent with other modals.
+- **Content policy (recorded):** Requiem Nexus **does not ship copyrighted book text** from *Vampire: The Requiem* Second Edition (or other Onyx Path / Paradox IP) inside the app. Any **future** in-sheet “rules depth” must use **original** copy only: short **paraphrases**, **table play aids**, **ST-facing reminders**, or **pointers** (“see your core book, p. …”) — not paste-ups of published wording.
+- **Goal:** Replace or supplement the interim **info toast** (book pointer) with searchable in-sheet **app-owned** help for the active trait (name filter / list over JSON or seed data), within the policy above.
+- **Primary files:** `CharacterDetails` (OpenReference flow); **`TraitRulesReferenceModal`**; optional `wwwroot` JSON or seed pipeline for **non-copyright** snippets keyed by trait id/name.
+- **Dependencies:** Curated **original** snippet set (or generator workflow); optional licensed excerpt only with explicit publisher approval (out of band).
+- **Exit criteria:** Reader can open, read, and dismiss help without leaving the sheet; focus management and **`aria-modal`** consistent with other modals.
 - **Tests:** Extend **Application** / **Web** tests if logic moves to services; **Domain** tests for any new parsing rules.
 
 ### O-2 — `ICharacterProgressionService` — **delivered**
@@ -641,6 +644,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Dependencies:** None.
 - **Exit criteria:** Measurable reduction in overview markup or code-behind; scoped CSS with **`::deep`** where needed.
 - **Tests:** Regression / manual ST flows unless logic extracted to services.
+- **Delivered components (incremental):** `StorytellerGlimpseOverviewParts/StorytellerGlimpseDegenerationBanners.razor`, `StorytellerGlimpsePassivePredatoryAuraCard.razor`, **`StorytellerGlimpseCoterieBeatAwardCard.razor`** (coterie Beat drag + award), **`StorytellerGlimpsePinnedNpcsSection`**, **`StorytellerGlimpseCharacterVitalsGrid`** (overview vitals cards + drag-drop Beat).
 
 ### O-6 — `EncounterManager` depth split — **delivered** (list sections; optional deeper splits remain)
 
@@ -703,7 +707,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 | **Post-Wave sweep (2026-04-04)** | **Delivered** — `CharacterProgressionSnapshotDto` (#5), `EncounterManager.NpcPicker/SmartLaunch` partials (#20), `MeleeAttackResolveModal` + `Account/Manage` skeletons (#13), `CampaignDetailsParts/` (#30), `GlimpseSocialManeuverParts/` (#32), `StorytellerGlimpseOverview` (#33) |
 | **§7 consolidated backlog** | **Closed** — all rows delivered or N/A; do not reopen Wave scope without **`mission.md`** / owner decision |
 | **This document** | **Delivery record** for Waves 1–4 + §7; **optional** execution items live in [Optional backlog](#optional-backlog) until implemented or explicitly cancelled |
-| **Next step** | New technical work: pick from [Optional backlog](#optional-backlog) with explicit scope — see [Next step (post–§7)](#agent-next-step) |
+| **Next step** | New technical work: explicit scope in **`mission.md`** or a named task — see [Next step (post–§7)](#agent-next-step); optional table is a **record**, not a queue |
 
 ---
 
@@ -726,6 +730,12 @@ Future extractions and polish: see [Optional backlog](#optional-backlog). This a
 | `CharacterUpdateDto` + `CharacterUpdateDtoApplier` | Hub vitals/progression patch on **`CharacterDetails`** without full EF reload (O-4) |
 | `TraitRulesReferenceModal` | In-sheet trait reference dialog for **`OpenReference`** (O-1 MVP) |
 | `StorytellerGlimpseOverviewParts/*`, `DegenerationRollFormat` | Overview tab decomposition (O-5) |
+| `StorytellerGlimpseCoterieBeatAwardCard.razor` | Coterie Beat drag + “Award to All” card in overview (O-5 incremental) |
+| `StorytellerGlimpsePinnedNpcsSection.razor`, `StorytellerGlimpseCharacterVitalsGrid.razor` | Pinned NPC strip + PC vitals / awards grid on Glimpse overview (O-5 incremental) |
+| `ExternalAuthAvailability` | Hide Google/Discord login UI when OAuth client id/secret are unset or placeholder (`not-configured`) — `Login.razor`, `LinkedAccounts.razor` |
+| `DotScale.razor.css` | Trait label button default/hover/focus: bone-white on dark panels for WCAG AA (E2E axe / advancement) |
+| `DiscordWebhookModal.razor` | Focus webhook URL field when modal opens (keyboard / SR) |
+| `scripts/test-e2e-local.ps1` | Reliable script termination / host message (PowerShell-safe closing line) |
 | `CharacterExportConcurrency` | Semaphore-limited PDF/JSON export **`Task.Run`** (O-9) |
 | `IReferenceDataCache.FlushAsync` / `forceReload` load | Runtime catalog refresh contract for future admin edits (O-10) |
 | `GlimpseSocialManeuvers`, `GlimpsePendingRequests` | Social + pending panels with scoped `*.razor.css`; overview uses `StorytellerGlimpseOverview` + `::deep` (2026-04-04) |
@@ -735,7 +745,7 @@ Future extractions and polish: see [Optional backlog](#optional-backlog). This a
 | `SkeletonLoader.razor`, `LoadingContainer.razor` | Loading state components — use everywhere |
 | `app-chrome.css` — `.alert` + `.alert-rn` | Shared Gothic alert chrome — hub **`alert-rn alert-*`** and auth **`alert alert-*`** both get base padding/background |
 | `InitiativeTracker.SignalR.razor.cs`, `InitiativeTracker.EncounterLoad.razor.cs`, `IInitiativeTrackerDragState` | Large tracker page — isolate SignalR subscriptions, cancelable load pipeline, scoped drag state (#19) |
-| `InitiativeParts/*` (`InitiativeOrderList`, `InitiativeOrderRow`, `InitiativeAddParticipantPanel`, …) | Initiative tracker — markup decomposition mirroring `EncounterParts/` (#19) |
+| `InitiativeParts/*` (`InitiativeOrderList`, `InitiativeOrderRow`, `InitiativeAddParticipantPanel`, `InitiativeEncounterPageHeader`, …) | Initiative tracker — markup decomposition mirroring `EncounterParts/` (#19); header slice 2026-04-05 |
 | `InitiativeTracker.State` / `.AddParticipant` / `.Announcements` / `.Tilts` / `.NpcCombat` / `.EncounterFlow` / `.Modals` / `.Display` | Initiative tracker — code-behind partials (#19) |
 | `DiceRollerStandardPanel` | Standard pool / trait / modifier / again-rote UI for `DiceRollerModal` (#17) |
 
