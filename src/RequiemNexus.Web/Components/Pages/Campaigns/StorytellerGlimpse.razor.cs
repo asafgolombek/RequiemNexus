@@ -410,6 +410,18 @@ public partial class StorytellerGlimpse : IAsyncDisposable
         _ = InvokeAsync(StateHasChanged);
     }
 
+    private Task OnPassiveAuraCharacterAChangedAsync(int value)
+    {
+        _passiveAuraCharacterA = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnPassiveAuraCharacterBChangedAsync(int value)
+    {
+        _passiveAuraCharacterB = value;
+        return Task.CompletedTask;
+    }
+
     private async Task TriggerPassivePredatoryAuraAsync()
     {
         if (_passiveAuraBusy || string.IsNullOrEmpty(_currentUserId))
@@ -505,28 +517,9 @@ public partial class StorytellerGlimpse : IAsyncDisposable
         }
     }
 
-    private void HandleDegBannerKeydown(KeyboardEventArgs e, int characterId)
-    {
-        if (e.Key == "Enter" || e.Key == " ")
-        {
-            OpenDegenerationRollModal(characterId);
-        }
-    }
-
-    private static string DegenerationPoolHint(int humanity, int resolve)
-    {
-        if (humanity <= 0)
-        {
-            return "chance die (Humanity 0)";
-        }
-
-        int pool = resolve + (7 - humanity);
-        return $"{resolve} + (7 − {humanity}) = {pool} dice";
-    }
-
     private string? DegenerationModalMessage =>
         _degRollTargetId is int id && _degAlerts.TryGetValue(id, out (string Name, int Humanity, int Resolve) entry)
-            ? $"{entry.Name} rolls degeneration ({DegenerationPoolHint(entry.Humanity, entry.Resolve)}). " +
+            ? $"{entry.Name} rolls degeneration ({DegenerationRollFormat.PoolHint(entry.Humanity, entry.Resolve)}). " +
               "Success (≥1): clear all stains, Humanity unchanged. " +
               "Failure: lose 1 Humanity, clear stains. Dramatic failure: also gain Guilty."
             : string.Empty;

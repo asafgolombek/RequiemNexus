@@ -73,96 +73,44 @@
                                         OnCreate="CreateFromTemplate" />
         }
 
-        @* Encounters in prep *@
-        @if (DraftEncountersForList.Any())
-        {
-            @if (!string.IsNullOrEmpty(_prepFeedback))
-            {
-                <p class="card-rn" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.9em;color:var(--gothic-muted);">@_prepFeedback</p>
-            }
-            <h3 style="margin-bottom:0.75rem;">Encounters in prep</h3>
-            @if (!string.IsNullOrEmpty(_createError) && !_showCreateEncounterForm)
-            {
-                <p class="text-danger" style="margin-bottom:0.75rem;">@_createError</p>
-            }
-            <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in DraftEncountersForList)
-                {
-                    <EncounterDraftPrepCard Encounter="enc"
-                                            Busy="_busy"
-                                            IsRenaming="@(_renamingEncounterId == enc.Id)"
-                                            @bind-RenameBuffer="_renameEncounterBuffer"
-                                            OnStartRename="OnDraftPrepStartRenameAsync"
-                                            OnCancelRename="CancelEncounterRenameAsync"
-                                            OnSaveRename="SaveEncounterRename"
-                                            OnAddNpc="OpenNpcPickerForDraftAsync"
-                                            OnStartPrep="OpenSmartLaunchPrepAsync"
-                                            OnAckSaveForLater="AckSaveForLaterAsync"
-                                            OnRemoveTemplate="RemoveTemplateRow">
-                        <SmartLaunchSlot>
-                            @if (_smartLaunchEncounterId == enc.Id)
-                            {
-                                <EncounterSmartLaunchPanel Title="Ready to begin?"
-                                                           LeadText="@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")"
-                                                           CampaignCharacters="_campaignCharacters"
-                                                           IsSelected="GetSmartCheck"
-                                                           SelectionChanged="OnSmartLaunchSelectionChangedAsync"
-                                                           Busy="_busy"
-                                                           ConfirmButtonText="@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative & join")"
-                                                           OnConfirm="ConfirmSmartLaunch"
-                                                           OnCancel="CancelSmartLaunchAsync" />
-                            }
-                        </SmartLaunchSlot>
-                    </EncounterDraftPrepCard>
-                }
-            </div>
-        }
+        <EncounterDraftPrepListSection DraftEncounters="DraftEncountersForList"
+                                       PrepFeedback="@_prepFeedback"
+                                       CreateError="@_createError"
+                                       ShowCreateEncounterForm="_showCreateEncounterForm"
+                                       Busy="_busy"
+                                       RenamingEncounterId="_renamingEncounterId"
+                                       @bind-RenameBuffer="_renameEncounterBuffer"
+                                       SmartLaunchEncounterId="_smartLaunchEncounterId"
+                                       SmartLaunchIsPrepStart="_smartLaunchIsPrepStart"
+                                       CampaignCharacters="_campaignCharacters"
+                                       SmartLaunchIsSelected="GetSmartCheck"
+                                       OnSmartLaunchSelectionChanged="OnSmartLaunchSelectionChangedAsync"
+                                       OnSmartLaunchConfirm="ConfirmSmartLaunch"
+                                       OnSmartLaunchCancel="CancelSmartLaunchAsync"
+                                       OnStartRename="OnDraftPrepStartRenameAsync"
+                                       OnCancelRename="CancelEncounterRenameAsync"
+                                       OnSaveRename="SaveEncounterRename"
+                                       OnAddNpc="OpenNpcPickerForDraftAsync"
+                                       OnStartPrep="OpenSmartLaunchPrepAsync"
+                                       OnAckSaveForLater="AckSaveForLaterAsync"
+                                       OnRemoveTemplate="RemoveTemplateRow" />
 
-        @if (LaunchedEncounters.Any())
-        {
-            <h3 style="margin-bottom:0.75rem;">Active encounter</h3>
-            <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in LaunchedEncounters)
-                {
-                    <EncounterActiveEncounterCard Encounter="enc"
-                                                  CampaignId="Id"
-                                                  Busy="_busy"
-                                                  OnOnlinePlayers="OpenSmartLaunchForActiveAsync"
-                                                  OnAddNpc="OpenNpcPickerForActiveAsync"
-                                                  OnPause="PauseEncounter"
-                                                  OnResolve="ResolveEncounter">
-                        <SmartLaunchSlot>
-                            @if (_smartLaunchEncounterId == enc.Id)
-                            {
-                                <EncounterSmartLaunchPanel Title="Add PCs to this fight"
-                                                           LeadText="@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")"
-                                                           CampaignCharacters="_campaignCharacters"
-                                                           IsSelected="GetSmartCheck"
-                                                           SelectionChanged="OnSmartLaunchSelectionChangedAsync"
-                                                           Busy="_busy"
-                                                           ConfirmButtonText="@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative & join")"
-                                                           OnConfirm="ConfirmSmartLaunch"
-                                                           OnCancel="CancelSmartLaunchAsync" />
-                            }
-                        </SmartLaunchSlot>
-                    </EncounterActiveEncounterCard>
-                }
-            </div>
-        }
-        @if (PausedEncounters.Any())
-        {
-            <h3 style="margin-bottom:0.75rem;">Paused encounter</h3>
-            <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in PausedEncounters)
-                {
-                    <EncounterPausedEncounterCard Encounter="enc"
-                                                  CampaignId="Id"
-                                                  Busy="_busy"
-                                                  OnResume="ResumeEncounter"
-                                                  OnResolve="ResolveEncounter" />
-                }
-            </div>
-        }
+        <EncounterLaunchedAndPausedSection CampaignId="Id"
+                                           LaunchedEncounters="LaunchedEncounters"
+                                           PausedEncounters="PausedEncounters"
+                                           Busy="_busy"
+                                           SmartLaunchEncounterId="_smartLaunchEncounterId"
+                                           SmartLaunchIsPrepStart="_smartLaunchIsPrepStart"
+                                           CampaignCharacters="_campaignCharacters"
+                                           SmartLaunchIsSelected="GetSmartCheck"
+                                           OnSmartLaunchSelectionChanged="OnSmartLaunchSelectionChangedAsync"
+                                           OnSmartLaunchConfirm="ConfirmSmartLaunch"
+                                           OnSmartLaunchCancel="CancelSmartLaunchAsync"
+                                           OnOnlinePlayers="OpenSmartLaunchForActiveAsync"
+                                           OnAddNpcActive="OpenNpcPickerForActiveAsync"
+                                           OnPause="PauseEncounter"
+                                           OnResume="ResumeEncounter"
+                                           OnResolve="ResolveEncounter" />
 
         @if (!DraftEncountersForList.Any() && !LaunchedEncounters.Any() && !PausedEncounters.Any() && !_showCreateEncounterForm)
         {
@@ -171,19 +119,7 @@
             </div>
         }
 
-        @* Past (resolved only) *@
-        @if (PastEncounters.Any())
-        {
-            <details>
-                <summary style="cursor:pointer;font-size:1rem;font-weight:600;margin-bottom:0.75rem;">Past encounters (@PastEncounters.Count)</summary>
-                <div class="character-grid" style="margin-top:0.75rem;">
-                    @foreach (CombatEncounter enc in PastEncounters)
-                    {
-                        <EncounterPastEncounterCard Encounter="enc" CampaignId="Id" />
-                    }
-                </div>
-            </details>
-        }
+        <EncounterPastEncountersSection CampaignId="Id" PastEncounters="PastEncounters" />
 
         @if (_activeEncounterForNpc.HasValue && _npcPickerMode is not null)
         {

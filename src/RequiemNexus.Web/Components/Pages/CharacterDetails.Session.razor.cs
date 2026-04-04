@@ -96,12 +96,12 @@ public partial class CharacterDetails
             if (_skipIncomingCharacterHubReloadCount > 0)
             {
                 _skipIncomingCharacterHubReloadCount--;
-                await ResolveDisciplinePowerPoolsAsync();
-                StateHasChanged();
-                return;
             }
 
-            _character = await CharacterService.ReloadCharacterAsync(Id, _currentUserId);
+            // Hub payload already includes vitals, progression, and humanity from SessionService — patch in place
+            // instead of a tracked full-graph reload (O-4). Structural changes (new merits, etc.) refresh on next
+            // full navigation or bloodline/chronicle flows that still call ReloadCharacterAsync.
+            CharacterUpdateDtoApplier.ApplyToCharacter(_character, patch);
             await ResolveDisciplinePowerPoolsAsync();
             StateHasChanged();
         });

@@ -20,7 +20,9 @@ public sealed class CharacterJsonExportService(ICharacterExportCharacterLoader l
             return "{}";
         }
 
-        return await Task.Run(() => ExportCharacterAsJson(character), cancellationToken);
+        return await CharacterExportConcurrency.RunThrottledAsync(
+            () => Task.Run(() => ExportCharacterAsJson(character), cancellationToken),
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

@@ -74,7 +74,7 @@
 
 **Committed §7 / Wave work:** **exhausted** — do not add new §7 rows for items already covered by #17 / #19 / #20.
 
-**Further technical polish:** use **[Optional backlog](#optional-backlog)** (O-1 … O-12). Each O-row needs explicit mission or task scope.
+**Further technical polish:** the **[Optional backlog](#optional-backlog)** (O-1 … O-12) is **largely delivered or closed** as of 2026-04-05 — see the summary table. New work should be scoped in **`mission.md`** or a fresh task; do not treat historical O-rows as an open implied backlog unless reopened there.
 
 **UX conventions (already delivered, still apply):** **`PageTitle`:** `{Screen} — Requiem Nexus`** (em dash); **`alert` + `alert-rn`** for page-level alerts outside hub empty-states (hub empty-state **`alert-rn`** remains intentional per §4.2).
 
@@ -589,20 +589,20 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 
 | ID | Priority | Area | Item |
 |---|---|---|---|
-| O-1 | P3 | Web / UX | In-sheet rules browser for trait **OpenReference** (replaces interim info toast) |
+| O-1 | P3 | Web / UX | In-sheet trait reference — **delivered (MVP)** — **`TraitRulesReferenceModal`** + **`OpenReference`** (book citation + dismiss; searchable seeded rule text remains product backlog) |
 | O-2 | P3 | Application | **`ICharacterProgressionService`** — Beat/XP slice of **`CharacterManagementService`** — **delivered** (`CharacterProgressionService`, façade forwards on **`CharacterManagementService`**) |
 | O-3 | P3 | Application | **`CampaignService`** — lore + session prep collaborators — **delivered** (`ICampaignLoreService` / **`CampaignLoreService`**, **`ICampaignSessionPrepService` / `CampaignSessionPrepService`**, **`CampaignService`** façade) |
-| O-4 | P2–P3 | Application / SignalR | Broader character reload reduction — patch DTOs or **`ICharacterPatchEvent`** beyond Beats/XP snapshot |
-| O-5 | P3 | Web | **`StorytellerGlimpse`** — further child components if overview tab grows |
-| O-6 | P3 | Web | **`EncounterManager`** — participant-heavy extraction, optional **`EncounterManager.*`** partials, optional validation error consolidation |
-| O-7 | P4 | Web | **`CampaignDetails`** — further splits if line counts exceed maintenance comfort again |
-| O-8 | P4 | Domain / Application | New **`IModifierProvider`** implementations when rules add DB-backed passive modifiers (Devotion / Covenant / Bloodline / Merit) |
-| O-9 | P4 | Infrastructure | Bounded PDF/JSON export queue (**`Channel<T>`** or worker) under high concurrent load |
-| O-10 | P4 | Application | **`IReferenceDataCache.FlushAsync`** + callers when admin definition editing ships |
-| O-11 | P3 | Domain | **`IContextualTraitResolver`** (or explicit branches) if a **`PoolTraitType`** needs async / service / campaign context |
-| O-12 | P4 | Web | Align **`CharacterPackTab`** naming with shipped **`CharacterDetailsPackTab`** only if rename churn is justified |
+| O-4 | P2–P3 | Application / SignalR | Hub **`CharacterUpdateDto`** patch — **delivered** — **`CharacterDetails.Session`** applies **`CharacterUpdateDtoApplier`** instead of full **`ReloadCharacterAsync`** on **`ReceiveCharacterUpdate`** (bloodline/chronicle paths still reload) |
+| O-5 | P3 | Web | **`StorytellerGlimpse`** overview — **delivered (incremental)** — **`StorytellerGlimpseOverviewParts/`** (`StorytellerGlimpseDegenerationBanners`, **`StorytellerGlimpsePassivePredatoryAuraCard`**) + **`DegenerationRollFormat`** helper |
+| O-6 | P3 | Web | **`EncounterManager`** — list/markup split — **delivered** (`EncounterDraftPrepListSection`, **`EncounterLaunchedAndPausedSection`**, **`EncounterPastEncountersSection`** in **`EncounterParts/`**); optional further **`EncounterManager.*`** partials / validation consolidation if line counts grow |
+| O-7 | P4 | Web | **`CampaignDetails`** — **N/A (2026-04-05)** — combined **`.razor` + partials** remain under maintenance threshold; reopen only if counts grow |
+| O-8 | P4 | Domain / Application | Future **`IModifierProvider`** s — **policy recorded** on **`ModifierService`** XML; new providers when rules + data exist (no empty provider types) |
+| O-9 | P4 | Infrastructure | Export concurrency — **delivered** — **`CharacterExportConcurrency`** (`SemaphoreSlim` depth **2**) wraps PDF/JSON **`Task.Run`** (not a **`Channel<T>`** worker; upgrade path unchanged) |
+| O-10 | P4 | Application | **`IReferenceDataCache.FlushAsync`** — **delivered** — + **`LoadFromDatabaseAsync(..., forceReload)`**; admin pipelines call **`FlushAsync`** when definition editing ships |
+| O-11 | P3 | Domain | **`IContextualTraitResolver`** — **deferred** until a **`PoolTraitType`** is proven to need async/service/campaign context (inventory-first) |
+| O-12 | P4 | Web | **`CharacterDetailsPackTab`** — **canonical** shipped name; early plan **`CharacterPackTab`** wording retired without rename churn |
 
-### O-1 — In-sheet rules browser (`OpenReference`)
+### O-1 — In-sheet rules browser (`OpenReference`) — **delivered (MVP)**
 
 - **Goal:** Replace or supplement the interim **info toast** (book pointer) with searchable in-sheet rules content for the active trait.
 - **Primary files:** `CharacterDetails` (OpenReference flow); new modal/panel components under `Components/` as designed; rules content source (seed/static) per product.
@@ -626,7 +626,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Exit criteria:** Smaller types; same external behavior or documented API migration; **AuthorizationHelper** on every mutation.
 - **Tests:** **`RequiemNexus.Data.Tests`** / **Application** tests for campaign APIs.
 
-### O-4 — Broader reload reduction / patch events
+### O-4 — Broader reload reduction / patch events — **delivered** (hub apply)
 
 - **Goal:** Extend the Beats/XP snapshot pattern to other high-churn mutations if profiling demands it; optional strict query budget (e.g. Beat-add).
 - **Primary files:** `CharacterManagementService`, **`CharacterDetails`** SignalR handlers, new DTOs/events as needed.
@@ -634,7 +634,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Exit criteria:** Measured fewer round-trips or explicit cancellation of the row in this doc.
 - **Tests:** **Application** tests; performance notes if applicable.
 
-### O-5 — `StorytellerGlimpse` further extractions
+### O-5 — `StorytellerGlimpse` further extractions — **delivered (incremental)**
 
 - **Goal:** Child components for remaining large overview regions (same pattern as **`StorytellerGlimpseOverview`**).
 - **Primary files:** `StorytellerGlimpse.razor` (+ `.cs` / `.css`), new children under **`Components/Pages/`**.
@@ -642,7 +642,7 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Exit criteria:** Measurable reduction in overview markup or code-behind; scoped CSS with **`::deep`** where needed.
 - **Tests:** Regression / manual ST flows unless logic extracted to services.
 
-### O-6 — `EncounterManager` depth split
+### O-6 — `EncounterManager` depth split — **delivered** (list sections; optional deeper splits remain)
 
 - **Goal:** Extract participant-heavy regions (**`EncounterParticipantPanel`**-style); add **`EncounterManager.*`** partials if **`.razor.cs`** exceeds the ~300-line maintenance target; optionally consolidate inline validation strings.
 - **Primary files:** `EncounterManager.razor`, `EncounterManager.razor.cs`, **`EncounterParts/`**.
@@ -650,42 +650,42 @@ Work that was **never** part of the committed §7 table. Implement **one O-row a
 - **Exit criteria:** Clearer ownership between participant management and create/template/smart-launch flows.
 - **Tests:** Existing encounter coverage; manual ST scenarios.
 
-### O-7 — `CampaignDetails` further splits
+### O-7 — `CampaignDetails` further splits — **N/A (threshold)**
 
 - **Goal:** Only if combined **`.razor` + partials** grow again — mirror **`CampaignDetailsParts/`** pattern.
 - **Primary files:** `CampaignDetails.*`, **`CampaignDetailsParts/`**.
 - **Dependencies:** None.
 - **Exit criteria:** PR documents line-count or SRP rationale.
 
-### O-8 — Additional `IModifierProvider`s
+### O-8 — Additional `IModifierProvider`s — **policy only (no new providers yet)**
 
 - **Goal:** When product rules require passive modifiers from Devotion/Covenant/Bloodline/Merit state in the database, add **providers** instead of extending **`ModifierService`** with new **`if`** chains.
 - **Primary files:** `ModifierService.cs`, new provider types, DI registration.
 - **Dependencies:** Data model for those modifier sources.
 - **Exit criteria:** **`ModifierProviderTests`** + documented **`Order`** relative to existing providers.
 
-### O-9 — Bounded export queue
+### O-9 — Bounded export queue — **delivered** (semaphore throttle)
 
 - **Goal:** Replace unconstrained **`Task.Run`** for PDF/JSON export if concurrent load threatens the thread pool (§3.5 warning).
 - **Primary files:** `CharacterPdfExportService`, `CharacterJsonExportService`; optional **`IHostedService`** worker.
 - **Dependencies:** Ops requirements (depth, timeouts, user feedback).
 - **Exit criteria:** Load-test notes or staged rollout documentation.
 
-### O-10 — `IReferenceDataCache.FlushAsync`
+### O-10 — `IReferenceDataCache.FlushAsync` — **delivered**
 
 - **Goal:** Runtime refresh after admin edits to reference definitions (§3.3 / risk register).
 - **Primary files:** **`IReferenceDataCache`**, **`ReferenceDataCache`**, future admin mutation pipelines.
 - **Dependencies:** Admin definition-edit feature.
 - **Exit criteria:** Contract implemented; invalidation semantics documented.
 
-### O-11 — Contextual trait resolution
+### O-11 — Contextual trait resolution — **deferred**
 
 - **Goal:** If any **`PoolTraitType`** cannot be a synchronous **`Character` → `int`** read, isolate in **`IContextualTraitResolver`** or explicit non-dictionary branches in **`TraitResolver`**.
 - **Primary files:** `TraitResolver.cs`, new types if needed.
 - **Dependencies:** Full inventory of traits vs. current **`FrozenDictionary`** coverage.
 - **Exit criteria:** Correct pool sizes for contested/contextual traits; **`RequiemNexus.Domain.Tests`** updated.
 
-### O-12 — `CharacterPackTab` naming
+### O-12 — `CharacterPackTab` naming — **resolved (canonical `CharacterDetailsPackTab`)**
 
 - **Goal:** Optional alignment between early plan wording (**`CharacterPackTab`**) and shipped **`CharacterDetailsPackTab`** ([`CharacterDetailsPackTab.razor`](../src/RequiemNexus.Web/Components/Pages/CharacterSheet/CharacterDetailsPackTab.razor)).
 - **Primary files:** Component rename + all references.
@@ -722,8 +722,13 @@ Future extractions and polish: see [Optional backlog](#optional-backlog). This a
 | `CharacterCreation/` step components | Section decomposition pattern for large wizard pages |
 | `CharacterSheet/*AdvancementSection*.razor` | Advancement page sections (paired with `CharacterAdvancement.razor` orchestration) |
 | `DanseMacabreTabs/*` | Tab panel extraction without colliding folder/page Razor type names |
-| `EncounterParts/*` + `EncounterManager.*.razor.cs` | `EncounterManager` decomposition — UI in `EncounterParts/`; code-behind partials `NpcPicker` / `SmartLaunch` |
+| `EncounterParts/*` + `EncounterManager.*.razor.cs` | `EncounterManager` decomposition — UI in `EncounterParts/`; code-behind partials `NpcPicker` / `SmartLaunch`; list sections **`EncounterDraftPrepListSection`**, **`EncounterLaunchedAndPausedSection`**, **`EncounterPastEncountersSection`** (O-6) |
 | `CharacterProgressionSnapshotDto` | Returned from Beats/XP mutations; UI patches tracked sheet without full reload |
+| `CharacterUpdateDto` + `CharacterUpdateDtoApplier` | Hub vitals/progression patch on **`CharacterDetails`** without full EF reload (O-4) |
+| `TraitRulesReferenceModal` | In-sheet trait reference dialog for **`OpenReference`** (O-1 MVP) |
+| `StorytellerGlimpseOverviewParts/*`, `DegenerationRollFormat` | Overview tab decomposition (O-5) |
+| `CharacterExportConcurrency` | Semaphore-limited PDF/JSON export **`Task.Run`** (O-9) |
+| `IReferenceDataCache.FlushAsync` / `forceReload` load | Runtime catalog refresh contract for future admin edits (O-10) |
 | `GlimpseSocialManeuvers`, `GlimpsePendingRequests` | Social + pending panels with scoped `*.razor.css`; overview uses `StorytellerGlimpseOverview` + `::deep` (2026-04-04) |
 | `SessionService.cs` | Consistent load/verify/proceed pattern per method |
 | `IModifierProvider` + `ModifierService` | Open/closed modifier aggregation — add a provider + DI registration instead of editing the orchestrator |

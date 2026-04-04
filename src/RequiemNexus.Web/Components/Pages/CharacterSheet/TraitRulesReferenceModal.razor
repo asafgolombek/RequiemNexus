@@ -1,0 +1,74 @@
+@using Microsoft.AspNetCore.Components.Web
+
+@if (IsOpen)
+{
+    <div class="rn-modal-backdrop fade-in" @onclick="CloseAsync">
+        <div class="rn-modal-panel fade-in"
+             style="max-width:28rem;"
+             @onclick:stopPropagation="true"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="trait-rules-ref-title"
+             @onkeydown="OnPanelKeyAsync"
+             tabindex="-1">
+            <div class="rn-modal-header">
+                <h2 id="trait-rules-ref-title" class="rn-modal-title">Trait reference</h2>
+                <button type="button" class="rn-modal-close" @onclick="CloseAsync" aria-label="Close">×</button>
+            </div>
+            <div class="rn-modal-body" style="font-size:0.9rem;">
+                <p class="mb-sm"><strong>@TraitName</strong></p>
+                <p class="text-muted-rn">
+                    Full mechanical text for traits, skills, and attributes appears in <cite>Vampire: The Requiem</cite> Second Edition (Chronicles of Darkness). This sheet keeps play fast; use your table copy or ST guidance for contested pools, specialties, and edge cases.
+                </p>
+            </div>
+            <div class="rn-modal-footer" style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid var(--border-subtle, rgba(255,255,255,0.08));">
+                <button type="button" class="btn-rn-primary" @ref="_primaryCloseButton" @onclick="CloseAsync">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ElementReference _primaryCloseButton;
+    private bool _wasOpen;
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public string TraitName { get; set; } = string.Empty;
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsOpen && !_wasOpen)
+        {
+            try
+            {
+                await _primaryCloseButton.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // Pre-rendering or hosts without a live DOM — ignore.
+            }
+        }
+
+        _wasOpen = IsOpen;
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private Task CloseAsync() => IsOpenChanged.InvokeAsync(false);
+
+    private Task OnPanelKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            return CloseAsync();
+        }
+
+        return Task.CompletedTask;
+    }
+}

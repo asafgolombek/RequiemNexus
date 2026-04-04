@@ -24,6 +24,7 @@
 @using RequiemNexus.Web.Components.UI
 @using Microsoft.JSInterop
 @using System.Linq
+@using RequiemNexus.Web.Components.Pages.Campaigns.StorytellerGlimpseOverviewParts
 
 <PageTitle>Storyteller Glimpse — Requiem Nexus</PageTitle>
 
@@ -92,85 +93,24 @@
         {
             <div class="glimpse-tab-panel" id="panel-glimpse-overview" role="tabpanel" aria-labelledby="tab-glimpse-overview">
                 <StorytellerGlimpseOverview>
-                @if (_degAlerts.Count > 0)
-                {
-                    <div class="degeneration-glimpse-banners" role="region" aria-label="Pending degeneration checks">
-                        @foreach (KeyValuePair<int, (string Name, int Humanity, int Resolve)> kv in _degAlerts.OrderBy(x => x.Value.Name))
-                        {
-                            <div class="degeneration-glimpse-banner card-rn alert-rn alert-warning"
-                                 role="button"
-                                 tabindex="0"
-                                 @onclick="() => OpenDegenerationRollModal(kv.Key)"
-                                 @onkeydown="e => HandleDegBannerKeydown(e, kv.Key)">
-                                <strong>@kv.Value.Name</strong> must roll degeneration (@DegenerationPoolHint(kv.Value.Humanity, kv.Value.Resolve)). Open the roll confirmation (Storyteller cannot dismiss without rolling).
-                            </div>
-                        }
-                    </div>
-                }
+                <StorytellerGlimpseDegenerationBanners Alerts="_degAlerts" OnOpenRoll="OpenDegenerationRollModal" />
 
-                <div class="card-rn glimpse-card">
-                    <h3 class="section-header">Passive Predatory Aura</h3>
-                    <p class="text-small text-muted-rn mb-sm">
-                        Manual Blood Potency contest between two PCs (chronicle-wide). Results appear in the session dice feed. When Kindred join the same encounter, passive contests also fire automatically once per pair.
-                    </p>
-                    <div class="form-row" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;">
-                        <label class="text-small">
-                            Kindred A
-                            <select class="form-control form-select-medium" @bind="_passiveAuraCharacterA">
-                                <option value="0">—</option>
-                                @foreach (CharacterVitalsDto v in _vitals.Where(x => x.CreatureType == CreatureType.Vampire))
-                                {
-                                    <option value="@v.CharacterId">@v.Name</option>
-                                }
-                            </select>
-                        </label>
-                        <label class="text-small">
-                            Kindred B
-                            <select class="form-control form-select-medium" @bind="_passiveAuraCharacterB">
-                                <option value="0">—</option>
-                                @foreach (CharacterVitalsDto v in _vitals.Where(x => x.CreatureType == CreatureType.Vampire))
-                                {
-                                    <option value="@v.CharacterId">@v.Name</option>
-                                }
-                            </select>
-                        </label>
-                        <button type="button"
-                                class="btn-rn-primary"
-                                disabled="@(_passiveAuraBusy || _passiveAuraCharacterA == 0 || _passiveAuraCharacterB == 0 || _passiveAuraCharacterA == _passiveAuraCharacterB || string.IsNullOrEmpty(_currentUserId))"
-                                @onclick="TriggerPassivePredatoryAuraAsync">
-                            Trigger contest
-                        </button>
-                    </div>
-                    @if (!string.IsNullOrEmpty(_passiveAuraMessage))
-                    {
-                        <p class="text-small mt-sm @(_passiveAuraError ? "feedback-error" : "feedback-ok")">@_passiveAuraMessage</p>
-                    }
-                </div>
+                <StorytellerGlimpsePassivePredatoryAuraCard Vampires="@(_vitals.Where(x => x.CreatureType == CreatureType.Vampire).ToList())"
+                                                            CharacterA="_passiveAuraCharacterA"
+                                                            CharacterAChanged="OnPassiveAuraCharacterAChangedAsync"
+                                                            CharacterB="_passiveAuraCharacterB"
+                                                            CharacterBChanged="OnPassiveAuraCharacterBChangedAsync"
+                                                            CurrentUserId="@_currentUserId"
+                                                            Busy="_passiveAuraBusy"
+                                                            Message="@_passiveAuraMessage"
+                                                            IsError="_passiveAuraError"
+                                                            OnTriggerContest="TriggerPassivePredatoryAuraAsync" />
 
-                @* ── Coterie Beat Award ──────────────────────────────────────────────── *@
-                <div class="card-rn glimpse-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3 class="section-header">Award Beat to Coterie</h3>
-                        <div class="draggable-beat" draggable="true" @ondragstart="HandleDragStart" title="Drag this to a character card to award a Beat instantly">
-                            ⚫
-                        </div>
-                    </div>
-                    <div class="coterie-beat-award">
-                        <input class="form-control coterie-reason-input"
-                               placeholder="Reason for coterie Beat…"
-                               aria-label="Reason for coterie-wide Beat award"
-                               @bind="_coteReason" />
-                        <button class="btn-rn-primary"
-                                disabled="@(string.IsNullOrWhiteSpace(_coteReason) || _awarding)"
-                                @onclick="AwardCoterieBeat">
-                            Award to All
-                        </button>
-                    </div>
-                    @if (!string.IsNullOrEmpty(_coteMessage))
-                    {
-                        <p class="feedback-ok">@_coteMessage</p>
-                    }
-                </div>
+                <StorytellerGlimpseCoterieBeatAwardCard @bind-Reason="_coteReason"
+                                                        Awarding="_awarding"
+                                                        Message="@_coteMessage"
+                                                        OnDragStart="HandleDragStart"
+                                                        OnAward="AwardCoterieBeat" />
 
                 @* ── Pinned NPCs ────────────────────────────────────────────────────── *@
                 @if (_pinnedNpcIds.Any())

@@ -7,7 +7,7 @@ namespace RequiemNexus.Application.Contracts;
 /// Application-lifetime snapshot of seeded reference catalog rows. Homebrew entities (<see cref="Clan.IsHomebrew"/>,
 /// <see cref="Discipline.IsHomebrew"/>, <see cref="Merit.IsHomebrew"/>) are excluded and remain database-backed.
 /// Warmed at host startup; restart the application to refresh. If admin editing of definitions is introduced later,
-/// extend this contract with an explicit flush/reload API and invoke it after mutations.
+/// call <see cref="FlushAsync"/> after mutations.
 /// </summary>
 public interface IReferenceDataCache
 {
@@ -67,9 +67,17 @@ public interface IReferenceDataCache
     IReadOnlyList<DevotionDefinition> DevotionDefinitions { get; }
 
     /// <summary>
-    /// Loads reference data from the database into this cache. Safe to call multiple times; later calls no-op after the first successful load.
+    /// Loads reference data from the database into this cache. Safe to call multiple times; later calls no-op after the first successful load unless <paramref name="forceReload"/> is <c>true</c>.
     /// </summary>
     /// <param name="context">Database context (typically a scoped instance from a factory).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task LoadFromDatabaseAsync(ApplicationDbContext context, CancellationToken cancellationToken = default);
+    /// <param name="forceReload">When <c>true</c>, replaces cached rows even if already initialized (used by <see cref="FlushAsync"/>).</param>
+    Task LoadFromDatabaseAsync(ApplicationDbContext context, CancellationToken cancellationToken = default, bool forceReload = false);
+
+    /// <summary>
+    /// Reloads all reference catalog snapshots from the database. Invoke after admin definition mutations when that feature exists.
+    /// </summary>
+    /// <param name="context">Database context (typically scoped).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task FlushAsync(ApplicationDbContext context, CancellationToken cancellationToken = default);
 }

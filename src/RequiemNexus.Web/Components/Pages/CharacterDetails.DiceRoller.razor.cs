@@ -13,11 +13,20 @@ public partial class CharacterDetails
 {
     private void OpenReference(string traitName)
     {
-        Logger.LogDebug("Trait reference toast shown for {TraitName}.", traitName);
-        ToastService.Show(
-            "Trait reference",
-            $"“{traitName}” — use Vampire: The Requiem 2nd Edition for full trait rules. An in-sheet rules browser is not part of the Grimoire yet.",
-            ToastType.Info);
+        Logger.LogDebug("Trait reference modal opened for {TraitName}.", traitName);
+        _traitRulesReferenceName = traitName;
+        _traitRulesReferenceOpen = true;
+    }
+
+    private Task OnTraitRulesReferenceOpenChanged(bool open)
+    {
+        _traitRulesReferenceOpen = open;
+        if (!open)
+        {
+            _traitRulesReferenceName = string.Empty;
+        }
+
+        return Task.CompletedTask;
     }
 
     private void OpenRoller(string traitName)

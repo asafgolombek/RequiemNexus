@@ -597,6 +597,10 @@ else
                              Requirements="_pendingRiteRequirements"
                              KinTargets="_riteKinTargets"
                              OnContinue="HandleRitePrepContinueAsync" />
+    <TraitRulesReferenceModal IsOpen="_traitRulesReferenceOpen"
+                             IsOpenChanged="OnTraitRulesReferenceOpenChanged"
+                             TraitName="@_traitRulesReferenceName" />
+
     <DiceRollerModal IsVisible="_isRollerOpen"
                      IsVisibleChanged="OnDiceRollerVisibilityChangedAsync"
                      TraitName="@_rollerTraitName"

@@ -5,6 +5,7 @@ namespace RequiemNexus.Application.Services;
 
 /// <summary>
 /// Aggregates passive modifiers from registered <see cref="IModifierProvider"/> implementations.
+/// When rules add DB-backed passive modifiers from Devotion, Covenant, Bloodline, or Merit state, add new providers (plan O-8) — do not extend this type with source-type conditionals.
 /// </summary>
 public sealed class ModifierService(IEnumerable<IModifierProvider> providers) : IModifierService
 {

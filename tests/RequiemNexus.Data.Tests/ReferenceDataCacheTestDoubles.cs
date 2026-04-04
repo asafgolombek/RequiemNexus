@@ -28,7 +28,9 @@ internal static class ReferenceDataCacheTestDoubles
         mock.SetupGet(c => c.BloodlineDefinitions).Returns([]);
         mock.SetupGet(c => c.CovenantDefinitionMerits).Returns([]);
         mock.SetupGet(c => c.DevotionDefinitions).Returns([]);
-        mock.Setup(c => c.LoadFromDatabaseAsync(It.IsAny<ApplicationDbContext>(), It.IsAny<CancellationToken>()))
+        mock.Setup(c => c.LoadFromDatabaseAsync(It.IsAny<ApplicationDbContext>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+            .Returns(Task.CompletedTask);
+        mock.Setup(c => c.FlushAsync(It.IsAny<ApplicationDbContext>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         return mock.Object;
     }

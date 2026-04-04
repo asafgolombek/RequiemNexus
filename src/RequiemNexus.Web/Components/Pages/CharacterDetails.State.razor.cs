@@ -29,6 +29,8 @@ public partial class CharacterDetails
     private int _selectedAssetQuantity = 1;
 
     private bool _isRollerOpen = false;
+    private bool _traitRulesReferenceOpen;
+    private string _traitRulesReferenceName = string.Empty;
     private string _rollerTraitName = string.Empty;
     private int _rollerBaseDice = 1;
     private int? _rollerFixedDicePool;

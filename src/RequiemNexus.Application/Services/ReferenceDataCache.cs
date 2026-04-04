@@ -129,14 +129,18 @@ public sealed class ReferenceDataCache : IReferenceDataCache
     }
 
     /// <inheritdoc />
-    public async Task LoadFromDatabaseAsync(ApplicationDbContext context, CancellationToken cancellationToken = default)
+    public Task FlushAsync(ApplicationDbContext context, CancellationToken cancellationToken = default) =>
+        LoadFromDatabaseAsync(context, cancellationToken, forceReload: true);
+
+    /// <inheritdoc />
+    public async Task LoadFromDatabaseAsync(ApplicationDbContext context, CancellationToken cancellationToken = default, bool forceReload = false)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         await _loadGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_isInitialized)
+            if (_isInitialized && !forceReload)
             {
                 return;
             }

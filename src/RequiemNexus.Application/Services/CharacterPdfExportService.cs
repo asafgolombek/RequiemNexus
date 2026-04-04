@@ -23,7 +23,9 @@ public sealed class CharacterPdfExportService(ICharacterExportCharacterLoader lo
             return [];
         }
 
-        return await Task.Run(() => ExportCharacterAsPdf(character), cancellationToken);
+        return await CharacterExportConcurrency.RunThrottledAsync(
+            () => Task.Run(() => ExportCharacterAsPdf(character), cancellationToken),
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

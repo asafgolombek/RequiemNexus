@@ -1,0 +1,22 @@
+@using RequiemNexus.Data.Models
+
+@if (PastEncounters.Any())
+{
+    <details>
+        <summary style="cursor:pointer;font-size:1rem;font-weight:600;margin-bottom:0.75rem;">Past encounters (@PastEncounters.Count())</summary>
+        <div class="character-grid" style="margin-top:0.75rem;">
+            @foreach (CombatEncounter enc in PastEncounters)
+            {
+                <EncounterPastEncounterCard Encounter="enc" CampaignId="CampaignId" />
+            }
+        </div>
+    </details>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public IEnumerable<CombatEncounter> PastEncounters { get; set; } = Array.Empty<CombatEncounter>();
+}
