@@ -41,7 +41,7 @@
 @inject IDisciplineActivationService DisciplineActivationService
 @inject ICoilService CoilService
 
-<PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
+<PageTitle>@(_character?.Name ?? "Character sheet") — Requiem Nexus</PageTitle>
 
 @if (_isSheetLoading)
 {
@@ -50,7 +50,7 @@
 else if (_sheetLoadError != null)
 {
     <div class="page-container fade-in">
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger alert-rn" role="alert">
             <strong>Could not load character.</strong> @_sheetLoadError
         </div>
         <a href="/characters" class="btn-rn-primary mt-3">Back to My Characters</a>

@@ -12,7 +12,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>Faction Detail - Requiem Nexus</PageTitle>
+<PageTitle>@(_faction?.Name is { } factionName ? $"{factionName} — Faction" : "Faction") — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     @if (_accessDenied)

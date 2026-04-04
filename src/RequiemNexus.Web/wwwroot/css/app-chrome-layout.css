@@ -1,0 +1,212 @@
+﻿/* ---------- Shared Layout Classes ---------- */
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+.section-panel {
+  background:linear-gradient(145deg, var(--ash-gray) 0%, var(--charcoal) 100%);
+  border:1px solid var(--muted-gray);
+  padding: 1.5rem;
+  border-radius: 4px;
+}
+
+.section-panel h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--crimson);
+  padding-bottom: 0.5rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  letter-spacing: 2px;
+  color: var(--bone-white);
+}
+
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    color: var(--crimson);
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--muted-gray));
+}
+
+.section-divider::after {
+    background: linear-gradient(to left, transparent, var(--muted-gray));
+}
+
+.section-divider-label {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    /* Small caps on dark panels: crimson shades fail WCAG AA; use high-contrast tier */
+    color: var(--text-bright);
+}
+
+.divider { height:2px; background:linear-gradient(90deg,transparent 0%,var(--muted-gray) 20%,var(--muted-gray) 80%,transparent 100%); position:relative; margin:2rem 0; }
+.divider::before { content:'◆'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:var(--crimson); opacity:.6; font-size:12px; background:var(--deep-black); padding:0 8px; }
+
+::-webkit-scrollbar { width:8px; }
+::-webkit-scrollbar-track { background:var(--charcoal); }
+::-webkit-scrollbar-thumb { background:var(--muted-gray); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:var(--crimson); }
+
+/* ---------- Grid Utilities ---------- */
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-3-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.grid-2-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+/* ---------- Empty State (Track 5.4) ---------- */
+.empty-state-rn {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.empty-state-rn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--crimson-glow);
+  opacity: 0.9;
+}
+
+.empty-state-rn-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-state-rn-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  color: var(--bone-white);
+  margin: 0;
+}
+
+.empty-state-rn-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-md, 1rem);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 28rem;
+}
+
+.empty-state-rn-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+.empty-state-rn p {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ---------- Text Utilities ---------- */
+.text-muted-rn {
+  color: var(--text-muted);
+}
+
+.text-accent {
+  color: var(--accent-light);
+}
+
+/* ---------- Animations ---------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+/* ---------- Staggered Animations ---------- */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* ---------- Page header (used below SharedHeader) ---------- */
+.page-header-rn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1rem;
+}
+
+.page-header-rn h2 {
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
+}

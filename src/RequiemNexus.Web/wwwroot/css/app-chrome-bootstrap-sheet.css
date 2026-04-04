@@ -1,0 +1,330 @@
+﻿/* ---------- Bootstrap Overrides for Dark Theme ---------- */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow:
+    0 0 0 0.1rem var(--accent-glow),
+    0 0 0 0.25rem var(--accent-color);
+}
+
+/* ---------- Character Sheet Shared Sections ---------- */
+.cs-section {
+    background-color: var(--bg-panel);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.cs-section h2 {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    color: var(--text-bright);
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
+}
+
+/* Conditions & Tilts: narrow card (align with grid column ~28rem), spaced below preceding sheet blocks */
+.cs-conditions-sheet-slot {
+    margin-top: 1.75rem;
+}
+
+.cs-conditions-panel {
+    max-width: min(100%, 28rem);
+    width: 100%;
+}
+
+.cs-conditions-panel .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--text-bright);
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.cs-conditions-panel .add-condition-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.cs-conditions-panel .condition-select {
+    flex: 1 1 12rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.cs-conditions-panel .add-condition-row > .form-control:not(.condition-select) {
+    flex: 1 1 10rem;
+    min-width: 0;
+    max-width: 16rem;
+}
+
+/* Character sheet page header — shared by /character/{id}, campaign view-only sheet, advancement */
+.cs-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem 0 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 1rem;
+}
+
+.cs-header .char-avatar {
+    display: flex;
+    width: 4rem;
+    height: 4rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: linear-gradient(145deg, rgba(139, 0, 0, 0.55), var(--deep-black));
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--bone-white);
+}
+
+.cs-header .char-avatar-initials {
+    line-height: 1;
+    user-select: none;
+}
+
+.cs-header .char-title-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.cs-header .char-title-row .edit-name-trigger {
+    margin: 0;
+}
+
+.cs-header .char-session-status {
+    flex-shrink: 0;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: var(--radius-full);
+    background: var(--muted-gray);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.cs-header .char-session-status-live {
+    background: var(--success-emerald);
+    box-shadow: 0 0 10px rgba(46, 90, 58, 0.65);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .cs-header .char-session-status-live {
+        animation: char-session-pulse 2s ease-in-out infinite;
+    }
+}
+
+@keyframes char-session-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.75;
+        transform: scale(1.15);
+    }
+}
+
+.cs-header .char-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cs-header .char-info > h1 {
+    margin: 0;
+    line-height: 1.2;
+}
+
+.cs-header .char-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.25rem;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.cs-header .char-xp {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+    line-height: 1.5;
+}
+
+/* Beats | Experiences | Total XP on one row (wraps only when the viewport is very narrow). */
+.cs-header .char-xp-trackers {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    max-width: 100%;
+}
+
+@media (min-width: 768px) {
+    .cs-header .char-xp-trackers {
+        flex-wrap: nowrap;
+    }
+}
+
+.cs-header .char-xp-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.5rem;
+}
+
+.cs-header .xp-counter,
+.cs-header .xp-total {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    min-height: 1.5em;
+    line-height: 1.5;
+    flex-shrink: 0;
+}
+
+.cs-header .xp-counter-label {
+    font-family: var(--font-heading);
+    font-size: 0.82em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--crimson-glow);
+    font-weight: 600;
+}
+
+.cs-header .xp-counter-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--bone-white);
+}
+
+.cs-header .xp-counter-btn {
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    line-height: 1;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--bone-white);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.cs-header .xp-counter-btn:hover:not(:disabled) {
+    border-color: var(--crimson-glow);
+    background: rgba(139, 0, 0, 0.35);
+}
+
+.cs-header .xp-counter-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Character sheet tabs — echo SharedHeader subnav (nav-tab + Grimoire tokens) */
+.tab-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.25rem 0.5rem;
+    padding: 0.35rem 0.5rem 0;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--muted-gray);
+    background: linear-gradient(180deg, var(--deep-black) 0%, var(--charcoal) 100%);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tab-btn {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition:
+        color var(--transition-fast),
+        border-color var(--transition-fast),
+        background var(--transition-fast);
+}
+
+.tab-btn:hover {
+    color: var(--bone-white);
+    background: rgba(139, 0, 0, 0.12);
+}
+
+.tab-btn:focus {
+    outline: none;
+}
+
+.tab-btn:focus-visible {
+    color: var(--bone-white);
+    border-bottom-color: var(--crimson-glow);
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.25);
+}
+
+.tab-btn.active {
+    color: var(--bone-white);
+    border-bottom-color: var(--crimson-glow);
+}
+
+/* Campaign details: chronicle NavLink bar + nested roster tab bar */
+.campaign-chronicle-nav {
+    margin-top: 1rem;
+}
+
+.campaign-roster-tab-bar {
+    margin-top: 0.5rem;
+}
+
+/* Player invite modal — comfortable width for URL field */
+.player-invite-modal.modal-panel {
+    max-width: 36rem;
+    width: calc(100% - 2rem);
+}
+
+/* Space between full-width Skills and the two-column row below (sheet / view-only / advancement) */
+.cs-grid > .cs-section.cs-skills {
+    margin-bottom: 1.5rem;
+}

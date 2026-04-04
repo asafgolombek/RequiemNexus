@@ -12,7 +12,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>NPC Detail - Requiem Nexus</PageTitle>
+<PageTitle>@(_npc?.Name is { } npcName ? $"{npcName} — NPC" : "NPC") — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     @if (_accessDenied)

@@ -14,7 +14,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>@(_character?.Name ?? "Character") - View Only - Requiem Nexus</PageTitle>
+<PageTitle>@(!_loaded ? "View-only sheet" : _character?.Name is { } name ? name : "View-only sheet") — View only — Requiem Nexus</PageTitle>
 
 @if (_character == null && !_loaded)
 {

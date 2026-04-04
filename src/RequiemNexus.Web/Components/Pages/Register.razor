@@ -24,14 +24,14 @@
 
         @if (!string.IsNullOrEmpty(_errorMessage))
         {
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger alert-rn" role="alert">
                 @_errorMessage
             </div>
         }
 
         @if (_registrationSuccess)
         {
-            <div class="alert alert-success mt-4" role="alert">
+            <div class="alert alert-success alert-rn mt-4" role="alert">
                 Registration successful! Please check your email to verify your account before logging in.
             </div>
             <div class="login-footer">

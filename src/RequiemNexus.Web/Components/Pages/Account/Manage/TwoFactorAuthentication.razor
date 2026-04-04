@@ -16,7 +16,7 @@ else if (user is not null)
 {
     @if (is2faEnabled)
     {
-        <div class="alert alert-success" role="alert">
+        <div class="alert alert-success alert-rn" role="alert">
             <strong>2FA is enabled.</strong> Your account is protected.
         </div>
         
@@ -24,14 +24,14 @@ else if (user is not null)
         
         @if (recoveryCodesLeft == 0)
         {
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger alert-rn" role="alert">
                 <strong>You have no recovery codes left.</strong>
                 <p>You must <a href="/Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
             </div>
         }
         else if (recoveryCodesLeft <= 3)
         {
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning alert-rn" role="alert">
                 <strong>You have @recoveryCodesLeft recovery codes left.</strong>
                 <p>You should <a href="/Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
             </div>
@@ -44,7 +44,7 @@ else if (user is not null)
     }
     else
     {
-        <div class="alert alert-secondary" role="alert">
+        <div class="alert alert-secondary alert-rn" role="alert">
             <strong>2FA is not enabled.</strong> Add an authenticator app or a security key.
         </div>
     }

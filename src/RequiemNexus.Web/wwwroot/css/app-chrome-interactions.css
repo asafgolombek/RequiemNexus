@@ -1,0 +1,75 @@
+﻿/* ---------- Focus Rings & Micro-Interactions ---------- */
+:focus-visible {
+    outline: 2px solid var(--crimson);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.2);
+    transition: box-shadow 0.2s ease;
+}
+
+/* Button Ripple */
+.btn-primary, .btn-login, .btn-secondary, .btn-primary-rn, .btn-secondary-rn, .btn-rn-primary, .btn-rn-secondary, .btn-rn-gold {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after, .btn-login::after, .btn-secondary::after, .btn-primary-rn::after, .btn-secondary-rn::after, .btn-rn-primary::after, .btn-rn-secondary::after, .btn-rn-gold::after {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: var(--crimson);
+    background: radial-gradient(circle, var(--crimson-glow) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+    left: var(--ripple-x, 50%);
+    top: var(--ripple-y, 50%);
+}
+
+.ripple-active::after {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
+    100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+
+/* Long-press Confirm */
+.btn-danger-hold,
+.btn-rn-danger-hold {
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btn-danger-hold::before,
+.btn-rn-danger-hold::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 0%;
+    background: rgba(139, 0, 0, 0.4);
+    transition: width 1.5s linear;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.btn-danger-hold.holding::before,
+.btn-rn-danger-hold.holding::before {
+    width: 100%;
+}
+
+/* Input Focus Glow Normalization */
+.input-grimoire, .input-container:focus-within {
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.input-grimoire:focus, .input-container:focus-within {
+    outline: none;
+    border-color: var(--crimson);
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
+}
+

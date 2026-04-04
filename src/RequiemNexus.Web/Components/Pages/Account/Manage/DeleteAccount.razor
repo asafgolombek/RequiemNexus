@@ -20,7 +20,7 @@
 }
 else if (isDeletionScheduled)
 {
-    <div class="alert alert-warning" role="alert">
+    <div class="alert alert-warning alert-rn" role="alert">
         <strong>Account deletion is scheduled.</strong><br />
         Your account and all associated data will be permanently deleted on
         <strong>@deletionDate!.Value.ToString("MMMM dd, yyyy")</strong>.
@@ -29,7 +29,7 @@ else if (isDeletionScheduled)
 
     @if (!string.IsNullOrEmpty(statusMessage))
     {
-        <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">
+        <div class="alert alert-rn @(isError ? "alert-danger" : "alert-success")" role="alert">
             @statusMessage
         </div>
     }
@@ -47,7 +47,7 @@ else if (isDeletionScheduled)
 }
 else
 {
-    <div class="alert alert-danger" role="alert">
+    <div class="alert alert-danger alert-rn" role="alert">
         <strong>Warning:</strong> This action schedules your account for permanent deletion.
         You will have a <strong>30-day grace period</strong> to cancel. After that, your account,
         characters, and all associated data will be permanently and irreversibly deleted.
@@ -55,7 +55,7 @@ else
 
     @if (!string.IsNullOrEmpty(statusMessage))
     {
-        <div class="alert @(isError ? "alert-danger" : "alert-success")" role="alert">
+        <div class="alert alert-rn @(isError ? "alert-danger" : "alert-success")" role="alert">
             @statusMessage
         </div>
     }

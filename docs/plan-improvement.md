@@ -6,7 +6,7 @@
 
 1. **Waves 1–4 are delivered.** Sections 1–6 below are a **Grimoire / reference** (patterns, rationale, and history). They are **not** a fresh implementation checklist unless you are explicitly picking up an item listed as open in [Status summary](#status-summary) or [Section 8](#section-8--plan-closure-phase-20-vs-backlog).
 2. **Fast path:** Read [Status summary](#status-summary) (completed vs optional rows) and [Section 8](#section-8--plan-closure-phase-20-vs-backlog). Use [Consolidated backlog](#section-7--consolidated-priority-backlog) (§7) for numbered item truth; avoid re-deriving scope from long narrative sections.
-3. **Optional follow-up:** Remaining **optional** backlog is mostly **`InitiativeTracker` code-behind file-size** ([Next step](#agent-next-step)) — markup is split into **`InitiativeParts/`** (2026-04-04); hub load concurrency, session subscriptions, and drag state remain in `InitiativeTracker.Session.razor.cs`, `InitiativeTracker.EncounterLoad.razor.cs`, and `IInitiativeTrackerDragState`. Everything else in §7 marked done is **done** in-tree.
+3. **Optional follow-up:** **`InitiativeTracker`** decomposition and **SignalR partial rename** are **done** (2026-04-04). **#13 / #14 sweep (2026-04-04):** contextual **`PageTitle`** while skeletons load (`CampaignCharacterView`, `FactionDetail`, `NpcDetail`, `CharacterDetails` punctuation); **`.alert-rn`** shares Gothic **`.alert`** base in `app-chrome.css` (hub parity); **Login** / **Register** alerts include **`alert-rn`**. Residual: other auth/manage pages and intentional hub **`alert-rn`** empty-states — see [Status summary](#status-summary).
 
 > **Scope:** Performance, large-file decomposition (migrations excluded), UI/UX consistency, and SOLID principle enforcement.
 > **Date:** 2026-04-02 (line counts correct as of this date — they will drift). **Web decomposition inventory** (§1.1 / §1.3 campaign & combat UI) extended 2026-04-03.
@@ -54,7 +54,7 @@
 | 16 | `Console.WriteLine` → `ILogger` across all `src/` production code |
 | 17 | `RiteExtendedRollPanel` + **`DiceRollerStandardPanel`** extracted from `DiceRollerModal` (2026-04-04) |
 | 18 | `CharacterAdvancement` section components extracted (`CharacterSheet/`) |
-| 19 *(partial)* | `InitiativeTracker` — `Session` + `EncounterLoad` + **feature `.razor.cs` partials** (`State`, `AddParticipant`, `Announcements`, `Tilts`, `NpcCombat`, `EncounterFlow`, `Modals`, `Display`) + `IInitiativeTrackerDragState`, **`InitiativeParts/`** (2026-04-04) |
+| 19 | `InitiativeTracker` — **`SignalR`** (hub subscriptions) + `EncounterLoad` + feature `.razor.cs` partials (`State`, `AddParticipant`, `Announcements`, `Tilts`, `NpcCombat`, `EncounterFlow`, `Modals`, `Display`) + `IInitiativeTrackerDragState`, **`InitiativeParts/`** (2026-04-04); cosmetic rename `Session` → **`SignalR`** partial filename (2026-04-04) |
 | 20 | `EncounterManager` — `EncounterParts/` UI + `NpcPicker` + `SmartLaunch` code-behind partials |
 | 21 | `ICharacterReader` / `ICharacterWriter` split on `ICharacterService` |
 | 22 | `TraitResolver` — switch replaced with `FrozenDictionary` dispatch |
@@ -72,29 +72,16 @@
 
 | # | Priority | Item | Notes |
 |---|---|---|---|
-| 19 *(remainder)* | P4 *(optional)* | `InitiativeTracker` — **`.razor` + `.razor.cs` splits delivered (2026-04-04).** **Optional cosmetic only:** rename `InitiativeTracker.Session.razor.cs` → `*.SignalR.razor.cs` for discoverability | Hub + load + drag unchanged — see §1.1 |
-| 13 *(residual)* | P3 | `PageTitle "Loading…"` fallbacks on some pages | Minor; intentional on others |
-| 14 *(residual)* | P2 | Login/register error surfaces + residual `alert-rn` on some hub pages | Intentional where inline/validation |
+| 13 *(residual)* | P4 | Further `PageTitle` tweaks on low-traffic pages | Core sheets + faction/NPC/view-only **done** (2026-04-04) |
+| 14 *(residual)* | P3 | Other **Account/Manage** alerts vs. `alert-rn`; hub empty-state **`alert-rn`** | Intentional per §4.2; **Login/Register** aligned |
 
 ### ➡️ Next Step
 
 <a id="agent-next-step"></a>
 
-**`InitiativeTracker` (backlog #19)** — P2-style concurrency concerns are **addressed in-tree**; what remains is **optional P3** maintainability (smaller `.razor` / `.razor.cs` files).
+**Backlog #19 (`InitiativeTracker`)** — **complete** (2026-04-04): `InitiativeParts/*`, feature partials, `IInitiativeTrackerDragState`, and **`InitiativeTracker.SignalR.razor.cs`** (hub subscriptions + initiative/character update handlers).
 
-**Already delivered (do not re-implement):**
-
-- Hub subscriptions (`SubscribeInitiativeUpdated`, `SubscribeCharacterUpdated`) and handlers → `InitiativeTracker.Session.razor.cs`
-- Encounter load cancellation → `InitiativeTracker.EncounterLoad.razor.cs` (`_loadEncounterCts` linked to dispose token)
-- Drag/reorder state → `IInitiativeTrackerDragState` / `InitiativeTrackerDragState` (registered scoped)
-- Loading UI → `<SkeletonLoader Variant="tracker" />` (§4.1)
-- Initiative markup → `InitiativeParts/*` + `InitiativeOrderList.razor.css`; initiative code-behind → `InitiativeTracker.*` partials except lifecycle in `InitiativeTracker.razor.cs` (2026-04-04)
-
-**Recommended order if you resume optional splits:**
-
-1. ~~Extract child components from `InitiativeTracker.razor`~~ — **done (2026-04-04):** `InitiativeParts/*` (order list + row, add panel, turn toolbar, blood log sidebar); tilt/combat actions live inside `InitiativeOrderRow` (not a separate tilt-only file).
-2. ~~Move remaining large `@code` from `InitiativeTracker.razor.cs` into partials~~ — **done (2026-04-04):** `InitiativeTracker.State`, `.AddParticipant`, `.Announcements`, `.Tilts`, `.NpcCombat`, `.EncounterFlow`, `.Modals`, `.Display` (+ existing `Session`, `EncounterLoad`)
-3. Optional cosmetic: rename `InitiativeTracker.Session.razor.cs` → `InitiativeTracker.SignalR.razor.cs` **only** if the team prefers “SignalR” in the filename — behavior stays the same
+**If you pick up optional polish next:** **#13** — remaining pages if any still use vague titles during load; **#14** — extend **`alert-rn`** on **Account/Manage** Razor files for full parity (optional); hub **`alert-rn`** empty-states stay on-page per §4.2.
 
 ---
 
@@ -131,9 +118,9 @@ Files over ~300 lines are a maintenance red flag. The list below excludes the `M
 
 **Problem (historical):** One class owned drag-and-drop, tilt/combat modals, and hub subscriptions; load concurrency was previously guarded with a semaphore.
 
-**Delivered (partial #19):** `InitiativeTracker.Session.razor.cs` — hub subscription registration + `InitiativeUpdated` / `CharacterUpdated` handlers. `InitiativeTracker.EncounterLoad.razor.cs` — `_loadEncounterCts` for cancelable encounter loads. `IInitiativeTrackerDragState` — scoped drag item for reorder. **Loading:** `<SkeletonLoader Variant="tracker" />` per §4.1.
+**Delivered (#19):** `InitiativeTracker.SignalR.razor.cs` — hub subscription registration + `InitiativeUpdated` / `CharacterUpdated` handlers (file renamed from `*.Session.razor.cs` for discoverability, 2026-04-04). `InitiativeTracker.EncounterLoad.razor.cs` — `_loadEncounterCts` for cancelable encounter loads. `IInitiativeTrackerDragState` — scoped drag item for reorder. **Loading:** `<SkeletonLoader Variant="tracker" />` per §4.1.
 
-**Delivered (P3, 2026-04-04):** Child components under `Web/Components/Pages/Campaigns/InitiativeParts/` — add-participant card, turn toolbar, order list + per-row UI (tilts + ST combat actions + NPC roll panel host), blood-log sidebar; initiative row/list CSS in `InitiativeOrderList.razor.css`. **Optional:** rename `InitiativeTracker.Session.razor.cs` → `InitiativeTracker.SignalR.razor.cs` (cosmetic only; 2026-04-04 feature partials already split the code-behind).
+**Delivered (P3, 2026-04-04):** Child components under `Web/Components/Pages/Campaigns/InitiativeParts/` — add-participant card, turn toolbar, order list + per-row UI (tilts + ST combat actions + NPC roll panel host), blood-log sidebar; initiative row/list CSS in `InitiativeOrderList.razor.css`.
 
 **See also:** §1.3 (`InitiativeTracker`) for a Razor-focused summary; backlog **#19**.
 
@@ -457,7 +444,7 @@ For **new** indexes in future work: use **EF Core migration** — add `HasIndex`
 - `<SkeletonLoader Variant="card" Count="3" />` — Campaigns index ✓
 - `<SkeletonLoader Variant="encounter-list" />` — Encounter manager ✓ (2026-04-03)
 - `<SkeletonLoader Variant="tracker" />` — Initiative tracker ✓ (2026-04-03)
-- Custom loading markup — Blood Bonds Panel, Ghouls Tab, character sheet embeds, NPC detail ✓ (`NpcDetail.razor` — `SkeletonLoader Variant="card"`), **Account/Manage** ✓ (`SkeletonLoader Variant="card"`, 2026-04-04), **`MeleeAttackResolveModal`** ✓ (`Variant="panel"`, 2026-04-04); **residual (optional):** `PageTitle` fallbacks (`"Loading..."`) on some pages
+- Custom loading markup — Blood Bonds Panel, Ghouls Tab, character sheet embeds, NPC detail ✓ (`NpcDetail.razor` — `SkeletonLoader Variant="card"`), **Account/Manage** ✓ (`SkeletonLoader Variant="card"`, 2026-04-04), **`MeleeAttackResolveModal`** ✓ (`Variant="panel"`, 2026-04-04); **`PageTitle`** during skeletons improved for **view-only / faction / NPC** (2026-04-04)
 
 **Fix:** Mandate `<SkeletonLoader>` or `<LoadingContainer>` for all loading states. Delete ad-hoc loading markup. Add skeleton variants for remaining page types (**tracker** ✓, **encounter-list** ✓, **NPC detail** ✓).
 
@@ -567,13 +554,13 @@ The backlog items are not independent. The order below reduces rework and risk.
 | 10 | P2 | SOLID | Introduce `IRiteActivationStrategy` per tradition in `SorceryActivationService` — **done (2026-04-03)** |
 | 11 | P2 | Performance | Push coil eligibility filter into EF query in `CoilService` — **superseded:** eligibility uses `IReferenceDataCache.CoilDefinitions` + Ordo/prerequisite rules in memory (no per-request coil table scan) |
 | 12 | P2 | Performance | Reduce 3 round-trips in `CampaignService.GetCampaignByIdAsync` — **done:** membership folded into main query + user hydration query (see `CampaignService.GetCampaignByIdAsync` implementation) |
-| 13 | P2 | UI/UX | Standardize loading states to `<SkeletonLoader>` / `<LoadingContainer>` — **substantially done (2026-04-04)** — see §4.1; residual: `PageTitle` `"Loading..."` fallbacks |
-| 14 | P2 | UI/UX | Standardize error surfaces — `ToastService` for global errors, inline text for form validation — **partial:** hub/campaign flows + **`CharacterAdvancement`** (2026-04-03); login/register and residual `alert-rn` on some pages unchanged where intentional (see §4.2) |
+| 13 | P2 | UI/UX | Standardize loading states to `<SkeletonLoader>` / `<LoadingContainer>` — **substantially done** — see §4.1; **`PageTitle`** contextual during skeletons: **`CampaignCharacterView`**, **`FactionDetail`**, **`NpcDetail`**, **`CharacterDetails`** punctuation (2026-04-04); further pages optional |
+| 14 | P2 | UI/UX | Standardize error surfaces — `ToastService` for global errors, inline text for form validation — **partial:** hub/campaign + **`CharacterAdvancement`**; **`.alert` / `.alert-rn`** Gothic base shared in **`app-chrome.css`**; **Login** / **Register** use **`alert-rn`** (2026-04-04); Account/Manage optional pass |
 | 15 | P2 | UI/UX | Add intermediate loading feedback on modal trigger buttons — **done (2026-04-03):** `CharacterDetails` + `CharacterAdvancement` (rite) `_pendingModal` + spinners |
 | 16 | P2 | Logging | Audit and replace all `Console.WriteLine` in production code with `ILogger` — **done** for `src/` (remaining: `TestDbInitializer` only, acceptable per §4.5); `OpenReference` — **interim UX** via info toast (full rules panel optional backlog) |
 | 17 | P3 | Large File | `DiceRollerModal` decomposition — **done** — `RiteExtendedRollPanel.razor` + **`DiceRollerStandardPanel.razor`** + `DiceRollerModal.razor.cs`; scoped CSS split across `DiceRollerStandardPanel.razor.css`, `RiteExtendedRollPanel.razor.css`, `DiceRollerModal.razor.css` |
 | 18 | P3 | Large File | Extract section components from `CharacterAdvancement.razor` — **done (2026-04-03)** — see §1.3 `CharacterAdvancement` |
-| 19 | P3 | Large File | Decompose `InitiativeTracker` — **done (2026-04-04):** `Session`, `EncounterLoad`, **`State`**, **`AddParticipant`**, **`Announcements`**, **`Tilts`**, **`NpcCombat`**, **`EncounterFlow`**, **`Modals`**, **`Display`** `.razor.cs` partials + `InitiativeParts/` + `IInitiativeTrackerDragState` + skeleton; **optional:** rename `Session` partial file to `SignalR` ([Next step](#agent-next-step)) |
+| 19 | P3 | Large File | Decompose `InitiativeTracker` — **done (2026-04-04):** **`SignalR`** (hub), `EncounterLoad`, **`State`**, **`AddParticipant`**, **`Announcements`**, **`Tilts`**, **`NpcCombat`**, **`EncounterFlow`**, **`Modals`**, **`Display`** `.razor.cs` partials + `InitiativeParts/` + `IInitiativeTrackerDragState` + skeleton |
 | 20 | P3 | Large File | `EncounterManager` — **done (2026-04-03–04):** `EncounterParts/` UI + **`EncounterManager.NpcPicker.razor.cs`** + **`EncounterManager.SmartLaunch.razor.cs`**; main `.razor.cs` holds fields, load, create/template/rename flows |
 | 21 | P3 | SOLID | Add `ICharacterReader` / `ICharacterWriter` split — **done** — `ICharacterService : ICharacterReader, ICharacterWriter` |
 | 22 | P3 | SOLID | Replace trait resolution switch with dictionary dispatch — **done** — `TraitResolver` uses `FrozenDictionary<TraitType, Func<Character, TraitReference, int>>` for pool traits |
@@ -602,8 +589,8 @@ The backlog items are not independent. The order below reduces rework and risk.
 | **Waves 1–4** (Section 5) | **Delivered** — seed pipeline, reference cache, query/modifier/rite refactors, `CharacterDetails` partials, loading/error/modal polish, `DanseMacabre` tabs, `EncounterParts/`, `CharacterAdvancement` sections |
 | **Post-Wave sweep (2026-04-04)** | **Delivered** — `CharacterProgressionSnapshotDto` (#5), `EncounterManager.NpcPicker/SmartLaunch` partials (#20), `MeleeAttackResolveModal` + `Account/Manage` skeletons (#13), `CampaignDetailsParts/` (#30), `GlimpseSocialManeuverParts/` (#32), `StorytellerGlimpseOverview` (#33) |
 | **This document** | **Closed** as the Phase 20 technical-polish **delivery record**; edits here should be **status syncs** or **new backlog rows**, not reopened Wave scope without an explicit mission/plan decision |
-| **§7 rows open** | **#19** — optional P4: `InitiativeTracker.Session.razor.cs` → `*.SignalR.razor.cs` rename only. **#13 residual** — `PageTitle "Loading…"` (P3). **#14 residual** — login/register + some `alert-rn` (intentional where noted) |
-| **Next step** | **#19** — optional filename rename for SignalR partial; **#17** standard pool child **delivered** (`DiceRollerStandardPanel`) — see [Next step](#agent-next-step) |
+| **§7 rows open** | **#13** / **#14** — minor residuals (see table above). **#19** — **closed** |
+| **Next step** | Optional: **Account/Manage** `alert-rn` pass — see [Next step](#agent-next-step) |
 
 ---
 
@@ -626,7 +613,8 @@ The backlog items are not independent. The order below reduces rework and risk.
 | `IModifierProvider` + `ModifierService` | Open/closed modifier aggregation — add a provider + DI registration instead of editing the orchestrator |
 | `IRiteActivationStrategy` + `SorceryActivationService` | Open/closed blood sorcery activation — add a strategy + DI registration per tradition |
 | `SkeletonLoader.razor`, `LoadingContainer.razor` | Loading state components — use everywhere |
-| `InitiativeTracker.Session.razor.cs`, `InitiativeTracker.EncounterLoad.razor.cs`, `IInitiativeTrackerDragState` | Large tracker page — isolate SignalR subscriptions, cancelable load pipeline, scoped drag state (#19 partial) |
+| `app-chrome.css` — `.alert` + `.alert-rn` | Shared Gothic alert chrome — hub **`alert-rn alert-*`** and auth **`alert alert-*`** both get base padding/background |
+| `InitiativeTracker.SignalR.razor.cs`, `InitiativeTracker.EncounterLoad.razor.cs`, `IInitiativeTrackerDragState` | Large tracker page — isolate SignalR subscriptions, cancelable load pipeline, scoped drag state (#19) |
 | `InitiativeParts/*` (`InitiativeOrderList`, `InitiativeOrderRow`, `InitiativeAddParticipantPanel`, …) | Initiative tracker — markup decomposition mirroring `EncounterParts/` (#19) |
 | `InitiativeTracker.State` / `.AddParticipant` / `.Announcements` / `.Tilts` / `.NpcCombat` / `.EncounterFlow` / `.Modals` / `.Display` | Initiative tracker — code-behind partials (#19) |
 | `DiceRollerStandardPanel` | Standard pool / trait / modifier / again-rote UI for `DiceRollerModal` (#17) |
