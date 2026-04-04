@@ -1,0 +1,70 @@
+@using RequiemNexus.Data.Models
+
+<div class="danger-zone" style="margin-top:2rem;">
+    @if (!IsStoryteller && Campaign.Characters.Any(c => c.ApplicationUserId == CurrentUserId))
+    {
+        @if (ShowConfirmLeave)
+        {
+            <div class="confirm-card card-rn">
+                <p>Leave this campaign? Your character will return to your unassigned pool.</p>
+                <button class="btn-rn-primary" disabled="@Busy" @onclick="OnConfirmLeave">Yes, Leave</button>
+                <button class="btn-rn-ghost" @onclick="OnCancelConfirm">Cancel</button>
+            </div>
+        }
+        else
+        {
+            <button class="btn-rn-ghost" @onclick="OnRequestLeave">Leave Campaign</button>
+        }
+    }
+
+    @if (IsStoryteller)
+    {
+        @if (ShowConfirmDelete)
+        {
+            <div class="confirm-card card-rn">
+                <p>⚠️ Delete campaign <strong>@Campaign.Name</strong>? This cannot be undone. All enrolled characters will be returned to their players.</p>
+                <button class="btn-rn-primary" disabled="@Busy" @onclick="OnConfirmDelete">Yes, Delete</button>
+                <button class="btn-rn-ghost" @onclick="OnCancelConfirm">Cancel</button>
+            </div>
+        }
+        else
+        {
+            <button class="btn-rn-ghost" style="margin-top: 1rem;" @onclick="OnRequestDelete">Delete Campaign</button>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Campaign Campaign { get; set; } = default!;
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    [Parameter]
+    public bool IsStoryteller { get; set; }
+
+    [Parameter]
+    public bool ShowConfirmLeave { get; set; }
+
+    [Parameter]
+    public bool ShowConfirmDelete { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnRequestLeave { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirmLeave { get; set; }
+
+    [Parameter]
+    public EventCallback OnRequestDelete { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirmDelete { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelConfirm { get; set; }
+}

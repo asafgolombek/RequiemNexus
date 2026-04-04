@@ -1,0 +1,82 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="margin-top:0;">
+    @if (!ShowAddForm)
+    {
+        <div class="flex-row flex-wrap items-center gap-sm" style="margin-bottom:0.75rem; justify-content:flex-end;">
+            <button type="button" class="btn-rn-primary" @onclick="OnOpenAddForm">Add prep note</button>
+        </div>
+    }
+    @if (ShowAddForm)
+    {
+        <div class="card-rn" style="margin-bottom:1rem;">
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <label class="font-sm" for="@($"{FormFieldIdPrefix}-title")">Title</label>
+                <input id="@($"{FormFieldIdPrefix}-title")" class="form-control" value="@NewTitle" @oninput="OnTitleInput" placeholder="Title" autocomplete="off" />
+                <label class="font-sm" for="@($"{FormFieldIdPrefix}-body")">Body</label>
+                <textarea id="@($"{FormFieldIdPrefix}-body")" class="form-control" rows="4" value="@NewBody" @oninput="OnBodyInput" placeholder="Body"></textarea>
+                <div class="flex-row flex-wrap gap-sm" style="margin-top:0.25rem;">
+                    <button type="button" class="btn-rn-primary" disabled="@(string.IsNullOrWhiteSpace(NewTitle))" @onclick="OnSave">Save</button>
+                    <button type="button" class="btn-rn-ghost" @onclick="OnDiscard">Discard</button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (Entries.Count == 0)
+    {
+        <p style="color:var(--gothic-muted);font-size:0.9em;">No prep notes yet.</p>
+    }
+    else
+    {
+        @foreach (SessionPrepNote prepNote in Entries)
+        {
+            <div class="card-rn" style="margin-bottom:0.75rem;border-left:3px solid var(--blood-red);">
+                <strong>@prepNote.Title</strong>
+                <p style="margin:0.25rem 0 0;font-size:0.9em;white-space:pre-wrap;">@prepNote.Body</p>
+                <button class="btn-rn-danger" style="font-size:0.75em;margin-top:0.35rem;" @onclick="() => OnDelete.InvokeAsync(prepNote.Id)">Remove</button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>Prefix for stable field ids (accessibility).</summary>
+    [Parameter]
+    public string FormFieldIdPrefix { get; set; } = "campaign-prep";
+
+    [Parameter]
+    public IReadOnlyList<SessionPrepNote> Entries { get; set; } = [];
+
+    [Parameter]
+    public bool ShowAddForm { get; set; }
+
+    [Parameter]
+    public string NewTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string NewBody { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnOpenAddForm { get; set; }
+
+    [Parameter]
+    public EventCallback<string> NewTitleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> NewBodyChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnDiscard { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+    private Task OnTitleInput(ChangeEventArgs e) =>
+        NewTitleChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+
+    private Task OnBodyInput(ChangeEventArgs e) =>
+        NewBodyChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+}

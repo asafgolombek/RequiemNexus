@@ -17,7 +17,7 @@ public static class DbInitializer
     /// <param name="roleManager">ASP.NET Core Identity role manager.</param>
     /// <param name="logger">Logger for the seed pipeline.</param>
     /// <param name="seeders">Registered seed steps (typically from DI: <c>GetServices&lt;ISeeder&gt;()</c>).</param>
-    /// <param name="runMigrations">When <see langword="true"/>, applies pending EF Core migrations before seeding.</param>
+    /// <param name="runMigrations">When <see langword="true"/>, applies pending EF Core migrations before seeding when the provider is relational (skipped for InMemory and other non-relational stores).</param>
     public static async Task InitializeAsync(
         ApplicationDbContext context,
         RoleManager<IdentityRole> roleManager,
@@ -25,7 +25,7 @@ public static class DbInitializer
         IEnumerable<ISeeder> seeders,
         bool runMigrations = false)
     {
-        if (runMigrations)
+        if (runMigrations && context.Database.IsRelational())
         {
             await context.Database.MigrateAsync();
         }

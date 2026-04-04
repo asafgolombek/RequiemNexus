@@ -169,7 +169,7 @@ public class CharacterManagementService(
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
-    public async Task AddBeatAsync(int characterId, string userId)
+    public async Task<CharacterProgressionSnapshotDto> AddBeatAsync(int characterId, string userId)
     {
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add Beats");
 
@@ -202,9 +202,10 @@ public class CharacterManagementService(
 
         await _dbContext.SaveChangesAsync();
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        return CharacterProgressionSnapshotDto.FromCharacter(character);
     }
 
-    public async Task RemoveBeatAsync(int characterId, string userId)
+    public async Task<CharacterProgressionSnapshotDto> RemoveBeatAsync(int characterId, string userId)
     {
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "remove Beats");
 
@@ -217,9 +218,11 @@ public class CharacterManagementService(
             await _dbContext.SaveChangesAsync();
             await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
+
+        return CharacterProgressionSnapshotDto.FromCharacter(character);
     }
 
-    public async Task AddXPAsync(int characterId, string userId)
+    public async Task<CharacterProgressionSnapshotDto> AddXPAsync(int characterId, string userId)
     {
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add XP");
 
@@ -239,9 +242,10 @@ public class CharacterManagementService(
 
         await _dbContext.SaveChangesAsync();
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
+        return CharacterProgressionSnapshotDto.FromCharacter(character);
     }
 
-    public async Task RemoveXPAsync(int characterId, string userId)
+    public async Task<CharacterProgressionSnapshotDto> RemoveXPAsync(int characterId, string userId)
     {
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "remove XP");
 
@@ -267,6 +271,8 @@ public class CharacterManagementService(
             await _dbContext.SaveChangesAsync();
             await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
+
+        return CharacterProgressionSnapshotDto.FromCharacter(character);
     }
 
     /// <inheritdoc />

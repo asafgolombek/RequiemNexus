@@ -180,9 +180,12 @@ public class CharacterServiceIntegrationTests
         await ctx.SaveChangesAsync();
 
         // Act
-        await service.AddBeatAsync(character.Id, character.ApplicationUserId);
+        var snap = await service.AddBeatAsync(character.Id, character.ApplicationUserId);
 
         // Assert
+        Assert.Equal(0, snap.Beats);
+        Assert.Equal(1, snap.ExperiencePoints);
+        Assert.Equal(1, snap.TotalExperiencePoints);
         var dbChar = await ctx.Characters.FindAsync(character.Id);
         Assert.NotNull(dbChar);
         Assert.Equal(0, dbChar.Beats);

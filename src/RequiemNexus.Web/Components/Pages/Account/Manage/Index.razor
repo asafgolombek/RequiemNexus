@@ -5,6 +5,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -117,7 +118,7 @@
 }
 else
 {
-    <p>Loading profile...</p>
+    <SkeletonLoader Variant="card" Count="2" />
 }
 
 <style>

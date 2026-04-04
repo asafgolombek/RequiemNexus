@@ -1,6 +1,7 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Domain
 @using RequiemNexus.Domain.Enums
+@using RequiemNexus.Web.Components.UI
 
 @if (IsOpen)
 {
@@ -13,7 +14,7 @@
             <div class="rn-modal-body" style="font-size: 0.9rem;">
                 @if (_attacker == null)
                 {
-                    <p class="text-muted-rn">Loading attacker…</p>
+                    <SkeletonLoader Variant="panel" />
                 }
                 else
                 {

@@ -91,6 +91,7 @@
         @if (_glimpseTab == "overview")
         {
             <div class="glimpse-tab-panel" id="panel-glimpse-overview" role="tabpanel" aria-labelledby="tab-glimpse-overview">
+                <StorytellerGlimpseOverview>
                 @if (_degAlerts.Count > 0)
                 {
                     <div class="degeneration-glimpse-banners" role="region" aria-label="Pending degeneration checks">
@@ -347,6 +348,7 @@
                         }
                     </div>
                 }
+                </StorytellerGlimpseOverview>
             </div>
         }
         else if (_glimpseTab == "social")

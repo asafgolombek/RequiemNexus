@@ -1,0 +1,30 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="tab-bar campaign-roster-tab-bar" role="tablist" aria-label="Campaign roster sections">
+    <button type="button" class="tab-btn @TabClass("players")" role="tab" aria-selected="@(ActiveTab == "players")" id="roster-tab-players" @onclick='() => SelectTab("players")' @onkeydown="OnKeydown">Players</button>
+    <button type="button" class="tab-btn @TabClass("lore")" role="tab" aria-selected="@(ActiveTab == "lore")" id="roster-tab-lore" @onclick='() => SelectTab("lore")' @onkeydown="OnKeydown">Lore</button>
+    @if (IsStoryteller)
+    {
+        <button type="button" class="tab-btn @TabClass("prep")" role="tab" aria-selected="@(ActiveTab == "prep")" id="roster-tab-prep" @onclick='() => SelectTab("prep")' @onkeydown="OnKeydown">Session prep</button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string ActiveTab { get; set; } = "players";
+
+    [Parameter]
+    public bool IsStoryteller { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ActiveTabChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<KeyboardEventArgs> OnTabKeydown { get; set; }
+
+    private string TabClass(string tab) => ActiveTab == tab ? "active" : string.Empty;
+
+    private async Task SelectTab(string tab) => await ActiveTabChanged.InvokeAsync(tab);
+
+    private Task OnKeydown(KeyboardEventArgs e) => OnTabKeydown.InvokeAsync(e);
+}

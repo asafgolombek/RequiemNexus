@@ -42,8 +42,12 @@ using (IServiceScope scope = app.Services.CreateScope())
     }
     else
     {
-        // E2E / visual regression: schema must exist before hosted services run; fixture applies seed and loads ReferenceDataCache afterward.
-        await context.Database.MigrateAsync();
+        // E2E / visual regression: relational DB needs schema before hosted services run; fixture applies seed and loads ReferenceDataCache afterward.
+        // Application.Tests swap in InMemory EF — MigrateAsync is not supported; those tests own schema (EnsureCreated).
+        if (context.Database.IsRelational())
+        {
+            await context.Database.MigrateAsync();
+        }
     }
 
     if (app.Environment.IsDevelopment())

@@ -1,0 +1,226 @@
+/* Overview tab — ::deep pierces parent-supplied ChildContent (scoped to StorytellerGlimpse). */
+
+.glimpse-overview-root ::deep .glimpse-card {
+    margin-bottom: 1.5rem;
+}
+
+.glimpse-overview-root ::deep .section-header {
+    margin-bottom: 0.75rem;
+}
+
+.glimpse-overview-root ::deep .coterie-beat-award {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.glimpse-overview-root ::deep .draggable-beat {
+    font-size: 1.5rem;
+    cursor: grab;
+    padding: 0.5rem;
+    background: var(--ash-gray);
+    border: 1px dashed var(--crimson);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.glimpse-overview-root ::deep .draggable-beat:active {
+    cursor: grabbing;
+}
+
+.glimpse-overview-root ::deep .draggable-beat:hover {
+    background: rgba(196, 30, 58, 0.1);
+    transform: scale(1.1);
+}
+
+.glimpse-overview-root ::deep .glimpse-card.drop-zone {
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.glimpse-overview-root ::deep .glimpse-card.drop-zone-active {
+    border: 2px solid var(--crimson);
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(196, 30, 58, 0.4);
+}
+
+.glimpse-overview-root ::deep .coterie-reason-input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.glimpse-overview-root ::deep .feedback-ok {
+    margin-top: 0.5rem;
+    color: var(--success-color);
+}
+
+.glimpse-overview-root ::deep .glimpse-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.glimpse-overview-root ::deep .vitals-grid {
+    display: grid;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.glimpse-overview-root ::deep .vital-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.glimpse-overview-root ::deep .vital-label {
+    font-size: 0.85em;
+    min-width: 85px;
+}
+
+.glimpse-overview-root ::deep .vital-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--ash-gray);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.glimpse-overview-root ::deep .vital-bar {
+    height: 100%;
+    transition: width 0.4s ease;
+}
+
+.glimpse-overview-root ::deep .health-bar { background: var(--crimson); }
+.glimpse-overview-root ::deep .willpower-bar { background: var(--warning-amber); }
+.glimpse-overview-root ::deep .vitae-bar { background: var(--accent-light); }
+
+.glimpse-overview-root ::deep .vital-value {
+    font-size: 0.8em;
+    min-width: 45px;
+    text-align: right;
+    color: var(--text-secondary);
+}
+
+.glimpse-overview-root ::deep .glimpse-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85em;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.glimpse-overview-root ::deep .award-panel {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.glimpse-overview-root ::deep .award-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.glimpse-overview-root ::deep .award-input {
+    flex: 1;
+    min-width: 140px;
+    font-size: 0.85em;
+}
+
+.glimpse-overview-root ::deep .xp-amount-input {
+    width: 70px;
+    font-size: 0.85em;
+}
+
+.glimpse-overview-root ::deep .feedback-small {
+    font-size: 0.8em;
+    margin-top: 0.4rem;
+}
+
+.glimpse-overview-root ::deep .text-small {
+    font-size: 0.85em;
+}
+
+.glimpse-overview-root ::deep .text-xsmall {
+    font-size: 0.75em;
+}
+
+.glimpse-overview-root ::deep .text-muted-rn {
+    color: var(--text-secondary);
+}
+
+.glimpse-overview-root ::deep .flex-center {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.glimpse-overview-root ::deep .flex-baseline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.glimpse-overview-root ::deep .margin-left-auto {
+    margin-left: auto;
+}
+
+.glimpse-overview-root ::deep .btn-align-small {
+    font-size: 0.85em;
+}
+
+.glimpse-overview-root ::deep .btn-small {
+    font-size: 0.8em;
+}
+
+.glimpse-overview-root ::deep .btn-xsmall {
+    font-size: 0.78em;
+}
+
+.glimpse-overview-root ::deep .input-small-text {
+    font-size: 0.85em;
+}
+
+.glimpse-overview-root ::deep .input-xsmall-text {
+    font-size: 0.9em;
+}
+
+.glimpse-overview-root ::deep .mt-small {
+    margin-top: 0.2rem;
+}
+
+.glimpse-overview-root ::deep .ml-small {
+    margin-left: 0.25rem;
+}
+
+.glimpse-overview-root ::deep .degeneration-glimpse-banners {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.glimpse-overview-root ::deep .degeneration-glimpse-banner {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.glimpse-overview-root ::deep .degeneration-glimpse-banner:focus {
+    outline: 2px solid var(--crimson-glow);
+    outline-offset: 2px;
+}
+
+.glimpse-overview-root ::deep .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+}

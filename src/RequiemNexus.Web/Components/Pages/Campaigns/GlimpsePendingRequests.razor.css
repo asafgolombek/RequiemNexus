@@ -1,0 +1,48 @@
+/* Pending approvals — markup lives in this component only (no ::deep needed). */
+
+.glimpse-card {
+    margin-bottom: 1.5rem;
+}
+
+.section-header {
+    margin-bottom: 0.75rem;
+}
+
+.maneuver-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pending-request-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.request-meta {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.request-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.note-input {
+    width: 160px;
+    font-size: 0.85em;
+}
+
+.text-small {
+    font-size: 0.85em;
+}
+
+.text-muted-rn {
+    color: var(--text-secondary);
+}
