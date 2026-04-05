@@ -1,0 +1,51 @@
+.tracker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tracker-label {
+    font-weight: bold;
+    color: var(--text-color);
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-family: var(--font-heading);
+}
+
+.tracker-boxes {
+    display: flex;
+    gap: 4px;
+}
+
+.health-box {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--muted-gray);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: background-color 0.2s, transform 0.15s, border-color 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--bone-white);
+    cursor: pointer;
+}
+
+.health-box:hover {
+    border-color: var(--crimson);
+    transform: scale(1.05);
+}
+
+.health-box.bashing { background: rgba(184, 134, 11, 0.2); border-color: var(--warning-amber); color: var(--warning-amber); }
+.health-box.lethal { background: rgba(139, 0, 0, 0.2); border-color: var(--crimson); color: var(--crimson); }
+.health-box.aggravated { background: rgba(139,0,0,0.4); border-color: var(--crimson-glow); color: var(--bone-white); }
+
+@media (max-width: 768px) {
+    .health-box {
+        width: 24px;
+        height: 24px;
+    }
+}

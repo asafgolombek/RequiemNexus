@@ -1,0 +1,37 @@
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3>Skills</h3>
+    @foreach ((string category, string[] skills) in Categories)
+    {
+        <h4 style="margin:0.75rem 0 0.4rem;font-size:0.9rem;color:var(--color-text-muted,#aaa);">@category</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+            @foreach (string skill in skills)
+            {
+                <label style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);min-width:110px;">
+                    @skill
+                    <input class="form-control"
+                           type="number" min="0" max="5" style="width:80px;"
+                           value="@EditSkills[skill]"
+                           @onchange="e => OnSkillChanged(skill, e)" />
+                </label>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<(string Category, string[] Items)> Categories { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public Dictionary<string, int> EditSkills { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private async Task OnSkillChanged(string skill, ChangeEventArgs e)
+    {
+        int v = int.TryParse(e.Value?.ToString(), out int parsed) ? Math.Clamp(parsed, 0, 5) : 2;
+        EditSkills[skill] = v;
+        await OnChanged.InvokeAsync();
+    }
+}

@@ -33,14 +33,21 @@ public class CampaignServiceTests
         var logger = new Mock<ILogger<CampaignService>>().Object;
         var factory = new MatchingDbContextFactory(options);
         var authHelper = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
-
-        return new CampaignService(ctx, factory, logger, authHelper, new Mock<ISessionService>().Object);
+        var sessionMock = new Mock<ISessionService>().Object;
+        return new CampaignService(
+            ctx,
+            factory,
+            logger,
+            authHelper,
+            new CampaignLoreService(ctx, sessionMock, NullLogger<CampaignLoreService>.Instance),
+            new CampaignSessionPrepService(ctx, authHelper, NullLogger<CampaignSessionPrepService>.Instance));
     }
 
     private static CharacterManagementService CreateCharacterService(ApplicationDbContext ctx, string databaseName)
     {
         IDbContextFactory<ApplicationDbContext> factory = InMemoryApplicationDbContextFactories.ForDatabaseName(databaseName);
         var auth = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
+        IReferenceDataCache referenceCache = ReferenceDataCacheTestDoubles.EmptyButInitialized();
         var humanity = new HumanityService(
             ctx,
             Mock.Of<IAuthorizationHelper>(),
@@ -48,16 +55,23 @@ public class CampaignServiceTests
             Mock.Of<IDiceService>(),
             Mock.Of<ISessionService>(),
             Mock.Of<IConditionService>(),
+            referenceCache,
             NullLogger<HumanityService>.Instance);
+        var characterQuery = new CharacterQueryService(ctx, factory);
+        var session = new Mock<ISessionService>().Object;
+        var creationRules = new RequiemNexus.Domain.Services.CharacterCreationRules();
+        var beatLedger = new BeatLedgerService(ctx);
+        var progression = new CharacterProgressionService(ctx, creationRules, beatLedger, auth, session);
         return new CharacterManagementService(
             ctx,
-            factory,
-            new RequiemNexus.Domain.Services.CharacterCreationRules(),
-            new BeatLedgerService(ctx),
+            creationRules,
             auth,
-            new Mock<ISessionService>().Object,
+            session,
             new CharacterCreationService(),
-            humanity);
+            humanity,
+            referenceCache,
+            characterQuery,
+            progression);
     }
 
     private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName) =>
@@ -308,5 +322,63 @@ public class CampaignServiceTests
         await service.AddCharacterToCampaignAsync(campaign.Id, second.Id, "p");
 
         Assert.Equal(campaign.Id, second.CampaignId);
+    }
+
+    [Fact]
+    public async Task SetDiscordWebhookUrlAsync_StorytellerMaySetAndClear()
+    {
+        string dbName = nameof(SetDiscordWebhookUrlAsync_StorytellerMaySetAndClear);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "Hook", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        const string url = "https://discord.com/api/webhooks/1/abcdefgh";
+        await service.SetDiscordWebhookUrlAsync(campaign.Id, url, "st");
+
+        Campaign? reloaded = await ctx.Campaigns.AsNoTracking().SingleAsync(c => c.Id == campaign.Id);
+        Assert.Equal(url, reloaded.DiscordWebhookUrl);
+
+        await service.SetDiscordWebhookUrlAsync(campaign.Id, null, "st");
+        reloaded = await ctx.Campaigns.AsNoTracking().SingleAsync(c => c.Id == campaign.Id);
+        Assert.Null(reloaded.DiscordWebhookUrl);
+    }
+
+    [Fact]
+    public async Task SetDiscordWebhookUrlAsync_RejectsNonStoryteller()
+    {
+        string dbName = nameof(SetDiscordWebhookUrlAsync_RejectsNonStoryteller);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "X", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.SetDiscordWebhookUrlAsync(
+                campaign.Id,
+                "https://discord.com/api/webhooks/1/tok",
+                "not-st"));
+    }
+
+    [Fact]
+    public async Task SetDiscordWebhookUrlAsync_RejectsInvalidUrl()
+    {
+        string dbName = nameof(SetDiscordWebhookUrlAsync_RejectsInvalidUrl);
+        DbContextOptions<ApplicationDbContext> options = CreateOptions(dbName);
+        using var ctx = CreateContext(options);
+        var service = CreateCampaignService(ctx, options);
+
+        var campaign = new Campaign { Name = "X", StoryTellerId = "st" };
+        ctx.Campaigns.Add(campaign);
+        await ctx.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SetDiscordWebhookUrlAsync(campaign.Id, "https://example.com/hook", "st"));
     }
 }

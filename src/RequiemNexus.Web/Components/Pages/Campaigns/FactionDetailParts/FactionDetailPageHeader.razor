@@ -1,0 +1,17 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+
+<a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Danse Macabre</a>
+
+<div class="campaign-header">
+    <h2>@Faction.Name <span class="badge-rn">@Faction.FactionType</span></h2>
+    <p class="text-muted">Influence Rating: @Faction.InfluenceRating</p>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired]
+    public CityFaction Faction { get; set; } = default!;
+}

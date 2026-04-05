@@ -15,6 +15,7 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Web;
 using StackExchange.Redis;
 using Xunit;
 
@@ -39,11 +40,11 @@ public class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> option
     }
 }
 
-public class RealTimeTests : IClassFixture<WebApplicationFactory<RequiemNexus.Web.Components.App>>
+public class RealTimeTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<RequiemNexus.Web.Components.App> _factory;
+    private readonly WebApplicationFactory<Program> _factory;
 
-    public RealTimeTests(WebApplicationFactory<RequiemNexus.Web.Components.App> factory)
+    public RealTimeTests(WebApplicationFactory<Program> factory)
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {

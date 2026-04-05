@@ -1,0 +1,15 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="opacity:0.7;">
+    <h4>@Encounter.Name</h4>
+    <p style="font-size:0.85em;color:var(--gothic-muted);">Resolved: @(Encounter.ResolvedAt?.ToLocalTime().ToString("g") ?? "—")</p>
+    <a href="/campaigns/@CampaignId/encounter/@Encounter.Id" class="btn-rn-ghost" style="font-size:0.85em;">👁️ View</a>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public CombatEncounter Encounter { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+}

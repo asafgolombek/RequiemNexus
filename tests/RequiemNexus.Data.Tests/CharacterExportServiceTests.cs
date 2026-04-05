@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
+using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Web.Helpers;
@@ -24,6 +25,14 @@ public class CharacterExportServiceTests
             .UseInMemoryDatabase(dbName)
             .Options;
         return new ApplicationDbContext(options);
+    }
+
+    private static ICharacterExportService CreateExportService(ApplicationDbContext ctx)
+    {
+        var loader = new CharacterExportCharacterLoader(ctx);
+        var json = new CharacterJsonExportService(loader);
+        var pdf = new CharacterPdfExportService(loader);
+        return new CharacterExportService(json, pdf);
     }
 
     private static Character BuildTestCharacter()
@@ -79,7 +88,7 @@ public class CharacterExportServiceTests
         ctx.Characters.Add(character);
         await ctx.SaveChangesAsync();
 
-        var svc = new CharacterExportService(ctx);
+        ICharacterExportService svc = CreateExportService(ctx);
         var json = await svc.ExportCharacterAsJsonAsync(character.Id, "test-user");
 
         var doc = JsonDocument.Parse(json);
@@ -92,7 +101,7 @@ public class CharacterExportServiceTests
     public async Task ExportCharacterAsJsonAsync_WithInvalidId_ReturnsEmptyJson()
     {
         using var ctx = CreateContext(nameof(ExportCharacterAsJsonAsync_WithInvalidId_ReturnsEmptyJson));
-        var svc = new CharacterExportService(ctx);
+        ICharacterExportService svc = CreateExportService(ctx);
 
         var json = await svc.ExportCharacterAsJsonAsync(999, "test-user");
 
@@ -103,7 +112,7 @@ public class CharacterExportServiceTests
     public void ExportCharacterAsJson_WithLoadedCharacter_ContainsExpectedFields()
     {
         using var ctx = CreateContext(nameof(ExportCharacterAsJson_WithLoadedCharacter_ContainsExpectedFields));
-        var svc = new CharacterExportService(ctx);
+        ICharacterExportService svc = CreateExportService(ctx);
         var character = BuildTestCharacter();
 
         var json = svc.ExportCharacterAsJson(character);
@@ -125,7 +134,7 @@ public class CharacterExportServiceTests
     public void ExportCharacterAsPdf_WithValidCharacter_ReturnsPdfBytes()
     {
         using var ctx = CreateContext(nameof(ExportCharacterAsPdf_WithValidCharacter_ReturnsPdfBytes));
-        var svc = new CharacterExportService(ctx);
+        ICharacterExportService svc = CreateExportService(ctx);
         var character = BuildTestCharacter();
 
         var pdfBytes = svc.ExportCharacterAsPdf(character);
@@ -139,7 +148,7 @@ public class CharacterExportServiceTests
     public async Task ExportCharacterAsPdfAsync_WithInvalidId_ReturnsEmptyBytes()
     {
         using var ctx = CreateContext(nameof(ExportCharacterAsPdfAsync_WithInvalidId_ReturnsEmptyBytes));
-        var svc = new CharacterExportService(ctx);
+        ICharacterExportService svc = CreateExportService(ctx);
 
         var pdfBytes = await svc.ExportCharacterAsPdfAsync(999, "test-user");
 

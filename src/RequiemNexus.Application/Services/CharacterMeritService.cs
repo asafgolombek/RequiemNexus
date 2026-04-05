@@ -12,31 +12,36 @@ namespace RequiemNexus.Application.Services;
 /// </summary>
 public class CharacterMeritService(
     ApplicationDbContext dbContext,
-    IBeatLedgerService beatLedger) : ICharacterMeritService
+    IBeatLedgerService beatLedger,
+    IReferenceDataCache referenceData) : ICharacterMeritService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
+    private readonly IReferenceDataCache _referenceData = referenceData;
 
     /// <inheritdoc />
     public async Task<List<Merit>> GetAvailableMeritsAsync(Character character)
     {
-        var covenantGatedMeritIds = await _dbContext.CovenantDefinitionMerits
-            .AsNoTracking()
+        HashSet<int> covenantGatedMeritIds = _referenceData.CovenantDefinitionMerits
             .Select(cdm => cdm.MeritId)
-            .Distinct()
-            .ToListAsync();
+            .ToHashSet();
 
-        var covenantMeritIdsByCovenant = await _dbContext.CovenantDefinitionMerits
-            .AsNoTracking()
+        List<int> covenantMeritIdsByCovenant = _referenceData.CovenantDefinitionMerits
             .Where(cdm => character.CovenantId != null && cdm.CovenantDefinitionId == character.CovenantId)
             .Select(cdm => cdm.MeritId)
-            .ToListAsync();
+            .ToList();
 
-        var allMerits = await _dbContext.Merits
+        List<Merit> homebrewMerits = await _dbContext.Merits
             .Include(m => m.Prerequisites)
             .OrderBy(m => m.Name)
             .AsNoTracking()
+            .Where(m => m.IsHomebrew)
             .ToListAsync();
+
+        List<Merit> allMerits = _referenceData.ReferenceMerits
+            .Concat(homebrewMerits)
+            .OrderBy(m => m.Name)
+            .ToList();
 
         return allMerits
             .Where(m =>
@@ -57,11 +62,15 @@ public class CharacterMeritService(
     /// <inheritdoc />
     public async Task<CharacterMerit> AddMeritAsync(Character character, int meritId, string? specification, int rating, int xpCost)
     {
-        var merit = await _dbContext.Merits
-            .Include(m => m.Prerequisites)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == meritId)
-            ?? throw new InvalidOperationException($"Merit with Id {meritId} not found.");
+        Merit? merit = _referenceData.ReferenceMerits.FirstOrDefault(m => m.Id == meritId);
+        if (merit == null)
+        {
+            merit = await _dbContext.Merits
+                .Include(m => m.Prerequisites)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == meritId)
+                ?? throw new InvalidOperationException($"Merit with Id {meritId} not found.");
+        }
 
         if (!MeritPrerequisiteEngine.MeetsPrerequisites(character, merit.Prerequisites.ToList()))
         {
@@ -69,9 +78,8 @@ public class CharacterMeritService(
                 "Your character does not meet the prerequisites for this merit.");
         }
 
-        var covenantLink = await _dbContext.CovenantDefinitionMerits
-            .AsNoTracking()
-            .FirstOrDefaultAsync(cdm => cdm.MeritId == meritId);
+        CovenantDefinitionMerit? covenantLink = _referenceData.CovenantDefinitionMerits
+            .FirstOrDefault(cdm => cdm.MeritId == meritId);
 
         if (covenantLink != null)
         {

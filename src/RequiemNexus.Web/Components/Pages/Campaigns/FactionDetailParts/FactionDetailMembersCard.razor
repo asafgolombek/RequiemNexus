@@ -1,0 +1,32 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3>Members (@Faction.Members.Count)</h3>
+    @if (!Faction.Members.Any())
+    {
+        <p class="text-muted">No members assigned.</p>
+    }
+    else
+    {
+        <ul style="list-style:none;padding:0;">
+            @foreach (ChronicleNpc member in Faction.Members)
+            {
+                <li style="margin-bottom:0.5rem;">
+                    <a href="/campaigns/@CampaignId/npcs/@member.Id">@member.Name</a>
+                    @if (!string.IsNullOrEmpty(member.RoleInFaction))
+                    {
+                        <span class="text-muted"> — @member.RoleInFaction</span>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired]
+    public CityFaction Faction { get; set; } = default!;
+}

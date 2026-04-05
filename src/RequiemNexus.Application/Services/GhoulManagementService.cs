@@ -25,12 +25,14 @@ public class GhoulManagementService(
     IAuthorizationHelper authHelper,
     RelationshipWebMetrics relationshipWebMetrics,
     ISessionService sessionService,
+    IReferenceDataCache referenceData,
     ILogger<GhoulManagementService> logger) : IGhoulManagementService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly RelationshipWebMetrics _relationshipWebMetrics = relationshipWebMetrics;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
 
     /// <inheritdoc />
     public async Task<Result<GhoulDto>> CreateGhoulAsync(CreateGhoulRequest request, string userId)
@@ -485,7 +487,7 @@ public class GhoulManagementService(
         }
     }
 
-    private static async Task<IReadOnlyList<string>> ResolveDisciplineNamesAsync(
+    private async Task<IReadOnlyList<string>> ResolveDisciplineNamesAsync(
         ApplicationDbContext db,
         IReadOnlyList<int> ids)
     {
@@ -494,9 +496,27 @@ public class GhoulManagementService(
             return [];
         }
 
-        Dictionary<int, string> map = await db.Disciplines.AsNoTracking()
-            .Where(d => ids.Contains(d.Id))
-            .ToDictionaryAsync(d => d.Id, d => d.Name);
+        var map = new Dictionary<int, string>();
+        foreach (int id in ids)
+        {
+            Discipline? fromCache = _referenceData.ReferenceDisciplines.FirstOrDefault(d => d.Id == id);
+            if (fromCache != null)
+            {
+                map[id] = fromCache.Name;
+            }
+        }
+
+        List<int> missing = ids.Where(id => !map.ContainsKey(id)).Distinct().ToList();
+        if (missing.Count > 0)
+        {
+            Dictionary<int, string> fromDb = await db.Disciplines.AsNoTracking()
+                .Where(d => missing.Contains(d.Id))
+                .ToDictionaryAsync(d => d.Id, d => d.Name);
+            foreach (KeyValuePair<int, string> pair in fromDb)
+            {
+                map[pair.Key] = pair.Value;
+            }
+        }
 
         List<string> names = [];
         foreach (int id in ids)

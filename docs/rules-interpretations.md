@@ -102,6 +102,39 @@ Rules for this phase are also summarized as delivery checklists in [`docs/missio
 - **Crúac extra Vitae:** Optional `ExtraVitae` on begin adds flat **+dice** to the ritual pool (not a re-bill on later rolls).
 - **Blood sympathy on rituals:** When `TargetCharacterId` is set, `BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy` applies (+1–+3 Theban/Necromancy, doubled for Crúac). No sympathy bonus without a named Kindred target.
 
+### Tradition overview (corebook summary)
+
+Plain-language V:tR 2e tradition descriptions (pages 150–165 and related); the **bullets above** are the authoritative in-app interpretation.
+
+#### Crúac
+
+- **What it is:** A bloody, witchcraft-like blood magic practiced primarily by the Circle of the Crone. It harnesses the Beast’s primal power, tainting the world by invoking dark, ancient gods.
+- **How it works:** A Ritual Discipline; spells are **rites**. Casting costs one Vitae per dot of the rite. The first Vitae fuels the Discipline internally; any remaining Vitae must be physically spilled during casting. The caster makes an extended **Manipulation + Occult + Crúac** roll.
+- **How to acquire:** Generally an Acolyte in good standing with at least one dot of Covenant Status (Circle of the Crone). Requires a teacher; learning does not require drinking the teacher’s Vitae. At character creation, a player who starts with Circle of the Crone Status may use their third Discipline dot to begin with Crúac.
+- **Drawbacks:** Learning Crúac degrades Humanity. Learning a dot triggers a breaking point for vampires with Humanity 4 or higher. Knowing the Discipline permanently caps maximum Humanity at **10 minus Crúac dots**. Vampire blood spilled during a rite becomes inert and unsuitable for feeding.
+
+#### Theban Sorcery
+
+- **What it is:** Dark miracles of the Lancea et Sanctum, believed handed down from the angel Amoniel—stern, deliberate magic that transmits God’s Curse to punish sinners and reveal truths.
+- **How it works:** A Ritual Discipline; spells are **miracles**. Casting costs one Willpower to prepare plus a specific physical **sacrament**. Whether the ritual succeeds or fails, the sacrament crumbles to dust at the crescendo. The caster makes an extended **Intelligence + Academics + Theban Sorcery** roll.
+- **How to acquire:** A priest with at least one dot of Covenant Status (Lancea et Sanctum) who swears never to reveal secrets to outsiders. Requires a teacher. Starting characters with Status may use their third Discipline dot to learn it.
+- **Drawbacks:** The ritualist’s **Humanity must be equal to or higher than the dot rating of the miracle** they cast.
+
+#### Kindred Necromancy
+
+- **What it is:** Focused death magic drawing on the aura of death around every vampire, rather than only the Blood or the Beast.
+- **How it works:** A Ritual Discipline. Casting costs **1 Vitae** plus a specific physical item (focus, kept; or sacrifice, lost). The caster makes a **Resolve + Occult + Kindred Necromancy** roll (some bloodlines use alternate pools, e.g. Presence + Persuasion or Composure + Occult).
+- **How to acquire:** A teacher (knowledge limited to the mentor’s rituals); a mortal cultural connection to death magic; or membership in a Necromancy-associated bloodline (e.g. Sangiovanni, Apollinaire, Burakumin, Rexroth).
+- **Drawbacks:** Using a ritual triggers an automatic breaking point at **Humanity 7+**. **Necromancy dots add to Blood Potency** when calculating torpor duration, **capped at effective BP 10** (see `TorporDurationTable.GetEffectiveBloodPotencyForTorporDuration`).
+
+#### Mysteries of the Dragon (Coils and Scales)
+
+- **What it is:** The Ordo Dracul’s path to transcend the Requiem—subverting the Curse through discipline, arcane chemistry, and study. Split into **Coils** and **Scales** (not the same as the app’s retired Ordo **ritual** `SorceryType`).
+- **How Coils work:** Permanent, passive changes to the Curse (Beast, Blood, vulnerabilities, bonds, etc.). Coils do not cost Vitae to “use” like active Disciplines.
+- **How Scales work:** Active procedures—experiments and surgeries—that share or weaponize Coil effects on others. Each Scale ties to a tier of a specific Coil.
+- **How to acquire:** On joining the Ordo, the vampire commits to one **primary Mystery**. Coils outside that Mystery are limited: non-Mystery Coil dots cannot exceed Ordo Dracul Status dots. Like other covenant arts, starting Status can justify the third Discipline dot on Coils. Learning a Scale costs **1 XP** with the prerequisite Coil, **2 XP** without.
+- **Drawbacks:** Inventing new Scales is slow (extended research, subjects, texts, lab). Developing a new Scale inflicts a breaking point at **Humanity 5 minus the prerequisite Coil’s dot rating** (success or failure).
+
 ## Phase 16b — The Discipline Engine (power activation)
 
 - **`"1 Vitae or 1 Willpower"` cost string:** `ActivationCost.Parse` recognises `N Vitae or M Willpower` and sets **`IsPlayerChoiceVitaeOrWillpower`** plus amounts — **do not** infer choice from substring matching in the Blazor UI; the modal uses the parsed flag. The player picks **Vitae** or **Willpower** (`DisciplineActivationResourceChoice`); `DisciplineActivationService.ActivatePowerAsync` takes that choice. If **neither** pool can pay the required amounts, the service throws **`InvalidOperationException`** before rolling (same exception style as other activation failures).

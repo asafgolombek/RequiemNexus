@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Web.Helpers;
 using Xunit;
 
@@ -27,7 +28,17 @@ public class DbInitializerTests
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
+        services.AddRequiemDataSeeders();
+
         return services.BuildServiceProvider();
+    }
+
+    private static async Task RunDbInitializeAsync(IServiceScope scope)
+    {
+        ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        IEnumerable<ISeeder> seeders = scope.ServiceProvider.GetServices<ISeeder>();
+        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, seeders, runMigrations: false);
     }
 
     [Fact]
@@ -36,9 +47,8 @@ public class DbInitializerTests
         var provider = CreateServiceProvider(nameof(InitializeAsync_SeedsBloodlineDefinitions));
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
 
         var bloodlines = await context.BloodlineDefinitions
             .Include(b => b.AllowedParentClans)
@@ -73,9 +83,8 @@ public class DbInitializerTests
         var provider = CreateServiceProvider(nameof(InitializeAsync_SeedsDevotionDefinitions));
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
 
         var devotions = await context.DevotionDefinitions
             .Include(d => d.Prerequisites)
@@ -102,9 +111,8 @@ public class DbInitializerTests
         var provider = CreateServiceProvider(nameof(InitializeAsync_BloodlinesDependOnClansAndDisciplines));
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
 
         var clanIds = await context.Clans.Select(c => c.Id).ToHashSetAsync();
         var disciplineIds = await context.Disciplines.Select(d => d.Id).ToHashSetAsync();
@@ -129,13 +137,12 @@ public class DbInitializerTests
         var provider = CreateServiceProvider(nameof(InitializeAsync_Idempotent_DoesNotDuplicateOnSecondRun));
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
         var bloodlineCount1 = await context.BloodlineDefinitions.CountAsync();
         var devotionCount1 = await context.DevotionDefinitions.CountAsync();
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
         var bloodlineCount2 = await context.BloodlineDefinitions.CountAsync();
         var devotionCount2 = await context.DevotionDefinitions.CountAsync();
 
@@ -144,14 +151,38 @@ public class DbInitializerTests
     }
 
     [Fact]
+    public async Task InitializeAsync_FullPipeline_PopulatesCoreCatalogTables()
+    {
+        var provider = CreateServiceProvider(nameof(InitializeAsync_FullPipeline_PopulatesCoreCatalogTables));
+        using var scope = provider.CreateScope();
+        ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        await RunDbInitializeAsync(scope);
+
+        Assert.True(await context.Clans.CountAsync() > 0, "Expected seeded Clans.");
+        Assert.True(await context.Disciplines.CountAsync() > 0, "Expected seeded Disciplines.");
+        Assert.True(await context.DisciplinePowers.CountAsync() > 0, "Expected seeded DisciplinePowers.");
+        Assert.True(await context.Merits.CountAsync() > 0, "Expected seeded Merits.");
+        Assert.True(await context.HuntingPoolDefinitions.CountAsync() > 0, "Expected seeded HuntingPoolDefinitions.");
+        Assert.True(await context.Assets.CountAsync() > 0, "Expected seeded Assets (equipment catalog).");
+        Assert.True(await context.CovenantDefinitions.CountAsync() > 0, "Expected seeded CovenantDefinitions.");
+        Assert.True(await context.CovenantDefinitionMerits.CountAsync() > 0, "Expected seeded CovenantDefinitionMerits.");
+        Assert.True(await context.BloodlineDefinitions.CountAsync() > 0, "Expected seeded BloodlineDefinitions.");
+        Assert.True(await context.DevotionDefinitions.CountAsync() > 0, "Expected seeded DevotionDefinitions.");
+        Assert.True(await context.SorceryRiteDefinitions.CountAsync() > 0, "Expected seeded SorceryRiteDefinitions.");
+        Assert.True(await context.ScaleDefinitions.CountAsync() > 0, "Expected seeded ScaleDefinitions.");
+        Assert.True(await context.CoilDefinitions.CountAsync() > 0, "Expected seeded CoilDefinitions.");
+        Assert.True(await context.NpcStatBlocks.CountAsync(s => s.IsPrebuilt) > 0, "Expected prebuilt NpcStatBlocks.");
+    }
+
+    [Fact]
     public async Task InitializeAsync_SecondRun_DoesNotRemoveCharacterMerits()
     {
         var provider = CreateServiceProvider(nameof(InitializeAsync_SecondRun_DoesNotRemoveCharacterMerits));
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
 
         Merit? anyOfficialMerit = await context.Merits.AsNoTracking().FirstOrDefaultAsync(m => !m.IsHomebrew);
         Assert.NotNull(anyOfficialMerit);
@@ -180,7 +211,7 @@ public class DbInitializerTests
         int meritLinksBefore = await context.CharacterMerits.CountAsync(cm => cm.CharacterId == character.Id);
         Assert.Equal(1, meritLinksBefore);
 
-        await DbInitializer.InitializeAsync(context, roleManager, NullLogger.Instance, runMigrations: false);
+        await RunDbInitializeAsync(scope);
 
         int meritLinksAfter = await context.CharacterMerits.CountAsync(cm => cm.CharacterId == character.Id);
         Assert.Equal(1, meritLinksAfter);

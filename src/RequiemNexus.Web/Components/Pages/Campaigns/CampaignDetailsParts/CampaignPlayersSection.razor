@@ -1,0 +1,190 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Data.Models
+
+<div class="characters-section">
+    <div class="section-header">
+        <h3>Players in this Campaign</h3>
+        @if (!IsStoryteller)
+        {
+            <button class="btn-rn-primary" @onclick="OnToggleAddCharacter">Add Character</button>
+        }
+    </div>
+
+    @if (ShowAddCharacter && !IsStoryteller)
+    {
+        <div class="add-character-panel">
+            <h4>Add Character to Campaign</h4>
+            <EditForm Model="AddModel" OnValidSubmit="SubmitAddAsync">
+                <div class="add-character-row">
+                    <div class="add-character-select">
+                        <InputSelect @bind-Value="AddModel.CharacterId" class="form-control">
+                            <option value="0">-- Select an available character --</option>
+                            @foreach (var c in AvailableCharacters)
+                            {
+                                <option value="@c.Id">@c.Name (@c.User?.Email)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="add-character-actions">
+                        <button type="submit" class="btn-rn-primary" disabled="@(AddModel.CharacterId == 0)">Add</button>
+                        <button type="button" class="btn-rn-ghost" @onclick="OnToggleAddCharacter">Cancel</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    }
+
+    @if (!Campaign.Characters.Any())
+    {
+        <div class="empty-state-rn">
+            <p>No characters have joined this saga yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="character-grid">
+            @foreach (var character in Campaign.Characters)
+            {
+                bool isOwn = character.ApplicationUserId == CurrentUserId;
+                <div class="character-card card-rn clickable-card" @onclick="() => OnNavigateToCharacter.InvokeAsync((character.Id, isOwn))">
+                    <h4 class="char-name">@character.Name</h4>
+                    <div class="char-clan">🦇 Clan: @(character.Clan?.Name ?? "Unknown")</div>
+                    <div class="player-info">
+                        <span>👤 Player:</span> @(character.User?.UserName ?? character.User?.Email ?? "Unknown")
+                    </div>
+                    <div class="stats">
+                        <span>❤️ HP: @character.CurrentHealth / @character.MaxHealth</span>
+                        <span>🛡️ WP: @character.CurrentWillpower / @character.MaxWillpower</span>
+                        <span>🩸 BP: @character.BloodPotency</span>
+                        <span>🍷 Vitae: @character.CurrentVitae / @character.MaxVitae</span>
+                    </div>
+                    @if (IsStoryteller)
+                    {
+                        <div @onclick:stopPropagation="true" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border-subtle);">
+                            <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" @onclick="() => OnTogglePerception.InvokeAsync(character.Id)">👁️ Hidden perception</button>
+                            @if (PerceptionOpenId == character.Id)
+                            {
+                                <div style="margin-top:0.35rem;display:flex;flex-direction:column;gap:0.35rem;max-width:280px;">
+                                    <label style="font-size:0.8em;display:flex;align-items:center;gap:0.35rem;">
+                                        <input type="checkbox" checked="@PerceptionUseAwareness" @onchange="OnAwarenessCheckboxChanged" /> Wits + Awareness (else Composure)
+                                    </label>
+                                    <label style="font-size:0.8em;">Penalty dice
+                                        <input type="number" class="form-control" style="width:80px;display:inline-block;" value="@PerceptionPenalty" @onchange="OnPenaltyChanged" min="0" max="20" />
+                                    </label>
+                                    <button type="button" class="btn-rn-primary" style="font-size:0.8em;align-self:flex-start;" disabled="@PerceptionBusy" @onclick="() => OnRollPerception.InvokeAsync(character.Id)">Roll</button>
+                                    @if (PerceptionBusy)
+                                    {
+                                        <span style="font-size:0.75em;color:var(--gothic-muted);">Rolling…</span>
+                                    }
+                                    @if (PerceptionResults.TryGetValue(character.Id, out string? pr))
+                                    {
+                                        <p style="font-size:0.8em;margin:0;color:var(--gothic-muted);white-space:pre-wrap;">@pr</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    <div class="card-actions" style="margin-top:10px;">
+                        @if (isOwn)
+                        {
+                            @if (ConfirmRemoveCharacterId == character.Id)
+                            {
+                                <span style="font-size:0.8em;" @onclick:stopPropagation="true">Remove from campaign?
+                                    <button class="btn-rn-primary" style="font-size:0.8em;" @onclick="() => OnConfirmRemoveCharacter.InvokeAsync(character.Id)">Yes</button>
+                                    <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="OnCancelConfirm">No</button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => OnAskRemoveCharacter.InvokeAsync(character.Id)" @onclick:stopPropagation="true">Remove from Campaign</button>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Campaign Campaign { get; set; } = default!;
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    [Parameter]
+    public bool IsStoryteller { get; set; }
+
+    [Parameter]
+    public bool ShowAddCharacter { get; set; }
+
+    [Parameter]
+    public AddCharacterToCampaignModel AddModel { get; set; } = default!;
+
+    [Parameter]
+    public List<Character> AvailableCharacters { get; set; } = [];
+
+    [Parameter]
+    public int? PerceptionOpenId { get; set; }
+
+    [Parameter]
+    public bool PerceptionBusy { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<int, string> PerceptionResults { get; set; } = new Dictionary<int, string>();
+
+    [Parameter]
+    public bool PerceptionUseAwareness { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> PerceptionUseAwarenessChanged { get; set; }
+
+    [Parameter]
+    public int PerceptionPenalty { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PerceptionPenaltyChanged { get; set; }
+
+    [Parameter]
+    public int ConfirmRemoveCharacterId { get; set; }
+
+    [Parameter]
+    public EventCallback OnToggleAddCharacter { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddCharacterSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback<(int CharacterId, bool IsOwner)> OnNavigateToCharacter { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnTogglePerception { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRollPerception { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAskRemoveCharacter { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnConfirmRemoveCharacter { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelConfirm { get; set; }
+
+    private Task OnAwarenessCheckboxChanged(ChangeEventArgs e)
+    {
+        bool v = e.Value is bool b && b;
+        return PerceptionUseAwarenessChanged.InvokeAsync(v);
+    }
+
+    private Task OnPenaltyChanged(ChangeEventArgs e)
+    {
+        int n = int.TryParse(e.Value?.ToString(), out int x) ? x : 0;
+        return PerceptionPenaltyChanged.InvokeAsync(n);
+    }
+
+    private Task SubmitAddAsync() => OnAddCharacterSubmit.InvokeAsync();
+}

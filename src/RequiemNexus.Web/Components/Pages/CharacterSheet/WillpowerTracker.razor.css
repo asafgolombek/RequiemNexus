@@ -1,0 +1,35 @@
+.tracker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tracker-label {
+    font-weight: bold;
+    color: var(--text-color);
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-family: var(--font-heading);
+}
+
+.tracker-boxes {
+    display: flex;
+    gap: 4px;
+}
+
+.willpower-box {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--muted-gray);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.willpower-box.filled {
+    background: var(--bone-white);
+    border-color: var(--bone-white);
+    box-shadow: 0 0 8px rgba(245, 240, 232, 0.4);
+}

@@ -1,56 +1,21 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.RealTime
 @using RequiemNexus.Web.Services
+@using RequiemNexus.Web.Helpers
 @inject SessionClientService SessionClient
-@inject IJSRuntime JSRuntime
 @implements IDisposable
 
 <section class="cs-section cs-vitals">
     <div class="vitals-trackers">
-        <div class="tracker-item">
-            <span class="tracker-label">Health</span>
-            <div class="tracker-boxes @(_healthPulse ? "animate-pulse" : "")">
-                @for(int i = 0; i < Character.CalculatedMaxHealth; i++)
-                {
-                    int captureIndex = i;
-                    <div class="health-box @GetHealthDamageClass(captureIndex)" 
-                         @onclick="() => ToggleHealth(captureIndex)"
-                         title="@GetHealthTooltip(captureIndex)">
-                        @GetHealthDamageSymbol(captureIndex)
-                    </div>
-                }
-            </div>
-        </div>
-        <div class="tracker-item">
-            <span class="tracker-label">Willpower</span>
-            <div class="tracker-boxes @(_willpowerPulse ? "animate-pulse" : "")">
-                @for(int i = 0; i < Character.CalculatedMaxWillpower; i++)
-                {
-                    int captureIndex = i;
-                    <div class="willpower-box @(i < Character.CurrentWillpower ? "filled" : "")" @onclick="() => ToggleWillpower(captureIndex)"></div>
-                }
-            </div>
-        </div>
-        <div class="tracker-item">
-            <span class="tracker-label">Vitae</span>
-            <div class="vitae-container @(_vitaePulse ? "animate-pulse" : "")" @ref="_vitaeContainer" @onclick="OnVitaeClick" style="cursor: pointer;">
-                <svg class="vitae-drop" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <clipPath id="vitae-fill-@_clipId">
-                            <rect x="0" y="@VitaeFillY" width="40" height="52" />
-                        </clipPath>
-                    </defs>
-                    <!-- Drop outline -->
-                    <path d="M20 2 C20 2 4 20 4 32 A16 16 0 0 0 36 32 C36 20 20 2 20 2Z"
-                          fill="none" stroke="var(--muted-gray)" stroke-width="1.5" />
-                    <!-- Fill layer -->
-                    <path d="M20 2 C20 2 4 20 4 32 A16 16 0 0 0 36 32 C36 20 20 2 20 2Z"
-                          fill="var(--crimson)" clip-path="url(#vitae-fill-@_clipId)"
-                          style="transition: clip-path 0.4s ease;" />
-                </svg>
-                <span class="vitae-label">@Character.CurrentVitae / @Character.MaxVitae</span>
-            </div>
-        </div>
+        <HealthTracker Character="Character"
+                       OnChanged="OnChanged"
+                       PulseTick="_healthPulseTick" />
+        <WillpowerTracker Character="Character"
+                          OnChanged="OnChanged"
+                          PulseTick="_willpowerPulseTick" />
+        <VitaeTracker Character="Character"
+                      OnChanged="OnChanged"
+                      PulseTick="_vitaePulseTick" />
     </div>
 
     <VitaeFastHealPanel CharacterId="Character.Id"
@@ -101,183 +66,66 @@
     [Parameter]
     public EventCallback OnHuntCompleted { get; set; }
 
-    private string _clipId = Guid.NewGuid().ToString("N");
-    private ElementReference _vitaeContainer;
-
-    private bool _healthPulse;
-    private bool _willpowerPulse;
-    private bool _vitaePulse;
+    private int _healthPulseTick;
+    private int _willpowerPulseTick;
+    private int _vitaePulseTick;
     private bool _humanityPulse;
 
-    private double VitaeFillY => 52.0 - (Character.MaxVitae > 0 ? (double)Character.CurrentVitae / Character.MaxVitae * 52.0 : 0);
+    private IDisposable? _characterSubscription;
 
     protected override void OnInitialized()
     {
-        SessionClient.CharacterUpdated += HandleCharacterUpdated;
+        _characterSubscription = SessionClient.SubscribeCharacterUpdated(HandleCharacterUpdated);
     }
 
     private async void HandleCharacterUpdated(CharacterUpdateDto patch)
     {
-        if (patch.CharacterId == Character.Id)
+        if (patch.CharacterId != Character.Id)
         {
-            if (patch.CurrentHealth.HasValue) { Character.CurrentHealth = patch.CurrentHealth.Value; await TriggerPulse("health"); }
-            if (patch.MaxHealth.HasValue) Character.MaxHealth = patch.MaxHealth.Value;
-            if (patch.HealthDamage != null) { Character.HealthDamage = patch.HealthDamage; await TriggerPulse("health"); }
-            if (patch.CurrentWillpower.HasValue) { Character.CurrentWillpower = patch.CurrentWillpower.Value; await TriggerPulse("willpower"); }
-            if (patch.MaxWillpower.HasValue) Character.MaxWillpower = patch.MaxWillpower.Value;
-            if (patch.CurrentVitae.HasValue) { Character.CurrentVitae = patch.CurrentVitae.Value; await TriggerPulse("vitae"); }
-            if (patch.MaxVitae.HasValue) Character.MaxVitae = patch.MaxVitae.Value;
-            if (patch.Humanity.HasValue) { Character.Humanity = patch.Humanity.Value; await TriggerPulse("humanity"); }
-            
-            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        bool healthDirty = patch.CurrentHealth.HasValue || patch.HealthDamage != null;
+        bool willDirty = patch.CurrentWillpower.HasValue;
+        bool vitaeDirty = patch.CurrentVitae.HasValue;
+        bool humanityDirty = patch.Humanity.HasValue;
+
+        CharacterUpdateDtoApplier.ApplyToCharacter(Character, patch);
+
+        if (healthDirty)
+        {
+            _healthPulseTick++;
+        }
+
+        if (willDirty)
+        {
+            _willpowerPulseTick++;
+        }
+
+        if (vitaeDirty)
+        {
+            _vitaePulseTick++;
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+        if (humanityDirty)
+        {
+            await TriggerHumanityPulseAsync();
         }
     }
 
-    private async Task TriggerPulse(string type)
+    private async Task TriggerHumanityPulseAsync()
     {
-        switch (type)
-        {
-            case "health": _healthPulse = true; break;
-            case "willpower": _willpowerPulse = true; break;
-            case "vitae": _vitaePulse = true; break;
-            case "humanity": _humanityPulse = true; break;
-        }
+        _humanityPulse = true;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(800);
-        switch (type)
-        {
-            case "health": _healthPulse = false; break;
-            case "willpower": _willpowerPulse = false; break;
-            case "vitae": _vitaePulse = false; break;
-            case "humanity": _humanityPulse = false; break;
-        }
+        _humanityPulse = false;
         await InvokeAsync(StateHasChanged);
-    }
-
-    private string GetHealthDamageClass(int index)
-    {
-        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
-            return "empty";
-        
-        return Character.HealthDamage[index] switch
-        {
-            '/' => "bashing",
-            'X' => "lethal",
-            '*' => "aggravated",
-            _ => "empty"
-        };
-    }
-
-    private string GetHealthDamageSymbol(int index)
-    {
-        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
-            return string.Empty;
-        
-        return Character.HealthDamage[index] switch
-        {
-            '/' => "/",
-            'X' => "✕",
-            '*' => "☩",
-            _ => string.Empty
-        };
-    }
-
-    private string GetHealthTooltip(int index)
-    {
-        int max = Character.CalculatedMaxHealth;
-        string penalty = string.Empty;
-        
-        if (index == max - 1) penalty = " (Wound Penalty: −3)";
-        else if (index == max - 2) penalty = " (Wound Penalty: −2)";
-        else if (index == max - 3) penalty = " (Wound Penalty: −1)";
-
-        if (string.IsNullOrEmpty(Character.HealthDamage) || index >= Character.HealthDamage.Length)
-            return $"Health Box {index + 1}{penalty}";
-
-        return Character.HealthDamage[index] switch
-        {
-            '/' => $"Bashing Damage{penalty}",
-            'X' => $"Lethal Damage{penalty}",
-            '*' => $"Aggravated Damage{penalty}",
-            _ => $"Health Box {index + 1}{penalty}"
-        };
-    }
-
-    private async Task ToggleHealth(int index)
-    {
-        if (Character.HealthDamage == null) Character.HealthDamage = string.Empty;
-        
-        if (Character.HealthDamage.Length < Character.CalculatedMaxHealth)
-        {
-            Character.HealthDamage = Character.HealthDamage.PadRight(Character.CalculatedMaxHealth, ' ');
-        }
-
-        char currentDamage = Character.HealthDamage[index];
-        char newDamage = currentDamage switch
-        {
-            ' ' => '/',
-            '/' => 'X',
-            'X' => '*',
-            '*' => ' ',
-            _ => '/'
-        };
-
-        var chars = Character.HealthDamage.ToCharArray();
-        chars[index] = newDamage;
-        Character.HealthDamage = new string(chars);
-
-        // Keep CurrentHealth in sync with total damage boxes taken
-        Character.CurrentHealth = Character.HealthDamage.Count(c => c != ' ');
-
-        await NotifyChanged();
-    }
-
-    private async Task ToggleWillpower(int index)
-    {
-        if (index == Character.CurrentWillpower - 1) Character.CurrentWillpower--;
-        else Character.CurrentWillpower = index + 1;
-        await NotifyChanged();
-    }
-
-    private async Task OnVitaeClick(MouseEventArgs e)
-    {
-        if (Character.MaxVitae <= 0) return;
-
-        // Use JS to get the bounding rect of the container to calculate relative click height
-        var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("getBoundingClientRect", _vitaeContainer);
-        if (rect == null) return;
-
-        // Calculate click position relative to the drop SVG height (52px original, but scaled)
-        // Note: The container includes the label, so we focus on the drop SVG part.
-        // For simplicity, we can just use the Y position within the container.
-        double relativeY = e.ClientY - rect.Top;
-        double percentage = 1.0 - (relativeY / rect.Height);
-        
-        // Clamp and calculate new value
-        int newValue = (int)Math.Round(percentage * Character.MaxVitae);
-        Character.CurrentVitae = Math.Clamp(newValue, 0, Character.MaxVitae);
-
-        await NotifyChanged();
-    }
-
-    private async Task NotifyChanged()
-    {
-        if (OnChanged.HasDelegate)
-        {
-            await OnChanged.InvokeAsync();
-        }
     }
 
     public void Dispose()
     {
-        SessionClient.CharacterUpdated -= HandleCharacterUpdated;
-    }
-
-    public class BoundingClientRect
-    {
-        public double Top { get; set; }
-        public double Left { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
+        _characterSubscription?.Dispose();
     }
 }

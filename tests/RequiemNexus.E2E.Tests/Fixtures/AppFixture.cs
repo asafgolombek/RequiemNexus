@@ -7,7 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Playwright;
 using Moq;
+using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Web;
 using StackExchange.Redis;
 using Xunit;
@@ -109,7 +111,11 @@ public class AppFixture : WebApplicationFactory<Program>, IAsyncLifetime
         ApplicationDbContext db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await db.Database.MigrateAsync();
         RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        await DbInitializer.InitializeAsync(db, roleManager, NullLogger.Instance, runMigrations: false);
+        IEnumerable<ISeeder> seeders = scope.ServiceProvider.GetServices<ISeeder>();
+        await DbInitializer.InitializeAsync(db, roleManager, NullLogger.Instance, seeders, runMigrations: false);
+
+        ReferenceDataCache referenceCache = scope.ServiceProvider.GetRequiredService<ReferenceDataCache>();
+        await referenceCache.LoadFromDatabaseAsync(db, CancellationToken.None);
 
         (SeededCampaignId, SeededCharacterId) =
             await E2eTestDataSeed.EnsurePlayerCampaignAndCharacterAsync(Services);

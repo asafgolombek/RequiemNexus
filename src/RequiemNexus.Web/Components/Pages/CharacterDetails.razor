@@ -1,5 +1,7 @@
 @page "/character/{Id:int}"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Logging
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Data.Models.Enums
 @using System.Security.Claims
@@ -16,10 +18,12 @@
 @using RequiemNexus.Web.Services
 @using RequiemNexus.Web.Helpers
 @using Microsoft.JSInterop
+@inject NavigationManager NavigationManager
+@inject ILogger<CharacterDetails> Logger
+@inject ITouchstoneService TouchstoneService
 @inject ICharacterService CharacterService
 @inject ICharacterAssetService CharacterAssetService
 @inject IAssetProcurementService AssetProcurementService
-@inject IAdvancementService AdvancementService
 @inject ICharacterExportService ExportService
 @inject ITraitResolver TraitResolver
 @inject IHumanityService HumanityService
@@ -37,7 +41,7 @@
 @inject IDisciplineActivationService DisciplineActivationService
 @inject ICoilService CoilService
 
-<PageTitle>@(_character?.Name ?? "Character Sheet") - Requiem Nexus</PageTitle>
+<PageTitle>@(_character?.Name ?? "Character sheet") — Requiem Nexus</PageTitle>
 
 @if (_isSheetLoading)
 {
@@ -46,7 +50,7 @@
 else if (_sheetLoadError != null)
 {
     <div class="page-container fade-in">
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger alert-rn" role="alert">
             <strong>Could not load character.</strong> @_sheetLoadError
         </div>
         <a href="/characters" class="btn-rn-primary mt-3">Back to My Characters</a>
@@ -294,7 +298,17 @@ else
                             else if (_character.BloodPotency >= 2 && _character.ClanId.HasValue && _character.CampaignId.HasValue)
                             {
                                 <p class="unaligned-note">None. Apply when Blood Potency 2+.</p>
-                                <button class="btn-rn-primary text-small" @onclick="OpenApplyBloodlineModal">Apply for Bloodline</button>
+                                <button type="button" class="btn-rn-primary text-small" @onclick="OpenApplyBloodlineModal" disabled="@IsOpeningModal(nameof(OpenApplyBloodlineModal))" aria-busy="@IsOpeningModal(nameof(OpenApplyBloodlineModal))">
+                                    @if (IsOpeningModal(nameof(OpenApplyBloodlineModal)))
+                                    {
+                                        <span class="btn-inline-spinner" aria-hidden="true"></span>
+                                        <span>Opening…</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Apply for Bloodline</span>
+                                    }
+                                </button>
                             }
                             else
                             {
@@ -334,7 +348,17 @@ else
                             else if (_character.CampaignId.HasValue)
                             {
                                 <p class="unaligned-note">Unaligned. Apply to join a covenant.</p>
-                                <button class="btn-rn-primary text-small" @onclick="OpenApplyCovenantModal">Apply for Covenant</button>
+                                <button type="button" class="btn-rn-primary text-small" @onclick="OpenApplyCovenantModal" disabled="@IsOpeningModal(nameof(OpenApplyCovenantModal))" aria-busy="@IsOpeningModal(nameof(OpenApplyCovenantModal))">
+                                    @if (IsOpeningModal(nameof(OpenApplyCovenantModal)))
+                                    {
+                                        <span class="btn-inline-spinner" aria-hidden="true"></span>
+                                        <span>Opening…</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Apply for Covenant</span>
+                                    }
+                                </button>
                             }
                             else
                             {
@@ -425,7 +449,17 @@ else
                                 else
                                 {
                                     <p class="unaligned-note">No rites yet. Purchase Crúac, Theban Sorcery, or Necromancy dots via Advancement where appropriate, then request to learn rites.</p>
-                                    <button class="btn-rn-primary text-small" @onclick="OpenLearnRiteModal" disabled="@_openingRiteModal">Learn Rite</button>
+                                    <button type="button" class="btn-rn-primary text-small" @onclick="OpenLearnRiteModal" disabled="@IsOpeningModal(nameof(OpenLearnRiteModal))" aria-busy="@IsOpeningModal(nameof(OpenLearnRiteModal))">
+                                        @if (IsOpeningModal(nameof(OpenLearnRiteModal)))
+                                        {
+                                            <span class="btn-inline-spinner" aria-hidden="true"></span>
+                                            <span>Opening…</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Learn Rite</span>
+                                        }
+                                    </button>
                                 }
                             </section>
                         }
@@ -450,7 +484,17 @@ else
                                 else if (_character.CampaignId.HasValue)
                                 {
                                     <p class="unaligned-note">No Chosen Mystery selected.</p>
-                                    <button class="btn-rn-primary text-small" @onclick="OpenChosenMysteryModal">Select Chosen Mystery</button>
+                                    <button type="button" class="btn-rn-primary text-small" @onclick="OpenChosenMysteryModal" disabled="@IsOpeningModal(nameof(OpenChosenMysteryModal))" aria-busy="@IsOpeningModal(nameof(OpenChosenMysteryModal))">
+                                        @if (IsOpeningModal(nameof(OpenChosenMysteryModal)))
+                                        {
+                                            <span class="btn-inline-spinner" aria-hidden="true"></span>
+                                            <span>Opening…</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Select Chosen Mystery</span>
+                                        }
+                                    </button>
                                 }
                                 @{
                                     var approvedCoils = _character.Coils?.Where(cc => cc.Status == Data.Models.Enums.CoilLearnStatus.Approved && cc.CoilDefinition != null).ToList();
@@ -476,7 +520,17 @@ else
                                 }
                                 @if (_character.CampaignId.HasValue)
                                 {
-                                    <button class="btn-rn-ghost btn-roll-small bloodline-detail-row" @onclick="OpenLearnCoilModal">Purchase Coil</button>
+                                    <button type="button" class="btn-rn-ghost btn-roll-small bloodline-detail-row" @onclick="OpenLearnCoilModal" disabled="@IsOpeningModal(nameof(OpenLearnCoilModal))" aria-busy="@IsOpeningModal(nameof(OpenLearnCoilModal))">
+                                        @if (IsOpeningModal(nameof(OpenLearnCoilModal)))
+                                        {
+                                            <span class="btn-inline-spinner" aria-hidden="true"></span>
+                                            <span>Opening…</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Purchase Coil</span>
+                                        }
+                                    </button>
                                 }
                                 @if (_character.HasCrucibleRitualAccess)
                                 {
@@ -543,6 +597,10 @@ else
                              Requirements="_pendingRiteRequirements"
                              KinTargets="_riteKinTargets"
                              OnContinue="HandleRitePrepContinueAsync" />
+    <TraitRulesReferenceModal IsOpen="_traitRulesReferenceOpen"
+                             IsOpenChanged="OnTraitRulesReferenceOpenChanged"
+                             TraitName="@_traitRulesReferenceName" />
+
     <DiceRollerModal IsVisible="_isRollerOpen"
                      IsVisibleChanged="OnDiceRollerVisibilityChangedAsync"
                      TraitName="@_rollerTraitName"

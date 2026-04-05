@@ -1,6 +1,9 @@
+using Microsoft.Extensions.Hosting;
 using RequiemNexus.Application.Events;
 using RequiemNexus.Application.Events.Handlers;
+using RequiemNexus.Application.Services;
 using RequiemNexus.Domain.Events;
+using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Extensions;
 
@@ -9,8 +12,22 @@ namespace RequiemNexus.Web.Extensions;
 /// </summary>
 internal static class ApplicationServiceExtensions
 {
-    internal static void AddApplicationServices(this IServiceCollection services)
+    /// <summary>
+    /// Registers application-layer services.
+    /// </summary>
+    /// <param name="services">The DI collection.</param>
+    /// <param name="environment">Host environment; <c>Testing</c> skips reference-cache warmup so E2E fixtures can migrate, seed, then load the cache.</param>
+    internal static void AddApplicationServices(this IServiceCollection services, IHostEnvironment environment)
     {
+        services.AddSingleton<ExternalAuthAvailability>();
+
+        services.AddSingleton<ReferenceDataCache>();
+        services.AddSingleton<RequiemNexus.Application.Contracts.IReferenceDataCache>(sp => sp.GetRequiredService<ReferenceDataCache>());
+        if (!environment.IsEnvironment("Testing"))
+        {
+            services.AddHostedService<RequiemNexus.Web.BackgroundServices.ReferenceDataCacheWarmupHostedService>();
+        }
+
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<RequiemNexus.Application.Contracts.IVitaeService, RequiemNexus.Application.Services.VitaeService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IWillpowerService, RequiemNexus.Application.Services.WillpowerService>();
@@ -23,11 +40,37 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<IDomainEventHandler<DegenerationCheckRequiredEvent>, DegenerationCheckRequiredEventHandler>();
 
         services.AddScoped<RequiemNexus.Application.Contracts.IAuthorizationHelper, RequiemNexus.Application.Services.AuthorizationHelper>();
+        services.AddScoped<RequiemNexus.Application.Services.CampaignLoreService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICampaignLoreService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CampaignLoreService>());
+        services.AddScoped<RequiemNexus.Application.Services.CampaignSessionPrepService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICampaignSessionPrepService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CampaignSessionPrepService>());
         services.AddScoped<RequiemNexus.Application.Contracts.ICampaignService, RequiemNexus.Application.Services.CampaignService>();
+
+        if (environment.IsEnvironment("Testing"))
+        {
+            services.AddScoped<RequiemNexus.Application.Contracts.ISessionDiscordNotifier, RequiemNexus.Application.RealTime.NullSessionDiscordNotifier>();
+        }
+        else
+        {
+            services.AddScoped<RequiemNexus.Application.Contracts.ISessionDiscordNotifier, RequiemNexus.Application.Services.DiscordWebhookSessionNotifier>();
+        }
+
         services.AddScoped<RequiemNexus.Application.Contracts.IBeatLedgerService, RequiemNexus.Application.Services.BeatLedgerService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IConditionService, RequiemNexus.Application.Services.ConditionService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IStorytellerGlimpseService, RequiemNexus.Application.Services.StorytellerGlimpseService>();
-        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterService, RequiemNexus.Application.Services.CharacterManagementService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterQueryService, RequiemNexus.Application.Services.CharacterQueryService>();
+        services.AddScoped<RequiemNexus.Application.Services.CharacterProgressionService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterProgressionService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CharacterProgressionService>());
+        services.AddScoped<RequiemNexus.Application.Services.CharacterManagementService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterService>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CharacterManagementService>());
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterReader>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CharacterManagementService>());
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterWriter>(sp =>
+            sp.GetRequiredService<RequiemNexus.Application.Services.CharacterManagementService>());
         services.AddScoped<RequiemNexus.Application.Contracts.IClanService, RequiemNexus.Application.Services.ClanService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IMeritService, RequiemNexus.Application.Services.MeritService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDisciplineService, RequiemNexus.Application.Services.DisciplineService>();
@@ -41,6 +84,9 @@ internal static class ApplicationServiceExtensions
         services.AddSingleton<RequiemNexus.Domain.Contracts.ICharacterCreationRules, RequiemNexus.Domain.Services.CharacterCreationRules>();
         services.AddSingleton<RequiemNexus.Domain.Contracts.IConditionRules, RequiemNexus.Domain.Services.ConditionRules>();
         services.AddSingleton<RequiemNexus.Domain.Contracts.IDiceService, RequiemNexus.Domain.Services.DiceService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportCharacterLoader, RequiemNexus.Application.Services.CharacterExportCharacterLoader>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterJsonExportService, RequiemNexus.Application.Services.CharacterJsonExportService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.ICharacterPdfExportService, RequiemNexus.Application.Services.CharacterPdfExportService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterExportService, RequiemNexus.Application.Services.CharacterExportService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IEncounterService, RequiemNexus.Application.Services.EncounterService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IEncounterQueryService, RequiemNexus.Application.Services.EncounterQueryService>();
@@ -70,6 +116,9 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.IBloodlineService, RequiemNexus.Application.Services.BloodlineService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICovenantService, RequiemNexus.Application.Services.CovenantService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISorceryService, RequiemNexus.Application.Services.SorceryService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IRiteActivationStrategy, RequiemNexus.Application.Services.CruacActivationStrategy>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IRiteActivationStrategy, RequiemNexus.Application.Services.ThebanActivationStrategy>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IRiteActivationStrategy, RequiemNexus.Application.Services.NecromancyActivationStrategy>();
         services.AddScoped<RequiemNexus.Application.Contracts.ISorceryActivationService, RequiemNexus.Application.Services.SorceryActivationService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IRiteRollOutcomeService, RequiemNexus.Application.Services.RiteRollOutcomeService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDisciplineActivationService, RequiemNexus.Application.Services.DisciplineActivationService>();
@@ -80,6 +129,10 @@ internal static class ApplicationServiceExtensions
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterCreationService, RequiemNexus.Application.Services.CharacterCreationService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ICharacterDisciplineService, RequiemNexus.Application.Services.CharacterDisciplineService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDevotionService, RequiemNexus.Application.Services.DevotionService>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.ConditionModifierProvider>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.CoilModifierProvider>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.WoundTrackModifierProvider>();
+        services.AddScoped<RequiemNexus.Application.Contracts.IModifierProvider, RequiemNexus.Application.Services.EquipmentModifierProvider>();
         services.AddScoped<RequiemNexus.Application.Contracts.IModifierService, RequiemNexus.Application.Services.ModifierService>();
         services.AddScoped<RequiemNexus.Application.Contracts.IDerivedStatService, RequiemNexus.Application.Services.DerivedStatService>();
         services.AddScoped<RequiemNexus.Application.Contracts.ITraitResolver, RequiemNexus.Application.Services.TraitResolver>();
@@ -95,6 +148,7 @@ internal static class ApplicationServiceExtensions
 
         services.AddSingleton<RequiemNexus.Web.Services.ToastService>();
         services.AddScoped<RequiemNexus.Web.Services.ScreenReaderAnnouncer>();
+        services.AddScoped<RequiemNexus.Web.Services.IInitiativeTrackerDragState, RequiemNexus.Web.Services.InitiativeTrackerDragState>();
         services.AddSingleton<Microsoft.AspNetCore.Authentication.Cookies.ITicketStore, RequiemNexus.Web.Services.DatabaseTicketStore>();
     }
 }

@@ -18,7 +18,8 @@ public class SessionService(
     IDiceService diceService,
     RealTimeMetrics metrics,
     ApplicationDbContext db,
-    IAuditLogService auditLog) : ISessionService
+    IAuditLogService auditLog,
+    ISessionDiscordNotifier sessionDiscordNotifier) : ISessionService
 {
     private static readonly TimeSpan _sessionTtl = TimeSpan.FromMinutes(15);
 
@@ -28,6 +29,7 @@ public class SessionService(
     private readonly RealTimeMetrics _metrics = metrics;
     private readonly ApplicationDbContext _db = db;
     private readonly IAuditLogService _auditLog = auditLog;
+    private readonly ISessionDiscordNotifier _sessionDiscordNotifier = sessionDiscordNotifier;
 
     /// <inheritdoc />
     public async Task StartSessionAsync(string userId, int chronicleId)
@@ -45,6 +47,8 @@ public class SessionService(
         _metrics.SessionStarted();
         await _publisher.Group(chronicleId).SessionStarted();
         await _auditLog.LogAsync(userId, AuditEventType.SessionStarted, details: $"Chronicle: {chronicleId}");
+        string stName = await GetUserDisplayNameAsync(userId).ConfigureAwait(false);
+        _sessionDiscordNotifier.NotifySessionStarted(chronicleId, stName);
     }
 
     /// <inheritdoc />
@@ -55,6 +59,8 @@ public class SessionService(
         await _publisher.Group(chronicleId).SessionEnded("Storyteller closed the session.");
         await _publisher.Group(chronicleId).ReceivePresenceUpdate(new List<PlayerPresenceDto>());
         await _auditLog.LogAsync(userId, AuditEventType.SessionEnded, details: $"Chronicle: {chronicleId}");
+        string stName = await GetUserDisplayNameAsync(userId).ConfigureAwait(false);
+        _sessionDiscordNotifier.NotifySessionEnded(chronicleId, stName);
     }
 
     /// <inheritdoc />
@@ -80,6 +86,7 @@ public class SessionService(
 
         var initiative = await _repository.GetInitiativeAsync(chronicleId);
         await _publisher.User(userId).ReceiveInitiativeUpdate(initiative);
+        _sessionDiscordNotifier.NotifyPlayerJoined(chronicleId, userName);
     }
 
     /// <inheritdoc />
@@ -98,6 +105,7 @@ public class SessionService(
             // Broadcast updated presence list
             var allPlayers = await _repository.GetPlayersAsync(chronicleId.Value);
             await _publisher.Group(chronicleId.Value).ReceivePresenceUpdate(allPlayers);
+            _sessionDiscordNotifier.NotifyPlayerLeft(chronicleId.Value, userId);
         }
     }
 
@@ -201,7 +209,10 @@ public class SessionService(
                 Humanity: character.Humanity,
                 Armor: character.Armor,
                 ActiveConditions: combinedConditions,
-                HealthDamage: character.HealthDamage);
+                HealthDamage: character.HealthDamage,
+                Beats: character.Beats,
+                ExperiencePoints: character.ExperiencePoints,
+                TotalExperiencePoints: character.TotalExperiencePoints);
 
             await _publisher.Group(character.CampaignId.Value).ReceiveCharacterUpdate(update);
         }
@@ -258,5 +269,15 @@ public class SessionService(
     public async Task BroadcastRelationshipUpdateAsync(int chronicleId, RelationshipUpdateDto update)
     {
         await _publisher.Group(chronicleId).ReceiveRelationshipUpdate(update);
+    }
+
+    private async Task<string> GetUserDisplayNameAsync(string userId)
+    {
+        return await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.UserName)
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false) ?? "Unknown Player";
     }
 }

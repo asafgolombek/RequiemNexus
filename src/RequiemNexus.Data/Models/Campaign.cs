@@ -34,6 +34,12 @@ public class Campaign
     [MaxLength(64)]
     public string? InviteTokenHash { get; set; }
 
+    /// <summary>
+    /// Phase 20: Optional Discord incoming webhook URL (HTTPS, discord.com/api/webhooks/...) for session presence posts. ST-only; never log the full value.
+    /// </summary>
+    [MaxLength(512)]
+    public string? DiscordWebhookUrl { get; set; }
+
     public virtual ICollection<Character> Characters { get; set; } = new List<Character>();
 
     public virtual ICollection<CityFaction> Factions { get; set; } = [];

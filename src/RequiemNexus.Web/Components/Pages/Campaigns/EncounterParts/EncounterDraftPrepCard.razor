@@ -1,0 +1,113 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn">
+    @if (IsRenaming)
+    {
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-bottom:0.35rem;">
+            <label for="rename-enc-@Encounter.Id" style="font-size:0.85em;color:var(--gothic-muted);align-self:center;">Name</label>
+            <input id="rename-enc-@Encounter.Id"
+                   class="form-control"
+                   style="flex:1;min-width:160px;"
+                   maxlength="200"
+                   value="@RenameBuffer"
+                   @oninput="OnRenameInputAsync" />
+            <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@Busy" @onclick="SaveRenameClickAsync">Save</button>
+            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" @onclick="CancelRenameClickAsync">Cancel</button>
+        </div>
+    }
+    else
+    {
+        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem;">
+            <h4 style="margin:0;">@Encounter.Name</h4>
+            <button type="button"
+                    class="btn-rn-ghost"
+                    style="font-size:0.75em;"
+                    disabled="@Busy"
+                    title="Rename this encounter"
+                    @onclick="StartRenameClickAsync">
+                Rename
+            </button>
+        </div>
+    }
+    <p style="font-size:0.85em;color:var(--gothic-muted);">NPC lines: @(Encounter.NpcTemplates?.Count ?? 0)</p>
+    @if (!string.IsNullOrEmpty(Encounter.PrepNotes))
+    {
+        <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.35rem 0;white-space:pre-wrap;">@Encounter.PrepNotes</p>
+    }
+    @if (Encounter.NpcTemplates == null || !Encounter.NpcTemplates.Any())
+    {
+        <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.5rem 0;">No NPCs yet — add from a stat block, Danse Macabre, or an Improvised NPC.</p>
+    }
+    else
+    {
+        <div class="character-grid" style="margin:0.5rem 0;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0.5rem;">
+            @foreach (EncounterNpcTemplate row in Encounter.NpcTemplates)
+            {
+                <EncounterNpcTemplateCard Template="row" Detailed="true" Busy="Busy" OnRemove="OnRemoveTemplate" />
+            }
+        </div>
+    }
+    @SmartLaunchSlot
+    <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+        <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@Busy" @onclick="StartPrepClickAsync">Start</button>
+        <button class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" type="button" @onclick="AckSaveForLaterClickAsync">Save for later</button>
+        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" @onclick="AddNpcClickAsync">+ Add NPC</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public CombatEncounter Encounter { get; set; } = null!;
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public bool IsRenaming { get; set; }
+
+    [Parameter]
+    public string RenameBuffer { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> RenameBufferChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<CombatEncounter> OnStartRename { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelRename { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSaveRename { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAddNpc { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnStartPrep { get; set; }
+
+    [Parameter]
+    public EventCallback OnAckSaveForLater { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemoveTemplate { get; set; }
+
+    /// <summary>Optional smart-launch UI (parent renders <see cref="EncounterSmartLaunchPanel"/> when applicable).</summary>
+    [Parameter]
+    public RenderFragment? SmartLaunchSlot { get; set; }
+
+    private Task OnRenameInputAsync(ChangeEventArgs e) =>
+        RenameBufferChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+
+    private Task StartRenameClickAsync() => OnStartRename.InvokeAsync(Encounter);
+
+    private Task CancelRenameClickAsync() => OnCancelRename.InvokeAsync();
+
+    private Task SaveRenameClickAsync() => OnSaveRename.InvokeAsync(Encounter.Id);
+
+    private Task AddNpcClickAsync() => OnAddNpc.InvokeAsync(Encounter.Id);
+
+    private Task StartPrepClickAsync() => OnStartPrep.InvokeAsync(Encounter.Id);
+
+    private Task AckSaveForLaterClickAsync() => OnAckSaveForLater.InvokeAsync();
+}

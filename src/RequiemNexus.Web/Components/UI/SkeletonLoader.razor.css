@@ -66,3 +66,56 @@
     background-size: 200% 100%;
     animation: shimmer 1.6s infinite linear;
 }
+
+/* Initiative tracker: sidebar + main column */
+.tracker {
+    display: grid;
+    grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    gap: 1rem;
+    width: 100%;
+}
+
+.tracker .skeleton-block {
+    min-height: 14rem;
+    height: 100%;
+}
+
+@media (max-width: 640px) {
+    .tracker {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Encounter manager: title band + stacked encounter rows */
+.encounter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    width: 100%;
+}
+
+.encounter-list .skeleton-block:first-child {
+    height: 2.25rem;
+    width: 42%;
+}
+
+.encounter-list .skeleton-block:not(:first-child) {
+    height: 3.35rem;
+    width: 100%;
+}
+
+/* Character sheet sections, modal bodies, glimpse card bodies */
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.panel .skeleton-block {
+    height: 0.75rem;
+}
+
+.panel .skeleton-block:last-child {
+    width: 72%;
+}

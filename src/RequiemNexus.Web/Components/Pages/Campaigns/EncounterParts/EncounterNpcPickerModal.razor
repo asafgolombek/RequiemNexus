@@ -1,0 +1,298 @@
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Data.Models
+
+<div class="rn-modal-backdrop" @onclick="CloseClickAsync">
+    <div class="rn-modal-panel" @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="enc-npc-modal-title">
+        <div class="rn-modal-header">
+            <h2 id="enc-npc-modal-title" class="rn-modal-title">@Title</h2>
+            <button type="button" class="rn-modal-close" @onclick="CloseClickAsync" aria-label="Close">×</button>
+        </div>
+        <div class="rn-modal-body">
+            @if (PickerMode == SourceMode)
+            {
+                <p style="font-size:0.9em;color:var(--gothic-muted);margin-bottom:0.75rem;">Choose how to add this NPC.</p>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <button type="button" class="btn-rn-primary" style="justify-content:center;" disabled="@Busy" @onclick="@(() => SetModeAsync(StatMode))">Stat block</button>
+                    <button type="button" class="btn-rn-primary" style="justify-content:center;" disabled="@Busy" @onclick="@(() => SetModeAsync(ChronicleMode))">Danse Macabre</button>
+                    @if (IsDraft)
+                    {
+                        <button type="button" class="btn-rn-primary" style="justify-content:center;" disabled="@Busy" @onclick="@(() => SetModeAsync(ImprovMode))">Improvised NPC</button>
+                    }
+                    <button type="button" class="btn-rn-ghost" @onclick="CloseClickAsync">Cancel</button>
+                </div>
+            }
+            else if (PickerMode == StatMode)
+            {
+                <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="@(() => SetModeAsync(SourceMode))">← Back</button>
+                @if (AvailableBlocks.Count == 0)
+                {
+                    <p class="rn-modal-empty">No stat blocks available for this campaign.</p>
+                }
+                else
+                {
+                    <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Health and willpower are taken from the stat block when you add.</p>
+                    <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
+                        <select class="form-control" style="flex:1;min-width:200px;" value="@SelectedBlockId" @onchange="OnBlockIdChangeAsync">
+                            <option value="0">— Select a stat block —</option>
+                            @foreach (NpcStatBlock block in AvailableBlocks)
+                            {
+                                <option value="@block.Id">@block.Name (@block.Concept)</option>
+                            }
+                        </select>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Init Mod
+                            <input class="form-control" style="width:100px;" type="number" @bind="NpcInitMod" @bind:event="oninput" />
+                        </label>
+                        @if (!IsDraft)
+                        {
+                            <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                                Roll (1d10)
+                                <input class="form-control" style="width:100px;" type="number" @bind="NpcRoll" @bind:event="oninput" />
+                            </label>
+                        }
+                        <button type="button" class="btn-rn-primary" disabled="@(SelectedBlockId == 0 || Busy)" @onclick="AddFromStatBlockClickAsync">Add</button>
+                    </div>
+                }
+            }
+            else if (PickerMode == ChronicleMode)
+            {
+                <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="@(() => SetModeAsync(SourceMode))">← Back</button>
+                <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Initiative defaults to Wits + Composure; health and willpower use a linked stat block when set, otherwise attributes.</p>
+                @if (ChronicleNpcs.Count == 0)
+                {
+                    <p class="rn-modal-empty">No living chronicle NPCs yet.</p>
+                    <a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost" style="display:inline-block;margin-bottom:0.5rem;">Open Danse Macabre</a>
+                }
+                else if (!ChronicleNpcs.Any(n => !ExcludedChronicleNpcIds.Contains(n.Id)))
+                {
+                    <p class="rn-modal-empty">All Danse Macabre NPCs are already in this encounter.</p>
+                }
+                else
+                {
+                    <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:200px;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Chronicle NPC
+                            <select class="form-control" value="@SelectedChronicleNpcId" @onchange="OnChronicleNpcSelect">
+                                <option value="0">— Select an NPC —</option>
+                                @foreach (ChronicleNpc npc in ChronicleNpcs.Where(n => !ExcludedChronicleNpcIds.Contains(n.Id)))
+                                {
+                                    <option value="@npc.Id">@npc.Name@(string.IsNullOrEmpty(npc.Title) ? "" : $", {npc.Title}")</option>
+                                }
+                            </select>
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Init mod
+                            <input class="form-control" style="width:100px;" type="number" @bind="NpcInitMod" @bind:event="oninput" />
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Health boxes
+                            <input class="form-control" style="width:100px;" type="number" @bind="ChronicleHealthBoxes" @bind:event="oninput" />
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                            Willpower (max)
+                            <input class="form-control" style="width:100px;" type="number" @bind="ChronicleMaxWillpower" @bind:event="oninput" />
+                        </label>
+                        @if (ChronicleTracksVitae)
+                        {
+                            <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                                Vitae (max)
+                                <input class="form-control" style="width:100px;" type="number" min="0" max="100" @bind="ChronicleMaxVitae" @bind:event="oninput" />
+                            </label>
+                        }
+                        @if (!IsDraft)
+                        {
+                            <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
+                                Roll (1d10)
+                                <input class="form-control" style="width:100px;" type="number" @bind="NpcRoll" @bind:event="oninput" />
+                            </label>
+                        }
+                        <button type="button"
+                                class="btn-rn-primary"
+                                disabled="@(SelectedChronicleNpcId == 0 || Busy || !ChronicleNpcs.Any(n => !ExcludedChronicleNpcIds.Contains(n.Id)))"
+                                @onclick="AddFromChronicleClickAsync">
+                            Add
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ChronicleAddError))
+                    {
+                        <p class="text-danger" style="font-size:0.85em;margin-top:0.5rem;margin-bottom:0;">@ChronicleAddError</p>
+                    }
+                    @if (ChroniclePrepHint is not null)
+                    {
+                        <p style="font-size:0.8em;color:var(--gothic-muted);margin-top:0.5rem;margin-bottom:0;">@ChroniclePrepHint</p>
+                    }
+                }
+            }
+            else if (PickerMode == ImprovMode)
+            {
+                <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="@(() => SetModeAsync(SourceMode))">← Back</button>
+                <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Initiative mod defaults to 0 (rolled when you start the encounter).</p>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;max-width:22rem;">
+                    <label style="font-size:0.85em;color:var(--gothic-muted);">Name <span aria-hidden="true">(required)</span></label>
+                    <input class="form-control" value="@ImprovName" @oninput="OnImprovNameInputAsync" placeholder="e.g. Guard" />
+                    <label style="font-size:0.85em;color:var(--gothic-muted);">Health boxes <span aria-hidden="true">(required)</span></label>
+                    <input class="form-control" type="number" min="1" max="50" @bind="ImprovHealthBoxes" @bind:event="oninput" />
+                    <label style="font-size:0.85em;color:var(--gothic-muted);">Willpower (max) <span aria-hidden="true">(required)</span></label>
+                    <input class="form-control" type="number" min="1" max="20" @bind="ImprovMaxWillpower" @bind:event="oninput" />
+                    @if (!string.IsNullOrEmpty(ImprovError))
+                    {
+                        <p class="text-danger" style="font-size:0.85em;margin:0;">@ImprovError</p>
+                    }
+                    <button type="button" class="btn-rn-primary" style="align-self:flex-start;" disabled="@Busy" @onclick="AddImprovisedClickAsync">Add</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public bool IsDraft { get; set; }
+
+    [Parameter, EditorRequired]
+    public string SourceMode { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string StatMode { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string ChronicleMode { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string ImprovMode { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? PickerMode { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> PickerModeChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<NpcStatBlock> AvailableBlocks { get; set; } = [];
+
+    [Parameter]
+    public int SelectedBlockId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedBlockIdChanged { get; set; }
+
+    [Parameter]
+    public int NpcInitMod { get; set; }
+
+    [Parameter]
+    public EventCallback<int> NpcInitModChanged { get; set; }
+
+    [Parameter]
+    public int NpcRoll { get; set; }
+
+    [Parameter]
+    public EventCallback<int> NpcRollChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ChronicleNpc> ChronicleNpcs { get; set; } = [];
+
+    [Parameter]
+    public HashSet<int> ExcludedChronicleNpcIds { get; set; } = [];
+
+    [Parameter]
+    public int SelectedChronicleNpcId { get; set; }
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnChronicleNpcSelect { get; set; }
+
+    [Parameter]
+    public int ChronicleHealthBoxes { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ChronicleHealthBoxesChanged { get; set; }
+
+    [Parameter]
+    public int ChronicleMaxWillpower { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ChronicleMaxWillpowerChanged { get; set; }
+
+    [Parameter]
+    public int ChronicleMaxVitae { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ChronicleMaxVitaeChanged { get; set; }
+
+    [Parameter]
+    public bool ChronicleTracksVitae { get; set; }
+
+    [Parameter]
+    public string ChronicleAddError { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? ChroniclePrepHint { get; set; }
+
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string ImprovName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ImprovNameChanged { get; set; }
+
+    [Parameter]
+    public int ImprovHealthBoxes { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ImprovHealthBoxesChanged { get; set; }
+
+    [Parameter]
+    public int ImprovMaxWillpower { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ImprovMaxWillpowerChanged { get; set; }
+
+    [Parameter]
+    public string ImprovError { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddFromStatBlock { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddFromChronicle { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddImprovised { get; set; }
+
+    private Task SetModeAsync(string? mode) => PickerModeChanged.InvokeAsync(mode);
+
+    private Task CloseClickAsync() => OnClose.InvokeAsync();
+
+    private Task OnKeyDownAsync(KeyboardEventArgs e) => OnKeyDown.InvokeAsync(e);
+
+    private Task OnBlockIdChangeAsync(ChangeEventArgs e)
+    {
+        int v = int.TryParse(e.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+            ? id
+            : 0;
+        return SelectedBlockIdChanged.InvokeAsync(v);
+    }
+
+    private Task OnImprovNameInputAsync(ChangeEventArgs e) =>
+        ImprovNameChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+
+    private Task AddFromStatBlockClickAsync() => OnAddFromStatBlock.InvokeAsync();
+
+    private Task AddFromChronicleClickAsync() => OnAddFromChronicle.InvokeAsync();
+
+    private Task AddImprovisedClickAsync() => OnAddImprovised.InvokeAsync();
+}

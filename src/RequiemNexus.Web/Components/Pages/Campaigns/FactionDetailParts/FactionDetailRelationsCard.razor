@@ -1,0 +1,117 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3>Faction Relations</h3>
+    @if (!Relationships.Any())
+    {
+        <p class="text-muted">No relationships defined.</p>
+    }
+    else
+    {
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left;padding:0.5rem;">With</th>
+                    <th style="text-align:left;padding:0.5rem;">Stance</th>
+                    <th style="text-align:left;padding:0.5rem;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (FactionRelationship rel in Relationships)
+                {
+                    CityFaction? other = rel.FactionAId == FactionId ? rel.FactionB : rel.FactionA;
+                    FactionStance stance = rel.FactionAId == FactionId ? rel.StanceFromA : rel.StanceFromA;
+                    <tr>
+                        <td style="padding:0.5rem;">
+                            @if (other != null)
+                            {
+                                <a href="/campaigns/@CampaignId/factions/@other.Id">@other.Name</a>
+                            }
+                        </td>
+                        <td style="padding:0.5rem;">@stance</td>
+                        <td style="padding:0.5rem;" class="text-muted">@rel.Notes</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <div class="add-form" style="margin-top:1rem;">
+        <h4>Add Relationship</h4>
+        <div class="form-row">
+            <select class="form-control" value="@RelOtherFactionId" @onchange="OnOtherFactionChangeAsync">
+                <option value="0">— Select faction —</option>
+                @foreach (CityFaction other in OtherFactions)
+                {
+                    <option value="@other.Id">@other.Name</option>
+                }
+            </select>
+            <select class="form-control" value="@RelStance" @onchange="OnStanceChangeAsync">
+                @foreach (FactionStance s in Enum.GetValues<FactionStance>())
+                {
+                    <option value="@s">@s</option>
+                }
+            </select>
+            <input class="form-control" placeholder="Notes" value="@RelNotes" @onchange="OnNotesChangeAsync" />
+            <button type="button" class="btn-rn-primary" disabled="@(RelOtherFactionId == 0 || Busy)" @onclick="OnSaveRelationship">Set</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter, EditorRequired]
+    public int FactionId { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FactionRelationship> Relationships { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CityFaction> OtherFactions { get; set; } = [];
+
+    [Parameter]
+    public int RelOtherFactionId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> RelOtherFactionIdChanged { get; set; }
+
+    [Parameter]
+    public FactionStance RelStance { get; set; }
+
+    [Parameter]
+    public EventCallback<FactionStance> RelStanceChanged { get; set; }
+
+    [Parameter]
+    public string RelNotes { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> RelNotesChanged { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveRelationship { get; set; }
+
+    private async Task OnOtherFactionChangeAsync(ChangeEventArgs e)
+    {
+        int v = int.TryParse(e.Value?.ToString(), out int n) ? n : 0;
+        await RelOtherFactionIdChanged.InvokeAsync(v);
+    }
+
+    private async Task OnStanceChangeAsync(ChangeEventArgs e)
+    {
+        if (Enum.TryParse(e.Value?.ToString(), out FactionStance stance))
+        {
+            await RelStanceChanged.InvokeAsync(stance);
+        }
+    }
+
+    private async Task OnNotesChangeAsync(ChangeEventArgs e)
+    {
+        await RelNotesChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+    }
+}

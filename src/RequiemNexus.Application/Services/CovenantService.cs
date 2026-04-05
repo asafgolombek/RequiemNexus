@@ -16,11 +16,13 @@ public class CovenantService(
     ApplicationDbContext dbContext,
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
+    IReferenceDataCache referenceData,
     ILogger<CovenantService> logger) : ICovenantService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
     private readonly ILogger<CovenantService> _logger = logger;
 
     /// <inheritdoc />
@@ -43,11 +45,10 @@ public class CovenantService(
             return [];
         }
 
-        List<CovenantDefinition> candidates = await _dbContext.CovenantDefinitions
-            .AsNoTracking()
+        List<CovenantDefinition> candidates = _referenceData.CovenantDefinitions
             .Where(c => c.IsPlayable)
             .OrderBy(c => c.Name)
-            .ToListAsync();
+            .ToList();
 
         return candidates.Select(c => new CovenantSummaryDto
         {
@@ -72,8 +73,8 @@ public class CovenantService(
             throw new InvalidOperationException("Character must be in a campaign to apply for a covenant.");
         }
 
-        CovenantDefinition? covenant = await _dbContext.CovenantDefinitions
-            .FirstOrDefaultAsync(c => c.Id == covenantDefinitionId)
+        CovenantDefinition? covenant = _referenceData.CovenantDefinitions
+            .FirstOrDefault(c => c.Id == covenantDefinitionId)
             ?? throw new InvalidOperationException($"Covenant {covenantDefinitionId} not found.");
 
         if (!covenant.IsPlayable)

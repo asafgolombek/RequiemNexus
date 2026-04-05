@@ -50,6 +50,8 @@
     private CombatEncounter? _encounter;
     private string? _userId;
 
+    private IDisposable? _initiativeSubscription;
+
     private List<InitiativeEntry> Sorted =>
         _encounter?.InitiativeEntries.OrderBy(e => e.Order).ToList() ?? [];
 
@@ -61,7 +63,7 @@
     {
         System.Security.Claims.ClaimsPrincipal user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
         _userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        SessionClient.InitiativeUpdated += OnInitiativeUpdated;
+        _initiativeSubscription = SessionClient.SubscribeInitiativeUpdated(OnInitiativeUpdated);
         await ReloadAsync();
     }
 
@@ -95,8 +97,9 @@
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        SessionClient.InitiativeUpdated -= OnInitiativeUpdated;
+        _initiativeSubscription?.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

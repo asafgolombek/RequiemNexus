@@ -11,7 +11,7 @@
 @inject IRequiemEmailService EmailService
 @inject IHttpContextAccessor HttpContextAccessor
 
-<PageTitle>Account Recovery - Requiem Nexus</PageTitle>
+<PageTitle>Account Recovery — Requiem Nexus</PageTitle>
 
 <div class="login-container">
     <div class="login-card">
@@ -22,7 +22,7 @@
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger alert-rn" role="alert">
                 @errorMessage
             </div>
         }
@@ -83,7 +83,7 @@
         }
         else if (currentStep == Step.Success)
         {
-            <div class="alert alert-success" role="alert">
+            <div class="alert alert-success alert-rn" role="alert">
                 Two-factor authentication has been disabled on your account.
             </div>
             <p>You can now log in with just your email and password. We strongly recommend setting up 2FA again once you have regained access.</p>

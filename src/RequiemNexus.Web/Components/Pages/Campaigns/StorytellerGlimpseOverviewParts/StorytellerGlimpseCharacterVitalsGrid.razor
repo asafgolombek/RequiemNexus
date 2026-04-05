@@ -1,0 +1,197 @@
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Web.Components.Pages.CharacterSheet
+
+@if (!Vitals.Any())
+{
+    <div class="empty-state-rn">
+        <p>No characters have joined this campaign yet.</p>
+    </div>
+}
+else
+{
+    <div class="character-grid">
+        @foreach (CharacterVitalsDto v in Vitals)
+        {
+            <div class="card-rn glimpse-card drop-zone @(ActiveDropTargetId == v.CharacterId ? "drop-zone-active" : "")"
+                 ondragover="event.preventDefault();"
+                 @ondragenter="() => OnDragEnter.InvokeAsync(v.CharacterId)"
+                 @ondragleave="OnDragLeave"
+                 @ondrop="() => OnDrop.InvokeAsync(v.CharacterId)">
+                <div class="glimpse-card-header">
+                    <h4>@v.Name</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+                        <a href="/campaigns/@CampaignId/characters/@v.CharacterId" class="btn-rn-ghost" style="font-size:0.8em;">👁 View Sheet</a>
+                        <button type="button" class="btn-rn-ghost" style="font-size:0.8em;" @onclick="() => OnOpenLineage.InvokeAsync(v.CharacterId)">Lineage</button>
+                    </div>
+                </div>
+
+                <div class="vitals-grid">
+                    <div class="vital-row">
+                        <span class="vital-label">❤️ Health</span>
+                        <div class="vital-bar-wrap">
+                            <div class="vital-bar health-bar" style="width:@BarPct(v.CurrentHealth, v.MaxHealth)%"></div>
+                        </div>
+                        <span class="vital-value">@v.CurrentHealth / @v.MaxHealth</span>
+                    </div>
+                    <div class="vital-row">
+                        <span class="vital-label">🛡️ Willpower</span>
+                        <div class="vital-bar-wrap">
+                            <div class="vital-bar willpower-bar" style="width:@BarPct(v.CurrentWillpower, v.MaxWillpower)%"></div>
+                        </div>
+                        <span class="vital-value">@v.CurrentWillpower / @v.MaxWillpower</span>
+                    </div>
+                    <div class="vital-row">
+                        <span class="vital-label">🍷 Vitae</span>
+                        <div class="vital-bar-wrap">
+                            <div class="vital-bar vitae-bar" style="width:@BarPct(v.CurrentVitae, v.MaxVitae)%"></div>
+                        </div>
+                        <span class="vital-value">@v.CurrentVitae / @v.MaxVitae</span>
+                    </div>
+                </div>
+
+                @if (v.MaxVitae > 0)
+                {
+                    <VitaeFastHealPanel CharacterId="v.CharacterId"
+                                        ActingUserId="@CurrentUserId"
+                                        CurrentVitae="v.CurrentVitae"
+                                        MaxVitae="v.MaxVitae"
+                                        HealthDamage="@v.HealthDamage"
+                                        TrackLength="v.MaxHealth"
+                                        OnHealed="OnHealed" />
+                }
+
+                <div class="glimpse-stats">
+                    <span>🕊️ Humanity: @v.Humanity</span>
+                    <span>🩸 Stains: @v.HumanityStains</span>
+                    <span>⚫ Beats: @v.Beats</span>
+                    <span>✨ XP: @v.ExperiencePoints</span>
+                    @if (v.ActiveConditionCount > 0)
+                    {
+                        <span class="condition-badge">⚠️ @v.ActiveConditionCount Condition@(v.ActiveConditionCount > 1 ? "s" : "")</span>
+                    }
+                </div>
+
+                <div class="glimpse-humanity-actions" style="display:flex;flex-wrap:wrap;gap:0.35rem;margin:0.5rem 0;">
+                    @if (v.HumanityStains >= v.Humanity)
+                    {
+                        <button type="button"
+                                class="btn-rn-danger"
+                                style="font-size:0.8em;"
+                                @onclick="() => OnOpenDegenerationRoll.InvokeAsync(v.CharacterId)">
+                            Roll Degeneration
+                        </button>
+                    }
+                    else if (v.HumanityStains > 0 && v.HumanityStains < v.Humanity)
+                    {
+                        <button type="button"
+                                class="btn-rn-ghost"
+                                style="font-size:0.8em;border:1px solid var(--border-subtle);"
+                                title="@(v.Humanity <= 0 ? "Pool: chance die (1 die)" : $"Pool: {v.Humanity + (v.HasTouchstoneAnchor ? 1 : 0)} dice (Humanity{(v.HasTouchstoneAnchor ? " + Touchstone" : "")})")"
+                                @onclick="() => OnRollRemorse.InvokeAsync(v.CharacterId)">
+                            Roll Remorse
+                        </button>
+                    }
+                </div>
+
+                <div class="award-panel">
+                    <div class="award-row">
+                        <input class="form-control award-input"
+                               placeholder="Beat reason…"
+                               aria-label="@($"Beat reason for {v.Name}")"
+                               @bind="BeatReasons[v.CharacterId]" />
+                        <button type="button" class="btn-rn-primary"
+                                style="font-size:0.85em;"
+                                disabled="@(string.IsNullOrWhiteSpace(BeatReasons.GetValueOrDefault(v.CharacterId)) || Awarding)"
+                                @onclick="() => OnAwardBeat.InvokeAsync(v.CharacterId)">
+                            + Beat
+                        </button>
+                    </div>
+                </div>
+
+                <div class="award-panel" style="margin-top:0.5rem;">
+                    <div class="award-row">
+                        <input type="number"
+                               class="form-control xp-amount-input"
+                               min="1"
+                               aria-label="@($"Experience points to award to {v.Name}")"
+                               @bind="XpAmounts[v.CharacterId]" />
+                        <input class="form-control award-input"
+                               placeholder="XP reason…"
+                               aria-label="@($"Experience point reason for {v.Name}")"
+                               @bind="XpReasons[v.CharacterId]" />
+                        <button type="button" class="btn-rn-ghost"
+                                style="font-size:0.85em;"
+                                disabled="@(XpAmounts.GetValueOrDefault(v.CharacterId) <= 0 || string.IsNullOrWhiteSpace(XpReasons.GetValueOrDefault(v.CharacterId)) || Awarding)"
+                                @onclick="() => OnAwardXp.InvokeAsync(v.CharacterId)">
+                            + XP
+                        </button>
+                    </div>
+                </div>
+
+                @if (FeedbackMessages.TryGetValue(v.CharacterId, out string? msg) && !string.IsNullOrEmpty(msg))
+                {
+                    <p class="feedback-ok feedback-small">@msg</p>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<CharacterVitalsDto> Vitals { get; set; } = [];
+
+    [Parameter]
+    public int? ActiveDropTargetId { get; set; }
+
+    [Parameter]
+    public bool Awarding { get; set; }
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, string> BeatReasons { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, string> XpReasons { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, int> XpAmounts { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<int, string> FeedbackMessages { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<int> OnDragEnter { get; set; }
+
+    [Parameter]
+    public EventCallback OnDragLeave { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDrop { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOpenLineage { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOpenDegenerationRoll { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRollRemorse { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAwardBeat { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAwardXp { get; set; }
+
+    [Parameter]
+    public EventCallback OnHealed { get; set; }
+
+    private static int BarPct(int cur, int max) =>
+        max <= 0 ? 0 : Math.Clamp(cur * 100 / max, 0, 100);
+}

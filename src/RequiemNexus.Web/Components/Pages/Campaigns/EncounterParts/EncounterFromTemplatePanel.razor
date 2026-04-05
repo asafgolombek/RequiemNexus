@@ -1,0 +1,62 @@
+@using System.Globalization
+@using RequiemNexus.Data.Models
+
+<div class="card-rn" style="margin-bottom:1.5rem;">
+    <h3 style="margin-bottom:0.75rem;">From template</h3>
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+        <select class="form-control" style="min-width:220px;" value="@SelectedTemplateId" @onchange="OnTemplateIdChangeAsync">
+            <option value="0">— Select template —</option>
+            @foreach (EncounterTemplate t in Templates)
+            {
+                <option value="@t.Id">@t.Name</option>
+            }
+        </select>
+        <input class="form-control"
+               style="min-width:180px;"
+               placeholder="Encounter name…"
+               value="@EncounterName"
+               @oninput="OnNameInputAsync" />
+        <button type="button"
+                class="btn-rn-primary"
+                disabled="@(SelectedTemplateId == 0 || Busy)"
+                @onclick="CreateClickAsync">
+            Create from template
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<EncounterTemplate> Templates { get; set; } = [];
+
+    [Parameter]
+    public int SelectedTemplateId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedTemplateIdChanged { get; set; }
+
+    [Parameter]
+    public string EncounterName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> EncounterNameChanged { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnCreate { get; set; }
+
+    private Task OnTemplateIdChangeAsync(ChangeEventArgs e)
+    {
+        int v = int.TryParse(e.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+            ? id
+            : 0;
+        return SelectedTemplateIdChanged.InvokeAsync(v);
+    }
+
+    private Task OnNameInputAsync(ChangeEventArgs e) =>
+        EncounterNameChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+
+    private Task CreateClickAsync() => OnCreate.InvokeAsync();
+}

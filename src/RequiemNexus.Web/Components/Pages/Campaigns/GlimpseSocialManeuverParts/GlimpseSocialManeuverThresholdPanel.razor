@@ -1,0 +1,36 @@
+<div class="social-config-row">
+    <label class="config-label">
+        Investigation successes per clue (chronicle)
+        <input type="number" class="form-control config-input-small" min="1" max="50"
+               value="@ThresholdDraft"
+               @onchange="OnThresholdChangeAsync" />
+    </label>
+    <button type="button" class="btn-rn-ghost btn-align-small" disabled="@Busy"
+            @onclick="HandleSaveAsync">Save threshold</button>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int ThresholdDraft { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> ThresholdDraftChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool Busy { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnSave { get; set; }
+
+    private Task OnThresholdChangeAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int v))
+        {
+            return ThresholdDraftChanged.InvokeAsync(v);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task HandleSaveAsync() => OnSave.InvokeAsync();
+}

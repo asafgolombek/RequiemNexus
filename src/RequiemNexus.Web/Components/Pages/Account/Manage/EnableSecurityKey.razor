@@ -16,13 +16,13 @@
 @inject ILogger<EnableSecurityKey> Logger
 @inject NavigationManager NavigationManager
 
-<PageTitle>Add Security Key - Requiem Nexus</PageTitle>
+<PageTitle>Add Security Key — Requiem Nexus</PageTitle>
 
 <h3>Set up a Security Key (FIDO2)</h3>
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="alert alert-danger" role="alert">@errorMessage</div>
+    <div class="alert alert-danger alert-rn" role="alert">@errorMessage</div>
 }
 
 <div class="mt-4">

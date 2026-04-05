@@ -1,0 +1,84 @@
+@using RequiemNexus.Application.DTOs
+
+<div class="card-rn glimpse-card">
+    <h3 class="section-header">Passive Predatory Aura</h3>
+    <p class="text-small text-muted-rn mb-sm">
+        Manual Blood Potency contest between two PCs (chronicle-wide). Results appear in the session dice feed. When Kindred join the same encounter, passive contests also fire automatically once per pair.
+    </p>
+    <div class="form-row" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;">
+        <label class="text-small">
+            Kindred A
+            <select class="form-control form-select-medium" value="@CharacterA" @onchange="OnCharacterAChangeAsync">
+                <option value="0">—</option>
+                @foreach (CharacterVitalsDto v in Vampires)
+                {
+                    <option value="@v.CharacterId">@v.Name</option>
+                }
+            </select>
+        </label>
+        <label class="text-small">
+            Kindred B
+            <select class="form-control form-select-medium" value="@CharacterB" @onchange="OnCharacterBChangeAsync">
+                <option value="0">—</option>
+                @foreach (CharacterVitalsDto v in Vampires)
+                {
+                    <option value="@v.CharacterId">@v.Name</option>
+                }
+            </select>
+        </label>
+        <button type="button"
+                class="btn-rn-primary"
+                disabled="@(Busy || CharacterA == 0 || CharacterB == 0 || CharacterA == CharacterB || string.IsNullOrEmpty(CurrentUserId))"
+                @onclick="() => OnTriggerContest.InvokeAsync()">
+            Trigger contest
+        </button>
+    </div>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p class="text-small mt-sm @(IsError ? "feedback-error" : "feedback-ok")">@Message</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<CharacterVitalsDto> Vampires { get; set; } = [];
+
+    [Parameter]
+    public int CharacterA { get; set; }
+
+    [Parameter]
+    public EventCallback<int> CharacterAChanged { get; set; }
+
+    [Parameter]
+    public int CharacterB { get; set; }
+
+    [Parameter]
+    public EventCallback<int> CharacterBChanged { get; set; }
+
+    [Parameter]
+    public string? CurrentUserId { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsError { get; set; }
+
+    [Parameter]
+    public EventCallback OnTriggerContest { get; set; }
+
+    private Task OnCharacterAChangeAsync(ChangeEventArgs e)
+    {
+        int v = int.TryParse(e.Value?.ToString(), out int x) ? x : 0;
+        return CharacterAChanged.InvokeAsync(v);
+    }
+
+    private Task OnCharacterBChangeAsync(ChangeEventArgs e)
+    {
+        int v = int.TryParse(e.Value?.ToString(), out int x) ? x : 0;
+        return CharacterBChanged.InvokeAsync(v);
+    }
+}

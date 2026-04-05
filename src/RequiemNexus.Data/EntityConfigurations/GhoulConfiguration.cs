@@ -31,5 +31,7 @@ public sealed class GhoulConfiguration : IEntityTypeConfiguration<Ghoul>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(g => g.ChronicleId);
+        builder.HasIndex(g => g.RegnantCharacterId);
+        builder.HasIndex(g => g.RegnantNpcId);
     }
 }

@@ -9,10 +9,11 @@
     justify-content: space-between;
 }
 
+/* Default + hover: bone-white on panel charcoal meets WCAG AA (accent-light on dark fails axe color-contrast). */
 .dot-label-btn {
     background: none;
     border: none;
-    color: var(--text-color);
+    color: var(--bone-white, var(--text-color));
     text-align: left;
     padding: 0;
     cursor: pointer;
@@ -21,8 +22,9 @@
     transition: color var(--transition-fast);
 }
 
-.dot-label-btn:hover {
-    color: var(--accent-light);
+.dot-label-btn:hover,
+.dot-label-btn:focus-visible {
+    color: var(--bone-white, var(--text-color));
     text-decoration: underline;
 }
 

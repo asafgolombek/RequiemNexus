@@ -1,0 +1,222 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Domain.Models
+
+@if (!Entries.Any())
+{
+    <div class="empty-state-rn">
+        <p>No participants yet. Add characters or NPCs above.</p>
+    </div>
+}
+else
+{
+    <InitiativeTurnToolbar Show="ShowTurnToolbar"
+                           Busy="Busy"
+                           ActionFeedback="ActionFeedback"
+                           OnAdvanceTurn="OnAdvanceTurn"
+                           OnHoldTurn="OnHoldTurn"
+                           OnResolveEncounter="OnResolveEncounter" />
+
+    <div class="initiative-list">
+        @foreach (InitiativeEntry entry in Entries)
+        {
+            bool isCurrent = CurrentActor?.Id == entry.Id;
+            bool isNpc = entry.CharacterId == null;
+            bool encounterLive = EncounterIsActive && !EncounterIsDraft;
+            bool showTiltColumn = IsStoryteller && encounterLive && entry.CharacterId.HasValue;
+            int? tiltCharId = entry.CharacterId;
+            int? pcWeaponCharacterId = entry.CharacterId;
+            bool showPlayerWeapon = !IsStoryteller && encounterLive
+                && pcWeaponCharacterId == PlayerOwnedCharacterId;
+            bool showMelee = IsStoryteller && encounterLive && entry.CharacterId.HasValue;
+            bool showStActions = IsStoryteller && encounterLive;
+            bool draggable = IsStoryteller && encounterLive;
+            bool showNpcRoll = NpcRollEntryId == entry.Id && isNpc && showStActions;
+
+            <InitiativeOrderRow Entry="entry"
+                                IsCurrent="isCurrent"
+                                IsStoryteller="IsStoryteller"
+                                Draggable="draggable"
+                                Busy="Busy"
+                                ShowPlayerHealth="ShowPlayerHealth(entry)"
+                                ShowPlayerWeaponDamage="showPlayerWeapon"
+                                CanStEditLaunchedNpcEncounter="CanStEditLaunchedNpcEncounter"
+                                ShowTiltColumn="showTiltColumn"
+                                TiltCharacterId="tiltCharId"
+                                ActiveTiltsForCharacter="ActiveTiltsFor(tiltCharId)"
+                                SelectedTilt="@SelectedTiltFor(tiltCharId)"
+                                SelectedTiltChanged="t => OnRowTiltSelectionAsync(entry, t)"
+                                ShowStCombatActions="showStActions"
+                                ShowMeleeAttack="showMelee"
+                                DefeatConfirmOpen="@(DefeatConfirmEntryId == entry.Id)"
+                                NpcRollOpen="@(NpcRollEntryId == entry.Id)"
+                                ShowNpcRollPanel="showNpcRoll"
+                                DamageBoxClass="DamageBoxClass"
+                                OnDragStart="() => OnDragStart.InvokeAsync(entry)"
+                                OnDrop="() => OnDrop.InvokeAsync(entry)"
+                                NpcHealthDamageTrackChanged="t => OnNpcHealthTrackChanged.InvokeAsync((EntryId: entry.Id, Track: t))"
+                                OnNpcSpendWill="() => OnNpcSpendWill.InvokeAsync(entry.Id)"
+                                OnNpcRestoreWill="() => OnNpcRestoreWill.InvokeAsync(entry.Id)"
+                                OnNpcSpendVitae="() => OnNpcSpendVitae.InvokeAsync(entry.Id)"
+                                OnNpcRestoreVitae="() => OnNpcRestoreVitae.InvokeAsync(entry.Id)"
+                                OnOpenPlayerWeaponDamage="() => OnOpenPlayerWeaponDamage.InvokeAsync(pcWeaponCharacterId!.Value)"
+                                OnRemoveTilt="id => OnRemoveTilt.InvokeAsync(id)"
+                                OnApplyTilt="() => OnApplyTilt.InvokeAsync(entry.CharacterId!.Value)"
+                                OnToggleNpcReveal="() => OnToggleNpcReveal.InvokeAsync(entry)"
+                                OnToggleNpcRoll="() => OnToggleNpcRoll.InvokeAsync(entry.Id)"
+                                OnReleaseHeld="() => OnReleaseHeld.InvokeAsync(entry.Id)"
+                                OnConfirmDefeatNpc="() => OnConfirmDefeatNpc.InvokeAsync(entry.Id)"
+                                OnCancelDefeatConfirm="OnCancelDefeatConfirm"
+                                OnRequestDefeatConfirm="() => OnRequestDefeatConfirm.InvokeAsync(entry.Id)"
+                                OnOpenMeleeAttack="() => OnOpenMeleeAttack.InvokeAsync(entry.CharacterId!.Value)"
+                                OnRemoveEntry="() => OnRemoveEntry.InvokeAsync(entry.Id)"
+                                OnNpcRollClosed="OnNpcRollClosed" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<InitiativeEntry> Entries { get; set; } = [];
+
+    [Parameter]
+    public InitiativeEntry? CurrentActor { get; set; }
+
+    [Parameter]
+    public bool IsStoryteller { get; set; }
+
+    [Parameter]
+    public bool EncounterIsActive { get; set; }
+
+    [Parameter]
+    public bool EncounterIsDraft { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public int? PlayerOwnedCharacterId { get; set; }
+
+    [Parameter]
+    public string? ActionFeedback { get; set; }
+
+    [Parameter]
+    public bool ShowTurnToolbar { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<int, List<CharacterTilt>> ActiveTilts { get; set; } =
+        new Dictionary<int, List<CharacterTilt>>();
+
+    [Parameter]
+    public IReadOnlyDictionary<int, TiltType> TiltSelections { get; set; } =
+        new Dictionary<int, TiltType>();
+
+    [Parameter]
+    public int? DefeatConfirmEntryId { get; set; }
+
+    [Parameter]
+    public int? NpcRollEntryId { get; set; }
+
+    [Parameter]
+    public bool CanStEditLaunchedNpcEncounter { get; set; }
+
+    [Parameter]
+    public Func<InitiativeEntry, bool> ShowPlayerHealth { get; set; } = _ => false;
+
+    [Parameter]
+    public Func<Character, int, string> DamageBoxClass { get; set; } = (_, _) => string.Empty;
+
+    [Parameter]
+    public EventCallback OnAdvanceTurn { get; set; }
+
+    [Parameter]
+    public EventCallback OnHoldTurn { get; set; }
+
+    [Parameter]
+    public EventCallback OnResolveEncounter { get; set; }
+
+    [Parameter]
+    public EventCallback<InitiativeEntry> OnDragStart { get; set; }
+
+    [Parameter]
+    public EventCallback<InitiativeEntry> OnDrop { get; set; }
+
+    [Parameter]
+    public EventCallback<(int EntryId, string Track)> OnNpcHealthTrackChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnNpcSpendWill { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnNpcRestoreWill { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnNpcSpendVitae { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnNpcRestoreVitae { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOpenPlayerWeaponDamage { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemoveTilt { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnApplyTilt { get; set; }
+
+    [Parameter]
+    public EventCallback<InitiativeEntry> OnToggleNpcReveal { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnToggleNpcRoll { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnReleaseHeld { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnConfirmDefeatNpc { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelDefeatConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRequestDefeatConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOpenMeleeAttack { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemoveEntry { get; set; }
+
+    [Parameter]
+    public EventCallback OnNpcRollClosed { get; set; }
+
+    [Parameter]
+    public EventCallback<(int CharacterId, TiltType Tilt)> OnTiltSelectionChanged { get; set; }
+
+    private IReadOnlyList<CharacterTilt>? ActiveTiltsFor(int? characterId)
+    {
+        if (!characterId.HasValue)
+        {
+            return null;
+        }
+
+        return ActiveTilts.TryGetValue(characterId.Value, out List<CharacterTilt>? list) ? list : null;
+    }
+
+    private TiltType SelectedTiltFor(int? characterId) =>
+        characterId.HasValue && TiltSelections.TryGetValue(characterId.Value, out TiltType sel)
+            ? sel
+            : TiltType.KnockedDown;
+
+    private Task OnRowTiltSelectionAsync(InitiativeEntry entry, TiltType tilt)
+    {
+        if (!entry.CharacterId.HasValue)
+        {
+            return Task.CompletedTask;
+        }
+
+        return OnTiltSelectionChanged.InvokeAsync((CharacterId: entry.CharacterId.Value, Tilt: tilt));
+    }
+}

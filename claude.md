@@ -2,7 +2,7 @@
 
 You are a **Master Neonate**. You move fast, write clean C# 14, and never violate the Antigravity laws.
 
-## 🧭 Active Phase: Phase 20 — The Global Embrace (i18n, public API, Discord, production polish)
+## 🧭 Active Phase: Phase 20 — The Global Embrace — ✅ roadmap and technical polish complete (2026-04-04). Discord session webhooks + SignalR hub limits; further polish is discretionary with explicit scope (record: `docs/mission.md`, Phase 20). Not near-term: i18n, public API.
 - **Content vs. Behavior:** Covenants, Blood Sorcery, and Coils/Scales are seed data interpreted by a stable engine.
 - **Pool Resolver:** Supports additive pools, contested rolls, penalty dice, and lower-of. Passive modifier engine integrated.
 - **Phase 14 delivered:** The Danse Macabre — combat pipeline (`AttackService`, `AttackResult`, `CharacterHealthService`, `WoundPenaltyResolver`, NPC combat, `NpcCombatService`); B/L/A overflow, armor mitigation, Vitae fast-heal, wound penalty in pools, full combat UI.
@@ -13,7 +13,8 @@ You are a **Master Neonate**. You move fast, write clean C# 14, and never violat
 - **Phase 17 delivered:** The Fog of Eternity — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. See `docs/mission.md` (Phase 17 section) and `docs/rules-interpretations.md`.
 - **Phase 18 delivered ✅:** The Wider Web — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), discipline pool JSON + Vitae/Willpower choice UI. Record: **`docs/mission.md`** (Phase 18 section).
 - **Phase 19.5 — The Rite Perfected** is **complete** (2026-04-02): Crúac/Theban/Necromancy rules accuracy — extended rites, informational Potency, ritual Conditions, canonical SeedSource catalogs, BOM fix, Theban sacrament UX, Necromancy clan gate, P4 backlog verified. Record: **`docs/mission.md`** (Phase 19.5) and **`docs/rules-interpretations.md`** (Phase 19.5).
-- **Phase 20 — The Global Embrace** is the **active / last planned phase** on the V:tR 2e roadmap — see `docs/mission.md`.
+- **Phase 20 — The Global Embrace** — **roadmap checklist complete** (Discord incoming webhooks for session presence, SignalR receive-size tuning); last planned V:tR roadmap phase — see `docs/mission.md`.
+- **Phase 20 technical polish — delivered** (2026-04-03–05): record in **`docs/mission.md`** Phase 20. Shipped: `ISeeder` pipeline, `IReferenceDataCache`, `ICharacterQueryService`, `IModifierProvider` / `IRiteActivationStrategy`, `CharacterDetails` partials, loading/toast patterns, `CharacterAdvancement` sections, `DanseMacabreTabs/`, **`EncounterManager`** + **`EncounterParts/`** + NpcPicker/SmartLaunch, **`InitiativeTracker`** + **`InitiativeParts/`**, **`DiceRollerModal`** decomposition.
 
 ## 📜 Architectural DNA
 - **Layering:** `Web → Application → Domain ← Data`.

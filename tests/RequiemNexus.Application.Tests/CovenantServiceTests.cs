@@ -28,7 +28,7 @@ public class CovenantServiceTests
         return authHelper;
     }
 
-    private static CovenantService CreateService(ApplicationDbContext ctx, IAuthorizationHelper? authHelper = null)
+    private static async Task<CovenantService> CreateServiceAsync(ApplicationDbContext ctx, IAuthorizationHelper? authHelper = null)
     {
         var auth = authHelper ?? CreatePermissiveAuthMock().Object;
         var sessionService = new Mock<ISessionService>();
@@ -36,7 +36,8 @@ public class CovenantServiceTests
             .Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>()))
             .Returns(Task.CompletedTask);
         var logger = new Mock<ILogger<CovenantService>>().Object;
-        return new CovenantService(ctx, auth, sessionService.Object, logger);
+        IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+        return new CovenantService(ctx, auth, sessionService.Object, cache, logger);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)
@@ -66,7 +67,7 @@ public class CovenantServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var sut = CreateService(ctx);
+        var sut = await CreateServiceAsync(ctx);
         await sut.RequestLeaveCovenantAsync(1, "player");
 
         var character = await ctx.Characters.FindAsync(1);
@@ -89,7 +90,7 @@ public class CovenantServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var sut = CreateService(ctx);
+        var sut = await CreateServiceAsync(ctx);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.RequestLeaveCovenantAsync(1, "player"));
     }
@@ -111,7 +112,7 @@ public class CovenantServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var sut = CreateService(ctx);
+        var sut = await CreateServiceAsync(ctx);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.RequestLeaveCovenantAsync(1, "player"));
     }
@@ -125,7 +126,7 @@ public class CovenantServiceTests
             .Setup(a => a.RequireCharacterOwnerAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new UnauthorizedAccessException("denied"));
 
-        var sut = CreateService(ctx, authHelper.Object);
+        var sut = await CreateServiceAsync(ctx, authHelper.Object);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             sut.RequestLeaveCovenantAsync(1, "not-owner"));
     }
@@ -149,7 +150,7 @@ public class CovenantServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var sut = CreateService(ctx);
+        var sut = await CreateServiceAsync(ctx);
         await sut.ApproveLeaveRequestAsync(1, "st");
 
         var character = await ctx.Characters.FindAsync(1);
@@ -174,7 +175,7 @@ public class CovenantServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var sut = CreateService(ctx);
+        var sut = await CreateServiceAsync(ctx);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.ApproveLeaveRequestAsync(1, "st"));
     }
@@ -199,7 +200,7 @@ public class CovenantServiceTests
             .Setup(a => a.RequireStorytellerAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new UnauthorizedAccessException("denied"));
 
-        var sut = CreateService(ctx, authHelper.Object);
+        var sut = await CreateServiceAsync(ctx, authHelper.Object);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             sut.ApproveLeaveRequestAsync(1, "not-st"));
     }
@@ -223,7 +224,7 @@ public class CovenantServiceTests
         });
         await ctx.SaveChangesAsync();
 
-        var sut = CreateService(ctx);
+        var sut = await CreateServiceAsync(ctx);
         await sut.RejectLeaveRequestAsync(1, "st");
 
         var character = await ctx.Characters.FindAsync(1);
@@ -251,7 +252,7 @@ public class CovenantServiceTests
             .Setup(a => a.RequireStorytellerAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new UnauthorizedAccessException("denied"));
 
-        var sut = CreateService(ctx, authHelper.Object);
+        var sut = await CreateServiceAsync(ctx, authHelper.Object);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             sut.RejectLeaveRequestAsync(1, "not-st"));
     }

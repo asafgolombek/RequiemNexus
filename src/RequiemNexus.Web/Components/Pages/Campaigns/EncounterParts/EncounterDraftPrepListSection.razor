@@ -1,0 +1,114 @@
+@using RequiemNexus.Data.Models
+
+@if (DraftEncounters.Any())
+{
+    @if (!string.IsNullOrEmpty(PrepFeedback))
+    {
+        <p class="card-rn" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.9em;color:var(--gothic-muted);">@PrepFeedback</p>
+    }
+    <h3 style="margin-bottom:0.75rem;">Encounters in prep</h3>
+    @if (!string.IsNullOrEmpty(CreateError) && !ShowCreateEncounterForm)
+    {
+        <p class="text-danger" style="margin-bottom:0.75rem;">@CreateError</p>
+    }
+    <div class="character-grid" style="margin-bottom:1.5rem;">
+        @foreach (CombatEncounter enc in DraftEncounters)
+        {
+            <EncounterDraftPrepCard Encounter="enc"
+                                    Busy="Busy"
+                                    IsRenaming="@(RenamingEncounterId == enc.Id)"
+                                    @bind-RenameBuffer="RenameBuffer"
+                                    OnStartRename="OnStartRename"
+                                    OnCancelRename="OnCancelRename"
+                                    OnSaveRename="OnSaveRename"
+                                    OnAddNpc="OnAddNpc"
+                                    OnStartPrep="OnStartPrep"
+                                    OnAckSaveForLater="OnAckSaveForLater"
+                                    OnRemoveTemplate="OnRemoveTemplate">
+                <SmartLaunchSlot>
+                    @if (SmartLaunchEncounterId == enc.Id)
+                    {
+                        <EncounterSmartLaunchPanel Title="Ready to begin?"
+                                                   LeadText="@(SmartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")"
+                                                   CampaignCharacters="CampaignCharacters"
+                                                   IsSelected="SmartLaunchIsSelected"
+                                                   SelectionChanged="OnSmartLaunchSelectionChanged"
+                                                   Busy="Busy"
+                                                   ConfirmButtonText="@(SmartLaunchIsPrepStart ? "Begin combat" : "Roll initiative & join")"
+                                                   OnConfirm="OnSmartLaunchConfirm"
+                                                   OnCancel="OnSmartLaunchCancel" />
+                    }
+                </SmartLaunchSlot>
+            </EncounterDraftPrepCard>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Draft encounters shown in the prep list (excludes the in-form draft when the create panel is open).</summary>
+    [Parameter]
+    public IEnumerable<CombatEncounter> DraftEncounters { get; set; } = Array.Empty<CombatEncounter>();
+
+    [Parameter]
+    public string PrepFeedback { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CreateError { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool ShowCreateEncounterForm { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public int? RenamingEncounterId { get; set; }
+
+    [Parameter]
+    public string RenameBuffer { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> RenameBufferChanged { get; set; }
+
+    [Parameter]
+    public int? SmartLaunchEncounterId { get; set; }
+
+    [Parameter]
+    public bool SmartLaunchIsPrepStart { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<Character> CampaignCharacters { get; set; } = Array.Empty<Character>();
+
+    [Parameter]
+    public Func<int, bool> SmartLaunchIsSelected { get; set; } = static _ => true;
+
+    [Parameter]
+    public EventCallback<(int CharacterId, bool Selected)> OnSmartLaunchSelectionChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSmartLaunchConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnSmartLaunchCancel { get; set; }
+
+    [Parameter]
+    public EventCallback<CombatEncounter> OnStartRename { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelRename { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSaveRename { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAddNpc { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnStartPrep { get; set; }
+
+    [Parameter]
+    public EventCallback OnAckSaveForLater { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemoveTemplate { get; set; }
+}

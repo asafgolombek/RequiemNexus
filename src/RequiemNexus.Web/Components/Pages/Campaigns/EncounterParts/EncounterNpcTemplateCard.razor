@@ -1,0 +1,42 @@
+@using RequiemNexus.Data.Models
+
+<div class="character-card card-rn" style="padding:0.65rem;">
+    <h4 class="char-name" style="font-size:1rem;margin:0 0 0.35rem 0;">@Template.Name</h4>
+    <div class="stats" style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8em;color:var(--gothic-muted);">
+        <span>Init mod: @Template.InitiativeMod</span>
+        <span>Health: @Template.HealthBoxes</span>
+        @if (Detailed)
+        {
+            <span>Willpower: @(Template.MaxWillpower < 1 ? "—" : Template.MaxWillpower.ToString())</span>
+            @if (Template.MaxVitae > 0)
+            {
+                <span>Max vitae: @Template.MaxVitae</span>
+            }
+            <span>@(Template.IsRevealed ? "Revealed to players" : $"Hidden — mask: {Template.DefaultMaskedName ?? "—"}")</span>
+            @if (!string.IsNullOrEmpty(Template.Notes))
+            {
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="@Template.Notes">@Template.Notes</span>
+            }
+        }
+    </div>
+    <div class="card-actions" style="margin-top:0.5rem;">
+        <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@Busy" @onclick="OnRemoveClick">Remove</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public EncounterNpcTemplate Template { get; set; } = null!;
+
+    /// <summary>When true, shows willpower, vitae, reveal state, and notes (prep list cards).</summary>
+    [Parameter]
+    public bool Detailed { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool Busy { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> OnRemove { get; set; }
+
+    private Task OnRemoveClick() => OnRemove.InvokeAsync(Template.Id);
+}

@@ -7,7 +7,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<ActiveSessions> Logger
 
-<PageTitle>Active Sessions</PageTitle>
+<PageTitle>Active Sessions — Requiem Nexus</PageTitle>
 
 <h3 class="mb-4 text-theme-primary">Active Sessions</h3>
 
@@ -15,14 +15,14 @@
 
 @if (!string.IsNullOrEmpty(_statusMessage))
 {
-    <div class="alert alert-success" role="alert">
+    <div class="alert alert-success alert-rn" role="alert">
         @_statusMessage
     </div>
 }
 
 @if (_sessions == null)
 {
-    <p><em>Loading...</em></p>
+    <SkeletonLoader Variant="rows" Count="5" />
 }
 else if (_sessions.Count == 0)
 {

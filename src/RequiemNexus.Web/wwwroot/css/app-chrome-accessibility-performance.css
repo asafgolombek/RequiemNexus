@@ -1,0 +1,126 @@
+﻿/* Track 6.4 — prefers-reduced-motion + html.performance-mode */
+@media (prefers-reduced-motion: reduce) {
+    .particle {
+        animation: none !important;
+        opacity: 0 !important;
+        visibility: hidden;
+    }
+
+    .fade-in,
+    .fade-in-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .stagger-1,
+    .stagger-2,
+    .stagger-3,
+    .stagger-4,
+    .stagger-5 {
+        animation-delay: 0s !important;
+    }
+
+    .card-rn:hover,
+    .card-grimoire:hover {
+        transform: none;
+    }
+
+    .dot.filled {
+        animation: none !important;
+    }
+
+    .dot:hover {
+        transform: none;
+    }
+
+    .ripple-active::after {
+        animation: none !important;
+        opacity: 0 !important;
+    }
+
+    .animate-pulse {
+        animation: none !important;
+    }
+
+    .notification {
+        animation: none !important;
+    }
+
+    .toast-host .toast-item {
+        animation: none !important;
+    }
+
+    .toast-host .toast-progress {
+        animation: none !important;
+        opacity: 0.35;
+    }
+}
+
+html.performance-mode .particle {
+    animation: none !important;
+    opacity: 0 !important;
+    visibility: hidden;
+}
+
+html.performance-mode .fade-in,
+html.performance-mode .fade-in-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+html.performance-mode .stagger-1,
+html.performance-mode .stagger-2,
+html.performance-mode .stagger-3,
+html.performance-mode .stagger-4,
+html.performance-mode .stagger-5 {
+    animation-delay: 0s !important;
+}
+
+html.performance-mode .card-rn:hover,
+html.performance-mode .card-grimoire:hover {
+    transform: none;
+}
+
+html.performance-mode .dot.filled {
+    animation: none !important;
+}
+
+html.performance-mode .dot:hover {
+    transform: none;
+}
+
+html.performance-mode .ripple-active::after {
+    animation: none !important;
+    opacity: 0 !important;
+}
+
+html.performance-mode .animate-pulse {
+    animation: none !important;
+}
+
+html.performance-mode .notification {
+    animation: none !important;
+}
+
+html.performance-mode .brand-link:hover .brand-mark-pulse {
+    animation: none !important;
+}
+
+html.performance-mode .widget-card:hover {
+    transform: none;
+}
+
+html.performance-mode .widget-card:hover .widget-icon {
+    transform: none;
+}
+
+html.performance-mode .toast-host .toast-item {
+    animation: none !important;
+}
+
+html.performance-mode .toast-host .toast-progress {
+    animation: none !important;
+    opacity: 0.35;
+}

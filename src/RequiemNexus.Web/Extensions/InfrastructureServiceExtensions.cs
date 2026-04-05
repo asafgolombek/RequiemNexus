@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Web.Hubs;
 using Serilog;
 using StackExchange.Redis;
@@ -90,6 +91,8 @@ internal static class InfrastructureServiceExtensions
 
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+        builder.Services.AddRequiemDataSeeders();
+
         builder.Services.AddFido2(options =>
         {
             options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost";
@@ -115,10 +118,15 @@ internal static class InfrastructureServiceExtensions
         builder.Services.AddScoped<ISessionService, SessionService>();
         builder.Services.AddSingleton<ISessionPublisher, SessionPublisher>();
         builder.Services.AddScoped<RequiemNexus.Web.Services.SessionClientService>();
+        builder.Services.AddScoped<RequiemNexus.Web.Services.ISessionEventBus>(sp =>
+            sp.GetRequiredService<RequiemNexus.Web.Services.SessionClientService>());
 
         builder.Services.AddSingleton<IHubFilter>(new RequiemNexus.Web.Hubs.Filters.RateLimitingFilter(30));
 
         ISignalRServerBuilder signalrBuilder = builder.Services.AddSignalR();
+
+        // Phase 20: initiative / hub payloads can exceed the default 32 KB cap; Redis backplane above supports multi-instance scale-out.
+        signalrBuilder.AddHubOptions<SessionHub>(o => o.MaximumReceiveMessageSize = 64 * 1024);
 
         if (!builder.Environment.IsEnvironment("Testing"))
         {

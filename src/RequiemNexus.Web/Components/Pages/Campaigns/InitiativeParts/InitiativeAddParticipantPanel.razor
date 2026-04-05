@@ -1,0 +1,197 @@
+@using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Data.Models
+
+@if (Visible)
+{
+    <div class="card-rn" style="margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:0.75rem;">Add Participant</h3>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+            <div>
+                <label style="font-size:0.8em;color:var(--gothic-muted);">Type</label>
+                <select class="form-control" @bind="AddType" @bind:after="AfterAddTypeChangedAsync" style="min-width:140px;">
+                    <option value="character">Character</option>
+                    <option value="npc">NPC (name)</option>
+                    <option value="chronicle">Danse Macabre NPC</option>
+                </select>
+            </div>
+
+            @if (AddType == "character")
+            {
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.8em;color:var(--gothic-muted);">Character</label>
+                    <select class="form-control" @bind="AddCharacterId">
+                        <option value="0">-- Select character --</option>
+                        @foreach (Character c in CampaignCharacters)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            else if (AddType == "npc")
+            {
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.8em;color:var(--gothic-muted);">NPC name <span aria-hidden="true">(required)</span></label>
+                    <input class="form-control" placeholder="NPC name…" required @bind="AddNpcName" />
+                </div>
+            }
+            else
+            {
+                <div style="flex:1;min-width:200px;">
+                    <label style="font-size:0.8em;color:var(--gothic-muted);">Chronicle NPC</label>
+                    @if (ChronicleNpcTotalCount == 0)
+                    {
+                        <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">None yet — add NPCs in <a href="/campaigns/@CampaignId/danse-macabre">Danse Macabre</a>.</p>
+                    }
+                    else if (!ChronicleNpcsAvailableForEncounter.Any())
+                    {
+                        <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">All Danse Macabre NPCs for this chronicle are already in this encounter.</p>
+                    }
+                    else
+                    {
+                        <select class="form-control" value="@AddChronicleNpcId" @onchange="OnChronicleSelectChanged">
+                            <option value="0">-- Select NPC --</option>
+                            @foreach (ChronicleNpc npc in ChronicleNpcsAvailableForEncounter)
+                            {
+                                <option value="@npc.Id">@npc.Name@(string.IsNullOrEmpty(npc.Title) ? "" : $", {npc.Title}")</option>
+                            }
+                        </select>
+                    }
+                </div>
+            }
+
+            <div>
+                <label style="font-size:0.8em;color:var(--gothic-muted);">Init Mod</label>
+                <input type="number" class="form-control" style="width:80px;" @bind="AddInitMod" />
+            </div>
+            @if (AddType == "npc" || AddType == "chronicle")
+            {
+                <div>
+                    <label style="font-size:0.8em;color:var(--gothic-muted);">Health boxes</label>
+                    <input type="number" class="form-control" style="width:80px;" min="1" max="50" @bind="AddNpcHealthBoxes" />
+                </div>
+                <div>
+                    <label style="font-size:0.8em;color:var(--gothic-muted);">Willpower (max)</label>
+                    <input type="number" class="form-control" style="width:80px;" min="1" max="20" @bind="AddNpcMaxWillpower" />
+                </div>
+                @if (AddType == "chronicle" && AddChronicleTracksVitae)
+                {
+                    <div>
+                        <label style="font-size:0.8em;color:var(--gothic-muted);">Vitae (max)</label>
+                        <input type="number" class="form-control" style="width:80px;" min="0" max="100" @bind="AddNpcMaxVitae" />
+                    </div>
+                }
+            }
+            <div>
+                <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1–10)</label>
+                <input type="number" class="form-control" style="width:80px;" min="1" max="10" @bind="AddRoll" />
+            </div>
+            <button class="btn-rn-primary"
+                    disabled="@(!CanAdd || Busy)"
+                    @onclick="OnAdd">
+                Add
+            </button>
+        </div>
+        @if (!string.IsNullOrEmpty(AddError))
+        {
+            <p class="text-danger" style="margin-top:0.5rem;">@AddError</p>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public string AddType { get; set; } = "character";
+
+    [Parameter]
+    public EventCallback<string> AddTypeChanged { get; set; }
+
+    [Parameter]
+    public int AddCharacterId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> AddCharacterIdChanged { get; set; }
+
+    [Parameter]
+    public string AddNpcName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> AddNpcNameChanged { get; set; }
+
+    [Parameter]
+    public int AddChronicleNpcId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> AddChronicleNpcIdChanged { get; set; }
+
+    [Parameter]
+    public int AddInitMod { get; set; }
+
+    [Parameter]
+    public EventCallback<int> AddInitModChanged { get; set; }
+
+    [Parameter]
+    public int AddRoll { get; set; } = 1;
+
+    [Parameter]
+    public EventCallback<int> AddRollChanged { get; set; }
+
+    [Parameter]
+    public int AddNpcHealthBoxes { get; set; } = 7;
+
+    [Parameter]
+    public EventCallback<int> AddNpcHealthBoxesChanged { get; set; }
+
+    [Parameter]
+    public int AddNpcMaxWillpower { get; set; } = 4;
+
+    [Parameter]
+    public EventCallback<int> AddNpcMaxWillpowerChanged { get; set; }
+
+    [Parameter]
+    public int AddNpcMaxVitae { get; set; }
+
+    [Parameter]
+    public EventCallback<int> AddNpcMaxVitaeChanged { get; set; }
+
+    [Parameter]
+    public bool AddChronicleTracksVitae { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> AddChronicleTracksVitaeChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<Character> CampaignCharacters { get; set; } = [];
+
+    [Parameter]
+    public IEnumerable<ChronicleNpc> ChronicleNpcsAvailableForEncounter { get; set; } = [];
+
+    [Parameter]
+    public int ChronicleNpcTotalCount { get; set; }
+
+    [Parameter]
+    public bool CanAdd { get; set; }
+
+    [Parameter]
+    public string AddError { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddTypeAfterChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnChronicleSelectChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnAdd { get; set; }
+
+    private Task AfterAddTypeChangedAsync() => OnAddTypeAfterChanged.InvokeAsync();
+}

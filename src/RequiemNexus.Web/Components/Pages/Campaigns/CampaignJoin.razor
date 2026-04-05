@@ -7,16 +7,17 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.WebUtilities
 @inject ICampaignService CampaignService
-@inject ICharacterService CharacterService
+@inject ICharacterReader CharacterReader
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject ToastService ToastService
 
-<PageTitle>Join campaign - Requiem Nexus</PageTitle>
+<PageTitle>Join campaign — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     @if (!_ready)
     {
-        <p><em>Loading…</em></p>
+        <SkeletonLoader Variant="card" Count="2" />
     }
     else if (string.IsNullOrWhiteSpace(Invite))
     {
@@ -44,11 +45,6 @@
         <div class="card-rn" style="max-width: 36rem;">
             <h2>Join @_preview.Name</h2>
             <p>Choose one of your characters that is not already in a campaign.</p>
-
-            @if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                <div class="alert-rn alert-danger" role="alert">@_errorMessage</div>
-            }
 
             @if (!_availableCharacters.Any())
             {
@@ -86,7 +82,6 @@
     private List<Character> _availableCharacters = [];
     private bool _ready;
     private bool _busy;
-    private string? _errorMessage;
     private string _loginUrl = "/";
     private readonly JoinModel _joinModel = new();
 
@@ -106,7 +101,7 @@
             _preview = await CampaignService.GetJoinPreviewAsync(Id, Invite, _currentUserId);
             if (_preview is not null)
             {
-                List<Character> all = await CharacterService.GetCharactersByUserIdAsync(_currentUserId);
+                List<Character> all = await CharacterReader.GetCharactersByUserIdAsync(_currentUserId);
                 _availableCharacters = all.Where(c => c.CampaignId == null).ToList();
             }
         }
@@ -122,7 +117,6 @@
         }
 
         _busy = true;
-        _errorMessage = null;
         try
         {
             await CampaignService.JoinCampaignWithInviteAsync(Id, _joinModel.CharacterId, Invite, _currentUserId);
@@ -130,11 +124,11 @@
         }
         catch (UnauthorizedAccessException ex)
         {
-            _errorMessage = ex.Message;
+            ToastService.Show("Join campaign", ex.Message, ToastType.Error);
         }
         catch (InvalidOperationException ex)
         {
-            _errorMessage = ex.Message;
+            ToastService.Show("Join campaign", ex.Message, ToastType.Error);
         }
         finally
         {

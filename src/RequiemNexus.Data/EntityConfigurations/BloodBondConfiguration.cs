@@ -39,5 +39,7 @@ public sealed class BloodBondConfiguration : IEntityTypeConfiguration<BloodBond>
         builder.HasIndex(b => new { b.ChronicleId, b.ThrallCharacterId, b.RegnantKey }).IsUnique();
         builder.HasIndex(b => b.ChronicleId);
         builder.HasIndex(b => b.ThrallCharacterId);
+        builder.HasIndex(b => b.RegnantCharacterId);
+        builder.HasIndex(b => b.RegnantNpcId);
     }
 }

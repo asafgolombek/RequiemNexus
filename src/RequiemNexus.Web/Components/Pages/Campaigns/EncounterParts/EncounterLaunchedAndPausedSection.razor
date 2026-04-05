@@ -1,0 +1,98 @@
+@using RequiemNexus.Data.Models
+
+@if (LaunchedEncounters.Any())
+{
+    <h3 style="margin-bottom:0.75rem;">Active encounter</h3>
+    <div class="character-grid" style="margin-bottom:1.5rem;">
+        @foreach (CombatEncounter enc in LaunchedEncounters)
+        {
+            <EncounterActiveEncounterCard Encounter="enc"
+                                          CampaignId="CampaignId"
+                                          Busy="Busy"
+                                          OnOnlinePlayers="OnOnlinePlayers"
+                                          OnAddNpc="OnAddNpcActive"
+                                          OnPause="OnPause"
+                                          OnResolve="OnResolve">
+                <SmartLaunchSlot>
+                    @if (SmartLaunchEncounterId == enc.Id)
+                    {
+                        <EncounterSmartLaunchPanel Title="Add PCs to this fight"
+                                                   LeadText="@(SmartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")"
+                                                   CampaignCharacters="CampaignCharacters"
+                                                   IsSelected="SmartLaunchIsSelected"
+                                                   SelectionChanged="OnSmartLaunchSelectionChanged"
+                                                   Busy="Busy"
+                                                   ConfirmButtonText="@(SmartLaunchIsPrepStart ? "Begin combat" : "Roll initiative & join")"
+                                                   OnConfirm="OnSmartLaunchConfirm"
+                                                   OnCancel="OnSmartLaunchCancel" />
+                    }
+                </SmartLaunchSlot>
+            </EncounterActiveEncounterCard>
+        }
+    </div>
+}
+
+@if (PausedEncounters.Any())
+{
+    <h3 style="margin-bottom:0.75rem;">Paused encounter</h3>
+    <div class="character-grid" style="margin-bottom:1.5rem;">
+        @foreach (CombatEncounter enc in PausedEncounters)
+        {
+            <EncounterPausedEncounterCard Encounter="enc"
+                                          CampaignId="CampaignId"
+                                          Busy="Busy"
+                                          OnResume="OnResume"
+                                          OnResolve="OnResolve" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public IEnumerable<CombatEncounter> LaunchedEncounters { get; set; } = Array.Empty<CombatEncounter>();
+
+    [Parameter]
+    public IEnumerable<CombatEncounter> PausedEncounters { get; set; } = Array.Empty<CombatEncounter>();
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public int? SmartLaunchEncounterId { get; set; }
+
+    [Parameter]
+    public bool SmartLaunchIsPrepStart { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<Character> CampaignCharacters { get; set; } = Array.Empty<Character>();
+
+    [Parameter]
+    public Func<int, bool> SmartLaunchIsSelected { get; set; } = static _ => true;
+
+    [Parameter]
+    public EventCallback<(int CharacterId, bool Selected)> OnSmartLaunchSelectionChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSmartLaunchConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnSmartLaunchCancel { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOnlinePlayers { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAddNpcActive { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPause { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnResume { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnResolve { get; set; }
+}

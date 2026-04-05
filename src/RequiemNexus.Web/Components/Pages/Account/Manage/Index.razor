@@ -5,6 +5,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Components.UI
 @using RequiemNexus.Web.Services
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -13,13 +14,13 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-<PageTitle>Profile - Requiem Nexus</PageTitle>
+<PageTitle>Profile — Requiem Nexus</PageTitle>
 
 <h3>Profile</h3>
 
 @if (!string.IsNullOrEmpty(profileStatusMessage))
 {
-    <div class="alert @(profileIsError ? "alert-danger" : "alert-success")" role="alert">
+    <div class="alert alert-rn @(profileIsError ? "alert-danger" : "alert-success")" role="alert">
         @profileStatusMessage
     </div>
 }
@@ -76,7 +77,7 @@
 
         @if (!string.IsNullOrEmpty(emailStatusMessage))
         {
-            <div class="alert @(emailIsError ? "alert-danger" : "alert-success")" role="alert">
+            <div class="alert alert-rn @(emailIsError ? "alert-danger" : "alert-success")" role="alert">
                 @emailStatusMessage
             </div>
         }
@@ -117,7 +118,7 @@
 }
 else
 {
-    <p>Loading profile...</p>
+    <SkeletonLoader Variant="card" Count="2" />
 }
 
 <style>

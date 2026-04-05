@@ -8,7 +8,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<Characters> Logger
 @using Microsoft.Extensions.Logging
-<PageTitle>My Characters - Requiem Nexus</PageTitle>
+<PageTitle>My Characters — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     <div class="page-header-rn">
@@ -22,7 +22,7 @@
     }
     else if (_loadError != null)
     {
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger alert-rn" role="alert">
             <strong>Could not load characters.</strong> @_loadError
         </div>
     }

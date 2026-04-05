@@ -10,9 +10,10 @@ Complete these steps **in order** before touching any file:
 
 1. Read this file (`agents.md`) in full.
 2. Read [`docs/mission.md`](./docs/mission.md) — understand the current phase and what is already done.
-3. Read the existing tests for the area you are changing.
-4. Run `dotnet build` — confirm the baseline is healthy.
-5. Run `dotnet format --verify-no-changes` — confirm formatting is clean.
+3. For **Phase 20 performance / refactor / UI-consistency** context, read **`docs/mission.md`** — **Phase 20: The Global Embrace** (delivery record). **Committed Phase 20 technical polish is complete** (2026-04-03–05); further extractions are **discretionary** unless `mission.md` or an explicit task reopens scope. Do not confuse historical **Wave** execution labels (polish sprint ordering) with `mission.md` **phase** numbers.
+4. Read the existing tests for the area you are changing.
+5. Run `dotnet build` — confirm the baseline is healthy.
+6. Run `dotnet format --verify-no-changes` — confirm formatting is clean.
 
 If you are blocked or requirements are ambiguous, **stop and surface the question explicitly. Do not guess. Do not proceed with a workaround.**
 
@@ -95,6 +96,8 @@ Every data-mutating operation must follow this exact sequence:
 4. Proceed only after ownership is confirmed.
 
 Skipping step 3 is a **security defect**, not a shortcut.
+
+For **PR and endpoint reviews** (minimal APIs, Blazor, `SessionHub`, Application services), use the layered checklist in [`docs/masquerade-audit-checklist.md`](./docs/masquerade-audit-checklist.md).
 
 ---
 
@@ -329,7 +332,7 @@ When making any change, ask: *does this make the system easier or harder to unde
 
 ## Current Phase
 
-**Phases 14–16b, 17, 18, 19, and 19.5 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition, **blood sorcery rules completion** — Crúac / Theban / Necromancy: extended rites, ritual Conditions, informational Potency, canonical ritual JSON in `SeedSource`, sacrament UX, backlog verification). Record: [`docs/mission.md`](./docs/mission.md) Phase 19.5 + [`docs/rules-interpretations.md`](./docs/rules-interpretations.md) Phase 19.5. **Phase 20 — The Global Embrace** is the **active phase** (i18n, public API, Discord, production polish) — [`docs/mission.md`](./docs/mission.md). Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
+**Phases 14–16b, 17, 18, 19, and 19.5 are complete** (combat & wounds, frenzy & torpor, feeding / hunting, discipline activation, humanity & conditions, **Wider Web** edge systems & seed catalogs, discipline acquisition, **blood sorcery rules completion** — Crúac / Theban / Necromancy: extended rites, ritual Conditions, informational Potency, canonical ritual JSON in `SeedSource`, sacrament UX, backlog verification). Record: [`docs/mission.md`](./docs/mission.md) Phase 19.5 + [`docs/rules-interpretations.md`](./docs/rules-interpretations.md) Phase 19.5. **Phase 20 — The Global Embrace** — **roadmap and technical polish complete** (2026-04-04): Discord session incoming webhooks + SignalR receive-size tuning; discretionary follow-on polish only with explicit scope — full delivery record: [`docs/mission.md`](./docs/mission.md) Phase 20. **Not** near-term: i18n, public REST API. Shipped in Phase 20 polish: `ISeeder` pipeline, `IReferenceDataCache`, `CharacterQueryService`, modifier providers, rite strategies, `CharacterDetails` partials, loading/error UX, `CharacterAdvancement` sections, `DanseMacabre` tabs, `EncounterManager` + `EncounterParts/` + NpcPicker/SmartLaunch, `InitiativeTracker` + `InitiativeParts/`, `DiceRollerModal` decomposition. Phase 18 delivery record: [`docs/mission.md`](./docs/mission.md) (section **Phase 18: The Wider Web**). Phase 16b reference: [`docs/phase16b-the-discipline-engine.md`](./docs/phase16b-the-discipline-engine.md). Phases 13, 12, and 8–11 are complete.
 
 **Local E2E:** `scripts/test-e2e-local.ps1` (PostgreSQL + Playwright). **Inquisition (unit/integration):** `scripts/test-local.ps1`.
 

@@ -1,0 +1,20 @@
+<div class="campaign-header">
+    <div>
+        <h2>⚔️ @EncounterName</h2>
+        <span style="font-size:0.85em;color:var(--gothic-muted);">
+            @StatusLine
+        </span>
+    </div>
+    <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Encounters</a>
+</div>
+
+@code {
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public string EncounterName { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? StatusLine { get; set; }
+}

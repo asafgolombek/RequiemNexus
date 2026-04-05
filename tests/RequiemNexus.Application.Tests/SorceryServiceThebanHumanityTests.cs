@@ -53,7 +53,10 @@ public class SorceryServiceThebanHumanityTests
         }
     }
 
-    private static SorceryService CreateSorceryService(ApplicationDbContext ctx, IAuthorizationHelper? auth = null)
+    private static SorceryService CreateSorceryService(
+        ApplicationDbContext ctx,
+        IReferenceDataCache referenceCache,
+        IAuthorizationHelper? auth = null)
     {
         var session = new Mock<ISessionService>();
         session.Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>())).Returns(Task.CompletedTask);
@@ -73,6 +76,7 @@ public class SorceryServiceThebanHumanityTests
             auth ?? CreateAuthMock().Object,
             beat.Object,
             session.Object,
+            referenceCache,
             new Mock<ILogger<SorceryService>>().Object);
     }
 
@@ -141,7 +145,8 @@ public class SorceryServiceThebanHumanityTests
             });
             await ctx.SaveChangesAsync();
 
-            var sut = CreateSorceryService(ctx);
+            IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+            var sut = CreateSorceryService(ctx, cache);
             var eligible = await sut.GetEligibleRitesAsync(1, "p1");
 
             Assert.Single(eligible);
@@ -202,7 +207,8 @@ public class SorceryServiceThebanHumanityTests
             });
             await ctx.SaveChangesAsync();
 
-            var sut = CreateSorceryService(ctx);
+            IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+            var sut = CreateSorceryService(ctx, cache);
             InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 sut.RequestLearnRiteAsync(1, 11, "p1"));
 
@@ -280,7 +286,8 @@ public class SorceryServiceThebanHumanityTests
             });
             await ctx.SaveChangesAsync();
 
-            var sut = CreateSorceryService(ctx);
+            IReferenceDataCache cache = await ReferenceDataCacheTestDoubles.WarmFromAsync(ctx);
+            var sut = CreateSorceryService(ctx, cache);
             InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 sut.ApproveRiteLearnAsync(100, null, "st"));
 

@@ -1,0 +1,121 @@
+@using RequiemNexus.Application.DTOs
+@using RequiemNexus.Data.Models
+
+<div class="new-maneuver-form">
+    <strong class="text-small">New maneuver</strong>
+    <div class="form-row">
+        <label class="form-label">
+            Initiator (PC)
+            <select class="form-control form-select-medium" value="@InitiatorId.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                    @onchange="OnInitiatorChangedAsync">
+                <option value="0">— Select —</option>
+                @foreach (CharacterVitalsDto v in Vitals)
+                {
+                    <option value="@v.CharacterId.ToString(System.Globalization.CultureInfo.InvariantCulture)">@v.Name</option>
+                }
+            </select>
+        </label>
+        <label class="form-label">
+            Target (NPC)
+            <select class="form-control form-select-medium" value="@TargetNpcId.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                    @onchange="OnTargetNpcChangedAsync">
+                <option value="0">— Select —</option>
+                @foreach (ChronicleNpc n in Npcs)
+                {
+                    <option value="@n.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)">@(PinnedNpcIds.Contains(n.Id) ? "📌 " : "")@n.Name</option>
+                }
+            </select>
+        </label>
+    </div>
+    <textarea class="form-control" rows="2" placeholder="Goal description…" value="@Goal"
+              @oninput="e => GoalChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty)"></textarea>
+    <div class="checkbox-group">
+        <label><input type="checkbox" checked="@BreakingPoint" @onchange="e => BreakingPointChanged.InvokeAsync(GetCheckboxBool(e))" /> Goal would be a breaking point (+2 Doors)</label>
+        <label><input type="checkbox" checked="@Aspiration" @onchange="e => AspirationChanged.InvokeAsync(GetCheckboxBool(e))" /> Prevents victim Aspiration (+1)</label>
+        <label><input type="checkbox" checked="@VirtueMask" @onchange="e => VirtueMaskChanged.InvokeAsync(GetCheckboxBool(e))" /> Against Virtue / Mask (+1)</label>
+    </div>
+    <button type="button" class="btn-rn-primary btn-align-start"
+            disabled="@(Busy || InitiatorId == 0 || TargetNpcId == 0 || string.IsNullOrWhiteSpace(Goal))"
+            @onclick="HandleCreateAsync">
+        Create maneuver
+    </button>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CharacterVitalsDto> Vitals { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ChronicleNpc> Npcs { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public HashSet<int> PinnedNpcIds { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public int InitiatorId { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> InitiatorIdChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public int TargetNpcId { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<int> TargetNpcIdChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Goal { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public EventCallback<string> GoalChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool BreakingPoint { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<bool> BreakingPointChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool Aspiration { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<bool> AspirationChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool VirtueMask { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<bool> VirtueMaskChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool Busy { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnCreate { get; set; }
+
+    private Task OnInitiatorChangedAsync(ChangeEventArgs e)
+    {
+        int id = int.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int parsed)
+            ? parsed
+            : 0;
+        return InitiatorIdChanged.InvokeAsync(id);
+    }
+
+    private Task OnTargetNpcChangedAsync(ChangeEventArgs e)
+    {
+        int id = int.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int parsed)
+            ? parsed
+            : 0;
+        return TargetNpcIdChanged.InvokeAsync(id);
+    }
+
+    private static bool GetCheckboxBool(ChangeEventArgs e) =>
+        e.Value switch
+        {
+            bool b => b,
+            string s => string.Equals(s, "on", StringComparison.OrdinalIgnoreCase),
+            _ => false,
+        };
+
+    private Task HandleCreateAsync() => OnCreate.InvokeAsync();
+}

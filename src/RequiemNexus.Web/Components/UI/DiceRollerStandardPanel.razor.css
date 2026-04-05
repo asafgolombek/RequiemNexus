@@ -1,0 +1,65 @@
+/* Standard pool / trait / modifier UI (extracted from DiceRollerModal). */
+
+.roller-form-group {
+    margin-bottom: 0.75rem;
+}
+
+.roller-form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: var(--text-hint);
+}
+
+.roller-input {
+    width: 100%;
+    padding: 8px;
+    background: var(--deep-black);
+    border: 1px solid var(--muted-gray);
+    color: var(--bone-white);
+    border-radius: 4px;
+    font-family: var(--font-primary);
+}
+
+.roller-input:focus {
+    outline: none;
+    border-color: var(--crimson);
+    box-shadow: 0 0 6px rgba(196,30,58,.5);
+}
+
+.roller-input option, .roller-input optgroup {
+    background: var(--charcoal);
+    color: var(--bone-white);
+}
+
+.pool-total {
+    font-size: 1.1rem;
+    color: var(--bone-white);
+}
+
+.chance-die-hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-hint);
+    line-height: 1.35;
+}
+
+.options-group {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--bone-white);
+}
+
+.option-label input[type="checkbox"] {
+    accent-color: var(--crimson);
+}

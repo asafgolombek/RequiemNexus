@@ -9,7 +9,7 @@
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject NavigationManager NavigationManager
 
-<PageTitle>Resend email confirmation</PageTitle>
+<PageTitle>Resend email confirmation — Requiem Nexus</PageTitle>
 
 <div class="login-container">
     <div class="login-card">
@@ -19,7 +19,7 @@
 
         @if (!string.IsNullOrEmpty(statusMessage))
         {
-            <div class="alert alert-info mt-3" role="alert">
+            <div class="alert alert-info alert-rn mt-3" role="alert">
                 @statusMessage
             </div>
         }

@@ -1,0 +1,34 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Data.Models.Enums
+@using RequiemNexus.Domain.Enums
+@using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Helpers
+
+<section class="cs-section cs-attributes">
+    <h2>Attributes (New Dot x 4 XP)</h2>
+    <div class="grid-3-col">
+        @foreach (var (label, category) in new[] {
+            ("Mental", TraitCategory.Mental),
+            ("Physical", TraitCategory.Physical),
+            ("Social", TraitCategory.Social)
+        })
+        {
+            <div class="stat-col @label.ToLower()">
+                <h3>@label</h3>
+                @foreach (var attr in Character.Attributes.Where(a => a.Category == category))
+                {
+                    var id = Enum.Parse<AttributeId>(attr.Name);
+                    <DotScale Value="attr.Rating" ValueChanged='(int val) => OnAttributeRatingChange.InvokeAsync((id, attr.Rating, val))' Label="@TraitMetadata.GetDisplayName(id)" ShowRollButton="false" />
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<(AttributeId Id, int CurrentRating, int NewRating)> OnAttributeRatingChange { get; set; }
+}

@@ -8,6 +8,8 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Web.Enums
+@using RequiemNexus.Web.Components.Pages.Campaigns.EncounterParts
 @inject IEncounterService EncounterService
 @inject IEncounterQueryService EncounterQueryService
 @inject IEncounterParticipantService EncounterParticipantService
@@ -19,13 +21,14 @@
 @inject ISessionService SessionService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject ToastService ToastService
 
-<PageTitle>Encounters - Requiem Nexus</PageTitle>
+<PageTitle>Encounters — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     @if (_loading)
     {
-        <p><em>Loading encounters...</em></p>
+        <SkeletonLoader Variant="encounter-list" Count="7" />
     }
     else if (_accessDenied)
     {
@@ -49,251 +52,65 @@
         }
         else
         {
-            <div class="card-rn" style="margin-bottom:1.5rem;">
-                <div style="display:flex;flex-direction:column;gap:0.75rem;">
-                    <label class="font-sm" for="create-enc-name">Encounter name</label>
-                    <input id="create-enc-name" class="form-control" @bind="_formEncounterName" placeholder="Encounter name…" maxlength="200" autocomplete="off" />
-                    <label class="font-sm" for="create-enc-notes">Notes (ST only)</label>
-                    <textarea id="create-enc-notes" class="form-control" rows="4" @bind="_formEncounterNotes" placeholder="Scene goals, reminders, etc." maxlength="4000"></textarea>
-                    <div>
-                        <p class="font-sm" style="margin:0 0 0.35rem 0;color:var(--gothic-muted);">NPCs</p>
-                        @if (FormDraftEncounter?.NpcTemplates is { } formNpcList && formNpcList.Count > 0)
-                        {
-                            <div class="character-grid" style="margin:0.5rem 0;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0.5rem;">
-                                @foreach (EncounterNpcTemplate row in formNpcList)
-                                {
-                                    <div class="character-card card-rn" style="padding:0.65rem;">
-                                        <h4 class="char-name" style="font-size:1rem;margin:0 0 0.35rem 0;">@row.Name</h4>
-                                        <div class="stats" style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8em;color:var(--gothic-muted);">
-                                            <span>Init mod: @row.InitiativeMod</span>
-                                            <span>Health: @row.HealthBoxes</span>
-                                        </div>
-                                        <div class="card-actions" style="margin-top:0.5rem;">
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => RemoveTemplateRow(row.Id)">Remove</button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">No NPCs yet. Add from a stat block, Danse Macabre, or an improvised NPC.</p>
-                        }
-                        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-top:0.5rem;" disabled="@_busy" @onclick="OpenAddNpcForCreateFormAsync">+ Add NPC</button>
-                    </div>
-                    @if (!string.IsNullOrEmpty(_createError))
-                    {
-                        <p class="text-danger" style="margin:0;">@_createError</p>
-                    }
-                    <div class="flex-row flex-wrap gap-sm" style="margin-top:0.25rem;">
-                        <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="CreateFormStartNowAsync">Start now</button>
-                        <button type="button" class="btn-rn-ghost" disabled="@_busy" @onclick="CreateFormSaveForLaterAsync">Save for later</button>
-                        <button type="button" class="btn-rn-ghost" disabled="@_busy" @onclick="DiscardCreateEncounterFormAsync">Discard</button>
-                    </div>
-                </div>
-            </div>
+            <EncounterCreateFormPanel @bind-Name="_formEncounterName"
+                                      @bind-Notes="_formEncounterNotes"
+                                      FormDraftEncounter="FormDraftEncounter"
+                                      CreateError="@_createError"
+                                      Busy="_busy"
+                                      OnStartNow="CreateFormStartNowAsync"
+                                      OnSaveForLater="CreateFormSaveForLaterAsync"
+                                      OnDiscard="DiscardCreateEncounterFormAsync"
+                                      OnAddNpc="OpenAddNpcForCreateFormAsync"
+                                      OnRemoveTemplate="RemoveTemplateRow" />
         }
 
-        @* From template *@
         @if (_templates.Count > 0)
         {
-            <div class="card-rn" style="margin-bottom:1.5rem;">
-                <h3 style="margin-bottom:0.75rem;">From template</h3>
-                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
-                    <select class="form-control" style="min-width:220px;" @bind="_selectedTemplateId">
-                        <option value="0">— Select template —</option>
-                        @foreach (EncounterTemplate t in _templates)
-                        {
-                            <option value="@t.Id">@t.Name</option>
-                        }
-                    </select>
-                    <input class="form-control" style="min-width:180px;" placeholder="Encounter name…" @bind="_fromTemplateEncounterName" />
-                    <button type="button" class="btn-rn-primary" disabled="@(_selectedTemplateId == 0 || _busy)" @onclick="CreateFromTemplate">Create from template</button>
-                </div>
-            </div>
+            <EncounterFromTemplatePanel Templates="_templates"
+                                        @bind-SelectedTemplateId="_selectedTemplateId"
+                                        @bind-EncounterName="_fromTemplateEncounterName"
+                                        Busy="_busy"
+                                        OnCreate="CreateFromTemplate" />
         }
 
-        @* Encounters in prep *@
-        @if (DraftEncountersForList.Any())
-        {
-            @if (!string.IsNullOrEmpty(_prepFeedback))
-            {
-                <p class="card-rn" style="margin-bottom:0.75rem;padding:0.75rem;font-size:0.9em;color:var(--gothic-muted);">@_prepFeedback</p>
-            }
-            <h3 style="margin-bottom:0.75rem;">Encounters in prep</h3>
-            @if (!string.IsNullOrEmpty(_createError) && !_showCreateEncounterForm)
-            {
-                <p class="text-danger" style="margin-bottom:0.75rem;">@_createError</p>
-            }
-            <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in DraftEncountersForList)
-                {
-                    <div class="card-rn">
-                        @if (_renamingEncounterId == enc.Id)
-                        {
-                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-bottom:0.35rem;">
-                                <label for="rename-enc-@enc.Id" style="font-size:0.85em;color:var(--gothic-muted);align-self:center;">Name</label>
-                                <input id="rename-enc-@enc.Id" class="form-control" style="flex:1;min-width:160px;" maxlength="200" @bind="_renameEncounterBuffer" />
-                                <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@_busy" @onclick="() => SaveEncounterRename(enc.Id)">Save</button>
-                                <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="CancelEncounterRename">Cancel</button>
-                            </div>
-                            @if (!string.IsNullOrEmpty(_renameEncounterError))
-                            {
-                                <p class="text-danger" style="font-size:0.85em;margin:0 0 0.5rem 0;">@_renameEncounterError</p>
-                            }
-                        }
-                        else
-                        {
-                            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem;">
-                                <h4 style="margin:0;">@enc.Name</h4>
-                                <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@_busy" title="Rename this encounter" @onclick="() => StartEncounterRename(enc)">Rename</button>
-                            </div>
-                        }
-                        <p style="font-size:0.85em;color:var(--gothic-muted);">NPC lines: @(enc.NpcTemplates?.Count ?? 0)</p>
-                        @if (!string.IsNullOrEmpty(enc.PrepNotes))
-                        {
-                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.35rem 0;white-space:pre-wrap;">@enc.PrepNotes</p>
-                        }
-                        @if (enc.NpcTemplates == null || !enc.NpcTemplates.Any())
-                        {
-                            <p style="font-size:0.85em;color:var(--gothic-muted);margin:0.5rem 0;">No NPCs yet — add from a stat block, Danse Macabre, or an Improvised NPC.</p>
-                        }
-                        else
-                        {
-                            <div class="character-grid" style="margin:0.5rem 0;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:0.5rem;">
-                                @foreach (EncounterNpcTemplate row in enc.NpcTemplates)
-                                {
-                                    <div class="character-card card-rn" style="padding:0.65rem;">
-                                        <h4 class="char-name" style="font-size:1rem;margin:0 0 0.35rem 0;">@row.Name</h4>
-                                        <div class="stats" style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.8em;color:var(--gothic-muted);">
-                                            <span>Init mod: @row.InitiativeMod</span>
-                                            <span>Health: @row.HealthBoxes</span>
-                                            <span>Willpower: @(row.MaxWillpower < 1 ? "—" : row.MaxWillpower.ToString())</span>
-                                            @if (row.MaxVitae > 0)
-                                            {
-                                                <span>Max vitae: @row.MaxVitae</span>
-                                            }
-                                            <span>@(row.IsRevealed ? "Revealed to players" : $"Hidden — mask: {row.DefaultMaskedName ?? "—"}")</span>
-                                            @if (!string.IsNullOrEmpty(row.Notes))
-                                            {
-                                                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="@row.Notes">@row.Notes</span>
-                                            }
-                                        </div>
-                                        <div class="card-actions" style="margin-top:0.5rem;">
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => RemoveTemplateRow(row.Id)">Remove</button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        @if (_smartLaunchEncounterId == enc.Id)
-                        {
-                            <div class="card-rn" style="margin-top:0.75rem;padding:0.75rem;border:1px solid var(--gothic-border, rgba(255,255,255,0.12));">
-                                <h4 style="margin:0 0 0.35rem 0;font-size:1rem;">Ready to begin?</h4>
-                                <p style="font-size:0.9em;margin:0 0 0.5rem 0;">@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")</p>
-                                <p style="font-size:0.85em;color:var(--gothic-muted);">Checked characters must be online in the session and not already in this encounter.</p>
-                                @if (_campaignCharacters.Count == 0)
-                                {
-                                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign — only NPC lines will be in initiative.</p>
-                                }
-                                @foreach (Character ch in _campaignCharacters)
-                                {
-                                    <label style="display:flex;align-items:center;gap:0.5rem;margin:0.35rem 0;">
-                                        <input type="checkbox" checked="@GetSmartCheck(ch.Id)" @onchange="e => SetSmartCheck(ch.Id, (bool)e.Value!)" />
-                                        <span>@ch.Name</span>
-                                    </label>
-                                }
-                                <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;">
-                                    <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmSmartLaunch">@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative &amp; join")</button>
-                                    <button type="button" class="btn-rn-ghost" @onclick="CancelSmartLaunch">Cancel</button>
-                                </div>
-                                @if (!string.IsNullOrEmpty(_smartLaunchConfirmError))
-                                {
-                                    <p class="text-danger" style="margin-top:0.5rem;margin-bottom:0;">@_smartLaunchConfirmError</p>
-                                }
-                            </div>
-                        }
-                        <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
-                            <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenSmartLaunch(enc.Id, prepStart: true)">Start</button>
-                            <button class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" type="button" @onclick="() => AckSaveForLater()">Save for later</button>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="async () => await OpenNpcPickerAsync(enc.Id, isDraft: true, _sourcePicker)">+ Add NPC</button>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
+        <EncounterDraftPrepListSection DraftEncounters="DraftEncountersForList"
+                                       PrepFeedback="@_prepFeedback"
+                                       CreateError="@_createError"
+                                       ShowCreateEncounterForm="_showCreateEncounterForm"
+                                       Busy="_busy"
+                                       RenamingEncounterId="_renamingEncounterId"
+                                       @bind-RenameBuffer="_renameEncounterBuffer"
+                                       SmartLaunchEncounterId="_smartLaunchEncounterId"
+                                       SmartLaunchIsPrepStart="_smartLaunchIsPrepStart"
+                                       CampaignCharacters="_campaignCharacters"
+                                       SmartLaunchIsSelected="GetSmartCheck"
+                                       OnSmartLaunchSelectionChanged="OnSmartLaunchSelectionChangedAsync"
+                                       OnSmartLaunchConfirm="ConfirmSmartLaunch"
+                                       OnSmartLaunchCancel="CancelSmartLaunchAsync"
+                                       OnStartRename="OnDraftPrepStartRenameAsync"
+                                       OnCancelRename="CancelEncounterRenameAsync"
+                                       OnSaveRename="SaveEncounterRename"
+                                       OnAddNpc="OpenNpcPickerForDraftAsync"
+                                       OnStartPrep="OpenSmartLaunchPrepAsync"
+                                       OnAckSaveForLater="AckSaveForLaterAsync"
+                                       OnRemoveTemplate="RemoveTemplateRow" />
 
-        @* Active encounters *@
-        @if (LaunchedEncounters.Any())
-        {
-            <h3 style="margin-bottom:0.75rem;">Active encounter</h3>
-            <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in LaunchedEncounters)
-                {
-                    <div class="card-rn">
-                        <h4>@enc.Name</h4>
-                        <p style="font-size:0.85em;color:var(--gothic-muted);">
-                            Round @enc.CurrentRound · Started @enc.CreatedAt.ToLocalTime().ToString("g")
-                        </p>
-                        @if (_smartLaunchEncounterId == enc.Id)
-                        {
-                            <div class="card-rn" style="margin-top:0.75rem;padding:0.75rem;border:1px solid var(--gothic-border, rgba(255,255,255,0.12));">
-                                <h4 style="margin:0 0 0.35rem 0;font-size:1rem;">Add PCs to this fight</h4>
-                                <p style="font-size:0.9em;margin:0 0 0.5rem 0;">@(_smartLaunchIsPrepStart ? "Start encounter — online players" : "Roll initiative for online players")</p>
-                                <p style="font-size:0.85em;color:var(--gothic-muted);">Checked characters must be online in the session and not already in this encounter.</p>
-                                @if (_campaignCharacters.Count == 0)
-                                {
-                                    <p style="font-size:0.85em;color:var(--gothic-muted);">No characters in this campaign — only NPC lines will be in initiative.</p>
-                                }
-                                @foreach (Character ch in _campaignCharacters)
-                                {
-                                    <label style="display:flex;align-items:center;gap:0.5rem;margin:0.35rem 0;">
-                                        <input type="checkbox" checked="@GetSmartCheck(ch.Id)" @onchange="e => SetSmartCheck(ch.Id, (bool)e.Value!)" />
-                                        <span>@ch.Name</span>
-                                    </label>
-                                }
-                                <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;">
-                                    <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmSmartLaunch">@(_smartLaunchIsPrepStart ? "Begin combat" : "Roll initiative &amp; join")</button>
-                                    <button type="button" class="btn-rn-ghost" @onclick="CancelSmartLaunch">Cancel</button>
-                                </div>
-                                @if (!string.IsNullOrEmpty(_smartLaunchConfirmError))
-                                {
-                                    <p class="text-danger" style="margin-top:0.5rem;margin-bottom:0;">@_smartLaunchConfirmError</p>
-                                }
-                            </div>
-                        }
-                        <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
-                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-primary" style="font-size:0.85em;">⚔️ Open tracker</a>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => OpenSmartLaunch(enc.Id, prepStart: false)">+ Online players</button>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="async () => await OpenNpcPickerAsync(enc.Id, isDraft: false, _sourcePicker)">+ Add NPC</button>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => PauseEncounter(enc.Id)">⏸ Pause</button>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">✓ Resolve</button>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        @* Paused *@
-        @if (PausedEncounters.Any())
-        {
-            <h3 style="margin-bottom:0.75rem;">Paused encounter</h3>
-            <div class="character-grid" style="margin-bottom:1.5rem;">
-                @foreach (CombatEncounter enc in PausedEncounters)
-                {
-                    <div class="card-rn">
-                        <h4>@enc.Name</h4>
-                        <p style="font-size:0.85em;color:var(--gothic-muted);">
-                            Round @enc.CurrentRound · Paused — resume to continue combat
-                        </p>
-                        <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
-                            <button type="button" class="btn-rn-primary" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResumeEncounter(enc.Id)">▶ Resume</button>
-                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-ghost" style="font-size:0.85em;">👁️ View tracker</a>
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@_busy" @onclick="() => ResolveEncounter(enc.Id)">✓ Resolve</button>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
+        <EncounterLaunchedAndPausedSection CampaignId="Id"
+                                           LaunchedEncounters="LaunchedEncounters"
+                                           PausedEncounters="PausedEncounters"
+                                           Busy="_busy"
+                                           SmartLaunchEncounterId="_smartLaunchEncounterId"
+                                           SmartLaunchIsPrepStart="_smartLaunchIsPrepStart"
+                                           CampaignCharacters="_campaignCharacters"
+                                           SmartLaunchIsSelected="GetSmartCheck"
+                                           OnSmartLaunchSelectionChanged="OnSmartLaunchSelectionChangedAsync"
+                                           OnSmartLaunchConfirm="ConfirmSmartLaunch"
+                                           OnSmartLaunchCancel="CancelSmartLaunchAsync"
+                                           OnOnlinePlayers="OpenSmartLaunchForActiveAsync"
+                                           OnAddNpcActive="OpenNpcPickerForActiveAsync"
+                                           OnPause="PauseEncounter"
+                                           OnResume="ResumeEncounter"
+                                           OnResolve="ResolveEncounter" />
 
         @if (!DraftEncountersForList.Any() && !LaunchedEncounters.Any() && !PausedEncounters.Any() && !_showCreateEncounterForm)
         {
@@ -302,165 +119,42 @@
             </div>
         }
 
-        @* Past (resolved only) *@
-        @if (PastEncounters.Any())
-        {
-            <details>
-                <summary style="cursor:pointer;font-size:1rem;font-weight:600;margin-bottom:0.75rem;">Past encounters (@PastEncounters.Count)</summary>
-                <div class="character-grid" style="margin-top:0.75rem;">
-                    @foreach (CombatEncounter enc in PastEncounters)
-                    {
-                        <div class="card-rn" style="opacity:0.7;">
-                            <h4>@enc.Name</h4>
-                            <p style="font-size:0.85em;color:var(--gothic-muted);">Resolved: @(enc.ResolvedAt?.ToLocalTime().ToString("g") ?? "—")</p>
-                            <a href="/campaigns/@Id/encounter/@enc.Id" class="btn-rn-ghost" style="font-size:0.85em;">👁️ View</a>
-                        </div>
-                    }
-                </div>
-            </details>
-        }
+        <EncounterPastEncountersSection CampaignId="Id" PastEncounters="PastEncounters" />
 
-        @* Add NPC modal (prep + active encounter) *@
         @if (_activeEncounterForNpc.HasValue && _npcPickerMode is not null)
         {
-            <div class="rn-modal-backdrop" @onclick="CloseNpcPicker">
-                <div class="rn-modal-panel" @onclick:stopPropagation="true" @onkeydown="OnNpcModalKeyDown" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="enc-npc-modal-title">
-                    <div class="rn-modal-header">
-                        <h2 id="enc-npc-modal-title" class="rn-modal-title">@GetNpcModalTitle()</h2>
-                        <button type="button" class="rn-modal-close" @onclick="CloseNpcPicker" aria-label="Close">×</button>
-                    </div>
-                    <div class="rn-modal-body">
-                        @if (_npcPickerMode == _sourcePicker)
-                        {
-                            <p style="font-size:0.9em;color:var(--gothic-muted);margin-bottom:0.75rem;">Choose how to add this NPC.</p>
-                            <div style="display:flex;flex-direction:column;gap:0.5rem;">
-                                <button type="button" class="btn-rn-primary" style="justify-content:center;" disabled="@_busy" @onclick="() => _npcPickerMode = _statPicker">Stat block</button>
-                                <button type="button" class="btn-rn-primary" style="justify-content:center;" disabled="@_busy" @onclick="() => _npcPickerMode = _chroniclePicker">Danse Macabre</button>
-                                @if (_npcPickerIsDraft)
-                                {
-                                    <button type="button" class="btn-rn-primary" style="justify-content:center;" disabled="@_busy" @onclick="() => _npcPickerMode = _improvisedPicker">Improvised NPC</button>
-                                }
-                                <button type="button" class="btn-rn-ghost" @onclick="CloseNpcPicker">Cancel</button>
-                            </div>
-                        }
-                        else if (_npcPickerMode == _statPicker)
-                        {
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">← Back</button>
-                            @if (_availableBlocks.Count == 0)
-                            {
-                                <p class="rn-modal-empty">No stat blocks available for this campaign.</p>
-                            }
-                            else
-                            {
-                                <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Health and willpower are taken from the stat block when you add.</p>
-                                <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
-                                    <select class="form-control" style="flex:1;min-width:200px;" @bind="_selectedBlockId">
-                                        <option value="0">— Select a stat block —</option>
-                                        @foreach (NpcStatBlock block in _availableBlocks)
-                                        {
-                                            <option value="@block.Id">@block.Name (@block.Concept)</option>
-                                        }
-                                    </select>
-                                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                        Init Mod
-                                        <input class="form-control" style="width:100px;" type="number" @bind="_npcInitMod" />
-                                    </label>
-                                    @if (!_npcPickerIsDraft)
-                                    {
-                                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                            Roll (1d10)
-                                            <input class="form-control" style="width:100px;" type="number" @bind="_npcRoll" />
-                                        </label>
-                                    }
-                                    <button type="button" class="btn-rn-primary" disabled="@(_selectedBlockId == 0 || _busy)" @onclick="AddNpcFromStatBlock">Add</button>
-                                </div>
-                            }
-                        }
-                        else if (_npcPickerMode == _chroniclePicker)
-                        {
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">← Back</button>
-                            <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Initiative defaults to Wits + Composure; health and willpower use a linked stat block when set, otherwise attributes.</p>
-                            @if (_chronicleNpcs.Count == 0)
-                            {
-                                <p class="rn-modal-empty">No living chronicle NPCs yet.</p>
-                                <a href="/campaigns/@Id/danse-macabre" class="btn-rn-ghost" style="display:inline-block;margin-bottom:0.5rem;">Open Danse Macabre</a>
-                            }
-                            else if (!_chronicleNpcs.Any(n => !_excludedChronicleNpcIds.Contains(n.Id)))
-                            {
-                                <p class="rn-modal-empty">All Danse Macabre NPCs are already in this encounter.</p>
-                            }
-                            else
-                            {
-                                <div style="display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;">
-                                    <label style="display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:200px;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                        Chronicle NPC
-                                        <select class="form-control" value="@_selectedChronicleNpcId" @onchange="OnChronicleNpcSelectChanged">
-                                            <option value="0">— Select an NPC —</option>
-                                            @foreach (ChronicleNpc npc in _chronicleNpcs.Where(n => !_excludedChronicleNpcIds.Contains(n.Id)))
-                                            {
-                                                <option value="@npc.Id">@npc.Name@(string.IsNullOrEmpty(npc.Title) ? "" : $", {npc.Title}")</option>
-                                            }
-                                        </select>
-                                    </label>
-                                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                        Init mod
-                                        <input class="form-control" style="width:100px;" type="number" @bind="_npcInitMod" />
-                                    </label>
-                                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                        Health boxes
-                                        <input class="form-control" style="width:100px;" type="number" @bind="_chronicleHealthBoxes" />
-                                    </label>
-                                    <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                        Willpower (max)
-                                        <input class="form-control" style="width:100px;" type="number" @bind="_chronicleMaxWillpower" />
-                                    </label>
-                                    @if (_chronicleTracksVitae)
-                                    {
-                                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                            Vitae (max)
-                                            <input class="form-control" style="width:100px;" type="number" min="0" max="100" @bind="_chronicleMaxVitae" />
-                                        </label>
-                                    }
-                                    @if (!_npcPickerIsDraft)
-                                    {
-                                        <label style="display:flex;flex-direction:column;gap:0.25rem;font-size:0.8rem;color:var(--color-text-muted,#aaa);">
-                                            Roll (1d10)
-                                            <input class="form-control" style="width:100px;" type="number" @bind="_npcRoll" />
-                                        </label>
-                                    }
-                                    <button type="button" class="btn-rn-primary" disabled="@(_selectedChronicleNpcId == 0 || _busy || !_chronicleNpcs.Any(n => !_excludedChronicleNpcIds.Contains(n.Id)))" @onclick="AddNpcFromChronicle">Add</button>
-                                </div>
-                                @if (!string.IsNullOrEmpty(_chronicleAddError))
-                                {
-                                    <p class="text-danger" style="font-size:0.85em;margin-top:0.5rem;margin-bottom:0;">@_chronicleAddError</p>
-                                }
-                                @if (_chroniclePrepHint is not null)
-                                {
-                                    <p style="font-size:0.8em;color:var(--gothic-muted);margin-top:0.5rem;margin-bottom:0;">@_chroniclePrepHint</p>
-                                }
-                            }
-                        }
-                        else if (_npcPickerMode == _improvisedPicker)
-                        {
-                            <button type="button" class="btn-rn-ghost" style="font-size:0.85em;margin-bottom:0.75rem;" @onclick="() => _npcPickerMode = _sourcePicker">← Back</button>
-                            <p style="font-size:0.85em;color:var(--gothic-muted);margin-bottom:0.75rem;">Initiative mod defaults to 0 (rolled when you start the encounter).</p>
-                            <div style="display:flex;flex-direction:column;gap:0.5rem;max-width:22rem;">
-                                <label style="font-size:0.85em;color:var(--gothic-muted);">Name <span aria-hidden="true">(required)</span></label>
-                                <input class="form-control" @bind="_improvName" placeholder="e.g. Guard" />
-                                <label style="font-size:0.85em;color:var(--gothic-muted);">Health boxes <span aria-hidden="true">(required)</span></label>
-                                <input class="form-control" type="number" min="1" max="50" @bind="_improvHealthBoxes" />
-                                <label style="font-size:0.85em;color:var(--gothic-muted);">Willpower (max) <span aria-hidden="true">(required)</span></label>
-                                <input class="form-control" type="number" min="1" max="20" @bind="_improvMaxWillpower" />
-                                @if (!string.IsNullOrEmpty(_improvError))
-                                {
-                                    <p class="text-danger" style="font-size:0.85em;margin:0;">@_improvError</p>
-                                }
-                                <button type="button" class="btn-rn-primary" style="align-self:flex-start;" disabled="@_busy" @onclick="AddImprovisedNpc">Add</button>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
+            <EncounterNpcPickerModal Title="@GetNpcModalTitle()"
+                                     Busy="_busy"
+                                     IsDraft="_npcPickerIsDraft"
+                                     SourceMode="@_sourcePicker"
+                                     StatMode="@_statPicker"
+                                     ChronicleMode="@_chroniclePicker"
+                                     ImprovMode="@_improvisedPicker"
+                                     @bind-PickerMode="_npcPickerMode"
+                                     AvailableBlocks="_availableBlocks"
+                                     @bind-SelectedBlockId="_selectedBlockId"
+                                     @bind-NpcInitMod="_npcInitMod"
+                                     @bind-NpcRoll="_npcRoll"
+                                     ChronicleNpcs="_chronicleNpcs"
+                                     ExcludedChronicleNpcIds="_excludedChronicleNpcIds"
+                                     SelectedChronicleNpcId="_selectedChronicleNpcId"
+                                     OnChronicleNpcSelect="OnChronicleNpcSelectChanged"
+                                     @bind-ChronicleHealthBoxes="_chronicleHealthBoxes"
+                                     @bind-ChronicleMaxWillpower="_chronicleMaxWillpower"
+                                     @bind-ChronicleMaxVitae="_chronicleMaxVitae"
+                                     ChronicleTracksVitae="_chronicleTracksVitae"
+                                     ChronicleAddError="@_chronicleAddError"
+                                     ChroniclePrepHint="@_chroniclePrepHint"
+                                     CampaignId="Id"
+                                     @bind-ImprovName="_improvName"
+                                     @bind-ImprovHealthBoxes="_improvHealthBoxes"
+                                     @bind-ImprovMaxWillpower="_improvMaxWillpower"
+                                     ImprovError="@_improvError"
+                                     OnClose="CloseNpcPickerAsync"
+                                     OnKeyDown="OnNpcModalKeyDownAsync"
+                                     OnAddFromStatBlock="AddNpcFromStatBlock"
+                                     OnAddFromChronicle="AddNpcFromChronicle"
+                                     OnAddImprovised="AddImprovisedNpc" />
         }
     }
 </div>

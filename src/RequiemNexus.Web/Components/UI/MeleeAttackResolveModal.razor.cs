@@ -67,7 +67,7 @@ public partial class MeleeAttackResolveModal : ComponentBase
     private IAttackService AttackService { get; set; } = default!;
 
     [Inject]
-    private ICharacterService CharacterService { get; set; } = default!;
+    private ICharacterReader CharacterReader { get; set; } = default!;
 
     [Inject]
     private ITraitResolver TraitResolver { get; set; } = default!;
@@ -112,7 +112,7 @@ public partial class MeleeAttackResolveModal : ComponentBase
         AuthenticationState auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _effectiveUserId = auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? StoryTellerUserId;
 
-        (Character Character, bool _)? loaded = await CharacterService.GetCharacterWithAccessCheckAsync(AttackerCharacterId, _effectiveUserId);
+        (Character Character, bool _)? loaded = await CharacterReader.GetCharacterWithAccessCheckAsync(AttackerCharacterId, _effectiveUserId);
         _attacker = loaded?.Character;
 
         List<InitiativeEntry> defenders = DefenderOptions.ToList();
@@ -198,7 +198,7 @@ public partial class MeleeAttackResolveModal : ComponentBase
         if (defender.CharacterId is int defCharId)
         {
             (Character Character, bool _)? defLoaded =
-                await CharacterService.GetCharacterWithAccessCheckAsync(defCharId, _effectiveUserId);
+                await CharacterReader.GetCharacterWithAccessCheckAsync(defCharId, _effectiveUserId);
             if (defLoaded == null)
             {
                 _error = "Could not load defender character.";

@@ -1,0 +1,85 @@
+@using RequiemNexus.Data.Models
+@using RequiemNexus.Web.Interop
+@inject IJSRuntime JSRuntime
+
+<div class="tracker-item">
+    <span class="tracker-label">Vitae</span>
+    <div class="vitae-container @(_pulse ? "animate-pulse" : "")" @ref="_vitaeContainer" @onclick="OnVitaeClick" style="cursor: pointer;">
+        <svg class="vitae-drop" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <clipPath id="vitae-fill-@_clipId">
+                    <rect x="0" y="@VitaeFillY" width="40" height="52" />
+                </clipPath>
+            </defs>
+            <path d="M20 2 C20 2 4 20 4 32 A16 16 0 0 0 36 32 C36 20 20 2 20 2Z"
+                  fill="none" stroke="var(--muted-gray)" stroke-width="1.5" />
+            <path d="M20 2 C20 2 4 20 4 32 A16 16 0 0 0 36 32 C36 20 20 2 20 2Z"
+                  fill="var(--crimson)" clip-path="url(#vitae-fill-@_clipId)"
+                  style="transition: clip-path 0.4s ease;" />
+        </svg>
+        <span class="vitae-label">@Character.CurrentVitae / @Character.MaxVitae</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Character Character { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public EventCallback OnChanged { get; set; }
+
+    /// <summary>Increments when the parent applies a real-time vitae-related patch so this tracker can flash.</summary>
+    [Parameter]
+    public int PulseTick { get; set; }
+
+    private readonly string _clipId = Guid.NewGuid().ToString("N");
+    private ElementReference _vitaeContainer;
+    private bool _pulse;
+    private int _lastPulseTick;
+
+    private double VitaeFillY => 52.0 - (Character.MaxVitae > 0 ? (double)Character.CurrentVitae / Character.MaxVitae * 52.0 : 0);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (PulseTick != _lastPulseTick && PulseTick > 0)
+        {
+            _lastPulseTick = PulseTick;
+            await RunPulseAsync();
+        }
+    }
+
+    private async Task RunPulseAsync()
+    {
+        _pulse = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(800);
+        _pulse = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnVitaeClick(MouseEventArgs e)
+    {
+        if (Character.MaxVitae <= 0)
+        {
+            return;
+        }
+
+        var rect = await JSRuntime.InvokeAsync<BoundingClientRectDto?>("getBoundingClientRect", _vitaeContainer);
+        if (rect == null)
+        {
+            return;
+        }
+
+        double relativeY = e.ClientY - rect.Top;
+        double percentage = 1.0 - (relativeY / rect.Height);
+
+        int newValue = (int)Math.Round(percentage * Character.MaxVitae);
+        Character.CurrentVitae = Math.Clamp(newValue, 0, Character.MaxVitae);
+
+        if (OnChanged.HasDelegate)
+        {
+            await OnChanged.InvokeAsync();
+        }
+    }
+}

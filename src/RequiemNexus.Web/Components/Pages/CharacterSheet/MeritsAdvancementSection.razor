@@ -1,0 +1,89 @@
+@using Microsoft.AspNetCore.Components
+@using RequiemNexus.Data.Models
+
+<section class="cs-section cs-advantages">
+    <h2>Add New Merit (Rating x 1 XP)</h2>
+    <div class="equipment-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <select value="@SelectedMeritId" @onchange="OnMeritIdChangeAsync" class="equipment-select" style="min-width: 200px;" aria-label="Merit to purchase">
+            <option value="0">-- Select Merit --</option>
+            @foreach (var m in AvailableMerits)
+            {
+                var cat = string.IsNullOrEmpty(m.MeritCategory) ? string.Empty : $" [{m.MeritCategory}]";
+                <option value="@m.Id">@m.Name (@m.ValidRatings)@cat</option>
+            }
+        </select>
+
+        @if (MeritRequiresSpecification)
+        {
+            <input type="text" value="@NewMeritSpecification" @oninput="OnSpecInputAsync" placeholder="Specification..." class="char-meta-input" style="width: 150px;" aria-label="Merit specification" />
+        }
+
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <label for="new-merit-rating">Rating:</label>
+            <input id="new-merit-rating" type="number" min="1" max="5" value="@NewMeritRating" @onchange="OnRatingChangeAsync" class="equipment-quantity" style="width: 60px;" />
+        </div>
+
+        <button class="btn-rn-primary" @onclick="OnAddMerit" disabled="@(SelectedMeritId == 0)">Add</button>
+    </div>
+    @if (SelectedMeritId != 0)
+    {
+        var selectedMerit = AvailableMerits.FirstOrDefault(m => m.Id == SelectedMeritId);
+        if (selectedMerit != null)
+        {
+            <div style="margin-top: 10px; font-size: 0.9em; color: #d0d0d0; background: #1a1a1a; padding: 10px; border-radius: 4px; border-left: 3px solid #550000;">
+                <strong>@selectedMerit.Name</strong>
+                <p style="margin: 5px 0; white-space: pre-wrap;">@selectedMerit.Description</p>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Merit> AvailableMerits { get; set; } = [];
+
+    [Parameter]
+    public int SelectedMeritId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedMeritIdChanged { get; set; }
+
+    [Parameter]
+    public string? NewMeritSpecification { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> NewMeritSpecificationChanged { get; set; }
+
+    [Parameter]
+    public int NewMeritRating { get; set; }
+
+    [Parameter]
+    public EventCallback<int> NewMeritRatingChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddMerit { get; set; }
+
+    private bool MeritRequiresSpecification =>
+        AvailableMerits.FirstOrDefault(m => m.Id == SelectedMeritId)?.RequiresSpecification ?? false;
+
+    private async Task OnMeritIdChangeAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int id))
+        {
+            await SelectedMeritIdChanged.InvokeAsync(id);
+        }
+    }
+
+    private async Task OnSpecInputAsync(ChangeEventArgs e)
+    {
+        await NewMeritSpecificationChanged.InvokeAsync(e.Value?.ToString());
+    }
+
+    private async Task OnRatingChangeAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int r))
+        {
+            await NewMeritRatingChanged.InvokeAsync(r);
+        }
+    }
+}

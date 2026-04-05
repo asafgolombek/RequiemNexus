@@ -1,0 +1,49 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="card-rn glimpse-card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 class="section-header">Award Beat to Coterie</h3>
+        <div class="draggable-beat" draggable="true" @ondragstart="OnDragStart" title="Drag this to a character card to award a Beat instantly">
+            ⚫
+        </div>
+    </div>
+    <div class="coterie-beat-award">
+        <input class="form-control coterie-reason-input"
+               placeholder="Reason for coterie Beat…"
+               aria-label="Reason for coterie-wide Beat award"
+               value="@Reason"
+               @oninput="OnReasonInputAsync" />
+        <button class="btn-rn-primary"
+                disabled="@(string.IsNullOrWhiteSpace(Reason) || Awarding)"
+                @onclick="OnAward">
+            Award to All
+        </button>
+    </div>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p class="feedback-ok">@Message</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Reason { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ReasonChanged { get; set; }
+
+    [Parameter]
+    public bool Awarding { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<DragEventArgs> OnDragStart { get; set; }
+
+    [Parameter]
+    public EventCallback OnAward { get; set; }
+
+    private Task OnReasonInputAsync(ChangeEventArgs e) =>
+        ReasonChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+}

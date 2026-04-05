@@ -5,7 +5,6 @@ using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.Models.Enums;
-using RequiemNexus.Data.RealTime;
 using RequiemNexus.Domain.Contracts;
 using RequiemNexus.Domain.Enums;
 using RequiemNexus.Domain.Models;
@@ -15,68 +14,39 @@ namespace RequiemNexus.Application.Services;
 
 public class CharacterManagementService(
     ApplicationDbContext dbContext,
-    IDbContextFactory<ApplicationDbContext> dbContextFactory,
     ICharacterCreationRules creationRules,
-    IBeatLedgerService beatLedger,
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
     ICharacterCreationService characterCreationService,
-    IHumanityService humanityService) : ICharacterService
+    IHumanityService humanityService,
+    IReferenceDataCache referenceData,
+    ICharacterQueryService characterQuery,
+    ICharacterProgressionService progression) : ICharacterService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
-    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ICharacterQueryService _characterQuery = characterQuery;
     private readonly ICharacterCreationRules _creationRules = creationRules;
-    private readonly IBeatLedgerService _beatLedger = beatLedger;
+    private readonly ICharacterProgressionService _progression = progression;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
     private readonly ICharacterCreationService _characterCreationService = characterCreationService;
     private readonly IHumanityService _humanityService = humanityService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
 
     /// <inheritdoc />
-    public async Task<List<Character>> GetCharactersByUserIdAsync(string userId)
-    {
-        // Factory creates a fresh context per call so Blazor Server's concurrent prerender
-        // and interactive renders do not share a single DbContext instance.
-        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
-        return await ctx.Characters
-            .Include(c => c.Clan)
-            .Where(c => c.ApplicationUserId == userId && !c.IsArchived)
-            .AsNoTracking()
-            .ToListAsync();
-    }
+    public Task<List<Character>> GetCharactersByUserIdAsync(string userId) =>
+        _characterQuery.GetCharactersByUserIdAsync(userId);
 
-    /// <summary>Returns the archived characters owned by the given user.</summary>
-    public async Task<List<Character>> GetArchivedCharactersAsync(string userId)
-    {
-        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
-        return await ctx.Characters
-            .Include(c => c.Clan)
-            .Where(c => c.ApplicationUserId == userId && c.IsArchived)
-            .AsNoTracking()
-            .ToListAsync();
-    }
+    /// <inheritdoc />
+    public Task<List<Character>> GetArchivedCharactersAsync(string userId) =>
+        _characterQuery.GetArchivedCharactersAsync(userId);
 
     public async Task<Character?> GetCharacterByIdAsync(int id, string userId)
     {
         // Intentionally NOT AsNoTracking: this method is the edit path — the returned entity
         // is tracked by EF so that subsequent mutations (AddBeatAsync, SaveAsync, etc.) persist.
         return await _dbContext.Characters
-            .Include(c => c.Clan)!.ThenInclude(cl => cl!.ClanDisciplines)
-            .Include(c => c.Covenant)
-            .Include(c => c.Campaign)
-            .Include(c => c.Attributes)
-            .Include(c => c.Skills)
-            .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
-            .Include(c => c.Bloodlines).ThenInclude(b => b.BloodlineDefinition)
-            .Include(c => c.Devotions).ThenInclude(d => d.DevotionDefinition)
-            .Include(c => c.Rites).ThenInclude(r => r.SorceryRiteDefinition)
-            .Include(c => c.Coils).ThenInclude(cc => cc.CoilDefinition).ThenInclude(c => c!.Scale)
-            .Include(c => c.ChosenMysteryScale)
-            .Include(c => c.PendingChosenMysteryScale)
-            .Include(c => c.Banes)
-            .Include(c => c.Aspirations)
-            .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
+            .IncludeCharacterDetailEditGraph()
             .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId);
     }
@@ -133,20 +103,39 @@ public class CharacterManagementService(
 
         if (newCharacter.Clan == null && newCharacter.ClanId.HasValue)
         {
-            newCharacter.Clan = await _dbContext.Clans
-                .Include(c => c.ClanDisciplines)
-                .FirstOrDefaultAsync(c => c.Id == newCharacter.ClanId.Value);
+            newCharacter.Clan = _referenceData.ReferenceClans.FirstOrDefault(c => c.Id == newCharacter.ClanId.Value)
+                ?? await _dbContext.Clans
+                    .Include(c => c.ClanDisciplines)
+                    .FirstOrDefaultAsync(c => c.Id == newCharacter.ClanId.Value);
         }
 
         List<int> disciplineIds = newCharacter.Disciplines.Select(d => d.DisciplineId).Distinct().ToList();
         if (disciplineIds.Count > 0)
         {
-            Dictionary<int, Discipline> disciplineMap = await _dbContext.Disciplines
-                .AsNoTracking()
-                .Include(d => d.Covenant)
-                .Include(d => d.Bloodline)
-                .Where(d => disciplineIds.Contains(d.Id))
-                .ToDictionaryAsync(d => d.Id);
+            var disciplineMap = new Dictionary<int, Discipline>();
+            foreach (int id in disciplineIds)
+            {
+                Discipline? d = _referenceData.ReferenceDisciplines.FirstOrDefault(x => x.Id == id);
+                if (d != null)
+                {
+                    disciplineMap[id] = d;
+                }
+            }
+
+            List<int> missingIds = disciplineIds.Where(id => !disciplineMap.ContainsKey(id)).ToList();
+            if (missingIds.Count > 0)
+            {
+                Dictionary<int, Discipline> fromDb = await _dbContext.Disciplines
+                    .AsNoTracking()
+                    .Include(d => d.Covenant)
+                    .Include(d => d.Bloodline)
+                    .Where(d => missingIds.Contains(d.Id))
+                    .ToDictionaryAsync(d => d.Id);
+                foreach (KeyValuePair<int, Discipline> pair in fromDb)
+                {
+                    disciplineMap[pair.Key] = pair.Value;
+                }
+            }
 
             if (disciplineMap.Count != disciplineIds.Count)
             {
@@ -179,152 +168,27 @@ public class CharacterManagementService(
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
     }
 
-    public async Task AddBeatAsync(int characterId, string userId)
-    {
-        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add Beats");
-
-        Character character = await _dbContext.Characters.FindAsync(characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        character.Beats++;
-
-        await _beatLedger.RecordBeatAsync(
-            character.Id,
-            character.CampaignId,
-            BeatSource.ManualAdjustment,
-            "Beat added",
-            userId);
-
-        if (_creationRules.TryConvertBeats(character.Beats, out int newBeats, out int xpGained))
-        {
-            character.Beats = newBeats;
-            character.ExperiencePoints += xpGained;
-            character.TotalExperiencePoints += xpGained;
-
-            await _beatLedger.RecordXpCreditAsync(
-                character.Id,
-                character.CampaignId,
-                xpGained,
-                XpSource.BeatConversion,
-                $"Converted 5 Beats to {xpGained} XP",
-                null);
-        }
-
-        await _dbContext.SaveChangesAsync();
-        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
-    }
-
-    public async Task RemoveBeatAsync(int characterId, string userId)
-    {
-        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "remove Beats");
-
-        Character character = await _dbContext.Characters.FindAsync(characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        if (character.Beats > 0)
-        {
-            character.Beats--;
-            await _dbContext.SaveChangesAsync();
-            await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
-        }
-    }
-
-    public async Task AddXPAsync(int characterId, string userId)
-    {
-        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "add XP");
-
-        Character character = await _dbContext.Characters.FindAsync(characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        character.ExperiencePoints++;
-        character.TotalExperiencePoints++;
-
-        await _beatLedger.RecordXpCreditAsync(
-            character.Id,
-            character.CampaignId,
-            1,
-            XpSource.ManualAdjustment,
-            "XP added manually",
-            userId);
-
-        await _dbContext.SaveChangesAsync();
-        await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
-    }
-
-    public async Task RemoveXPAsync(int characterId, string userId)
-    {
-        await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "remove XP");
-
-        Character character = await _dbContext.Characters.FindAsync(characterId)
-            ?? throw new InvalidOperationException($"Character {characterId} not found.");
-
-        if (character.ExperiencePoints > 0)
-        {
-            character.ExperiencePoints--;
-            if (character.TotalExperiencePoints > 0)
-            {
-                character.TotalExperiencePoints--;
-            }
-
-            await _beatLedger.RecordXpSpendAsync(
-                character.Id,
-                character.CampaignId,
-                1,
-                XpExpense.ManualAdjustment,
-                "XP removed manually",
-                userId);
-
-            await _dbContext.SaveChangesAsync();
-            await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
-        }
-    }
+    /// <inheritdoc />
+    public Task<CharacterProgressionSnapshotDto> AddBeatAsync(int characterId, string userId) =>
+        _progression.AddBeatAsync(characterId, userId);
 
     /// <inheritdoc />
-    public async Task<(Character Character, bool IsOwner)?> GetCharacterWithAccessCheckAsync(int characterId, string requestingUserId)
-    {
-        Character? character = await _dbContext.Characters
-            .Include(c => c.Clan)!.ThenInclude(cl => cl!.ClanDisciplines)
-            .Include(c => c.Campaign)
-            .Include(c => c.Attributes)
-            .Include(c => c.Skills)
-            .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .Include(c => c.Disciplines).ThenInclude(d => d.Discipline!).ThenInclude(d => d.Powers)
-            .Include(c => c.Bloodlines).ThenInclude(b => b.BloodlineDefinition)
-            .Include(c => c.CharacterAssets).ThenInclude(ca => ca.Asset)
-            .Include(c => c.Aspirations)
-            .Include(c => c.Banes)
-            .AsNoTracking()
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(c => c.Id == characterId);
+    public Task<CharacterProgressionSnapshotDto> RemoveBeatAsync(int characterId, string userId) =>
+        _progression.RemoveBeatAsync(characterId, userId);
 
-        if (character == null)
-        {
-            return null;
-        }
+    /// <inheritdoc />
+    public Task<CharacterProgressionSnapshotDto> AddXPAsync(int characterId, string userId) =>
+        _progression.AddXPAsync(characterId, userId);
 
-        // Owner: full edit access.
-        if (character.ApplicationUserId == requestingUserId)
-        {
-            return (character, true);
-        }
+    /// <inheritdoc />
+    public Task<CharacterProgressionSnapshotDto> RemoveXPAsync(int characterId, string userId) =>
+        _progression.RemoveXPAsync(characterId, userId);
 
-        // Campaign member (Storyteller or fellow player): read-only access.
-        if (character.CampaignId.HasValue)
-        {
-            bool isMember = await _dbContext.Campaigns
-                .AnyAsync(c => c.Id == character.CampaignId
-                    && (c.StoryTellerId == requestingUserId
-                        || c.Characters.Any(ch => ch.ApplicationUserId == requestingUserId)));
-
-            if (isMember)
-            {
-                return (character, false);
-            }
-        }
-
-        // No access.
-        return null;
-    }
+    /// <inheritdoc />
+    public Task<(Character Character, bool IsOwner)?> GetCharacterWithAccessCheckAsync(
+        int characterId,
+        string requestingUserId) =>
+        _characterQuery.GetCharacterWithAccessCheckAsync(characterId, requestingUserId);
 
     /// <inheritdoc />
     public async Task RetireCharacterAsync(int characterId, string userId)
@@ -390,18 +254,6 @@ public class CharacterManagementService(
         string userId)
     {
         await _authHelper.RequireCharacterOwnerAsync(characterId, userId, "select ritual Blood Sympathy targets");
-        await using ApplicationDbContext ctx = await _dbContextFactory.CreateDbContextAsync();
-        Character? ch = await ctx.Characters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == characterId);
-        if (ch?.CampaignId is not int campId)
-        {
-            return [];
-        }
-
-        return await ctx.Characters
-            .AsNoTracking()
-            .Where(c => c.CampaignId == campId && c.Id != characterId && c.CreatureType == CreatureType.Vampire)
-            .OrderBy(c => c.Name)
-            .Select(c => new CampaignKindredTargetDto(c.Id, c.Name))
-            .ToListAsync();
+        return await _characterQuery.GetCampaignKindredTargetsForRitesAsync(characterId);
     }
 }

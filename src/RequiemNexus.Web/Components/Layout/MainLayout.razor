@@ -45,9 +45,11 @@
 </div>
 
 @code {
+    private IDisposable? _bloodlineSubscription;
+
     protected override void OnInitialized()
     {
-        SessionClient.BloodlineApproved += OnBloodlineApprovedHandler;
+        _bloodlineSubscription = SessionClient.SubscribeBloodlineApproved(OnBloodlineApprovedHandler);
     }
 
     private void OnBloodlineApprovedHandler(int characterId, string bloodlineName)
@@ -62,7 +64,7 @@
 
     public void Dispose()
     {
-        SessionClient.BloodlineApproved -= OnBloodlineApprovedHandler;
+        _bloodlineSubscription?.Dispose();
     }
 
 }

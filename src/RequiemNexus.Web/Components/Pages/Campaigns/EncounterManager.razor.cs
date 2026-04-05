@@ -1,11 +1,11 @@
-using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Data.Models;
 using RequiemNexus.Data.RealTime;
+using RequiemNexus.Web.Enums;
+using RequiemNexus.Web.Services;
 
 namespace RequiemNexus.Web.Components.Pages.Campaigns;
 
@@ -25,7 +25,6 @@ public partial class EncounterManager
     private readonly Dictionary<int, bool> _smartLaunchSelection = [];
     private int? _smartLaunchEncounterId;
     private bool _smartLaunchIsPrepStart;
-    private string _smartLaunchConfirmError = string.Empty;
     private string _prepFeedback = string.Empty;
 
     private bool _loading = true;
@@ -65,7 +64,6 @@ public partial class EncounterManager
     private string _improvError = string.Empty;
     private int? _renamingEncounterId;
     private string _renameEncounterBuffer = string.Empty;
-    private string _renameEncounterError = string.Empty;
 
     private List<CombatEncounter> DraftEncounters => _encounters.Where(e => e.IsDraft).ToList();
 
@@ -95,10 +93,29 @@ public partial class EncounterManager
         await LoadEncounters();
     }
 
-    private bool GetSmartCheck(int characterId) =>
-        _smartLaunchSelection.GetValueOrDefault(characterId, true);
+    private Task OnDraftPrepStartRenameAsync(CombatEncounter enc)
+    {
+        StartEncounterRename(enc);
+        return Task.CompletedTask;
+    }
 
-    private void SetSmartCheck(int characterId, bool value) => _smartLaunchSelection[characterId] = value;
+    private Task CancelEncounterRenameAsync()
+    {
+        CancelEncounterRename();
+        return Task.CompletedTask;
+    }
+
+    private Task AckSaveForLaterAsync()
+    {
+        AckSaveForLater();
+        return Task.CompletedTask;
+    }
+
+    private Task OpenNpcPickerForDraftAsync(int encounterId) =>
+        OpenNpcPickerAsync(encounterId, isDraft: true, _sourcePicker);
+
+    private Task OpenNpcPickerForActiveAsync(int encounterId) =>
+        OpenNpcPickerAsync(encounterId, isDraft: false, _sourcePicker);
 
     private async Task LoadEncounters()
     {
@@ -172,7 +189,7 @@ public partial class EncounterManager
         }
         catch (Exception ex)
         {
-            _createError = ex.Message;
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
             return false;
         }
         finally
@@ -237,7 +254,7 @@ public partial class EncounterManager
             }
             catch (Exception ex)
             {
-                _createError = ex.Message;
+                ToastService.Show("Encounter", ex.Message, ToastType.Error);
                 return;
             }
             finally
@@ -296,107 +313,16 @@ public partial class EncounterManager
         _prepFeedback = "Saved. This encounter stays in your list until you use Start.";
     }
 
-    private async Task OpenNpcPickerAsync(int encounterId, bool isDraft, string mode)
-    {
-        _activeEncounterForNpc = encounterId;
-        _npcPickerIsDraft = isDraft;
-        _npcPickerMode = mode;
-        _selectedBlockId = 0;
-        _selectedChronicleNpcId = 0;
-        _npcInitMod = 0;
-        _npcRoll = 1;
-        _chronicleHealthBoxes = 7;
-        _chronicleMaxWillpower = 4;
-        _chronicleMaxVitae = 0;
-        _chronicleTracksVitae = false;
-        _chroniclePrepHint = null;
-        _chronicleAddError = string.Empty;
-        _improvName = string.Empty;
-        _improvHealthBoxes = 7;
-        _improvMaxWillpower = 4;
-        _improvError = string.Empty;
-        _excludedChronicleNpcIds.Clear();
-
-        if (isDraft)
-        {
-            CombatEncounter? draftEnc = _encounters.FirstOrDefault(e => e.Id == encounterId);
-            if (draftEnc?.NpcTemplates != null)
-            {
-                foreach (EncounterNpcTemplate t in draftEnc.NpcTemplates)
-                {
-                    if (t.ChronicleNpcId is int cid)
-                    {
-                        _ = _excludedChronicleNpcIds.Add(cid);
-                    }
-                }
-            }
-        }
-        else if (!string.IsNullOrEmpty(_currentUserId))
-        {
-            CombatEncounter? live = await EncounterQueryService.GetEncounterAsync(encounterId, _currentUserId);
-            if (live?.NpcTemplates != null)
-            {
-                foreach (EncounterNpcTemplate t in live.NpcTemplates)
-                {
-                    if (t.ChronicleNpcId is int cid)
-                    {
-                        _ = _excludedChronicleNpcIds.Add(cid);
-                    }
-                }
-            }
-
-            if (live?.InitiativeEntries != null)
-            {
-                foreach (InitiativeEntry row in live.InitiativeEntries)
-                {
-                    if (row.ChronicleNpcId is int iid)
-                    {
-                        _ = _excludedChronicleNpcIds.Add(iid);
-                    }
-                }
-            }
-        }
-    }
-
-    private void CloseNpcPicker()
-    {
-        _activeEncounterForNpc = null;
-        _npcPickerMode = null;
-        _chroniclePrepHint = null;
-        _chronicleAddError = string.Empty;
-        _improvError = string.Empty;
-    }
-
-    private void OnNpcModalKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Escape")
-        {
-            CloseNpcPicker();
-        }
-    }
-
-    private string GetNpcModalTitle() =>
-        _npcPickerMode switch
-        {
-            _sourcePicker => "Add NPC",
-            _statPicker => "Add NPC — stat block",
-            _chroniclePicker => "Add NPC — Danse Macabre",
-            _improvisedPicker => "Add NPC — Improvised",
-            _ => "Add NPC",
-        };
-
     private void StartEncounterRename(CombatEncounter enc)
     {
         _renamingEncounterId = enc.Id;
         _renameEncounterBuffer = enc.Name;
-        _renameEncounterError = string.Empty;
     }
 
     private void CancelEncounterRename()
     {
         _renamingEncounterId = null;
         _renameEncounterBuffer = string.Empty;
-        _renameEncounterError = string.Empty;
     }
 
     private async Task SaveEncounterRename(int encounterId)
@@ -407,7 +333,6 @@ public partial class EncounterManager
         }
 
         _busy = true;
-        _renameEncounterError = string.Empty;
         try
         {
             await EncounterPrepService.UpdateDraftEncounterNameAsync(encounterId, _renameEncounterBuffer, _currentUserId);
@@ -416,326 +341,7 @@ public partial class EncounterManager
         }
         catch (Exception ex)
         {
-            _renameEncounterError = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task OnChronicleNpcSelectChanged(ChangeEventArgs e)
-    {
-        _chronicleAddError = string.Empty;
-        string? raw = e.Value?.ToString();
-        _selectedChronicleNpcId = int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
-            ? id
-            : 0;
-        await RefreshChroniclePrepAsync();
-    }
-
-    private async Task RefreshChroniclePrepAsync()
-    {
-        _chroniclePrepHint = null;
-        if (_selectedChronicleNpcId == 0 || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        ChronicleNpcEncounterPrepDto? prep =
-            await EncounterPrepService.GetChronicleNpcEncounterPrepAsync(_selectedChronicleNpcId, _currentUserId);
-        if (prep == null)
-        {
-            return;
-        }
-
-        _npcInitMod = prep.SuggestedInitiativeMod;
-        _chronicleHealthBoxes = prep.SuggestedHealthBoxes;
-        _chronicleMaxWillpower = prep.SuggestedMaxWillpower;
-        _chronicleTracksVitae = prep.TracksVitae;
-        _chronicleMaxVitae = prep.TracksVitae ? prep.SuggestedMaxVitae : 0;
-        string vitaeHint = prep.TracksVitae ? $", vitae {prep.SuggestedMaxVitae} (Blood Potency)." : string.Empty;
-        _chroniclePrepHint = string.IsNullOrEmpty(prep.LinkedStatBlockName)
-            ? $"Suggested from sheet: mod {prep.SuggestedInitiativeMod} (Wits + Composure), health {prep.SuggestedHealthBoxes}, willpower {prep.SuggestedMaxWillpower} (Resolve + Composure){vitaeHint}"
-            : $"Linked stat block \"{prep.LinkedStatBlockName}\": mod {prep.SuggestedInitiativeMod}, health {prep.SuggestedHealthBoxes}, willpower {prep.SuggestedMaxWillpower}{vitaeHint}";
-    }
-
-    private async Task AddNpcFromChronicle()
-    {
-        _chronicleAddError = string.Empty;
-        if (_selectedChronicleNpcId == 0)
-        {
-            _chronicleAddError = "Select a chronicle NPC from the list.";
-            return;
-        }
-
-        if (!_activeEncounterForNpc.HasValue || _busy || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            if (_npcPickerIsDraft)
-            {
-                await EncounterPrepService.AddNpcTemplateFromChronicleNpcAsync(
-                    _activeEncounterForNpc.Value,
-                    _selectedChronicleNpcId,
-                    _npcInitMod,
-                    _chronicleHealthBoxes,
-                    _chronicleMaxWillpower,
-                    _chronicleMaxVitae,
-                    isRevealed: true,
-                    defaultMaskedName: null,
-                    storyTellerUserId: _currentUserId);
-            }
-            else
-            {
-                await EncounterParticipantService.AddNpcToEncounterFromChronicleNpcAsync(
-                    _activeEncounterForNpc.Value,
-                    _selectedChronicleNpcId,
-                    _npcInitMod,
-                    _npcRoll,
-                    _chronicleHealthBoxes,
-                    _chronicleMaxWillpower,
-                    _chronicleMaxVitae,
-                    _currentUserId);
-            }
-
-            CloseNpcPicker();
-            await LoadEncounters();
-        }
-        catch (Exception ex)
-        {
-            _chronicleAddError = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task AddNpcFromStatBlock()
-    {
-        if (_selectedBlockId == 0 || !_activeEncounterForNpc.HasValue || _busy)
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            NpcStatBlock? block = await NpcStatBlockService.GetBlockAsync(_selectedBlockId);
-            if (block is null)
-            {
-                return;
-            }
-
-            int hp = Math.Max(1, block.Health);
-            int wp = Math.Max(1, block.Willpower);
-
-            if (_npcPickerIsDraft)
-            {
-                await EncounterPrepService.AddNpcTemplateAsync(
-                    _activeEncounterForNpc.Value,
-                    block.Name,
-                    _npcInitMod,
-                    hp,
-                    wp,
-                    null,
-                    true,
-                    null,
-                    _currentUserId!);
-            }
-            else
-            {
-                await EncounterParticipantService.AddNpcToEncounterAsync(
-                    _activeEncounterForNpc.Value,
-                    block.Name,
-                    _npcInitMod,
-                    _npcRoll,
-                    _currentUserId!,
-                    hp,
-                    wp);
-            }
-
-            CloseNpcPicker();
-            await LoadEncounters();
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task AddImprovisedNpc()
-    {
-        if (!_activeEncounterForNpc.HasValue || _busy || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _improvError = string.Empty;
-        if (string.IsNullOrWhiteSpace(_improvName))
-        {
-            _improvError = "Name is required.";
-            return;
-        }
-
-        if (_improvHealthBoxes < 1 || _improvHealthBoxes > 50)
-        {
-            _improvError = "Health must be between 1 and 50.";
-            return;
-        }
-
-        if (_improvMaxWillpower < 1 || _improvMaxWillpower > 20)
-        {
-            _improvError = "Willpower must be between 1 and 20.";
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await EncounterPrepService.AddNpcTemplateAsync(
-                _activeEncounterForNpc.Value,
-                _improvName.Trim(),
-                0,
-                _improvHealthBoxes,
-                _improvMaxWillpower,
-                null,
-                true,
-                null,
-                _currentUserId);
-            CloseNpcPicker();
-            await LoadEncounters();
-        }
-        catch (Exception ex)
-        {
-            _improvError = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task ResolveEncounter(int encounterId)
-    {
-        if (_busy)
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await EncounterService.ResolveEncounterAsync(encounterId, _currentUserId!);
-            await LoadEncounters();
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private void OpenSmartLaunch(int encounterId, bool prepStart)
-    {
-        _smartLaunchEncounterId = encounterId;
-        _smartLaunchIsPrepStart = prepStart;
-        _smartLaunchConfirmError = string.Empty;
-        _createError = string.Empty;
-        foreach (Character ch in _campaignCharacters)
-        {
-            _smartLaunchSelection[ch.Id] = true;
-        }
-    }
-
-    private void CancelSmartLaunch()
-    {
-        _smartLaunchEncounterId = null;
-        _smartLaunchIsPrepStart = false;
-        _smartLaunchConfirmError = string.Empty;
-    }
-
-    private async Task ConfirmSmartLaunch()
-    {
-        if (!_smartLaunchEncounterId.HasValue || _busy)
-        {
-            return;
-        }
-
-        bool startedFromPrep = _smartLaunchIsPrepStart;
-        int encounterId = _smartLaunchEncounterId.Value;
-
-        List<int> ids = _campaignCharacters
-            .Where(c => _smartLaunchSelection.GetValueOrDefault(c.Id, false))
-            .Select(c => c.Id)
-            .ToList();
-
-        _busy = true;
-        _smartLaunchConfirmError = string.Empty;
-        _createError = string.Empty;
-        try
-        {
-            if (startedFromPrep)
-            {
-                await EncounterService.LaunchEncounterAsync(encounterId, _currentUserId!);
-            }
-
-            await EncounterParticipantService.BulkAddOnlinePlayersAsync(encounterId, ids, _currentUserId!);
-
-            CancelSmartLaunch();
-            await LoadEncounters();
-
-            if (startedFromPrep)
-            {
-                NavigationManager.NavigateTo($"/campaigns/{Id}/encounter/{encounterId}", forceLoad: true);
-            }
-        }
-        catch (Exception ex)
-        {
-            await LoadEncounters();
-            _smartLaunchConfirmError = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task PauseEncounter(int encounterId)
-    {
-        if (_busy)
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await EncounterService.PauseEncounterAsync(encounterId, _currentUserId!);
-            await LoadEncounters();
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task ResumeEncounter(int encounterId)
-    {
-        if (_busy)
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await EncounterService.ResumeEncounterAsync(encounterId, _currentUserId!);
-            await LoadEncounters();
+            ToastService.Show("Encounter", ex.Message, ToastType.Error);
         }
         finally
         {

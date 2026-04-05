@@ -54,10 +54,13 @@ public class PredatoryAuraService(
 
         await using ApplicationDbContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        Character? attacker = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == attackerCharacterId);
-        Character? defender = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == defenderCharacterId);
+        List<Character> lashPair = await db.Characters.AsNoTracking()
+            .Include(c => c.Campaign)
+            .Where(c => c.Id == attackerCharacterId || c.Id == defenderCharacterId)
+            .ToListAsync();
+
+        Character? attacker = lashPair.FirstOrDefault(c => c.Id == attackerCharacterId);
+        Character? defender = lashPair.FirstOrDefault(c => c.Id == defenderCharacterId);
 
         if (attacker == null)
         {
@@ -80,8 +83,16 @@ public class PredatoryAuraService(
                 "Both characters must belong to the specified chronicle.");
         }
 
-        bool isStoryteller = await db.Campaigns.AsNoTracking()
-            .AnyAsync(c => c.Id == chronicleId && c.StoryTellerId == userId);
+        string? storyTellerId = attacker.Campaign?.StoryTellerId ?? defender.Campaign?.StoryTellerId;
+        if (storyTellerId == null)
+        {
+            storyTellerId = await db.Campaigns.AsNoTracking()
+                .Where(c => c.Id == chronicleId)
+                .Select(c => c.StoryTellerId)
+                .FirstOrDefaultAsync();
+        }
+
+        bool isStoryteller = storyTellerId != null && string.Equals(storyTellerId, userId, StringComparison.Ordinal);
 
         if (!isStoryteller)
         {
@@ -145,10 +156,12 @@ public class PredatoryAuraService(
             }
         }
 
-        Character? charA = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == vampireAId);
-        Character? charB = await db.Characters.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == vampireBId);
+        List<Character> passivePair = await db.Characters.AsNoTracking()
+            .Where(c => c.Id == vampireAId || c.Id == vampireBId)
+            .ToListAsync();
+
+        Character? charA = passivePair.FirstOrDefault(c => c.Id == vampireAId);
+        Character? charB = passivePair.FirstOrDefault(c => c.Id == vampireBId);
 
         if (charA == null)
         {

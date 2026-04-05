@@ -61,7 +61,7 @@ dotnet build $E2EProj --no-restore -c $Configuration
 $e2eProjDir = Split-Path -Parent $E2EProj
 $playwrightE2e = Join-Path $e2eProjDir "bin\$Configuration\net10.0\playwright.ps1"
 if (-not (Test-Path $playwrightE2e)) {
-    Write-Error "Playwright bootstrap script not found at $playwrightE2e — build E2E project first."
+    Write-Error "Playwright bootstrap script not found at $playwrightE2e - build E2E project first."
 }
 
 & $Pwsh -NoProfile -ExecutionPolicy Bypass -File $playwrightE2e install --with-deps chromium
@@ -93,4 +93,4 @@ if ($VisualRegression) {
     }
 }
 
-Write-Host "`nE2E local run finished." -ForegroundColor Green
+Write-Host ([Environment]::NewLine + 'E2E local run finished.') -ForegroundColor Green

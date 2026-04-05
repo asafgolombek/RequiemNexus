@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
+using RequiemNexus.Data.Seeding;
 using RequiemNexus.Web.Components;
 using RequiemNexus.Web.Extensions;
 using RequiemNexus.Web.Hubs;
@@ -21,7 +23,7 @@ if (builder.Environment.IsEnvironment("Testing"))
 }
 
 builder.AddInfrastructureServices();
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Environment);
 builder.AddIdentityAndAuthServices();
 builder.AddRequiemRateLimiting();
 
@@ -33,9 +35,19 @@ using (IServiceScope scope = app.Services.CreateScope())
 {
     ApplicationDbContext context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    IEnumerable<ISeeder> seeders = scope.ServiceProvider.GetServices<ISeeder>();
     if (!app.Environment.IsEnvironment("Testing"))
     {
-        await DbInitializer.InitializeAsync(context, roleManager, app.Logger, runMigrations);
+        await DbInitializer.InitializeAsync(context, roleManager, app.Logger, seeders, runMigrations);
+    }
+    else
+    {
+        // E2E / visual regression: relational DB needs schema before hosted services run; fixture applies seed and loads ReferenceDataCache afterward.
+        // Application.Tests swap in InMemory EF — MigrateAsync is not supported; those tests own schema (EnsureCreated).
+        if (context.Database.IsRelational())
+        {
+            await context.Database.MigrateAsync();
+        }
     }
 
     if (app.Environment.IsDevelopment())

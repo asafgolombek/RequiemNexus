@@ -22,6 +22,7 @@ public sealed class HumanityService(
     IDiceService diceService,
     ISessionService sessionService,
     IConditionService conditionService,
+    IReferenceDataCache referenceData,
     ILogger<HumanityService> logger) : IHumanityService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
@@ -30,6 +31,7 @@ public sealed class HumanityService(
     private readonly IDiceService _diceService = diceService;
     private readonly ISessionService _sessionService = sessionService;
     private readonly IConditionService _conditionService = conditionService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
     private readonly ILogger<HumanityService> _logger = logger;
 
     /// <inheritdoc />
@@ -41,11 +43,17 @@ public sealed class HumanityService(
     /// <inheritdoc />
     public async Task EnforceHumanityCapForPersistenceAsync(Character character, CancellationToken cancellationToken = default)
     {
-        int cruacRating = await (
-            from cd in _dbContext.CharacterDisciplines.AsNoTracking()
-            join d in _dbContext.Disciplines.AsNoTracking() on cd.DisciplineId equals d.Id
-            where cd.CharacterId == character.Id && d.Name == "Crúac"
-            select cd.Rating).FirstOrDefaultAsync(cancellationToken);
+        int cruacDisciplineId = _referenceData.ReferenceDisciplines.FirstOrDefault(d => d.Name == "Crúac")?.Id ?? 0;
+        int cruacRating = cruacDisciplineId == 0
+            ? await (
+                from cd in _dbContext.CharacterDisciplines.AsNoTracking()
+                join d in _dbContext.Disciplines.AsNoTracking() on cd.DisciplineId equals d.Id
+                where cd.CharacterId == character.Id && d.Name == "Crúac"
+                select cd.Rating).FirstOrDefaultAsync(cancellationToken)
+            : await _dbContext.CharacterDisciplines.AsNoTracking()
+                .Where(cd => cd.CharacterId == character.Id && cd.DisciplineId == cruacDisciplineId)
+                .Select(cd => cd.Rating)
+                .FirstOrDefaultAsync(cancellationToken);
 
         int maxHumanity = 10 - cruacRating;
         if (character.Humanity > maxHumanity)

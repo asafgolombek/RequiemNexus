@@ -37,9 +37,9 @@ To forge the definitive, high-performance digital ecosystem for **Vampire: The R
 | 18 | The Wider Web — Edge Systems & Content | ✅ Complete |
 | 19 | The Blood Lineage — Discipline Acquisition Rules | ✅ Complete |
 | 19.5 | The Rite Perfected — Blood Sorcery Rules Completion | ✅ Complete |
-| 20 | The Global Embrace | 🔄 Active |
+| 20 | The Global Embrace | ✅ Complete |
 
-> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 18 — The Wider Web is complete ✅** — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), `Disciplines.json` pools, Vitae/Willpower activation choice — record: **Phase 18** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19.5 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 19.5 — The Rite Perfected is complete ✅** — blood sorcery rules completion: extended action system, Potency (informational), ritual Conditions, seed rating corrections, BOM fix, Theban sacrament enforcement — record: **Phase 19.5** section below and **Phase 19.5** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (i18n, public API, Discord presence, production polish) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
+> **Phase 17 — The Fog of Eternity is complete ✅** — `IConditionRules.GetPenalties()`, condition penalties in `ModifierService`, `EvaluateStainsAsync` call sites, degeneration + remorse + incapacitated UI. Record: **Phase 17** section below and **Phase 17** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 18 — The Wider Web is complete ✅** — passive predatory aura, blood sympathy roll, social maneuver interceptors, SeedSource catalog passes (D1–D8), `Disciplines.json` pools, Vitae/Willpower activation choice — record: **Phase 18** section below. **Phase 19 — The Blood Lineage is complete** — acquisition metadata, 7 gates (`CharacterDisciplineService`), `IHumanityService`, `DegenerationCheckRequiredEvent`, two-pass seed pipeline, `DisciplineJsonImporter`. **Phase 16b — The Discipline Engine is complete** — see [`docs/phase16b-the-discipline-engine.md`](./phase16b-the-discipline-engine.md). Phases 14–19.5 are the **V:tR 2e Playability Gap** — full scope in this document and [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 19.5 — The Rite Perfected is complete ✅** — blood sorcery rules completion: extended action system, Potency (informational), ritual Conditions, seed rating corrections, BOM fix, Theban sacrament enforcement — record: **Phase 19.5** section below and **Phase 19.5** in [`docs/rules-interpretations.md`](./rules-interpretations.md). **Phase 20 — The Global Embrace** (Discord session webhooks, SignalR production tuning, and discretionary UI/architecture polish — record in **Phase 20** section below) is the **last planned phase**. Phase 13 (E2E Playwright suite, axe/Lighthouse CI, screen-reader announcer, visual-regression workflow) is **complete** — run local browser tests with `scripts/test-e2e-local.ps1`.
 
 ---
 
@@ -66,7 +66,7 @@ Phase 19.5 (Blood Sorcery Rules Completion) ✅
 **Recommended parallel tracks:**
 - Track A: ~~14 → 15 → Phase 17~~ ✅ — Phase 17 section below
 - Track B: ~~Phase 19~~ ✅ → ~~Phase 16b~~ ✅ (discipline chain) — [plan](./phase16b-the-discipline-engine.md)
-- Track C: ~~Phase 18~~ ✅ — ~~**Phase 19.5**~~ ✅ (blood sorcery rules completion — Phase 19.5 section below) → **Phase 20** when scheduled
+- Track C: ~~Phase 18~~ ✅ — ~~**Phase 19.5**~~ ✅ (blood sorcery rules completion — Phase 19.5 section below) → ~~**Phase 20**~~ ✅ (Phase 20 section below)
 
 ---
 
@@ -113,7 +113,7 @@ Every architectural choice is a learning milestone. We prioritize **Explicit Und
 - **Reactive Patterns** — Master real-time state changes without page refreshes using explicit C# state management.
 - **ORM Mastery** — Use **EF Core** to understand relational mapping, migrations, and performance tuning from SQLite to PostgreSQL.
 - **Modern Syntax (C# 14)** — Wield Primary Constructors and enhanced collection expressions as deliberate learning milestones, reducing boilerplate to sharpen intent.
-- **Identity & Security (The Masquerade)** — Deep dive into ASP.NET Core Identity, cookie-based sessions for the first-party Blazor app, and enterprise-grade data privacy. Bearer tokens (e.g. JWT) are in scope when a public API ships (Phase 20 — The Global Embrace), not for the primary UI today.
+- **Identity & Security (The Masquerade)** — Deep dive into ASP.NET Core Identity, **cookie-based sessions** for the first-party Blazor app, and enterprise-grade data privacy. **Bearer tokens (e.g. JWT)** are **not** on the near-term roadmap; they would only apply if a **separate public API** were introduced in a **future** phase, not for the primary UI.
 - **Data-Driven Domain Modeling** — Phases 8–11 extend the pattern of separating content (seed data) from behavior (engine logic): Bloodlines/Devotions and Covenants/Sorcery (8–9), social maneuvers and clues (10), asset catalog and inventory (11).
 
 ### Learning Artifacts (Mandatory)
@@ -379,7 +379,7 @@ Phase 8 supported **additive pools only**; contested rolls and penalty dice were
 ### Scope
 
 - [x] **Necromancy** — `Necromancy` discipline; `SorceryType.Necromancy`; Mekhet clan gate via `RequiredClanId`; sample rite `Corrupting the Corpse` in `DbInitializer.EnsureBloodSorceryPhaseExtensionsAsync` (catalog can grow from seed/JSON).
-- [x] ~~**Ordo Dracul Rituals**~~ — **Retired in Phase 19.5 (P6).** Ordo **Coils/Scales** remain (`coils_info.json`, `CoilOrdoEligibility`); separate **Ordo ritual spells** are not a `SorceryType` in-app (see `docs/magic_types_and_rules.txt` — Mysteries of the Dragon).
+- [x] ~~**Ordo Dracul Rituals**~~ — **Retired in Phase 19.5 (P6).** Ordo **Coils/Scales** remain (`coils_info.json`, `CoilOrdoEligibility`); separate **Ordo ritual spells** are not a `SorceryType` in-app (see [`docs/rules-interpretations.md`](./rules-interpretations.md#tradition-overview-corebook-summary) — Mysteries of the Dragon).
 - [ ] **Expanded ritual catalog** — Full rulebook/supplement list (e.g. Taste of the Dragon, Pasha's Vision, …) deferred to content passes; structure is in place.
 - [x] **Data model extension** — `SorceryType` values, nullable `RequiredCovenantId`, `RequiredClanId`, `RequirementsJson`, migration `Phase95Phase96BloodSorceryExtensions`.
 - [x] **UI** — Blood Sorcery section for Crúac/Theban or any character with Necromancy dots; rite requests from **Advancement** (`ApplyLearnRiteModal`); sheet uses activation only; modal labels traditions (Ordo ritual UI removed with P6).
@@ -767,7 +767,7 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 **Status:** ✅ **Complete (2026-04-02).** Delivery scope, decisions, and code pointers live in this section; rules interpretation in [`docs/rules-interpretations.md`](./rules-interpretations.md) (Phase 19.5).
 
-**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and `docs/magic_types_and_rules.txt`. All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
+**The Objective:** Correct the existing blood sorcery engine against the V:tR 2e PDF (pages 150–165) and the [tradition overview](./rules-interpretations.md#tradition-overview-corebook-summary) in `docs/rules-interpretations.md` (Phase 19.5). All three Ritual Disciplines (Crúac, Theban Sorcery, Kindred Necromancy) share a stable engine from Phases 9–9.6; this phase closes the rules accuracy gap without adding new architecture.
 
 ### Prerequisites
 
@@ -847,14 +847,22 @@ JSON under `src/RequiemNexus.Data/SeedSource/`; `DbInitializer` upserts / missin
 
 ## 📅 Phase 20: The Global Embrace
 
-**Status:** 🔄 **Active** — next roadmap focus after Phase 19.5 closure.
+**Status:** ✅ **Roadmap complete (2026-04-04)** — Discord session webhooks + SignalR production tuning delivered below. Further large-file extractions or UX passes are **discretionary** unless a new **`mission.md`** item or explicit task reopens them.
 
-**The Objective:** Final polish and expansion into the international community. **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, and 19.5.
+**The Objective:** Final **production and ops polish**, **Discord** integration, and **discretionary technical work** (performance, decomposition, UI consistency, SOLID-oriented refactors). **This is the last planned roadmap phase** — it follows the V:tR 2e playability work in Phases 14–16b, 17–19, and 19.5.
 
-- [ ] **Localization (i18n)** — Full support for French, German, and Spanish, adhering to the "Sacred Term Policy" (e.g., *Discipline* remains *Discipline*)
-- [ ] **Public REST API** — Documented endpoints for community developers to build third-party companion tools; **external client auth** (typically JWT or OAuth2 access tokens) is introduced here. The first-party Blazor app remains cookie-based Identity.
-- [ ] **Discord Rich Presence** — Enhanced webhooks for detailed session summaries and "Coterie Status" updates
-- [ ] **Production Rollout** — Final optimization of SignalR hubs for high-concurrency public traffic
+**Out of near-term scope (not scheduled):** full UI **localization (i18n)**; a **documented public REST API** for third-party clients; **bearer/JWT (or OAuth2) auth** for external API consumers — the first-party app remains cookie-based Identity.
+
+**Technical polish — delivery record (this section):** Historical **Wave 1–4** labels referred to **execution ordering** for the Phase 20 polish sprint (not `mission.md` **phase** numbers). Scope: performance, large-file decomposition, UI consistency, and SOLID-friendly refactors. **Grimoire:** Exemplary patterns for composition, loading states, and hybrid errors live in **`docs/Architecture.md`** and in the codebase (e.g. `DanseMacabreTabs/`, `EncounterParts/`, `InitiativeParts/`, `CharacterDetails.*.razor.cs` partials).
+
+**Waves 1–4 — delivered (2026-04-03):** `ISeeder` pipeline + `DbInitializer` orchestration; logging/index alignment; **`IReferenceDataCache`** warmup; **`ICharacterQueryService`** + partial Beats/XP reload / hub echo behavior; **`IModifierProvider`** aggregation in **`ModifierService`**; **`IRiteActivationStrategy`** in **`SorceryActivationService`**; **`CharacterDetails`** split into feature **`CharacterDetails.*.razor.cs`** partials with injects on **`CharacterDetails.razor`**; standardized **`SkeletonLoader`** / **`LoadingContainer`** and hybrid **`ToastService`** + inline validation across listed hub pages; **`CharacterAdvancement`** section components under **`CharacterSheet/`** + toast/inline errors; **`DanseMacabre`** tab panels in **`DanseMacabreTabs/`** (avoids Razor type-name clash with the page); **`EncounterManager`** markup decomposed into **`EncounterParts/`** child components (create/template flows, smart-launch, draft/active/paused/past cards, NPC picker — page keeps orchestration).
+
+**Post–Wave 4 technical polish — delivered (2026-04-05):** **`InitiativeTracker`** (`InitiativeParts/`, feature partials, **`InitiativeTracker.SignalR.razor.cs`**); **`DiceRollerModal`** code-behind partials (**`Pool`**, **`RiteExtended`**, **`RollAndHub`**); **`app-chrome.css`** split into ordered **`app-chrome-*.css`** modules (facade imports); **`PageTitle`** / **`alert-rn`** consistency pass where applied. The committed Phase 20 technical backlog for this tranche is **complete**. Further extractions are **discretionary** unless a new mission item reopens them.
+
+**Discretionary polish sweep (2026-04-05–06):** Highlights: **`CharacterDetails`** applies hub **`CharacterUpdateDto`** without full reload; **`TraitRulesReferenceModal`** + focus on open; **`StorytellerGlimpseOverviewParts/`** (degeneration banners, passive aura, coterie beat card); **`EncounterManager`** list sections; **`CharacterExportConcurrency`**; **`IReferenceDataCache.FlushAsync`**; campaign lore/session-prep services; **`ICharacterProgressionService`**. Trait resolution inventory on **`ITraitResolver`**; **`ExternalAuthAvailability`** hides Google/Discord login when credentials are unset; **`InitiativeEncounterPageHeader`**; Discord webhook modal focuses URL field on open; **`DotScale`** trait-label hover/focus uses bone-white for WCAG AA (E2E axe); **`test-e2e-local.ps1`** closing line parse fix. **`StorytellerGlimpsePinnedNpcsSection`** + **`StorytellerGlimpseCharacterVitalsGrid`**; **`StorytellerGlimpse.*.razor.cs`** feature partials (Awards, Chrome, SignalR, PassiveAura, Degeneration). **`NpcDetailParts/`** + **`NpcDetail.razor.cs`** + **`NpcDetailStatsHelper`**; **`FactionDetailParts/`** + **`FactionDetail.razor.cs`**; **`SocialManeuversSection.razor.cs`** + **`SocialManeuverCard`** + **`SocialManeuverSheetDisplayHelper`**.
+
+- [x] **Discord Rich Presence** — Per-campaign Discord **incoming webhook** (ST-only on `CampaignDetails`); `SessionService` posts non-blocking embeds on session start/end and player join/leave (`DiscordWebhookSessionNotifier`, `DiscordIncomingWebhookValidator`). OAuth login remains separate.
+- [x] **Production Rollout** — SignalR **Redis backplane** (existing) + hub `MaximumReceiveMessageSize` 64 KB for initiative-sized payloads; rate limiting on `/hubs/session` (existing).
 
 ---
 

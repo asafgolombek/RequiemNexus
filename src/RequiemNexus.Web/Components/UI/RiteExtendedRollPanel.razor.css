@@ -1,0 +1,21 @@
+/* Shared hint / checkbox label styles used inside extended rite summary (was on DiceRollerModal). */
+
+.chance-die-hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-hint);
+    line-height: 1.35;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--bone-white);
+}
+
+.option-label input[type="checkbox"] {
+    accent-color: var(--crimson);
+}

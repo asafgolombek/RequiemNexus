@@ -19,12 +19,14 @@ public class SorceryService(
     IAuthorizationHelper authHelper,
     IBeatLedgerService beatLedger,
     ISessionService sessionService,
+    IReferenceDataCache referenceData,
     ILogger<SorceryService> logger) : ISorceryService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
     private readonly ILogger<SorceryService> _logger = logger;
 
     /// <inheritdoc />
@@ -51,14 +53,11 @@ public class SorceryService(
             .Select(r => r.SorceryRiteDefinitionId)
             .ToHashSet();
 
-        List<SorceryRiteDefinition> candidates = await _dbContext.SorceryRiteDefinitions
-            .AsNoTracking()
-            .Include(s => s.RequiredCovenant)
-            .Include(s => s.RequiredClan)
+        List<SorceryRiteDefinition> candidates = _referenceData.SorceryRiteDefinitions
             .Where(r => (r.RequiredCovenantId == null || r.RequiredCovenantId == character.CovenantId)
                 && (r.RequiredClanId == null || r.RequiredClanId == character.ClanId)
                 && !learnedOrPendingIds.Contains(r.Id))
-            .ToListAsync();
+            .ToList();
 
         return candidates
             .Where(r => GetSorceryDisciplineRating(character, r.SorceryType) >= r.Level
@@ -102,9 +101,8 @@ public class SorceryService(
             throw new InvalidOperationException("Character must be in an approved covenant to learn rites.");
         }
 
-        SorceryRiteDefinition? rite = await _dbContext.SorceryRiteDefinitions
-            .Include(r => r.RequiredCovenant)
-            .FirstOrDefaultAsync(r => r.Id == sorceryRiteDefinitionId)
+        SorceryRiteDefinition? rite = _referenceData.SorceryRiteDefinitions
+            .FirstOrDefault(r => r.Id == sorceryRiteDefinitionId)
             ?? throw new InvalidOperationException($"Rite {sorceryRiteDefinitionId} not found.");
 
         if (rite.RequiredCovenantId.HasValue && rite.RequiredCovenantId.Value != character.CovenantId)

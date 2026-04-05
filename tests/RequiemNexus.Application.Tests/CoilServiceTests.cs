@@ -36,7 +36,13 @@ public class CoilServiceTests
             .Setup(s => s.BroadcastCharacterUpdateAsync(It.IsAny<int>()))
             .Returns(Task.CompletedTask);
         var logger = new Mock<ILogger<CoilService>>().Object;
-        return new CoilService(ctx, auth, beatLedger.Object, sessionService.Object, logger);
+        return new CoilService(
+            ctx,
+            auth,
+            beatLedger.Object,
+            sessionService.Object,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
+            logger);
     }
 
     private static ApplicationDbContext CreateContext(string dbName)

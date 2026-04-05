@@ -574,6 +574,10 @@ namespace RequiemNexus.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DiscordWebhookUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<string>("InviteTokenHash")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");

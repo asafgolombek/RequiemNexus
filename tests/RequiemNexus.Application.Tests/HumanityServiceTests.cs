@@ -197,6 +197,7 @@ public class HumanityServiceTests
             Mock.Of<IDiceService>(),
             Mock.Of<ISessionService>(),
             Mock.Of<IConditionService>(),
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
             Mock.Of<ILogger<HumanityService>>());
     }
 }

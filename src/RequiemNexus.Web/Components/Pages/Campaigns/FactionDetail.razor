@@ -3,8 +3,8 @@
 @using RequiemNexus.Data.Models
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Domain.Enums
-@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using RequiemNexus.Web.Components.Pages.Campaigns.FactionDetailParts
 @inject ICityFactionService FactionService
 @inject IChronicleNpcService NpcService
 @inject IFactionRelationshipService RelationshipService
@@ -12,7 +12,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>Faction Detail - Requiem Nexus</PageTitle>
+<PageTitle>@(_faction?.Name is { } factionName ? $"{factionName} — Faction" : "Faction") — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     @if (_accessDenied)
@@ -24,16 +24,11 @@
     }
     else if (_faction == null)
     {
-        <p><em>Loading...</em></p>
+        <SkeletonLoader Variant="card" Count="3" />
     }
     else
     {
-        <a href="/campaigns/@CampaignId/danse-macabre" class="btn-rn-ghost" style="margin-bottom:1rem;display:inline-block;">← Back to Danse Macabre</a>
-
-        <div class="campaign-header">
-            <h2>@_faction.Name <span class="badge-rn">@_faction.FactionType</span></h2>
-            <p class="text-muted">Influence Rating: @_faction.InfluenceRating</p>
-        </div>
+        <FactionDetailPageHeader CampaignId="CampaignId" Faction="_faction" />
 
         @if (!string.IsNullOrEmpty(_feedbackMessage))
         {
@@ -87,269 +82,26 @@
                     </a>
                 }
             </div>
-            <button class="btn-rn-primary" disabled="@_busy" @onclick="SaveFaction">Save Changes</button>
+            <button type="button" class="btn-rn-primary" disabled="@_busy" @onclick="SaveFaction">Save Changes</button>
         </div>
 
-        <div class="card-rn" style="margin-bottom:1.5rem;">
-            <h3>Members (@_faction.Members.Count)</h3>
-            @if (!_faction.Members.Any())
-            {
-                <p class="text-muted">No members assigned.</p>
-            }
-            else
-            {
-                <ul style="list-style:none;padding:0;">
-                    @foreach (ChronicleNpc member in _faction.Members)
-                    {
-                        <li style="margin-bottom:0.5rem;">
-                            <a href="/campaigns/@CampaignId/npcs/@member.Id">@member.Name</a>
-                            @if (!string.IsNullOrEmpty(member.RoleInFaction))
-                            {
-                                <span class="text-muted"> — @member.RoleInFaction</span>
-                            }
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
+        <FactionDetailMembersCard CampaignId="CampaignId" Faction="_faction" />
 
-        <div class="card-rn" style="margin-bottom:1.5rem;">
-            <h3>Controlled Territories</h3>
-            @if (!_faction.ControlledTerritories.Any())
-            {
-                <p class="text-muted">No territories controlled.</p>
-            }
-            else
-            {
-                <ul style="list-style:none;padding:0;">
-                    @foreach (FeedingTerritory t in _faction.ControlledTerritories)
-                    {
-                        <li>@t.Name <span class="badge-rn">Rating @t.Rating</span></li>
-                    }
-                </ul>
-            }
-        </div>
+        <FactionDetailTerritoriesCard Faction="_faction" />
 
-        <div class="card-rn" style="margin-bottom:1.5rem;">
-            <h3>Faction Relations</h3>
-            @if (!_relationships.Any())
-            {
-                <p class="text-muted">No relationships defined.</p>
-            }
-            else
-            {
-                <table style="width:100%;border-collapse:collapse;">
-                    <thead>
-                        <tr>
-                            <th style="text-align:left;padding:0.5rem;">With</th>
-                            <th style="text-align:left;padding:0.5rem;">Stance</th>
-                            <th style="text-align:left;padding:0.5rem;">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (FactionRelationship rel in _relationships)
-                        {
-                            CityFaction? other = rel.FactionAId == FactionId ? rel.FactionB : rel.FactionA;
-                            FactionStance stance = rel.FactionAId == FactionId ? rel.StanceFromA : rel.StanceFromA;
-                            <tr>
-                                <td style="padding:0.5rem;">
-                                    @if (other != null)
-                                    {
-                                        <a href="/campaigns/@CampaignId/factions/@other.Id">@other.Name</a>
-                                    }
-                                </td>
-                                <td style="padding:0.5rem;">@stance</td>
-                                <td style="padding:0.5rem;" class="text-muted">@rel.Notes</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
+        <FactionDetailRelationsCard CampaignId="CampaignId"
+                                    FactionId="FactionId"
+                                    Relationships="_relationships"
+                                    OtherFactions="_otherFactions"
+                                    @bind-RelOtherFactionId="_relOtherFactionId"
+                                    @bind-RelStance="_relStance"
+                                    @bind-RelNotes="_relNotes"
+                                    Busy="_busy"
+                                    OnSaveRelationship="SaveRelationship" />
 
-            <div class="add-form" style="margin-top:1rem;">
-                <h4>Add Relationship</h4>
-                <div class="form-row">
-                    <select class="form-control" @bind="_relOtherFactionId">
-                        <option value="0">— Select faction —</option>
-                        @foreach (CityFaction other in _otherFactions)
-                        {
-                            <option value="@other.Id">@other.Name</option>
-                        }
-                    </select>
-                    <select class="form-control" @bind="_relStance">
-                        @foreach (FactionStance s in Enum.GetValues<FactionStance>())
-                        {
-                            <option value="@s">@s</option>
-                        }
-                    </select>
-                    <input class="form-control" placeholder="Notes" @bind="_relNotes" />
-                    <button class="btn-rn-primary" disabled="@(_relOtherFactionId == 0 || _busy)" @onclick="SaveRelationship">Set</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="danger-zone" style="margin-top:2rem;">
-            @if (_showConfirmDelete)
-            {
-                <div class="confirm-card card-rn">
-                    <p>⚠️ Delete faction <strong>@_faction.Name</strong>? This cannot be undone.</p>
-                    <button class="btn-rn-primary" disabled="@_busy" @onclick="ConfirmDelete">Yes, Delete</button>
-                    <button class="btn-rn-ghost" @onclick="() => _showConfirmDelete = false">Cancel</button>
-                </div>
-            }
-            else
-            {
-                <button class="btn-rn-ghost" @onclick="() => _showConfirmDelete = true">🗑 Delete Faction</button>
-            }
-        </div>
+        <FactionDetailDangerZone FactionName="_faction.Name"
+                                   @bind-ShowConfirmDelete="_showConfirmDelete"
+                                   Busy="_busy"
+                                   OnConfirmDelete="ConfirmDelete" />
     }
 </div>
-
-@code {
-    [Parameter]
-    public int CampaignId { get; set; }
-
-    [Parameter]
-    public int FactionId { get; set; }
-
-    private CityFaction? _faction;
-    private List<ChronicleNpc> _allNpcs = [];
-    private List<FactionRelationship> _relationships = [];
-    private List<CityFaction> _otherFactions = [];
-    private bool _accessDenied = false;
-    private bool _busy = false;
-    private bool _showConfirmDelete = false;
-    private string? _feedbackMessage;
-    private string? _currentUserId;
-
-    // Edit form state
-    private string _editName = string.Empty;
-    private FactionType _editType = FactionType.Other;
-    private int _editInfluence = 1;
-    private string _editAgenda = string.Empty;
-    private string _editPublicDesc = string.Empty;
-    private string _editStNotes = string.Empty;
-    private int _editLeaderNpcId = 0;
-
-    // Relationship form state
-    private int _relOtherFactionId = 0;
-    private FactionStance _relStance = FactionStance.Neutral;
-    private string _relNotes = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(_currentUserId))
-        {
-            _accessDenied = true;
-            return;
-        }
-
-        Campaign? campaign = await CampaignService.GetCampaignByIdAsync(CampaignId, _currentUserId);
-        if (campaign == null || !CampaignService.IsStoryteller(campaign, _currentUserId))
-        {
-            _accessDenied = true;
-            return;
-        }
-
-        await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-        _faction = await FactionService.GetFactionAsync(FactionId);
-        if (_faction == null)
-        {
-            return;
-        }
-
-        _editName = _faction.Name;
-        _editType = _faction.FactionType;
-        _editInfluence = _faction.InfluenceRating;
-        _editAgenda = _faction.Agenda;
-        _editPublicDesc = _faction.PublicDescription;
-        _editStNotes = _faction.StorytellerNotes;
-        _editLeaderNpcId = _faction.LeaderNpcId ?? 0;
-
-        _allNpcs = await NpcService.GetNpcsAsync(CampaignId, true);
-        List<FactionRelationship> all = await RelationshipService.GetRelationshipsAsync(CampaignId);
-        _relationships = all.Where(r => r.FactionAId == FactionId || r.FactionBId == FactionId).ToList();
-
-        List<CityFaction> allFactions = await FactionService.GetFactionsAsync(CampaignId);
-        _otherFactions = allFactions.Where(f => f.Id != FactionId).ToList();
-    }
-
-    private async Task SaveFaction()
-    {
-        if (string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        _feedbackMessage = null;
-        try
-        {
-            await FactionService.UpdateFactionAsync(
-                FactionId,
-                _editName,
-                _editType,
-                _editInfluence,
-                _editPublicDesc,
-                _editStNotes,
-                _editAgenda,
-                _editLeaderNpcId == 0 ? null : _editLeaderNpcId,
-                _currentUserId);
-            await LoadData();
-            _feedbackMessage = "Faction saved.";
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task SaveRelationship()
-    {
-        if (_relOtherFactionId == 0 || string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await RelationshipService.SetRelationshipAsync(CampaignId, FactionId, _relOtherFactionId, _relStance, _relNotes, _currentUserId);
-            _relOtherFactionId = 0;
-            _relNotes = string.Empty;
-            await LoadData();
-            _feedbackMessage = "Relationship set.";
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private async Task ConfirmDelete()
-    {
-        if (string.IsNullOrEmpty(_currentUserId))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            await FactionService.DeleteFactionAsync(FactionId, _currentUserId);
-            NavigationManager.NavigateTo($"/campaigns/{CampaignId}/danse-macabre");
-        }
-        catch
-        {
-            _showConfirmDelete = false;
-            _busy = false;
-        }
-    }
-}

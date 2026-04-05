@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.RealTime;
+using RequiemNexus.Application.Security;
 using RequiemNexus.Application.Services;
 using RequiemNexus.Data;
 using RequiemNexus.Data.Models;
@@ -32,7 +33,14 @@ public class CampaignServiceDeleteTests
         var logger = new Mock<ILogger<CampaignService>>().Object;
         var factory = new MatchingDbContextFactory(options);
         var authHelper = new AuthorizationHelper(factory, NullLogger<AuthorizationHelper>.Instance);
-        return new CampaignService(ctx, factory, logger, authHelper, new Mock<ISessionService>().Object);
+        var sessionMock = new Mock<ISessionService>().Object;
+        return new CampaignService(
+            ctx,
+            factory,
+            logger,
+            authHelper,
+            new CampaignLoreService(ctx, sessionMock, NullLogger<CampaignLoreService>.Instance),
+            new CampaignSessionPrepService(ctx, authHelper, NullLogger<CampaignSessionPrepService>.Instance));
     }
 
     private static async Task<(ApplicationDbContext Context, IAsyncDisposable Teardown, DbContextOptions<ApplicationDbContext> Options)> CreateSqliteAsync()

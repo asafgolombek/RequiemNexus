@@ -19,6 +19,7 @@ namespace RequiemNexus.Application.Services;
 /// <summary>
 /// Handles rite activation pool resolution and cost application.
 /// Separated from <see cref="SorceryService"/> (rite learning) to keep each class focused.
+/// Tradition-specific rules delegate to <see cref="IRiteActivationStrategy"/> implementations.
 /// </summary>
 public class SorceryActivationService(
     ApplicationDbContext dbContext,
@@ -29,6 +30,7 @@ public class SorceryActivationService(
     IWillpowerService willpowerService,
     IHumanityService humanityService,
     IDomainEventDispatcher domainEventDispatcher,
+    IEnumerable<IRiteActivationStrategy> riteActivationStrategies,
     ILogger<SorceryActivationService> logger) : ISorceryActivationService
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -45,6 +47,10 @@ public class SorceryActivationService(
     private readonly IWillpowerService _willpowerService = willpowerService;
     private readonly IHumanityService _humanityService = humanityService;
     private readonly IDomainEventDispatcher _domainEventDispatcher = domainEventDispatcher;
+
+    private readonly IReadOnlyDictionary<SorceryType, IRiteActivationStrategy> _riteStrategies =
+        riteActivationStrategies.ToDictionary(s => s.Tradition);
+
     private readonly ILogger<SorceryActivationService> _logger = logger;
 
     /// <inheritdoc />
@@ -60,32 +66,22 @@ public class SorceryActivationService(
             .Include(c => c.Disciplines).ThenInclude(d => d.Discipline)
             .Include(c => c.Attributes)
             .Include(c => c.Skills)
-            .Include(c => c.Rites)
+            .Include(c => c.Rites).ThenInclude(r => r.SorceryRiteDefinition)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
         CharacterRite? cr = character.Rites.FirstOrDefault(r => r.Id == characterRiteId && r.Status == RiteLearnStatus.Approved);
-        if (cr == null)
-        {
-            cr = await _dbContext.CharacterRites
-                .Include(r => r.SorceryRiteDefinition)
-                .FirstOrDefaultAsync(r => r.Id == characterRiteId && r.CharacterId == characterId && r.Status == RiteLearnStatus.Approved);
-        }
-
         if (cr?.SorceryRiteDefinition == null)
         {
             throw new InvalidOperationException("Approved character rite not found.");
         }
 
         SorceryRiteDefinition def = cr.SorceryRiteDefinition;
+        IRiteActivationStrategy strategy = ResolveStrategy(def.SorceryType);
 
-        if (def.SorceryType == SorceryType.Theban && character.Humanity < def.Level)
-        {
-            throw new InvalidOperationException(
-                $"Theban Sorcery requires Humanity {def.Level} or higher to cast this miracle (character has Humanity {character.Humanity}).");
-        }
+        strategy.ValidateTraditionRules(character, def);
 
-        int traditionDots = GetTraditionDisciplineDots(character, def.SorceryType);
+        int traditionDots = strategy.GetTraditionDisciplineDots(character);
         if (traditionDots < def.Level)
         {
             throw new InvalidOperationException(
@@ -118,12 +114,7 @@ public class SorceryActivationService(
             throw new InvalidOperationException(ackResult.Error);
         }
 
-        if (request.ExtraVitae != 0 && def.SorceryType != SorceryType.Cruac)
-        {
-            throw new InvalidOperationException("Extra Vitae may only be spent on Crúac rituals.");
-        }
-
-        int extraVitae = def.SorceryType == SorceryType.Cruac ? Math.Clamp(request.ExtraVitae, 0, 5) : 0;
+        int extraVitae = strategy.ResolveExtraVitaeSpend(request);
 
         (int vitaeCost, int wpCost, int stainGain) = RiteRequirementValidator.AggregateInternalCosts(requirements);
 
@@ -190,8 +181,7 @@ public class SorceryActivationService(
             }
         }
 
-        bool necromancyDegenerationCheckRaised =
-            def.SorceryType == SorceryType.Necromancy && character.Humanity >= 7;
+        bool necromancyDegenerationCheckRaised = strategy.ShouldRaiseDegenerationCheck(character);
         if (necromancyDegenerationCheckRaised)
         {
             _domainEventDispatcher.Dispatch(
@@ -222,7 +212,7 @@ public class SorceryActivationService(
         int sympathyDice = await TryResolveRitualBloodSympathyBonusAsync(
             characterId,
             character,
-            def.SorceryType,
+            strategy,
             request.TargetCharacterId);
 
         dicePool += sympathyDice;
@@ -247,6 +237,16 @@ public class SorceryActivationService(
             minutesPerRoll,
             traditionDots,
             necromancyDegenerationCheckRaised);
+    }
+
+    private IRiteActivationStrategy ResolveStrategy(SorceryType type)
+    {
+        if (!_riteStrategies.TryGetValue(type, out IRiteActivationStrategy? strategy))
+        {
+            throw new InvalidOperationException($"No rite activation strategy registered for tradition {type}.");
+        }
+
+        return strategy;
     }
 
     /// <summary>
@@ -282,7 +282,7 @@ public class SorceryActivationService(
     private async Task<int> TryResolveRitualBloodSympathyBonusAsync(
         int ritualistCharacterId,
         Character ritualist,
-        SorceryType tradition,
+        IRiteActivationStrategy traditionStrategy,
         int? targetCharacterId)
     {
         if (targetCharacterId is not int tid || tid == ritualistCharacterId)
@@ -290,7 +290,7 @@ public class SorceryActivationService(
             return 0;
         }
 
-        if (tradition is not (SorceryType.Cruac or SorceryType.Theban or SorceryType.Necromancy))
+        if (traditionStrategy.Tradition is not (SorceryType.Cruac or SorceryType.Theban or SorceryType.Necromancy))
         {
             return 0;
         }
@@ -335,15 +335,6 @@ public class SorceryActivationService(
         }
 
         int baseBonus = BloodSympathyRules.RitualSympathyBonusThebanOrNecromancy(degree.Value);
-        return tradition == SorceryType.Cruac ? baseBonus * 2 : baseBonus;
+        return traditionStrategy.AdjustRitualBloodSympathyBonus(baseBonus);
     }
-
-    private int GetTraditionDisciplineDots(Character character, SorceryType type) =>
-        type switch
-        {
-            SorceryType.Cruac => character.GetDisciplineRating("Crúac"),
-            SorceryType.Theban => character.GetDisciplineRating("Theban Sorcery"),
-            SorceryType.Necromancy => character.GetDisciplineRating("Necromancy"),
-            _ => 0,
-        };
 }

@@ -1,12 +1,6 @@
 @page "/campaigns/{CampaignId:int}/encounter/{EncounterId:int}"
 @rendermode InteractiveServer
-@using System.Globalization
-@using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.RealTime
-@using RequiemNexus.Data.Models
-@using RequiemNexus.Data.RealTime
-@using RequiemNexus.Domain.Enums
-@using RequiemNexus.Domain.Models
 @using RequiemNexus.Web.Services
 @using System.Security.Claims
 @using System.Threading
@@ -26,15 +20,17 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject PersistentComponentState ApplicationState
 @inject ScreenReaderAnnouncer Announcer
+@inject IInitiativeTrackerDragState InitiativeTrackerDragState
 @using RequiemNexus.Web.Components.UI
+@using RequiemNexus.Web.Components.Pages.Campaigns.InitiativeParts
 @implements IAsyncDisposable
 
-<PageTitle>Initiative Tracker - Requiem Nexus</PageTitle>
+<PageTitle>Initiative Tracker — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     @if (_loading)
     {
-        <p><em>Loading encounter...</em></p>
+        <SkeletonLoader Variant="tracker" Count="2" />
     }
     else if (_accessDenied)
     {
@@ -54,371 +50,96 @@
     {
         <div class="initiative-page-grid">
         <div class="initiative-page-main">
-        <div class="campaign-header">
-            <div>
-                <h2>⚔️ @_encounter.Name</h2>
-                <span style="font-size:0.85em;color:var(--gothic-muted);">
-                    @if (_encounter.IsActive && !_encounter.IsDraft)
-                    {
-                        <text>Round @_encounter.CurrentRound · Active</text>
-                    }
-                    else if (_encounter.IsDraft)
-                    {
-                        <text>Draft — start from Encounter Manager to begin combat</text>
-                    }
-                    else if (_encounter.IsPaused)
-                    {
-                        <text>Paused — resume from Encounter Manager to continue combat</text>
-                    }
-                    else if (_encounter.ResolvedAt != null)
-                    {
-                        <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
-                    }
-                    else
-                    {
-                        <text>Inactive</text>
-                    }
-                </span>
-            </div>
-            <a href="/campaigns/@CampaignId/encounters" class="btn-rn-ghost">← Encounters</a>
-        </div>
-
-        @if (_isSt && _encounter.ResolvedAt == null && !_encounter.IsPaused)
-        {
-            <div class="card-rn" style="margin-bottom:1.5rem;">
-                <h3 style="margin-bottom:0.75rem;">Add Participant</h3>
-                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
-                    <div>
-                        <label style="font-size:0.8em;color:var(--gothic-muted);">Type</label>
-                        <select class="form-control" @bind="_addType" @bind:after="OnAddTypeChanged" style="min-width:140px;">
-                            <option value="character">Character</option>
-                            <option value="npc">NPC (name)</option>
-                            <option value="chronicle">Danse Macabre NPC</option>
-                        </select>
-                    </div>
-
-                    @if (_addType == "character")
-                    {
-                        <div style="flex:1;min-width:160px;">
-                            <label style="font-size:0.8em;color:var(--gothic-muted);">Character</label>
-                            <select class="form-control" @bind="_addCharacterId">
-                                <option value="0">-- Select character --</option>
-                                @foreach (Character c in _campaignCharacters)
-                                {
-                                    <option value="@c.Id">@c.Name</option>
-                                }
-                            </select>
-                        </div>
-                    }
-                    else if (_addType == "npc")
-                    {
-                        <div style="flex:1;min-width:160px;">
-                            <label style="font-size:0.8em;color:var(--gothic-muted);">NPC name <span aria-hidden="true">(required)</span></label>
-                            <input class="form-control" placeholder="NPC name…" required @bind="_addNpcName" />
-                        </div>
-                    }
-                    else
-                    {
-                        <div style="flex:1;min-width:200px;">
-                            <label style="font-size:0.8em;color:var(--gothic-muted);">Chronicle NPC</label>
-                            @if (_chronicleNpcs.Count == 0)
-                            {
-                                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">None yet — add NPCs in <a href="/campaigns/@CampaignId/danse-macabre">Danse Macabre</a>.</p>
-                            }
-                            else if (!ChronicleNpcsAvailableForEncounter.Any())
-                            {
-                                <p style="font-size:0.85em;color:var(--gothic-muted);margin:0;">All Danse Macabre NPCs for this chronicle are already in this encounter.</p>
-                            }
-                            else
-                            {
-                                <select class="form-control" value="@_addChronicleNpcId" @onchange="OnTrackerChronicleSelectChanged">
-                                    <option value="0">-- Select NPC --</option>
-                                    @foreach (ChronicleNpc npc in ChronicleNpcsAvailableForEncounter)
-                                    {
-                                        <option value="@npc.Id">@npc.Name@(string.IsNullOrEmpty(npc.Title) ? "" : $", {npc.Title}")</option>
-                                    }
-                                </select>
-                            }
-                        </div>
-                    }
-
-                    <div>
-                        <label style="font-size:0.8em;color:var(--gothic-muted);">Init Mod</label>
-                        <input type="number" class="form-control" style="width:80px;" @bind="_addInitMod" />
-                    </div>
-                    @if (_addType == "npc" || _addType == "chronicle")
-                    {
-                        <div>
-                            <label style="font-size:0.8em;color:var(--gothic-muted);">Health boxes</label>
-                            <input type="number" class="form-control" style="width:80px;" min="1" max="50" @bind="_addNpcHealthBoxes" />
-                        </div>
-                        <div>
-                            <label style="font-size:0.8em;color:var(--gothic-muted);">Willpower (max)</label>
-                            <input type="number" class="form-control" style="width:80px;" min="1" max="20" @bind="_addNpcMaxWillpower" />
-                        </div>
-                        @if (_addType == "chronicle" && _addChronicleTracksVitae)
-                        {
-                            <div>
-                                <label style="font-size:0.8em;color:var(--gothic-muted);">Vitae (max)</label>
-                                <input type="number" class="form-control" style="width:80px;" min="0" max="100" @bind="_addNpcMaxVitae" />
-                            </div>
-                        }
-                    }
-                    <div>
-                        <label style="font-size:0.8em;color:var(--gothic-muted);">Roll (1–10)</label>
-                        <input type="number" class="form-control" style="width:80px;" min="1" max="10" @bind="_addRoll" />
-                    </div>
-                    <button class="btn-rn-primary"
-                            disabled="@(!CanAddParticipant() || _busy)"
-                            @onclick="AddParticipant">
-                        Add
-                    </button>
-                </div>
-                @if (!string.IsNullOrEmpty(_addError))
+        <InitiativeEncounterPageHeader CampaignId="CampaignId" EncounterName="@_encounter.Name">
+            <StatusLine>
+                @if (_encounter.IsActive && !_encounter.IsDraft)
                 {
-                    <p class="text-danger" style="margin-top:0.5rem;">@_addError</p>
+                    <text>Round @_encounter.CurrentRound · Active</text>
                 }
-            </div>
-        }
-
-        @if (!SortedEntries.Any())
-        {
-            <div class="empty-state-rn">
-                <p>No participants yet. Add characters or NPCs above.</p>
-            </div>
-        }
-        else
-        {
-            <div style="margin-bottom:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
-                @if (_isSt && _encounter.IsActive && !_encounter.IsDraft)
+                else if (_encounter.IsDraft)
                 {
-                    <button class="btn-rn-primary"
-                            disabled="@_busy"
-                            @onclick="AdvanceTurn">
-                        ▶ Advance Turn
-                    </button>
-                    <button class="btn-rn-ghost"
-                            disabled="@_busy"
-                            @onclick="HoldTurn">
-                        ⏸ Hold action
-                    </button>
-                    <button class="btn-rn-ghost"
-                            disabled="@_busy"
-                            @onclick="ResolveEncounter">
-                        ✓ Resolve Encounter
-                    </button>
+                    <text>Draft — start from Encounter Manager to begin combat</text>
                 }
-                @if (!string.IsNullOrEmpty(_actionFeedback))
+                else if (_encounter.IsPaused)
                 {
-                    <span style="font-size:0.85em;color:var(--gothic-muted);">@_actionFeedback</span>
+                    <text>Paused — resume from Encounter Manager to continue combat</text>
                 }
-            </div>
-
-            <div class="initiative-list">
-                @foreach (InitiativeEntry entry in SortedEntries)
+                else if (_encounter.ResolvedAt != null)
                 {
-                    bool isCurrent = CurrentActor?.Id == entry.Id;
-                    string displayName = entry.Character?.Name ?? entry.NpcName ?? "Unknown";
-                    bool isNpc = entry.CharacterId == null;
-
-                    <div class="initiative-row @(isCurrent ? "initiative-current" : "") @(entry.HasActed ? "initiative-acted" : "") @(_isSt && _encounter.IsActive && !_encounter.IsDraft ? "draggable-row" : "")"
-                         draggable="@(_isSt && _encounter.IsActive && !_encounter.IsDraft ? "true" : "false")"
-                         @ondragstart="() => OnDragStart(entry)"
-                         @ondragover:preventDefault="true"
-                         @ondrop="() => OnDrop(entry)">
-                        
-                        <div class="initiative-order">@entry.Order</div>
-
-                        <div class="initiative-info">
-                            <span class="initiative-name">
-                                @if (isCurrent)
-                                {
-                                    <strong>▶ @displayName</strong>
-                                }
-                                else
-                                {
-                                    @displayName
-                                }
-                                @if (isNpc)
-                                {
-                                    <span class="badge-npc">NPC</span>
-                                }
-                            </span>
-                            
-                            @if (entry.Character != null && ShowPlayerHealth(entry))
-                            {
-                                <div class="mini-health-track">
-                                    @for (int i = 0; i < entry.Character.CalculatedMaxHealth; i++)
-                                    {
-                                        <span class="health-box-mini @GetDamageClass(entry.Character, i)"></span>
-                                    }
-                                </div>
-                            }
-                            @if (isNpc && _isSt)
-                            {
-                                <div class="initiative-npc-health">
-                                    <span class="initiative-npc-health-label">Health</span>
-                                    <HealthDamageTrackBoxes BoxCount="entry.NpcHealthBoxes"
-                                                            DamageTrack="@entry.NpcHealthDamage"
-                                                            ReadOnly="@(!CanStEditLaunchedNpcEncounter())"
-                                                            DamageTrackChanged="t => OnNpcHealthTrackChangedAsync(entry.Id, t)" />
-                                </div>
-                                @if (CanStEditLaunchedNpcEncounter())
-                                {
-                                    @if (entry.NpcMaxWillpower > 0)
-                                    {
-                                        <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
-                                            Willpower: <strong>@entry.NpcCurrentWillpower</strong> / @entry.NpcMaxWillpower
-                                        </div>
-                                        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendWill(entry.Id)">Spend</button>
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreWill(entry.Id)">Restore</button>
-                                        </div>
-                                    }
-                                    @if (entry.NpcMaxVitae > 0)
-                                    {
-                                        <div style="margin-top:0.35rem;font-size:0.78em;color:var(--gothic-muted);">
-                                            Vitae: <strong>@entry.NpcCurrentVitae</strong> / @entry.NpcMaxVitae
-                                        </div>
-                                        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.2rem;">
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcSpendVitae(entry.Id)">Spend vitae</button>
-                                            <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => NpcRestoreVitae(entry.Id)">Restore vitae</button>
-                                        </div>
-                                    }
-                                }
-                            }
-
-                            <span class="initiative-total">
-                                Initiative: <strong>@entry.Total</strong>
-                                <span style="font-size:0.8em;color:var(--gothic-muted);">(@entry.InitiativeMod + @entry.RollResult)</span>
-                            </span>
-
-                            @if (!_isSt && _encounter.IsActive && !_encounter.IsDraft && entry.CharacterId is int ownedPid && PlayerOwnedCharacterId == ownedPid)
-                            {
-                                <div style="margin-top:0.35rem;">
-                                    <button type="button"
-                                            class="btn-rn-ghost"
-                                            style="font-size:0.75em;"
-                                            disabled="@_busy"
-                                            @onclick="() => OpenPlayerWeaponDamageModal(ownedPid)">
-                                        Weapon damage
-                                    </button>
-                                </div>
-                            }
-                        </div>
-
-                        <div style="display: flex; align-items: center; gap: 1.5rem;">
-                            @if (_isSt && _encounter.IsActive && !_encounter.IsDraft && entry.CharacterId.HasValue)
-                            {
-                                <div class="initiative-tilts">
-                                    @if (_activeTilts.TryGetValue(entry.CharacterId.Value, out List<CharacterTilt>? tilts) && tilts.Any())
-                                    {
-                                        @foreach (CharacterTilt tilt in tilts)
-                                        {
-                                            <span class="tilt-badge">
-                                                @(tilt.CustomName ?? tilt.TiltType.ToString())
-                                                <button class="tilt-remove-btn"
-                                                        disabled="@_busy"
-                                                        @onclick="() => RemoveTilt(tilt.Id)">
-                                                    ×
-                                                </button>
-                                            </span>
-                                        }
-                                    }
-
-                                    <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;margin-top:0.3rem;">
-                                        <select class="form-control"
-                                                style="font-size:0.8em;"
-                                                @bind="_tiltSelections[entry.CharacterId.Value]">
-                                            @foreach (TiltType t in Enum.GetValues<TiltType>())
-                                            {
-                                                <option value="@t">@t</option>
-                                            }
-                                        </select>
-                                        <button class="btn-rn-ghost"
-                                                style="font-size:0.8em;"
-                                                disabled="@_busy"
-                                                @onclick="() => ApplyTilt(entry.CharacterId.Value)">
-                                            + Tilt
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-
-                            @if (_isSt && _encounter.IsActive && !_encounter.IsDraft)
-                            {
-                                @if (isNpc)
-                                {
-                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcReveal(entry)">
-                                        @(entry.IsRevealed ? "🙈 Hide" : "👁️ Reveal")
-                                    </button>
-                                    <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ToggleNpcRoll(entry.Id)">
-                                        @(_npcRollEntryId == entry.Id ? "Hide roll" : "Roll")
-                                    </button>
-                                }
-                                @if (entry.IsHeld)
-                                {
-                                    <button type="button" class="btn-rn-primary" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ReleaseHeld(entry.Id)">Release</button>
-                                }
-                                @if (isNpc)
-                                {
-                                    @if (_defeatConfirmEntryId == entry.Id)
-                                    {
-                                        <div style="display:flex;flex-direction:column;gap:0.35rem;align-items:flex-start;max-width:18rem;">
-                                            <span style="font-size:0.72em;color:var(--gothic-muted);">Remove from initiative only. This does not remove the NPC from the chronicle (Danse Macabre).</span>
-                                            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                                                <button type="button" class="btn-rn-primary" style="font-size:0.7em;" disabled="@_busy" @onclick="() => ConfirmDefeatNpc(entry.Id)">Confirm</button>
-                                                <button type="button" class="btn-rn-ghost" style="font-size:0.7em;" disabled="@_busy" @onclick="CancelDefeatConfirm">Cancel</button>
-                                            </div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <button type="button" class="btn-rn-ghost" style="font-size:0.75em;" disabled="@_busy" @onclick="() => _defeatConfirmEntryId = entry.Id">Defeated / out of fight</button>
-                                    }
-                                }
-                                else
-                                {
-                                    @if (_isSt && _encounter.IsActive && !_encounter.IsDraft && entry.CharacterId.HasValue)
-                                    {
-                                        <button type="button"
-                                                class="btn-rn-ghost"
-                                                style="font-size:0.75em;align-self:flex-start;"
-                                                disabled="@_busy"
-                                                @onclick="() => OpenMeleeAttackModal(entry.CharacterId!.Value)">
-                                            Attack
-                                        </button>
-                                    }
-                                    <button type="button" class="btn-rn-ghost"
-                                            style="font-size:0.75em;align-self:flex-start;"
-                                            disabled="@_busy"
-                                            @onclick="() => RemoveEntry(entry.Id)">
-                                        Remove
-                                    </button>
-                                }
-                            }
-                        </div>
-                    </div>
-                    @if (_npcRollEntryId == entry.Id && isNpc && _isSt && _encounter.IsActive && !_encounter.IsDraft)
-                    {
-                        <NpcEncounterRollPanel InitiativeEntryId="entry.Id"
-                                               HasChronicleNpc="entry.ChronicleNpcId.HasValue"
-                                               AttributesJson="@(entry.ChronicleNpc?.AttributesJson ?? "{}")"
-                                               SkillsJson="@(entry.ChronicleNpc?.SkillsJson ?? "{}")"
-                                               OnClosed="CloseNpcRollPanelAsync" />
-                    }
+                    <text>Resolved @_encounter.ResolvedAt?.ToLocalTime():g</text>
                 }
-            </div>
-        }
+                else
+                {
+                    <text>Inactive</text>
+                }
+            </StatusLine>
+        </InitiativeEncounterPageHeader>
+
+        <InitiativeAddParticipantPanel Visible="@(_isSt && _encounter.ResolvedAt == null && !_encounter.IsPaused)"
+                                       CampaignId="CampaignId"
+                                       @bind-AddType="_addType"
+                                       @bind-AddCharacterId="_addCharacterId"
+                                       @bind-AddNpcName="_addNpcName"
+                                       @bind-AddChronicleNpcId="_addChronicleNpcId"
+                                       @bind-AddInitMod="_addInitMod"
+                                       @bind-AddRoll="_addRoll"
+                                       @bind-AddNpcHealthBoxes="_addNpcHealthBoxes"
+                                       @bind-AddNpcMaxWillpower="_addNpcMaxWillpower"
+                                       @bind-AddNpcMaxVitae="_addNpcMaxVitae"
+                                       @bind-AddChronicleTracksVitae="_addChronicleTracksVitae"
+                                       CampaignCharacters="_campaignCharacters"
+                                       ChronicleNpcsAvailableForEncounter="ChronicleNpcsAvailableForEncounter"
+                                       ChronicleNpcTotalCount="_chronicleNpcs.Count"
+                                       CanAdd="CanAddParticipant()"
+                                       AddError="_addError"
+                                       Busy="_busy"
+                                       OnAddTypeAfterChanged="OnAddTypeChanged"
+                                       OnChronicleSelectChanged="OnTrackerChronicleSelectChanged"
+                                       OnAdd="AddParticipant" />
+
+        <InitiativeOrderList Entries="SortedEntries"
+                             CurrentActor="CurrentActor"
+                             IsStoryteller="_isSt"
+                             EncounterIsActive="_encounter.IsActive"
+                             EncounterIsDraft="_encounter.IsDraft"
+                             Busy="_busy"
+                             PlayerOwnedCharacterId="PlayerOwnedCharacterId"
+                             ActionFeedback="_actionFeedback"
+                             ShowTurnToolbar="@(_isSt && _encounter.IsActive && !_encounter.IsDraft)"
+                             ActiveTilts="_activeTilts"
+                             TiltSelections="_tiltSelections"
+                             DefeatConfirmEntryId="_defeatConfirmEntryId"
+                             NpcRollEntryId="_npcRollEntryId"
+                             CanStEditLaunchedNpcEncounter="CanStEditLaunchedNpcEncounter()"
+                             ShowPlayerHealth="ShowPlayerHealth"
+                             DamageBoxClass="GetDamageClass"
+                             OnAdvanceTurn="AdvanceTurn"
+                             OnHoldTurn="HoldTurn"
+                             OnResolveEncounter="ResolveEncounter"
+                             OnDragStart="OnDragStart"
+                             OnDrop="OnDrop"
+                             OnNpcHealthTrackChanged="OnNpcHealthTrackFromListAsync"
+                             OnNpcSpendWill="NpcSpendWill"
+                             OnNpcRestoreWill="NpcRestoreWill"
+                             OnNpcSpendVitae="NpcSpendVitae"
+                             OnNpcRestoreVitae="NpcRestoreVitae"
+                             OnOpenPlayerWeaponDamage="OpenPlayerWeaponDamageFromListAsync"
+                             OnRemoveTilt="RemoveTilt"
+                             OnApplyTilt="ApplyTilt"
+                             OnToggleNpcReveal="ToggleNpcReveal"
+                             OnToggleNpcRoll="ToggleNpcRoll"
+                             OnReleaseHeld="ReleaseHeld"
+                             OnConfirmDefeatNpc="ConfirmDefeatNpc"
+                             OnCancelDefeatConfirm="CancelDefeatConfirm"
+                             OnRequestDefeatConfirm="RequestDefeatConfirmAsync"
+                             OnOpenMeleeAttack="OpenMeleeAttackFromListAsync"
+                             OnRemoveEntry="RemoveEntry"
+                             OnNpcRollClosed="CloseNpcRollPanelAsync"
+                             OnTiltSelectionChanged="OnTiltSelectionFromListAsync" />
         </div>
         @if (_isSt)
         {
-            <aside class="initiative-blood-log-sidebar" aria-label="Blood Logs">
-                <h3 class="initiative-blood-log-title">Blood Logs</h3>
-                <div class="initiative-blood-log-feed">
-                    <RollHistoryFeed />
-                </div>
-            </aside>
+            <InitiativeBloodLogSidebar />
         }
         </div>
     }

@@ -9,16 +9,18 @@
 @using RequiemNexus.Web.Helpers
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ICharacterService CharacterService
+@inject ICharacterReader CharacterReader
 @inject ITraitResolver TraitResolver
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<PageTitle>@(_character?.Name ?? "Character") - View Only - Requiem Nexus</PageTitle>
+<PageTitle>@(!_loaded ? "View-only sheet" : _character?.Name is { } name ? name : "View-only sheet") — View only — Requiem Nexus</PageTitle>
 
 @if (_character == null && !_loaded)
 {
-    <p><em>Loading character...</em></p>
+    <div class="character-sheet fade-in">
+        <SkeletonLoader Variant="sheet" Count="4" />
+    </div>
 }
 else if (_character == null)
 {
@@ -325,7 +327,7 @@ else
 
         if (!string.IsNullOrEmpty(_currentUserId))
         {
-            (Character Character, bool IsOwner)? result = await CharacterService.GetCharacterWithAccessCheckAsync(CharacterId, _currentUserId);
+            (Character Character, bool IsOwner)? result = await CharacterReader.GetCharacterWithAccessCheckAsync(CharacterId, _currentUserId);
             _character = result?.Character;
         }
 

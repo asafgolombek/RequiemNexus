@@ -1,0 +1,257 @@
+﻿/* ---------- Shared Button Styles (Grimoire) ----------
+   DEPRECATED — prefer .btn-rn-* on new markup; legacy classes remain as aliases (UI_UX_FACELIFT Track 5.1).
+   .btn-primary       → .btn-rn-primary
+   .btn-primary-rn    → .btn-rn-primary
+   .btn-secondary     → .btn-rn-secondary
+   .btn-secondary-rn  → .btn-rn-secondary
+   .btn-ghost         → .btn-rn-ghost
+   .btn-danger-rn     → .btn-rn-danger
+   .btn-danger-hold   → .btn-rn-danger-hold (long-press confirm)
+   Default height ≈ md (36px). Stack .btn-rn-sm (28px) or .btn-rn-lg (44px) for sizing.
+*/
+.btn-primary,
+.btn-primary-rn,
+.btn-rn-primary {
+  background: linear-gradient(135deg, var(--crimson) 0%, #6B0000 100%);
+  border: 1px solid var(--crimson-glow);
+  color: var(--bone-white);
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-primary:hover,
+.btn-primary-rn:hover,
+.btn-rn-primary:hover {
+  background: linear-gradient(135deg, var(--crimson-glow) 0%, var(--crimson) 100%);
+  box-shadow: 0 0 40px rgba(196,30,58,.6), 0 0 80px rgba(139,0,0,.3), inset 0 0 15px rgba(245,240,232,.1);
+  transform: translateY(-2px);
+  color: var(--bone-white);
+}
+.btn-primary:active,
+.btn-primary-rn:active,
+.btn-rn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 0 20px rgba(196,30,58,.4), inset 0 0 10px rgba(196,30,58,.3);
+}
+
+.btn-secondary,
+.btn-secondary-rn,
+.btn-rn-secondary {
+  background: transparent;
+  border: 1px solid var(--muted-gray);
+  color: var(--bone-white);
+  transition: all .3s ease;
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-secondary:hover,
+.btn-secondary-rn:hover,
+.btn-rn-secondary:hover {
+  border-color: var(--bone-white);
+  background: rgba(245,240,232,.05);
+  color: var(--bone-white);
+}
+
+.btn-ghost,
+.btn-rn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--bone-white);
+  transition: all .3s ease;
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-ghost:hover,
+.btn-rn-ghost:hover {
+  background: rgba(245,240,232,.08);
+  border-color: rgba(245,240,232,.1);
+  color: var(--bone-white);
+}
+
+/* Destructive (immediate action — modal confirm or explicit flow) */
+.btn-danger-rn,
+.btn-rn-danger {
+  background: transparent;
+  border: 1px solid var(--crimson-glow);
+  color: var(--bone-white);
+  transition: all .3s ease;
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-danger-rn:hover,
+.btn-rn-danger:hover {
+  background: var(--color-danger-dim);
+  border-color: var(--crimson-glow);
+  color: var(--bone-white);
+  box-shadow: 0 0 16px rgba(196, 30, 58, 0.25);
+}
+
+/* EXPERIMENTAL gold — WCAG on surfaces still pending (design-tokens / UI_UX_FACELIFT Q10) */
+.btn-rn-gold {
+  background: linear-gradient(135deg, var(--color-gold-dim) 0%, var(--color-gold) 100%);
+  border: 1px solid var(--color-gold);
+  color: var(--deep-black);
+  transition: all .3s ease;
+  padding: 8px 16px;
+  min-height: 36px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-rn-gold:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.35);
+  color: var(--deep-black);
+}
+
+/* Size modifiers */
+.btn-primary.btn-rn-sm,
+.btn-primary-rn.btn-rn-sm,
+.btn-rn-primary.btn-rn-sm,
+.btn-secondary.btn-rn-sm,
+.btn-secondary-rn.btn-rn-sm,
+.btn-rn-secondary.btn-rn-sm,
+.btn-ghost.btn-rn-sm,
+.btn-rn-ghost.btn-rn-sm,
+.btn-danger-rn.btn-rn-sm,
+.btn-rn-danger.btn-rn-sm,
+.btn-rn-gold.btn-rn-sm,
+.btn-login.btn-rn-sm {
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: var(--text-xs);
+}
+
+.btn-primary.btn-rn-lg,
+.btn-primary-rn.btn-rn-lg,
+.btn-rn-primary.btn-rn-lg,
+.btn-secondary.btn-rn-lg,
+.btn-secondary-rn.btn-rn-lg,
+.btn-rn-secondary.btn-rn-lg,
+.btn-ghost.btn-rn-lg,
+.btn-rn-ghost.btn-rn-lg,
+.btn-danger-rn.btn-rn-lg,
+.btn-rn-danger.btn-rn-lg,
+.btn-rn-gold.btn-rn-lg,
+.btn-login.btn-rn-lg {
+  min-height: 44px;
+  padding: 10px 20px;
+  font-size: var(--text-sm);
+}
+
+/* Bootstrap .btn-sm stacked on Grimoire buttons — treat as compact (Track 5.1 sm) */
+.btn-primary.btn-sm,
+.btn-primary-rn.btn-sm,
+.btn-rn-primary.btn-sm,
+.btn-secondary.btn-sm,
+.btn-secondary-rn.btn-sm,
+.btn-rn-secondary.btn-sm,
+.btn-ghost.btn-sm,
+.btn-rn-ghost.btn-sm,
+.btn-danger-rn.btn-sm,
+.btn-rn-danger.btn-sm,
+.btn-rn-gold.btn-sm,
+.btn-login.btn-sm {
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:hover,
+  .btn-primary-rn:hover,
+  .btn-rn-primary:hover,
+  .btn-rn-gold:hover {
+    transform: none;
+  }
+}
+
+/* ── UI Elements ── */
+.dot {
+  width:16px; height:16px; border-radius:50%; border:2px solid var(--bone-white); transition:all .2s ease; cursor:pointer;
+}
+@keyframes bloodSpread { 0%{opacity:.4} 50%{opacity:.7} 100%{opacity:1} }
+.dot.filled { background:var(--crimson); border-color:var(--crimson-glow); box-shadow:0 0 12px rgba(196,30,58,.8); animation:bloodSpread .2s ease-out; }
+.dot:hover  { border-color:var(--crimson-glow); transform:scale(1.1); }
+
+.card-grimoire {
+  background:linear-gradient(145deg, var(--ash-gray) 0%, var(--charcoal) 100%);
+  border:1px solid var(--muted-gray);
+  border-radius:4px;
+  transition:all .3s ease;
+}
+.card-grimoire:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 0, 0, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.4s ease;
+    border-color: var(--crimson);
+}
+.card-grimoire.active {
+  border-color:var(--crimson-glow);
+  box-shadow:0 0 50px rgba(196,30,58,.5),0 0 100px rgba(139,0,0,.3),inset 0 0 30px rgba(196,30,58,.1);
+}
+
+/* Retain backward compat */
+.card-rn {
+  background:linear-gradient(145deg, var(--ash-gray) 0%, var(--charcoal) 100%);
+  border:1px solid var(--muted-gray);
+  border-radius:4px;
+  transition:all .3s ease;
+  padding: 1.5rem;
+}
+.card-rn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 0, 0, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.4s ease;
+    border-color: var(--crimson);
+}
+
+.input-grimoire {
+  background:var(--charcoal); border:1px solid var(--muted-gray); color:var(--bone-white); transition:all .3s ease;
+}
+.input-grimoire:focus { outline:none; border-color:var(--crimson); box-shadow:0 0 15px rgba(139,0,0,.2); }
+.input-grimoire::placeholder { color:var(--muted-gray); }
+
+.notification { background:var(--ash-gray); border-left:3px solid var(--crimson); animation:slideIn .3s ease-out; color: var(--bone-white); }
+.notification-error   { border-left-color:var(--crimson-glow); background:linear-gradient(90deg,rgba(139,0,0,.2) 0%,var(--ash-gray) 100%); }
+.notification-warning { border-left-color:var(--warning-amber); background:linear-gradient(90deg,rgba(184,134,11,.15) 0%,var(--ash-gray) 100%); }
+.notification-success { border-left-color:var(--success-emerald); background:linear-gradient(90deg,rgba(46,90,58,.2) 0%,var(--ash-gray) 100%); }
+
+@keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }

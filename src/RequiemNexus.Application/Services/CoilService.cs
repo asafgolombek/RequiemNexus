@@ -19,19 +19,20 @@ public class CoilService(
     IAuthorizationHelper authHelper,
     IBeatLedgerService beatLedger,
     ISessionService sessionService,
+    IReferenceDataCache referenceData,
     ILogger<CoilService> logger) : ICoilService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly IBeatLedgerService _beatLedger = beatLedger;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
     private readonly ILogger<CoilService> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<List<ScaleSummaryDto>> GetScalesAsync()
+    public Task<List<ScaleSummaryDto>> GetScalesAsync()
     {
-        return await _dbContext.ScaleDefinitions
-            .AsNoTracking()
+        List<ScaleSummaryDto> result = _referenceData.ScaleDefinitions
             .OrderBy(s => s.Name)
             .Select(s => new ScaleSummaryDto
             {
@@ -41,7 +42,8 @@ public class CoilService(
                 MysteryName = s.MysteryName,
                 MaxLevel = s.MaxLevel,
             })
-            .ToListAsync();
+            .ToList();
+        return Task.FromResult(result);
     }
 
     /// <inheritdoc />
@@ -53,7 +55,7 @@ public class CoilService(
             .AsNoTracking()
             .Include(c => c.Covenant)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .Include(c => c.Coils).ThenInclude(cc => cc.CoilDefinition)
+            .Include(c => c.Coils)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
@@ -61,6 +63,8 @@ public class CoilService(
         {
             return [];
         }
+
+        IReadOnlyDictionary<int, int> coilIdToScaleId = CoilIdToScaleIdMap();
 
         var learnedOrPendingCoilIds = character.Coils
             .Where(cc => cc.Status == CoilLearnStatus.Approved || cc.Status == CoilLearnStatus.Pending)
@@ -74,12 +78,10 @@ public class CoilService(
 
         int ordoStatusDots = CoilOrdoEligibility.GetOrdoStatusDots(character);
 
-        var allCoils = await _dbContext.CoilDefinitions
-            .AsNoTracking()
-            .Include(c => c.Scale)
+        List<CoilDefinition> allCoils = _referenceData.CoilDefinitions
             .OrderBy(c => c.ScaleId)
             .ThenBy(c => c.Level)
-            .ToListAsync();
+            .ToList();
 
         var result = new List<CoilSummaryDto>();
         foreach (var coil in allCoils)
@@ -100,8 +102,10 @@ public class CoilService(
             // Ordo Status cap for non-chosen Coils
             if (!isChosenMystery && character.ChosenMysteryScaleId.HasValue)
             {
-                int existingNonChosenDots = character.Coils
-                    .Count(cc => cc.Status == CoilLearnStatus.Approved && cc.CoilDefinition?.ScaleId != character.ChosenMysteryScaleId);
+                int existingNonChosenDots = CountApprovedNonChosenCoilDots(
+                    character,
+                    coilIdToScaleId,
+                    character.ChosenMysteryScaleId);
 
                 if (existingNonChosenDots >= ordoStatusDots)
                 {
@@ -135,7 +139,7 @@ public class CoilService(
         var character = await _dbContext.Characters
             .Include(c => c.Covenant)
             .Include(c => c.Merits).ThenInclude(m => m.Merit)
-            .Include(c => c.Coils).ThenInclude(cc => cc.CoilDefinition)
+            .Include(c => c.Coils)
             .FirstOrDefaultAsync(c => c.Id == characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
@@ -149,9 +153,10 @@ public class CoilService(
             throw new InvalidOperationException("Only Ordo Dracul members can purchase Coils.");
         }
 
-        var coil = await _dbContext.CoilDefinitions
-            .Include(c => c.Scale)
-            .FirstOrDefaultAsync(c => c.Id == coilDefinitionId)
+        IReadOnlyDictionary<int, int> coilIdToScaleId = CoilIdToScaleIdMap();
+
+        CoilDefinition coil = _referenceData.CoilDefinitions
+            .FirstOrDefault(c => c.Id == coilDefinitionId)
             ?? throw new InvalidOperationException($"Coil {coilDefinitionId} not found.");
 
         // Prerequisite chain check
@@ -171,8 +176,10 @@ public class CoilService(
         if (!isChosenMystery && character.ChosenMysteryScaleId.HasValue)
         {
             int ordoStatusDots = CoilOrdoEligibility.GetOrdoStatusDots(character);
-            int existingNonChosenDots = character.Coils
-                .Count(cc => cc.Status == CoilLearnStatus.Approved && cc.CoilDefinition?.ScaleId != character.ChosenMysteryScaleId);
+            int existingNonChosenDots = CountApprovedNonChosenCoilDots(
+                character,
+                coilIdToScaleId,
+                character.ChosenMysteryScaleId);
 
             if (existingNonChosenDots >= ordoStatusDots)
             {
@@ -391,7 +398,7 @@ public class CoilService(
             throw new InvalidOperationException("A Chosen Mystery selection is already pending approval.");
         }
 
-        var scale = await _dbContext.ScaleDefinitions.FindAsync(scaleId)
+        ScaleDefinition scale = _referenceData.ScaleDefinitions.FirstOrDefault(s => s.Id == scaleId)
             ?? throw new InvalidOperationException($"Scale {scaleId} not found.");
 
         character.PendingChosenMysteryScaleId = scaleId;
@@ -519,4 +526,43 @@ public class CoilService(
 
         await _sessionService.BroadcastCharacterUpdateAsync(characterId);
     }
+
+    /// <summary>
+    /// Counts approved coils whose scale differs from the chosen mystery (Ordo Status cap input).
+    /// Matches prior navigation-based semantics when scale is unknown in cache.
+    /// </summary>
+    private static int CountApprovedNonChosenCoilDots(
+        Character character,
+        IReadOnlyDictionary<int, int> coilIdToScaleId,
+        int? chosenMysteryScaleId)
+    {
+        if (!chosenMysteryScaleId.HasValue)
+        {
+            return 0;
+        }
+
+        int chosen = chosenMysteryScaleId.Value;
+        int count = 0;
+        foreach (CharacterCoil cc in character.Coils)
+        {
+            if (cc.Status != CoilLearnStatus.Approved)
+            {
+                continue;
+            }
+
+            if (!coilIdToScaleId.TryGetValue(cc.CoilDefinitionId, out int scaleId) || scaleId != chosen)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Maps coil definition id to scale id using reference data so eligibility queries avoid
+    /// loading <see cref="CoilDefinition"/> rows for every <see cref="CharacterCoil"/>.
+    /// </summary>
+    private IReadOnlyDictionary<int, int> CoilIdToScaleIdMap() =>
+        _referenceData.CoilDefinitions.ToDictionary(c => c.Id, c => c.ScaleId);
 }

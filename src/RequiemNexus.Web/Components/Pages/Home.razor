@@ -6,13 +6,13 @@
 @using RequiemNexus.Application.Contracts
 @using RequiemNexus.Application.RealTime
 @using RequiemNexus.Web.Components.UI
-@inject ICharacterService CharacterService
+@inject ICharacterReader CharacterReader
 @inject ICampaignService CampaignService
 @inject ISessionService SessionService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<Home> Logger
 
-<PageTitle>Home - Requiem Nexus</PageTitle>
+<PageTitle>Home — Requiem Nexus</PageTitle>
 
 <div class="page-container fade-in">
     <main class="dashboard-content">
@@ -108,7 +108,7 @@
 
         try
         {
-            var charactersTask = CharacterService.GetCharactersByUserIdAsync(userId);
+            var charactersTask = CharacterReader.GetCharactersByUserIdAsync(userId);
             var campaignsTask = CampaignService.GetCampaignsByUserIdAsync(userId);
             await Task.WhenAll(charactersTask, campaignsTask);
 

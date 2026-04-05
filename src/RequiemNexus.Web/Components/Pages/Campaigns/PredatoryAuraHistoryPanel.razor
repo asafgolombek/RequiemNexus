@@ -9,7 +9,9 @@
         </summary>
         @if (_loading)
         {
-            <p class="text-small text-muted-rn" style="margin-top:0.65rem;"><em>Loading…</em></p>
+            <div style="margin-top:0.65rem;">
+                <SkeletonLoader Variant="panel" Count="4" />
+            </div>
         }
         else if (!_rows.Any())
         {

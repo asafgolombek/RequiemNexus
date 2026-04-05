@@ -60,6 +60,7 @@ public class GhoulManagementServiceTests
             auth ?? CreatePermissiveAuthMock().Object,
             new RelationshipWebMetrics(_meterFactory.Value),
             session,
+            ReferenceDataCacheTestDoubles.EmptyButInitialized(),
             NullLogger<GhoulManagementService>.Instance);
     }
 

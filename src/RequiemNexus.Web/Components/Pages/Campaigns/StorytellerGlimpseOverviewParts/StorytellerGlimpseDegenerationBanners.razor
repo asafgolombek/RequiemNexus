@@ -1,0 +1,38 @@
+@using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Web.Helpers
+
+@if (Alerts.Count > 0)
+{
+    <div class="degeneration-glimpse-banners" role="region" aria-label="Pending degeneration checks">
+        @foreach (KeyValuePair<int, (string Name, int Humanity, int Resolve)> kv in Alerts.OrderBy(x => x.Value.Name))
+        {
+            <div class="degeneration-glimpse-banner card-rn alert-rn alert-warning"
+                 role="button"
+                 tabindex="0"
+                 @onclick="() => OnOpenRoll.InvokeAsync(kv.Key)"
+                 @onkeydown="e => HandleBannerKeyAsync(e, kv.Key)">
+                <strong>@kv.Value.Name</strong> must roll degeneration (@DegenerationRollFormat.PoolHint(kv.Value.Humanity, kv.Value.Resolve)). Open the roll confirmation (Storyteller cannot dismiss without rolling).
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Pending degeneration alerts keyed by character id.</summary>
+    [Parameter]
+    public IReadOnlyDictionary<int, (string Name, int Humanity, int Resolve)> Alerts { get; set; } =
+        new Dictionary<int, (string Name, int Humanity, int Resolve)>(capacity: 0);
+
+    [Parameter]
+    public EventCallback<int> OnOpenRoll { get; set; }
+
+    private Task HandleBannerKeyAsync(KeyboardEventArgs e, int characterId)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            return OnOpenRoll.InvokeAsync(characterId);
+        }
+
+        return Task.CompletedTask;
+    }
+}

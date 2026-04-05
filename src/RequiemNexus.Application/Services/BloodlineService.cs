@@ -18,11 +18,13 @@ public class BloodlineService(
     ApplicationDbContext dbContext,
     IAuthorizationHelper authHelper,
     ISessionService sessionService,
+    IReferenceDataCache referenceData,
     ILogger<BloodlineService> logger) : IBloodlineService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
     private readonly ILogger<BloodlineService> _logger = logger;
 
     /// <inheritdoc />
@@ -46,12 +48,10 @@ public class BloodlineService(
             return [];
         }
 
-        List<BloodlineDefinition> candidates = await _dbContext.BloodlineDefinitions
-            .AsNoTracking()
-            .Include(b => b.AllowedParentClans)
+        List<BloodlineDefinition> candidates = _referenceData.BloodlineDefinitions
             .Where(b => b.AllowedParentClans.Any(bc => bc.ClanId == character.ClanId.Value)
                 && character.BloodPotency >= b.PrerequisiteBloodPotency)
-            .ToListAsync();
+            .ToList();
 
         var result = new List<BloodlineSummaryDto>();
         foreach (BloodlineDefinition b in candidates)
@@ -102,9 +102,8 @@ public class BloodlineService(
             throw new InvalidOperationException("Character already has a pending bloodline application.");
         }
 
-        BloodlineDefinition? bloodline = await _dbContext.BloodlineDefinitions
-            .Include(b => b.AllowedParentClans)
-            .FirstOrDefaultAsync(b => b.Id == bloodlineDefinitionId)
+        BloodlineDefinition? bloodline = _referenceData.BloodlineDefinitions
+            .FirstOrDefault(b => b.Id == bloodlineDefinitionId)
             ?? throw new InvalidOperationException($"Bloodline {bloodlineDefinitionId} not found.");
 
         IReadOnlyList<int> allowedClanIds = bloodline.AllowedParentClans.Select(bc => bc.ClanId).ToList();

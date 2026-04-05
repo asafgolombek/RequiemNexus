@@ -1,0 +1,9 @@
+<div class="glimpse-overview-root">
+    @ChildContent
+</div>
+
+@code {
+    /// <summary>Markup for the Storyteller Glimpse overview tab (supplied by the parent page).</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

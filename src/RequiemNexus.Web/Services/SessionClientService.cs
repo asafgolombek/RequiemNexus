@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
 using RequiemNexus.Data.RealTime;
@@ -13,8 +14,26 @@ namespace RequiemNexus.Web.Services;
 /// Client-side service for interacting with the real-time SessionHub.
 /// Injected into Blazor components to handle broadcasts and invoke hub methods.
 /// </summary>
-public class SessionClientService(NavigationManager navManager, ToastService toastService) : IAsyncDisposable
+public class SessionClientService(
+    NavigationManager navManager,
+    ToastService toastService,
+    ILogger<SessionClientService> logger) : IAsyncDisposable, ISessionEventBus
 {
+    private readonly object _handlerLock = new();
+
+    private readonly List<Action<IEnumerable<PlayerPresenceDto>>> _presenceHandlers = [];
+    private readonly List<Action<DiceRollResultDto>> _diceRollHandlers = [];
+    private readonly List<Action<IEnumerable<DiceRollResultDto>>> _rollHistoryHandlers = [];
+    private readonly List<Action<CharacterUpdateDto>> _characterUpdateHandlers = [];
+    private readonly List<Action<int, string>> _bloodlineApprovedHandlers = [];
+    private readonly List<Action<IEnumerable<InitiativeEntryDto>>> _initiativeHandlers = [];
+    private readonly List<Action<ConditionNotificationDto>> _conditionNotificationHandlers = [];
+    private readonly List<Action<ChronicleUpdateDto>> _chronicleHandlers = [];
+    private readonly List<Action<SocialManeuverUpdateDto>> _socialManeuverHandlers = [];
+    private readonly List<Action<RelationshipUpdateDto>> _relationshipHandlers = [];
+    private readonly List<Action> _sessionStartedHandlers = [];
+    private readonly List<Action<string>> _sessionEndedHandlers = [];
+
     private HubConnection? _hubConnection;
     private int? _currentChronicleId;
     private int? _currentCharacterId;
@@ -22,31 +41,55 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
     private CancellationTokenSource? _stopCts;
     private bool? _isSessionActiveCache;
 
-    public event Action<IEnumerable<PlayerPresenceDto>>? PresenceUpdated;
-
-    public event Action<DiceRollResultDto>? DiceRollReceived;
-
-    public event Action<IEnumerable<DiceRollResultDto>>? RollHistoryReceived;
-
-    public event Action<CharacterUpdateDto>? CharacterUpdated;
-
-    public event Action<int, string>? BloodlineApproved;
-
-    public event Action<IEnumerable<InitiativeEntryDto>>? InitiativeUpdated;
-
-    public event Action<ConditionNotificationDto>? ConditionNotificationReceived;
-
-    public event Action<ChronicleUpdateDto>? ChronicleUpdated;
-
-    public event Action<SocialManeuverUpdateDto>? SocialManeuverUpdated;
-
-    public event Action<RelationshipUpdateDto>? RelationshipUpdated;
-
-    public event Action? SessionStarted;
-
-    public event Action<string>? SessionEnded;
-
     public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
+
+    /// <inheritdoc />
+    public IDisposable SubscribePresenceUpdated(Action<IEnumerable<PlayerPresenceDto>> handler) =>
+        Subscribe(_presenceHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeDiceRollReceived(Action<DiceRollResultDto> handler) =>
+        Subscribe(_diceRollHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeRollHistoryReceived(Action<IEnumerable<DiceRollResultDto>> handler) =>
+        Subscribe(_rollHistoryHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeCharacterUpdated(Action<CharacterUpdateDto> handler) =>
+        Subscribe(_characterUpdateHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeBloodlineApproved(Action<int, string> handler) =>
+        Subscribe(_bloodlineApprovedHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeInitiativeUpdated(Action<IEnumerable<InitiativeEntryDto>> handler) =>
+        Subscribe(_initiativeHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeConditionNotificationReceived(Action<ConditionNotificationDto> handler) =>
+        Subscribe(_conditionNotificationHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeChronicleUpdated(Action<ChronicleUpdateDto> handler) =>
+        Subscribe(_chronicleHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeSocialManeuverUpdated(Action<SocialManeuverUpdateDto> handler) =>
+        Subscribe(_socialManeuverHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeRelationshipUpdated(Action<RelationshipUpdateDto> handler) =>
+        Subscribe(_relationshipHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeSessionStarted(Action handler) =>
+        Subscribe(_sessionStartedHandlers, handler);
+
+    /// <inheritdoc />
+    public IDisposable SubscribeSessionEnded(Action<string> handler) =>
+        Subscribe(_sessionEndedHandlers, handler);
 
     /// <summary>
     /// Connects to the session hub and invokes JoinSession. Returns a structured result so pages can show inline guidance
@@ -122,7 +165,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
     /// </summary>
     public void SetPresence(IEnumerable<PlayerPresenceDto> players)
     {
-        PresenceUpdated?.Invoke(players);
+        Raise(_presenceHandlers, h => h(players));
     }
 
     /// <summary>
@@ -313,17 +356,17 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         _hubConnection.On("SessionStarted", async () =>
         {
             _isSessionActiveCache = true;
-            SessionStarted?.Invoke();
+            Raise(_sessionStartedHandlers, h => h());
             await RejoinCurrentSessionAsync();
         });
 
         _hubConnection.On<string>("SessionEnded", reason =>
         {
             _isSessionActiveCache = false;
-            SessionEnded?.Invoke(reason);
+            Raise(_sessionEndedHandlers, h => h(reason));
         });
 
-        _hubConnection.On<IEnumerable<PlayerPresenceDto>>("ReceivePresenceUpdate", players => PresenceUpdated?.Invoke(players));
+        _hubConnection.On<IEnumerable<PlayerPresenceDto>>("ReceivePresenceUpdate", players => Raise(_presenceHandlers, h => h(players)));
 
         _hubConnection.On<DiceRollResultDto>("ReceiveDiceRoll", roll =>
         {
@@ -336,19 +379,25 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
                     roll.IsDramaticFailure ? ToastType.Error : roll.IsExceptionalSuccess ? ToastType.Success : ToastType.Info);
             }
 
-            DiceRollReceived?.Invoke(roll);
+            Raise(_diceRollHandlers, h => h(roll));
         });
 
-        _hubConnection.On<IEnumerable<DiceRollResultDto>>("ReceiveRollHistory", history => RollHistoryReceived?.Invoke(history));
-        _hubConnection.On<CharacterUpdateDto>("ReceiveCharacterUpdate", patch => CharacterUpdated?.Invoke(patch));
-        _hubConnection.On<int, string>("ReceiveBloodlineApproved", (characterId, bloodlineName) => BloodlineApproved?.Invoke(characterId, bloodlineName));
-        _hubConnection.On<IEnumerable<InitiativeEntryDto>>("ReceiveInitiativeUpdate", entries => InitiativeUpdated?.Invoke(entries));
-        _hubConnection.On<ConditionNotificationDto>("ReceiveConditionNotification", n => ConditionNotificationReceived?.Invoke(n));
-        _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => ChronicleUpdated?.Invoke(patch));
-        _hubConnection.On<SocialManeuverUpdateDto>("ReceiveSocialManeuverUpdate", update => SocialManeuverUpdated?.Invoke(update));
+        _hubConnection.On<IEnumerable<DiceRollResultDto>>("ReceiveRollHistory", history => Raise(_rollHistoryHandlers, h => h(history)));
+        _hubConnection.On<CharacterUpdateDto>("ReceiveCharacterUpdate", patch => Raise(_characterUpdateHandlers, h => h(patch)));
+        _hubConnection.On<int, string>(
+            "ReceiveBloodlineApproved",
+            (characterId, bloodlineName) => Raise(_bloodlineApprovedHandlers, h => h(characterId, bloodlineName)));
+        _hubConnection.On<IEnumerable<InitiativeEntryDto>>("ReceiveInitiativeUpdate", entries => Raise(_initiativeHandlers, h => h(entries)));
+        _hubConnection.On<ConditionNotificationDto>(
+            "ReceiveConditionNotification",
+            n => Raise(_conditionNotificationHandlers, h => h(n)));
+        _hubConnection.On<ChronicleUpdateDto>("ReceiveChronicleUpdate", patch => Raise(_chronicleHandlers, h => h(patch)));
+        _hubConnection.On<SocialManeuverUpdateDto>(
+            "ReceiveSocialManeuverUpdate",
+            update => Raise(_socialManeuverHandlers, h => h(update)));
         _hubConnection.On<RelationshipUpdateDto>("ReceiveRelationshipUpdate", update =>
         {
-            RelationshipUpdated?.Invoke(update);
+            Raise(_relationshipHandlers, h => h(update));
             if (!string.IsNullOrEmpty(update.Summary))
             {
                 toastService.Show("Relationships", update.Summary, ToastType.Info);
@@ -486,7 +535,7 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
             else
             {
                 toastService.Show("Link Failure", "The real-time link encountered an error.", ToastType.Error);
-                Console.WriteLine($"Hub Invocation Error ({methodName}): {ex.Message}");
+                logger.LogError(ex, "Hub invocation error: {Method}", methodName);
             }
         }
     }
@@ -503,5 +552,37 @@ public class SessionClientService(NavigationManager navManager, ToastService toa
         _currentChronicleId = null;
         _currentCharacterId = null;
         _isSessionActiveCache = null;
+    }
+
+    private IDisposable Subscribe<T>(List<T> list, T handler)
+        where T : Delegate
+    {
+        lock (_handlerLock)
+        {
+            list.Add(handler);
+        }
+
+        return new SessionEventCallbackSubscription(() =>
+        {
+            lock (_handlerLock)
+            {
+                list.Remove(handler);
+            }
+        });
+    }
+
+    private void Raise<T>(List<T> handlers, Action<T> invoke)
+        where T : Delegate
+    {
+        T[] snapshot;
+        lock (_handlerLock)
+        {
+            snapshot = handlers.ToArray();
+        }
+
+        foreach (T handler in snapshot)
+        {
+            invoke(handler);
+        }
     }
 }

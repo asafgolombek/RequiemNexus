@@ -1,0 +1,146 @@
+@using Microsoft.AspNetCore.Components.Web
+@using RequiemNexus.Data.Models
+
+<div class="roller-form-group">
+    <label>@(FixedDicePool.HasValue ? "Pool (with modifiers)" : $"Base trait ({TraitName})")</label>
+    <input type="number" value="@(FixedDicePool ?? BaseDice)" readonly class="roller-input" style="background: rgba(0,0,0,0.5);" />
+</div>
+
+@if (Character != null && !FixedDicePool.HasValue)
+{
+    <div class="roller-form-group">
+        <label>Associated Trait</label>
+        <select value="@AssociatedTraitName" @onchange="OnAssociatedTraitSelectAsync" class="roller-input" style="width: 100%; padding: 8px;">
+            <option value="">-- None --</option>
+            <optgroup label="Attributes">
+                @foreach (string attr in AttributeNames.Where(a => a != TraitName))
+                {
+                    <option value="@attr">@attr</option>
+                }
+            </optgroup>
+            <optgroup label="Skills">
+                @foreach (string skill in SkillNames.Where(s => s != TraitName))
+                {
+                    <option value="@skill">@skill</option>
+                }
+            </optgroup>
+        </select>
+    </div>
+}
+
+@if (!IsRiteExtendedMode)
+{
+    <div class="roller-form-group">
+        <label>Modifiers (Bonus / Penalty)</label>
+        <input type="number" value="@Modifier" @onchange="OnModifierInputAsync" class="roller-input" />
+    </div>
+}
+
+<div class="roller-form-group">
+    <label>Total Pool</label>
+    <strong class="pool-total">@(IsChanceDiePool ? "Chance Die" : TotalPool.ToString())</strong>
+</div>
+
+@if (IsChanceDiePool)
+{
+    <p class="chance-die-hint">Chance die: only a 10 counts as a success. 10-again, 9-again, 8-again, and rote do not apply.</p>
+}
+
+<div class="options-group">
+    <label class="option-label"><input type="checkbox" checked="@TenAgain" @onchange="OnTenAgainAsync" disabled="@IsChanceDiePool" /> 10-Again</label>
+    <label class="option-label"><input type="checkbox" checked="@NineAgain" @onchange="OnNineAgainAsync" disabled="@IsChanceDiePool" /> 9-Again</label>
+    <label class="option-label"><input type="checkbox" checked="@EightAgain" @onchange="OnEightAgainAsync" disabled="@IsChanceDiePool" /> 8-Again</label>
+    <label class="option-label"><input type="checkbox" checked="@IsRote" @onchange="OnIsRoteAsync" disabled="@IsChanceDiePool" /> Rote Action</label>
+</div>
+
+@code {
+    /// <summary>Standard pool, associated trait, modifiers, and again/rote options for the shared dice roller modal.</summary>
+    [Parameter]
+    public string TraitName { get; set; } = string.Empty;
+
+    [Parameter]
+    public int BaseDice { get; set; } = 1;
+
+    [Parameter]
+    public Character? Character { get; set; }
+
+    [Parameter]
+    public int? FixedDicePool { get; set; }
+
+    [Parameter]
+    public bool IsRiteExtendedMode { get; set; }
+
+    [Parameter]
+    public bool IsChanceDiePool { get; set; }
+
+    [Parameter]
+    public int TotalPool { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> AttributeNames { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> SkillNames { get; set; } = [];
+
+    [Parameter]
+    public string AssociatedTraitName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> AssociatedTraitNameChanged { get; set; }
+
+    [Parameter]
+    public int Modifier { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ModifierChanged { get; set; }
+
+    [Parameter]
+    public bool TenAgain { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> TenAgainChanged { get; set; }
+
+    [Parameter]
+    public bool NineAgain { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> NineAgainChanged { get; set; }
+
+    [Parameter]
+    public bool EightAgain { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> EightAgainChanged { get; set; }
+
+    [Parameter]
+    public bool IsRote { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsRoteChanged { get; set; }
+
+    private async Task OnAssociatedTraitSelectAsync(ChangeEventArgs e)
+    {
+        string next = e.Value?.ToString() ?? string.Empty;
+        await AssociatedTraitNameChanged.InvokeAsync(next);
+    }
+
+    private async Task OnModifierInputAsync(ChangeEventArgs e)
+    {
+        int next = int.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int v)
+            ? v
+            : 0;
+        await ModifierChanged.InvokeAsync(next);
+    }
+
+    private async Task OnTenAgainAsync(ChangeEventArgs e) =>
+        await TenAgainChanged.InvokeAsync(e.Value is bool b && b);
+
+    private async Task OnNineAgainAsync(ChangeEventArgs e) =>
+        await NineAgainChanged.InvokeAsync(e.Value is bool b && b);
+
+    private async Task OnEightAgainAsync(ChangeEventArgs e) =>
+        await EightAgainChanged.InvokeAsync(e.Value is bool b && b);
+
+    private async Task OnIsRoteAsync(ChangeEventArgs e) =>
+        await IsRoteChanged.InvokeAsync(e.Value is bool b && b);
+}

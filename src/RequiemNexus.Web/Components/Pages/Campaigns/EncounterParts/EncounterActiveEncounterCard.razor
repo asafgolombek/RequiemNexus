@@ -1,0 +1,50 @@
+@using RequiemNexus.Data.Models
+
+<div class="card-rn">
+    <h4>@Encounter.Name</h4>
+    <p style="font-size:0.85em;color:var(--gothic-muted);">
+        Round @Encounter.CurrentRound · Started @Encounter.CreatedAt.ToLocalTime().ToString("g")
+    </p>
+    @SmartLaunchSlot
+    <div class="card-actions" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <a href="/campaigns/@CampaignId/encounter/@Encounter.Id" class="btn-rn-primary" style="font-size:0.85em;">⚔️ Open tracker</a>
+        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" @onclick="OnlinePlayersClickAsync">+ Online players</button>
+        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" @onclick="AddNpcClickAsync">+ Add NPC</button>
+        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" @onclick="PauseClickAsync">⏸ Pause</button>
+        <button type="button" class="btn-rn-ghost" style="font-size:0.85em;" disabled="@Busy" @onclick="ResolveClickAsync">✓ Resolve</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public CombatEncounter Encounter { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOnlinePlayers { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnAddNpc { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPause { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnResolve { get; set; }
+
+    [Parameter]
+    public RenderFragment? SmartLaunchSlot { get; set; }
+
+    private Task OnlinePlayersClickAsync() => OnOnlinePlayers.InvokeAsync(Encounter.Id);
+
+    private Task AddNpcClickAsync() => OnAddNpc.InvokeAsync(Encounter.Id);
+
+    private Task PauseClickAsync() => OnPause.InvokeAsync(Encounter.Id);
+
+    private Task ResolveClickAsync() => OnResolve.InvokeAsync(Encounter.Id);
+}

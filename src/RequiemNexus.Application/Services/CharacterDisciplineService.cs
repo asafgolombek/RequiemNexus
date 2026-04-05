@@ -20,7 +20,8 @@ public class CharacterDisciplineService(
     IExperienceCostRules experienceCostRules,
     IAuthorizationHelper authorizationHelper,
     IDomainEventDispatcher domainEventDispatcher,
-    IHumanityService humanityService) : ICharacterDisciplineService
+    IHumanityService humanityService,
+    IReferenceDataCache referenceData) : ICharacterDisciplineService
 {
     private const string _cruacDisciplineName = "Crúac";
     private const string _lanceaCovenantName = "The Lancea et Sanctum";
@@ -31,11 +32,21 @@ public class CharacterDisciplineService(
     private readonly IAuthorizationHelper _authorizationHelper = authorizationHelper;
     private readonly IDomainEventDispatcher _domainEventDispatcher = domainEventDispatcher;
     private readonly IHumanityService _humanityService = humanityService;
+    private readonly IReferenceDataCache _referenceData = referenceData;
 
     /// <inheritdoc />
     public async Task<List<Discipline>> GetAvailableDisciplinesAsync()
     {
-        return await _dbContext.Disciplines.OrderBy(d => d.Name).AsNoTracking().ToListAsync();
+        List<Discipline> homebrew = await _dbContext.Disciplines
+            .OrderBy(d => d.Name)
+            .AsNoTracking()
+            .Where(d => d.IsHomebrew)
+            .ToListAsync();
+
+        return _referenceData.ReferenceDisciplines
+            .Concat(homebrew)
+            .OrderBy(d => d.Name)
+            .ToList();
     }
 
     /// <inheritdoc />
@@ -201,6 +212,12 @@ public class CharacterDisciplineService(
 
     private async Task<Discipline?> LoadDisciplineForGatesAsync(int disciplineId)
     {
+        Discipline? fromCache = _referenceData.ReferenceDisciplines.FirstOrDefault(d => d.Id == disciplineId);
+        if (fromCache != null)
+        {
+            return fromCache;
+        }
+
         return await _dbContext.Disciplines
             .Include(d => d.Covenant)
             .Include(d => d.Bloodline)

@@ -93,6 +93,15 @@ public interface ICampaignService
     /// <summary>Deletes a session-prep note. ST-only.</summary>
     Task DeleteSessionPrepNoteAsync(int noteId, string stUserId);
 
+    /// <summary>
+    /// Storyteller-only: sets or clears the optional Discord incoming webhook URL used for session presence posts (start/end/join/leave).
+    /// </summary>
+    /// <param name="campaignId">Campaign id.</param>
+    /// <param name="discordWebhookUrl">HTTPS Discord webhook URL, or <c>null</c>/whitespace to disable.</param>
+    /// <param name="stUserId">Storyteller user id.</param>
+    /// <exception cref="InvalidOperationException">When the URL fails validation.</exception>
+    Task SetDiscordWebhookUrlAsync(int campaignId, string? discordWebhookUrl, string stUserId);
+
     /// <summary>Returns <c>true</c> when <paramref name="userId"/> is the Storyteller of the campaign.</summary>
     bool IsStoryteller(Campaign campaign, string userId);
 
