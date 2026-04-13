@@ -39,7 +39,7 @@ jobs:
           TARGET_URL: ${{ secrets.STAGING_URL }}
 
       - name: Upload Performance Report
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: perf-report-${{ github.run_number }}
