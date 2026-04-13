@@ -48,7 +48,7 @@ jobs:
           DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Threshold=60
 
       - name: Upload Coverage Artifacts
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: coverage-${{ github.run_number }}

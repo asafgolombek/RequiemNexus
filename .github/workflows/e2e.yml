@@ -73,7 +73,7 @@ jobs:
           PLAYWRIGHT_RETRIES: "2"
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: e2e-results-${{ github.run_number }}
@@ -139,7 +139,7 @@ jobs:
             Username=postgres;Password=postgres
 
       - name: Upload Snapshot Diffs
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         if: failure()
         with:
           name: snapshot-diffs-${{ github.run_number }}
