@@ -39,7 +39,7 @@ public class CampaignServiceDeleteTests
             factory,
             logger,
             authHelper,
-            new CampaignLoreService(ctx, sessionMock, NullLogger<CampaignLoreService>.Instance),
+            new CampaignLoreService(ctx, sessionMock, authHelper, NullLogger<CampaignLoreService>.Instance),
             new CampaignSessionPrepService(ctx, authHelper, NullLogger<CampaignSessionPrepService>.Instance));
     }
 

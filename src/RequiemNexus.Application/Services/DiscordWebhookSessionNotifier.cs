@@ -98,7 +98,7 @@ public sealed class DiscordWebhookSessionNotifier(
             webhookUrl,
             campaignId,
             "Player left",
-            $"{DiscordWebhookEmbedText.SanitizeDisplayName(displayName ?? playerUserId)} left the session.").ConfigureAwait(false);
+            $"{DiscordWebhookEmbedText.SanitizeDisplayName(displayName ?? "a player")} left the session.").ConfigureAwait(false);
     }
 
     private async Task PostEmbedAsync(int campaignId, string title, string description)
@@ -123,7 +123,7 @@ public sealed class DiscordWebhookSessionNotifier(
 
     private async Task PostEmbedWithWebhookAsync(string webhookUrl, int campaignId, string title, string description)
     {
-        using var client = new HttpClient { Timeout = _httpTimeout };
+        using var client = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }, disposeHandler: true) { Timeout = _httpTimeout };
         var payload = new DiscordWebhookPayload
         {
             Embeds =

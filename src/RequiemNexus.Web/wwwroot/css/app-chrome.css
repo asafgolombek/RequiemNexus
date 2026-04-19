@@ -1,6 +1,6 @@
 /* Requiem Nexus — application chrome (split for maintainability). Order = cascade order. */
-@import url('app-chrome-interactions.css');
 @import url('app-chrome-base.css');
+@import url('app-chrome-interactions.css');
 @import url('app-chrome-alerts-forms.css');
 @import url('app-chrome-buttons-cards.css');
 @import url('app-chrome-layout.css');

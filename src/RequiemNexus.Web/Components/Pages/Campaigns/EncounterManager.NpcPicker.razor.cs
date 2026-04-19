@@ -89,17 +89,13 @@ public partial class EncounterManager
         return Task.CompletedTask;
     }
 
-    private void OnNpcModalKeyDown(KeyboardEventArgs e)
+    private Task OnNpcModalKeyDownAsync(KeyboardEventArgs e)
     {
         if (e.Key == "Escape")
         {
             CloseNpcPicker();
         }
-    }
 
-    private Task OnNpcModalKeyDownAsync(KeyboardEventArgs e)
-    {
-        OnNpcModalKeyDown(e);
         return Task.CompletedTask;
     }
 

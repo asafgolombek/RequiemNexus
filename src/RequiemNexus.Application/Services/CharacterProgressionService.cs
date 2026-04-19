@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using RequiemNexus.Application.Contracts;
 using RequiemNexus.Application.DTOs;
 using RequiemNexus.Application.RealTime;
@@ -33,6 +35,10 @@ public class CharacterProgressionService(
         Character character = await _dbContext.Characters.FindAsync(characterId)
             ?? throw new InvalidOperationException($"Character {characterId} not found.");
 
+        await using IDbContextTransaction? tx = _dbContext.Database.IsRelational()
+            ? await _dbContext.Database.BeginTransactionAsync()
+            : null;
+
         character.Beats++;
 
         await _beatLedger.RecordBeatAsync(
@@ -58,6 +64,11 @@ public class CharacterProgressionService(
         }
 
         await _dbContext.SaveChangesAsync();
+        if (tx is not null)
+        {
+            await tx.CommitAsync();
+        }
+
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         return CharacterProgressionSnapshotDto.FromCharacter(character);
     }
@@ -91,6 +102,10 @@ public class CharacterProgressionService(
         character.ExperiencePoints++;
         character.TotalExperiencePoints++;
 
+        await using IDbContextTransaction? tx = _dbContext.Database.IsRelational()
+            ? await _dbContext.Database.BeginTransactionAsync()
+            : null;
+
         await _beatLedger.RecordXpCreditAsync(
             character.Id,
             character.CampaignId,
@@ -100,6 +115,11 @@ public class CharacterProgressionService(
             userId);
 
         await _dbContext.SaveChangesAsync();
+        if (tx is not null)
+        {
+            await tx.CommitAsync();
+        }
+
         await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         return CharacterProgressionSnapshotDto.FromCharacter(character);
     }
@@ -120,6 +140,10 @@ public class CharacterProgressionService(
                 character.TotalExperiencePoints--;
             }
 
+            await using IDbContextTransaction? tx = _dbContext.Database.IsRelational()
+                ? await _dbContext.Database.BeginTransactionAsync()
+                : null;
+
             await _beatLedger.RecordXpSpendAsync(
                 character.Id,
                 character.CampaignId,
@@ -129,6 +153,11 @@ public class CharacterProgressionService(
                 userId);
 
             await _dbContext.SaveChangesAsync();
+            if (tx is not null)
+            {
+                await tx.CommitAsync();
+            }
+
             await _sessionService.BroadcastCharacterUpdateAsync(character.Id);
         }
 

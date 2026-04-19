@@ -67,7 +67,7 @@
     transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.input-grimoire:focus, .input-container:focus-within {
+.input-container:focus-within {
     outline: none;
     border-color: var(--crimson);
     box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);

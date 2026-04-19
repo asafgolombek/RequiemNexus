@@ -12,7 +12,10 @@ internal static class DiscordWebhookEmbedText
             return "Unknown";
         }
 
-        return value.Trim().Replace("@", string.Empty, StringComparison.Ordinal);
+        return value.Trim()
+            .Replace("@", string.Empty, StringComparison.Ordinal)
+            .Replace("<", string.Empty, StringComparison.Ordinal)
+            .Replace(">", string.Empty, StringComparison.Ordinal);
     }
 
     internal static string Truncate(string value, int maxLen)

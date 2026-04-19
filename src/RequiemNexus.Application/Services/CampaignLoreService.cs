@@ -14,10 +14,12 @@ namespace RequiemNexus.Application.Services;
 public class CampaignLoreService(
     ApplicationDbContext dbContext,
     ISessionService sessionService,
+    IAuthorizationHelper authHelper,
     ILogger<CampaignLoreService> logger) : ICampaignLoreService
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly ISessionService _sessionService = sessionService;
+    private readonly IAuthorizationHelper _authHelper = authHelper;
     private readonly ILogger<CampaignLoreService> _logger = logger;
 
     /// <inheritdoc />
@@ -33,6 +35,8 @@ public class CampaignLoreService(
     /// <inheritdoc />
     public async Task<CampaignLore> CreateLoreAsync(int campaignId, string title, string body, string authorUserId)
     {
+        await _authHelper.RequireCampaignMemberAsync(campaignId, authorUserId, "create lore");
+
         CampaignLore lore = new()
         {
             CampaignId = campaignId,

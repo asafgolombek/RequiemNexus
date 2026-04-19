@@ -86,7 +86,7 @@ public partial class EncounterManager
         int encounterId = _smartLaunchEncounterId.Value;
 
         List<int> ids = _campaignCharacters
-            .Where(c => _smartLaunchSelection.GetValueOrDefault(c.Id, false))
+            .Where(c => _smartLaunchSelection.GetValueOrDefault(c.Id, true))
             .Select(c => c.Id)
             .ToList();
 
